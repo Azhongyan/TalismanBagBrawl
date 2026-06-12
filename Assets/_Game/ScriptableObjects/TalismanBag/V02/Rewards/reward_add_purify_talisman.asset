@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b74e0b083c434b6aa834f50cd2a80101, type: 3}
+  m_Name: reward_add_purify_talisman
+  m_EditorClassIdentifier: 
+  rewardId: reward_add_purify_talisman
+  displayName: "\u83B7\u5F97\u51C0\u5316\u7B26"
+  rewardType: 1
+  shortDescription: "\u83B7\u5F97 1 \u5F20\u51C0\u5316\u7B26\u3002"
+  detailedDescription: "\u6E05\u9664\u4E2D\u6BD2\u3001\u71C3\u70E7\u548C\u5C01\u5370\u3002"
+  icon: {fileID: 0}
+  talismanToAdd: {fileID: 11400000, guid: c8af8eedbb6b7b147a5716b1eebbf35e, type: 2}
+  formationModifierType: 0
+  buildModifierType: 0
+  modifierValue: 0
+  helpfulAgainstTags: 020000000300000004000000
+  relatedFunctionTags: 080000000e000000
+  baseWeight: 11

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26802b78c0ad4754a894e6fe1b2eabed, type: 3}
+  m_Name: CounterMultiplierConfig_V02
+  m_EditorClassIdentifier: 
+  strongCounterMultiplier: 1.8
+  lightCounterMultiplier: 1.35
+  neutralMultiplier: 1
+  resistedMultiplier: 0.7
+  hardResistedMultiplier: 0.55
+  rewardShieldBreakMultiplier: 2.5
+  groupClearMultiplier: 1.6

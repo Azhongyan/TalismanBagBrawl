@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b74e0b083c434b6aa834f50cd2a80101, type: 3}
+  m_Name: reward_add_spirit_stone
+  m_EditorClassIdentifier: 
+  rewardId: reward_add_spirit_stone
+  displayName: "\u83B7\u5F97\u805A\u7075\u77F3"
+  rewardType: 1
+  shortDescription: "\u83B7\u5F97 1 \u5757\u805A\u7075\u77F3\u3002"
+  detailedDescription: "\u6269\u5C55\u9635\u6CD5\u4F9B\u80FD\u8303\u56F4\u3002"
+  icon: {fileID: 0}
+  talismanToAdd: {fileID: 11400000, guid: 8e3c898e75863c94c95e2b0be4207001, type: 2}
+  formationModifierType: 0
+  buildModifierType: 0
+  modifierValue: 0
+  helpfulAgainstTags: 06000000040000000a000000
+  relatedFunctionTags: 0a000000
+  baseWeight: 9

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cc904949755314e81026bb929a3144, type: 3}
+  m_Name: seal_talisman_taoist
+  m_EditorClassIdentifier: 
+  enemyId: seal_talisman_taoist
+  displayName: "\u5C01\u7B26\u9053\u4EBA"
+  enemyType: 3
+  maxHp: 155
+  attackDamage: 8
+  attackInterval: 3
+  weaknessText: "\u5C01\u5370"
+  dangerText: "\u884C\u5217\u5C01\u9501"
+  recommendedBuildText: "\u51C0\u5316\u7B26\u53EF\u4EE5\u89E3\u5C01\u3002\u4E0D\u8981\u628A\u6240\u6709\u8F93\u51FA\u7B26\u653E\u5728\u540C\u4E00\u884C\u6216\u540C\u4E00\u5217\u3002"
+  chargeInterval: 0
+  chargeDuration: 0
+  chargeAttackDamage: 0
+  manaDrainInterval: 0
+  manaDrainAmount: 0
+  sealInterval: 0
+  sealDuration: 0
+  ghostShadowInterval: 0
+  ghostShadowDamage: 0
+  icon: {fileID: 0}
+  enemyClass: "\u5C01\u5370"
+  enemyArchetype: "\u884C\u5217\u5C01\u9501"
+  intentText: "\u51C6\u5907\u5C01\u5370\u7B26\u7B93"
+  recommendedCounterText: "\u51C0\u5316\u7B26\u53EF\u4EE5\u89E3\u5C01\u3002\u4E0D\u8981\u628A\u6240\u6709\u8F93\u51FA\u7B26\u653E\u5728\u540C\u4E00\u884C\u6216\u540C\u4E00\u5217\u3002"
+  weaknessTags: 04000000
+  resistTags: 
+  resistedElements: 
+  resistedFunctions: 02000000
+  vulnerableElements: 03000000
+  vulnerableFunctions: 080000000e000000
+  skills:
+  - {fileID: 11400000, guid: 9dd836c7f45c4bf0a86d0a09255e72af, type: 2}

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cc904949755314e81026bb929a3144, type: 3}
+  m_Name: heart_demon_boss
+  m_EditorClassIdentifier: 
+  enemyId: heart_demon_boss
+  displayName: "\u5FC3\u9B54\u90AA\u4FEE"
+  enemyType: 4
+  maxHp: 260
+  attackDamage: 14
+  attackInterval: 3
+  weaknessText: "\u53EF\u6253\u65AD / \u6015\u7A33\u5B9A\u9635\u6CD5 / \u6015\u96F7\u5370\u7206\u53D1"
+  dangerText: "\u5438\u7075 / \u5C01\u5370 / \u5FC3\u9B54\u51B2\u51FB / \u534A\u8840\u72C2\u66B4"
+  recommendedBuildText: "\u96F7\u5370 / \u62A4\u4E39 / \u706B\u5251\u6D41 / \u591A\u805A\u7075\u77F3"
+  chargeInterval: 14
+  chargeDuration: 3
+  chargeAttackDamage: 36
+  manaDrainInterval: 6
+  manaDrainAmount: 12
+  sealInterval: 9
+  sealDuration: 4
+  ghostShadowInterval: 0
+  ghostShadowDamage: 0
+  icon: {fileID: 0}

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cc904949755314e81026bb929a3144, type: 3}
+  m_Name: ghost_swarm
+  m_EditorClassIdentifier: 
+  enemyId: ghost_swarm
+  displayName: "\u9B3C\u7FA4\u538B\u5883"
+  enemyType: 1
+  maxHp: 160
+  attackDamage: 9
+  attackInterval: 2
+  weaknessText: "\u6015\u9A71\u90AA / \u5F31\u96F7"
+  dangerText: "\u9B3C\u5F71\u653B\u51FB"
+  recommendedBuildText: "\u9A71\u90AA\u9635 / \u96F7\u6CD5 / \u706B\u7075\u8FDE\u53D1"
+  chargeInterval: 0
+  chargeDuration: 0
+  chargeAttackDamage: 0
+  manaDrainInterval: 0
+  manaDrainAmount: 0
+  sealInterval: 0
+  sealDuration: 0
+  ghostShadowInterval: 7
+  ghostShadowDamage: 8
+  icon: {fileID: 0}

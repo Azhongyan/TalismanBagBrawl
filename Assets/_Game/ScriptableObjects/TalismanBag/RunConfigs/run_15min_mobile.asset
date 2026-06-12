@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 682abf7f134699a48b803cb48cf92525, type: 3}
+  m_Name: run_15min_mobile
+  m_EditorClassIdentifier: 
+  runId: run_15min_mobile
+  displayName: "15\u5206\u949F\u7AD6\u7248\u9A8C\u8BC1\u5C40"
+  rounds:
+  - roundIndex: 1
+    enemy: {fileID: 11400000, guid: ff769e0e41d485d4a814c2f5996fbedf, type: 2}
+    rewardSpiritJade: 6
+    unlockBagExpansion: 0
+    roundTitle: "Round 1 \u666E\u901A\u9B3C\u602A"
+    roundHint: "\u628A\u706B\u7B26\u653E\u5728\u805A\u7075\u77F3\u65C1\u8FB9\uFF0C\u706B\u7B26\u4F1A\u91CA\u653E\u5F97\u66F4\u5FEB\u3002"
+  - roundIndex: 2
+    enemy: {fileID: 11400000, guid: 8d433438ba7eaad4ca7f4cf104124706, type: 2}
+    rewardSpiritJade: 8
+    unlockBagExpansion: 0
+    roundTitle: "Round 2 \u5F3A\u5316\u9B3C\u602A"
+    roundHint: "\u9B3C\u602A\u5BB3\u6015\u96F7\u6CD5\u3001\u6843\u6728\u548C\u9A71\u90AA\u7C7B\u6CD5\u5668\u3002"
+  - roundIndex: 3
+    enemy: {fileID: 11400000, guid: 937d27e883302b444a18a415a368a64a, type: 2}
+    rewardSpiritJade: 10
+    unlockBagExpansion: 0
+    roundTitle: "Round 3 \u5251\u4FEE"
+    roundHint: "\u5251\u4FEE\u84C4\u529B\u8FDE\u65A9\u65F6\uFF0C\u53EF\u4EE5\u7528\u96F7\u7B26\u6253\u65AD\u3002"
+  - roundIndex: 4
+    enemy: {fileID: 11400000, guid: ecb78db132ea535489b75d1451b0b2de, type: 2}
+    rewardSpiritJade: 12
+    unlockBagExpansion: 1
+    roundTitle: "Round 4 \u90AA\u4FEE"
+    roundHint: "\u90AA\u4FEE\u4F1A\u5C01\u5370\u9635\u4F4D\uFF0C\u4E0D\u8981\u628A\u6240\u6709\u6838\u5FC3\u9053\u5177\u6324\u5728\u4E00\u8D77\u3002"
+  - roundIndex: 5
+    enemy: {fileID: 11400000, guid: eca57052722b8cc4ebb6a631df69d858, type: 2}
+    rewardSpiritJade: 14
+    unlockBagExpansion: 0
+    roundTitle: "Round 5 \u53CC\u9B3C\u538B\u529B\u6218"
+    roundHint: "\u68C0\u67E5\u4F60\u7684\u7075\u6C14\u4F9B\u7ED9\u548C\u6301\u7EED\u8F93\u51FA\u662F\u5426\u7A33\u5B9A\u3002"
+  - roundIndex: 6
+    enemy: {fileID: 11400000, guid: c6c5a1574096eca4fb367de294687bc8, type: 2}
+    rewardSpiritJade: 16
+    unlockBagExpansion: 0
+    roundTitle: "Round 6 \u5251\u4FEE\u7CBE\u82F1"
+    roundHint: "\u66F4\u9891\u7E41\u7684\u84C4\u529B\u9700\u8981\u96F7\u7B26\u548C\u62A4\u76FE\u4E00\u8D77\u515C\u5E95\u3002"
+  - roundIndex: 7
+    enemy: {fileID: 11400000, guid: 931f54255d9aa7942b8641884d04a0af, type: 2}
+    rewardSpiritJade: 0
+    unlockBagExpansion: 0
+    roundTitle: "Round 7 Boss \u5FC3\u9B54\u90AA\u4FEE"
+    roundHint: "Boss \u4F1A\u5438\u7075\u3001\u5C01\u5370\u548C\u84C4\u529B\uFF0C\u7A33\u5B9A\u7075\u6C14\u3001\u9632\u5FA1\u548C\u96F7\u7B26\u6253\u65AD\u90FD\u5F88\u91CD\u8981\u3002"
+  startingSpiritJade: 0
+  startingItems:
+  - {fileID: 11400000, guid: 1d69960c9999159478ae4848e99bffa0, type: 2}
+  - {fileID: 11400000, guid: ee4833b08c9ef0240be9a1aa6b062b03, type: 2}
+  - {fileID: 11400000, guid: cc68a7cd909891d4eb0ba347ddbeda08, type: 2}
+  - {fileID: 11400000, guid: 2705557f8e92b9a4885d1d415d8dfed2, type: 2}

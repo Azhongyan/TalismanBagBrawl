@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b40c8ab260801ca4e881d24d280b9d45, type: 3}
+  m_Name: qi_pill_basic
+  m_EditorClassIdentifier: 
+  itemId: qi_pill_basic
+  displayName: "\u56DE\u6C14\u4E39"
+  itemType: 3
+  elementType: 2
+  icon: {fileID: 0}
+  width: 1
+  height: 1
+  baseCooldown: 8
+  manaCost: 12
+  baseValue: 20
+  uiColor: {r: 0.95, g: 0.5, b: 0.92, a: 1}
+  description: "\u4F4E\u8840\u65F6\u6062\u590D\u6C14\u8840\uFF0C\u8D34\u8FD1\u62A4\u8EAB\u7B26\u6CBB\u7597\u66F4\u9AD8\u3002"
+  elementTag: 0
+  functionTags: 
+  counterTags: 
+  effectType: 0
+  energyRequired: 1
+  requiresFormationPower: 1
+  shortRoleDescription: 
+  counterDescription: 

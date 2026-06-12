@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b40c8ab260801ca4e881d24d280b9d45, type: 3}
+  m_Name: water_talisman_basic
+  m_EditorClassIdentifier: 
+  itemId: water_talisman_basic
+  displayName: "\u6C34\u7B26"
+  itemType: 5
+  elementType: 2
+  icon: {fileID: 0}
+  width: 1
+  height: 1
+  baseCooldown: 4
+  manaCost: 12
+  baseValue: 10
+  uiColor: {r: 0.35, g: 0.82, b: 0.95, a: 1}
+  description: "\u6062\u590D 10 \u6C14\u8840\uFF0C\u8D34\u8FD1\u56DE\u6C14\u4E39\u53EF\u7F29\u77ED\u51B7\u5374\u3002"
+  elementTag: 0
+  functionTags: 
+  counterTags: 
+  effectType: 0
+  energyRequired: 1
+  requiresFormationPower: 1
+  shortRoleDescription: 
+  counterDescription: 

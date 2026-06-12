@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 285353d9dd22a8c4695edb3b52013526, type: 3}
+  m_Name: RunConfig_V02_15Min
+  m_EditorClassIdentifier: 
+  runId: v02_15min_seven_rounds
+  displayName: V0.2 15Min Formation Counter Run
+  rounds:
+  - roundIndex: 1
+    roundTitle: "\u57FA\u7840\u5E03\u9635"
+    enemy: {fileID: 11400000, guid: 0b6fe088fc1a49218a5200ef4f15d771, type: 2}
+    teachingGoal: "\u7406\u89E3\u7B26\u7B93\u5FC5\u987B\u88AB\u9635\u773C\u6216\u805A\u7075\u77F3\u4F9B\u80FD\u624D\u4F1A\u89E6\u53D1\u3002"
+    preBattleHint: "\u628A\u706B\u7B26\u653E\u5230\u9635\u773C\u6216\u805A\u7075\u77F3\u4F9B\u80FD\u8303\u56F4\u5185\u3002\u672A\u4F9B\u80FD\u7684\u7B26\u7B93\u4E0D\u4F1A\u89E6\u53D1\u3002"
+    isBossRound: 0
+    targetDurationMin: 45
+    targetDurationMax: 60
+  - roundIndex: 2
+    roundTitle: "\u9F9F\u7532\u62A4\u6CD5"
+    enemy: {fileID: 11400000, guid: c73ab9457d1841e39a189727a2ec2687, type: 2}
+    teachingGoal: "\u7406\u89E3\u62A4\u76FE\u654C\u4EBA\u9700\u8981\u96F7\u7B26\u6216\u7206\u53D1\u5904\u7406\u3002"
+    preBattleHint: "\u654C\u4EBA\u4F1A\u5468\u671F\u6027\u83B7\u5F97\u62A4\u76FE\u3002\u96F7\u7B26\u5BF9\u62A4\u76FE\u6548\u679C\u66F4\u597D\uFF0C\u5251\u4E38\u7206\u53D1\u4E5F\u6709\u6548\u3002"
+    isBossRound: 0
+    targetDurationMin: 75
+    targetDurationMax: 100
+  - roundIndex: 3
+    roundTitle: "\u5C0F\u5996\u7FA4"
+    enemy: {fileID: 11400000, guid: 7e529c3694fd44d0a76d614cf3c06b36, type: 2}
+    teachingGoal: "\u7406\u89E3\u591A\u76EE\u6807\u654C\u4EBA\u9700\u8981\u8FDE\u9501\u3001\u8303\u56F4\u6216\u71C3\u70E7\u5904\u7406\u3002"
+    preBattleHint: "\u5C0F\u5996\u7FA4\u4F1A\u7528\u6570\u91CF\u538B\u5236\u4F60\u3002\u8FDE\u9501\u96F7\u7B26\u548C\u706B\u7B26\u71C3\u70E7\u66F4\u9002\u5408\u6E05\u7FA4\u3002"
+    isBossRound: 0
+    targetDurationMin: 80
+    targetDurationMax: 110
+  - roundIndex: 4
+    roundTitle: "\u8D64\u6BD2\u5996"
+    enemy: {fileID: 11400000, guid: 7c1e7e13122c4fb68ebc45e5465bb3b5, type: 2}
+    teachingGoal: "\u7406\u89E3\u4E0D\u80FD\u53EA\u5806\u8F93\u51FA\uFF0C\u9632\u5FA1\u548C\u51C0\u5316\u4E5F\u91CD\u8981\u3002"
+    preBattleHint: "\u8D64\u6BD2\u5996\u4F1A\u53E0\u52A0\u4E2D\u6BD2\u548C\u71C3\u70E7\u3002\u51C0\u5316\u7B26\u53EF\u4EE5\u6E05\u9664\u72B6\u6001\uFF0C\u62A4\u8EAB\u7B26\u53EF\u4EE5\u62B5\u6297\u6301\u7EED\u4F24\u5BB3\u3002"
+    isBossRound: 0
+    targetDurationMin: 90
+    targetDurationMax: 120
+  - roundIndex: 5
+    roundTitle: "\u5077\u7075\u9B3C"
+    enemy: {fileID: 11400000, guid: 01aa1e0be8f5453c8c1d705f056a6e9a, type: 2}
+    teachingGoal: "\u7406\u89E3\u9635\u773C\u548C\u805A\u7075\u77F3\u662F\u6838\u5FC3\u8D44\u6E90\uFF0C\u4F1A\u88AB\u654C\u4EBA\u9488\u5BF9\u3002"
+    preBattleHint: "\u5077\u7075\u9B3C\u4F1A\u5077\u53D6\u9635\u773C\u6216\u805A\u7075\u77F3\u7075\u6C14\uFF0C\u4F7F\u5468\u56F4\u7B26\u7B93\u77ED\u6682\u5931\u6548\u3002\u9547\u9B42\u7B26\u53EF\u4EE5\u53CD\u5236\u5077\u7075\u3002"
+    isBossRound: 0
+    targetDurationMin: 90
+    targetDurationMax: 120
+  - roundIndex: 6
+    roundTitle: "\u5C01\u7B26\u9053\u4EBA"
+    enemy: {fileID: 11400000, guid: b201fc3b753c4adab4321c91239bf709, type: 2}
+    teachingGoal: "\u7406\u89E3\u6838\u5FC3\u8F93\u51FA\u4E0D\u80FD\u5168\u90E8\u5806\u5728\u540C\u4E00\u884C\u6216\u540C\u4E00\u5217\u3002"
+    preBattleHint: "\u5C01\u7B26\u9053\u4EBA\u4F1A\u5C01\u5370\u4E00\u884C\u6216\u4E00\u5217\u7B26\u7B93\u3002\u51C0\u5316\u7B26\u53EF\u4EE5\u89E3\u5C01\uFF0C\u4E0D\u8981\u628A\u6240\u6709\u6838\u5FC3\u8F93\u51FA\u5806\u5728\u540C\u4E00\u6761\u7EBF\u4E0A\u3002"
+    isBossRound: 0
+    targetDurationMin: 100
+    targetDurationMax: 130
+  - roundIndex: 7
+    roundTitle: "\u7834\u9635\u5C0FBoss"
+    enemy: {fileID: 11400000, guid: af00b4c24b8d448cba58b91f4833e62b, type: 2}
+    teachingGoal: "\u7EFC\u5408\u68C0\u9A8C\u7834\u76FE\u3001\u6E05\u7FA4\u3001\u9635\u773C\u4FDD\u62A4\u548C\u9635\u6CD5\u7A33\u5B9A\u6027\u3002"
+    preBattleHint: "Boss\u4F1A\u5148\u83B7\u5F97\u62A4\u76FE\uFF0C\u4E2D\u6BB5\u53EC\u5524\u5C0F\u5996\uFF0C\u4F4E\u8840\u91CF\u65F6\u5C01\u5370\u9635\u773C\u9644\u8FD1\u683C\u5B50\u3002\u9700\u8981\u7834\u76FE\u3001\u6E05\u7FA4\u3001\u51C0\u5316\u548C\u7A33\u5B9A\u4F9B\u80FD\u3002"
+    isBossRound: 1
+    targetDurationMin: 150
+    targetDurationMax: 180

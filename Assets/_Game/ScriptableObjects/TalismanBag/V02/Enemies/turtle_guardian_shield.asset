@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cc904949755314e81026bb929a3144, type: 3}
+  m_Name: turtle_guardian_shield
+  m_EditorClassIdentifier: 
+  enemyId: turtle_guardian_shield
+  displayName: "\u9F9F\u7532\u62A4\u6CD5"
+  enemyType: 0
+  maxHp: 120
+  attackDamage: 7
+  attackInterval: 2.8
+  weaknessText: "\u62A4\u76FE"
+  dangerText: "\u5468\u671F\u62A4\u76FE"
+  recommendedBuildText: "\u96F7\u7B26\u53EF\u4EE5\u7834\u76FE\uFF0C\u5251\u4E38\u7206\u53D1\u4E5F\u6709\u6548\u3002"
+  chargeInterval: 0
+  chargeDuration: 0
+  chargeAttackDamage: 0
+  manaDrainInterval: 0
+  manaDrainAmount: 0
+  sealInterval: 0
+  sealDuration: 0
+  ghostShadowInterval: 0
+  ghostShadowDamage: 0
+  icon: {fileID: 0}
+  enemyClass: "\u62A4\u76FE"
+  enemyArchetype: "\u5468\u671F\u62A4\u76FE"
+  intentText: "\u6B63\u5728\u79EF\u84C4\u62A4\u76FE"
+  recommendedCounterText: "\u96F7\u7B26\u53EF\u4EE5\u7834\u76FE\uFF0C\u5251\u4E38\u7206\u53D1\u4E5F\u6709\u6548\u3002"
+  weaknessTags: 01000000
+  resistTags: 
+  resistedElements: 01000000
+  resistedFunctions: 03000000
+  vulnerableElements: 02000000
+  vulnerableFunctions: 0c00000002000000
+  skills:
+  - {fileID: 11400000, guid: 40c91a04c97d4a1d977cfb964e8bdf11, type: 2}

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cc904949755314e81026bb929a3144, type: 3}
+  m_Name: evil_cultivator_basic
+  m_EditorClassIdentifier: 
+  enemyId: evil_cultivator_basic
+  displayName: "\u90AA\u4FEE\u5C01\u9635"
+  enemyType: 3
+  maxHp: 140
+  attackDamage: 12
+  attackInterval: 3.5
+  weaknessText: "\u6015\u7A33\u5B9A\u8F93\u51FA / \u6015\u5145\u8DB3\u7075\u6C14"
+  dangerText: "\u4F1A\u5C01\u5370 / \u4F1A\u5438\u7075"
+  recommendedBuildText: "\u5206\u6563\u9635\u578B / \u53CC\u7075\u6C14"
+  chargeInterval: 0
+  chargeDuration: 0
+  chargeAttackDamage: 0
+  manaDrainInterval: 6
+  manaDrainAmount: 10
+  sealInterval: 10
+  sealDuration: 4
+  ghostShadowInterval: 0
+  ghostShadowDamage: 0
+  icon: {fileID: 0}

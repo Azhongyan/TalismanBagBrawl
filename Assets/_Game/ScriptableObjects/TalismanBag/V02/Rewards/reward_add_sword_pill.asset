@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b74e0b083c434b6aa834f50cd2a80101, type: 3}
+  m_Name: reward_add_sword_pill
+  m_EditorClassIdentifier: 
+  rewardId: reward_add_sword_pill
+  displayName: "\u83B7\u5F97\u5251\u4E38"
+  rewardType: 1
+  shortDescription: "\u83B7\u5F97 1 \u679A\u5251\u4E38\u3002"
+  detailedDescription: "\u7528\u4E8E\u5355\u4F53\u7206\u53D1\uFF0C\u9002\u5408\u6253
+    Boss \u548C\u84C4\u529B\u654C\u4EBA\u3002"
+  icon: {fileID: 0}
+  talismanToAdd: {fileID: 11400000, guid: 1c27e7ad918de534d90cfd5bb2599fa4, type: 2}
+  formationModifierType: 0
+  buildModifierType: 0
+  modifierValue: 0
+  helpfulAgainstTags: 090000000a000000
+  relatedFunctionTags: 02000000
+  baseWeight: 10

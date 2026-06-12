@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b74e0b083c434b6aa834f50cd2a80101, type: 3}
+  m_Name: reward_add_chain_thunder
+  m_EditorClassIdentifier: 
+  rewardId: reward_add_chain_thunder
+  displayName: "\u83B7\u5F97\u8FDE\u9501\u96F7\u7B26"
+  rewardType: 1
+  shortDescription: "\u83B7\u5F97 1 \u5F20\u8FDE\u9501\u96F7\u7B26\u3002"
+  detailedDescription: "\u7528\u4E8E\u6E05\u7FA4\u548C\u5904\u7406\u53EC\u5524\u3002"
+  icon: {fileID: 0}
+  talismanToAdd: {fileID: 11400000, guid: 48b8fc4ea74c4df488834454ffa9bd47, type: 2}
+  formationModifierType: 0
+  buildModifierType: 0
+  modifierValue: 0
+  helpfulAgainstTags: 0800000007000000
+  relatedFunctionTags: 0400000005000000
+  baseWeight: 10

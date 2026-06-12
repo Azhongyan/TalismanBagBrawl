@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b74e0b083c434b6aa834f50cd2a80101, type: 3}
+  m_Name: reward_outer_ring_defense_boost
+  m_EditorClassIdentifier: 
+  rewardId: reward_outer_ring_defense_boost
+  displayName: "\u5916\u5708\u62A4\u9635"
+  rewardType: 2
+  shortDescription: "\u5916\u5708\u62A4\u8EAB\u7B26\u62A4\u76FE +30%\uFF0C\u5916\u5708\u51C0\u5316\u7B26\u51B7\u5374
+    -15%\u3002"
+  detailedDescription: "\u9F13\u52B1\u628A\u9632\u5FA1\u7B26\u653E\u5230\u9635\u6CD5\u5916\u5708\u5F62\u6210\u9632\u62A4\u7ED3\u6784\u3002"
+  icon: {fileID: 0}
+  talismanToAdd: {fileID: 0}
+  formationModifierType: 4
+  buildModifierType: 0
+  modifierValue: 0
+  helpfulAgainstTags: 020000000300000004000000090000000a000000
+  relatedFunctionTags: 0900000008000000
+  baseWeight: 8
