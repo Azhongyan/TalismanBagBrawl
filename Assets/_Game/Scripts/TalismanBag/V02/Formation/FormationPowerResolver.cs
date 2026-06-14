@@ -5,6 +5,7 @@ using TalismanBag.Items;
 using TalismanBag.UI;
 using TalismanBag.V02.Rewards;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace TalismanBag.V02.Formation
 {
@@ -18,6 +19,8 @@ namespace TalismanBag.V02.Formation
         [SerializeField] private V02RunModifierState runModifierState;
 
         public event Action PowerStatesChanged;
+
+        private bool hasDiscoveredSlotViews;
 
         public Vector2Int FormationEyePosition => formationEyePosition;
         public float WeakCooldownMultiplier => weakCooldownMultiplier;
@@ -63,6 +66,7 @@ namespace TalismanBag.V02.Formation
 
             grid = bagGrid;
             slotViews = slots;
+            hasDiscoveredSlotViews = false;
 
             if (isActiveAndEnabled && grid != null)
             {
@@ -95,6 +99,10 @@ namespace TalismanBag.V02.Formation
             {
                 return;
             }
+
+            EnsureSlotViewsCurrent();
+            NormalizeSlotGridPositions();
+            EnsureGridCoversSlotViews();
 
             List<TalismanItemRuntime> placedItems = grid.GetAllPlacedItems();
             List<Vector2Int> spiritStonePositions = new();
@@ -221,6 +229,221 @@ namespace TalismanBag.V02.Formation
         private List<TalismanItemRuntime> GetPlacedItems()
         {
             return grid != null ? grid.GetAllPlacedItems() : new List<TalismanItemRuntime>();
+        }
+
+        private void EnsureSlotViewsCurrent()
+        {
+            if (hasDiscoveredSlotViews && SlotViewsCoverKnownBounds(slotViews))
+            {
+                return;
+            }
+
+            TalismanGridSlotView[] discovered = FindObjectsOfType<TalismanGridSlotView>(true);
+            if (discovered == null || discovered.Length == 0)
+            {
+                hasDiscoveredSlotViews = true;
+                return;
+            }
+
+            List<TalismanGridSlotView> matchingSlots = new();
+            foreach (TalismanGridSlotView slotView in discovered)
+            {
+                if (slotView == null)
+                {
+                    continue;
+                }
+
+                if (slotView.Grid == null || slotView.Grid == grid)
+                {
+                    matchingSlots.Add(slotView);
+                }
+            }
+
+            if (matchingSlots.Count > CountSlots(slotViews) || !SlotViewsCoverKnownBounds(slotViews))
+            {
+                slotViews = matchingSlots.ToArray();
+            }
+
+            hasDiscoveredSlotViews = true;
+        }
+
+        private bool SlotViewsCoverKnownBounds(TalismanGridSlotView[] slots)
+        {
+            if (slots == null || slots.Length == 0)
+            {
+                return false;
+            }
+
+            int maxX = -1;
+            int maxY = -1;
+            foreach (TalismanGridSlotView slotView in slots)
+            {
+                if (slotView == null)
+                {
+                    continue;
+                }
+
+                Vector2Int position = slotView.GridPosition;
+                maxX = Mathf.Max(maxX, position.x);
+                maxY = Mathf.Max(maxY, position.y);
+            }
+
+            return grid == null || maxX + 1 >= grid.Width && maxY + 1 >= grid.Height;
+        }
+
+        private static int CountSlots(TalismanGridSlotView[] slots)
+        {
+            if (slots == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            foreach (TalismanGridSlotView slotView in slots)
+            {
+                if (slotView != null)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private void EnsureGridCoversSlotViews()
+        {
+            if (grid == null || slotViews == null)
+            {
+                return;
+            }
+
+            int requiredWidth = 0;
+            int requiredHeight = 0;
+            foreach (TalismanGridSlotView slotView in slotViews)
+            {
+                if (slotView == null)
+                {
+                    continue;
+                }
+
+                Vector2Int position = slotView.GridPosition;
+                requiredWidth = Mathf.Max(requiredWidth, position.x + 1);
+                requiredHeight = Mathf.Max(requiredHeight, position.y + 1);
+            }
+
+            if (requiredWidth > 0 && requiredHeight > 0)
+            {
+                grid.EnsureSize(requiredWidth, requiredHeight, false);
+            }
+        }
+
+        private void NormalizeSlotGridPositions()
+        {
+            if (grid == null || slotViews == null || slotViews.Length == 0)
+            {
+                return;
+            }
+
+            Dictionary<Transform, List<TalismanGridSlotView>> slotsByParent = new();
+            foreach (TalismanGridSlotView slotView in slotViews)
+            {
+                if (slotView == null || slotView.transform.parent == null)
+                {
+                    continue;
+                }
+
+                Transform parent = slotView.transform.parent;
+                if (!slotsByParent.TryGetValue(parent, out List<TalismanGridSlotView> group))
+                {
+                    group = new List<TalismanGridSlotView>();
+                    slotsByParent[parent] = group;
+                }
+
+                group.Add(slotView);
+            }
+
+            Transform gridParent = null;
+            List<TalismanGridSlotView> gridSlots = null;
+            foreach (KeyValuePair<Transform, List<TalismanGridSlotView>> pair in slotsByParent)
+            {
+                if (gridSlots == null || pair.Value.Count > gridSlots.Count)
+                {
+                    gridParent = pair.Key;
+                    gridSlots = pair.Value;
+                }
+            }
+
+            if (gridParent == null || gridSlots == null || gridSlots.Count == 0)
+            {
+                return;
+            }
+
+            gridSlots.Sort((left, right) => left.transform.GetSiblingIndex().CompareTo(right.transform.GetSiblingIndex()));
+
+            int columns = Mathf.Max(1, grid.Width);
+            int rows = Mathf.Max(1, grid.Height);
+            GridLayoutGroup layout = gridParent.GetComponent<GridLayoutGroup>();
+            if (layout != null)
+            {
+                if (layout.constraint == GridLayoutGroup.Constraint.FixedColumnCount)
+                {
+                    columns = Mathf.Max(1, layout.constraintCount);
+                    rows = Mathf.Max(rows, Mathf.CeilToInt(gridSlots.Count / (float)columns));
+                }
+                else if (layout.constraint == GridLayoutGroup.Constraint.FixedRowCount)
+                {
+                    rows = Mathf.Max(1, layout.constraintCount);
+                    columns = Mathf.Max(columns, Mathf.CeilToInt(gridSlots.Count / (float)rows));
+                }
+            }
+
+            if (columns <= 0 || rows <= 0)
+            {
+                return;
+            }
+
+            grid.EnsureSize(columns, rows, false);
+
+            for (int i = 0; i < gridSlots.Count; i++)
+            {
+                TalismanGridSlotView slotView = gridSlots[i];
+                if (slotView == null)
+                {
+                    continue;
+                }
+
+                int rawColumn;
+                int rawRow;
+                if (layout != null && layout.startAxis == GridLayoutGroup.Axis.Vertical)
+                {
+                    rawColumn = i / rows;
+                    rawRow = i % rows;
+                }
+                else
+                {
+                    rawColumn = i % columns;
+                    rawRow = i / columns;
+                }
+
+                int visualColumn = rawColumn;
+                int visualRowFromTop = rawRow;
+                GridLayoutGroup.Corner startCorner = layout != null ? layout.startCorner : GridLayoutGroup.Corner.UpperLeft;
+                if (startCorner == GridLayoutGroup.Corner.UpperRight || startCorner == GridLayoutGroup.Corner.LowerRight)
+                {
+                    visualColumn = columns - 1 - rawColumn;
+                }
+
+                if (startCorner == GridLayoutGroup.Corner.LowerLeft || startCorner == GridLayoutGroup.Corner.LowerRight)
+                {
+                    visualRowFromTop = rows - 1 - rawRow;
+                }
+
+                Vector2Int position = new(Mathf.Clamp(visualColumn, 0, columns - 1), Mathf.Clamp(rows - 1 - visualRowFromTop, 0, rows - 1));
+                if (slotView.Grid != grid || slotView.GridPosition != position)
+                {
+                    slotView.Initialize(grid, position);
+                }
+            }
         }
 
         private void RefreshSlotViews(List<Vector2Int> spiritStonePositions)

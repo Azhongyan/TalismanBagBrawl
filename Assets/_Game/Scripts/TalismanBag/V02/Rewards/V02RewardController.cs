@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TalismanBag.Enemies;
 using TalismanBag.Inventory;
+using TalismanBag.Items;
 using TalismanBag.V02.EnemySkills;
 using TalismanBag.V02.Formation;
 using TalismanBag.V02.Tags;
@@ -13,6 +14,41 @@ namespace TalismanBag.V02.Rewards
 {
     public sealed class V02RewardController : MonoBehaviour
     {
+        private const string FireTalismanId = "fire_talisman_basic";
+        private const string ShieldTalismanId = "shield_talisman_basic";
+        private const string SpiritStoneId = "spirit_stone_basic";
+        private const string QiPillId = "qi_pill_basic";
+        private const string ThunderTalismanId = "thunder_talisman_basic";
+        private const string SwordPillId = "sword_pill_basic";
+        private const string ChainThunderId = "chain_thunder_talisman_basic";
+        private const string PurifyTalismanId = "purify_talisman_basic";
+        private const string SoulSuppressId = "soul_suppress_talisman_basic";
+        private const string SealId = "seal_basic";
+
+        private const string RewardAddThunder = "reward_add_thunder_talisman";
+        private const string RewardAddSword = "reward_add_sword_pill";
+        private const string RewardAddChainThunder = "reward_add_chain_thunder";
+        private const string RewardAddPurify = "reward_add_purify_talisman";
+        private const string RewardAddSoulSuppress = "reward_add_soul_suppress";
+        private const string RewardAddSpiritStone = "reward_add_spirit_stone";
+        private const string RewardAddSeal = "reward_add_seal";
+        private const string RewardAddQiPill = "reward_add_qi_pill";
+        private const string RewardAddBackupOutput = "reward_add_backup_output_talisman";
+        private const string RewardFireBurn = "reward_fire_burn_plus_one";
+        private const string RewardShieldBoost = "reward_shield_amount_boost";
+        private const string RewardCleanseCooldown = "reward_cleanse_cooldown_reduction";
+        private const string RewardEyeCore = "reward_upgrade_eye_core_nine_grid";
+        private const string RewardThunderBoost = "reward_thunder_shieldbreak_boost";
+        private const string RewardChainThunderBoost = "reward_chain_thunder_damage_boost";
+
+        private static readonly string[] StarterItemIds =
+        {
+            FireTalismanId,
+            ShieldTalismanId,
+            SpiritStoneId,
+            QiPillId
+        };
+
         [SerializeField] public V02RewardPoolConfig rewardPool;
         [SerializeField] public PlayerTalismanInventory inventory;
         [SerializeField] public FormationPowerResolver formationPowerResolver;
@@ -23,37 +59,59 @@ namespace TalismanBag.V02.Rewards
         [SerializeField] public int optionCount = 3;
 
         private EnemyDefinition currentNextEnemy;
+        private int currentCompletedRoundNumber = 1;
         private readonly List<V02RewardDefinition> currentOptions = new();
+        private readonly Dictionary<string, V02RewardDefinition> runtimeRewards = new();
 
         public event Action<V02RewardDefinition> RewardChosen;
 
         public EnemyDefinition CurrentNextEnemy => currentNextEnemy;
 
+        public void StartNewRewardRun()
+        {
+            EnsureRuntimeRewards();
+            inventoryAdapter?.ResetTalismansByIds(StarterItemIds);
+            currentCompletedRoundNumber = 1;
+            currentOptions.Clear();
+            rewardPanel?.Hide();
+        }
+
         public void OpenRewardSelection(EnemyDefinition nextEnemy)
         {
+            OpenRewardSelection(nextEnemy, currentCompletedRoundNumber);
+        }
+
+        public void OpenRewardSelection(EnemyDefinition nextEnemy, int completedRoundNumber)
+        {
             currentNextEnemy = nextEnemy;
+            currentCompletedRoundNumber = Mathf.Clamp(completedRoundNumber, 1, 6);
             currentOptions.Clear();
-            currentOptions.AddRange(GenerateRewardOptions(nextEnemy));
+            currentOptions.AddRange(GenerateRewardOptions(nextEnemy, currentCompletedRoundNumber));
             rewardPanel?.Show(currentOptions, nextEnemy, ChooseReward);
         }
 
         public List<V02RewardDefinition> GenerateRewardOptions(EnemyDefinition nextEnemy)
         {
+            return GenerateRewardOptions(nextEnemy, currentCompletedRoundNumber);
+        }
+
+        public List<V02RewardDefinition> GenerateRewardOptions(EnemyDefinition nextEnemy, int completedRoundNumber)
+        {
+            EnsureRuntimeRewards();
+
             List<V02RewardDefinition> result = new();
-            if (rewardPool == null || rewardPool.rewards == null || rewardPool.rewards.Count == 0)
+            List<V02RewardDefinition> candidates = BuildStageCandidates(completedRoundNumber);
+            int targetCount = Mathf.Max(1, optionCount);
+            while (result.Count < targetCount && candidates.Count > 0)
             {
-                return result;
-            }
-
-            TryAddWeighted(result, nextEnemy, reward => reward.rewardType == V02RewardType.NewTalisman);
-            TryAddWeighted(result, nextEnemy, reward => reward.rewardType == V02RewardType.FormationModifier || reward.rewardType == V02RewardType.BuildModifier);
-
-            while (result.Count < Mathf.Max(1, optionCount))
-            {
-                if (!TryAddWeighted(result, nextEnemy, _ => true))
+                V02RewardDefinition selected = PickWeighted(candidates, nextEnemy);
+                if (selected == null)
                 {
                     break;
                 }
+
+                result.Add(selected);
+                candidates.Remove(selected);
             }
 
             return result;
@@ -138,6 +196,69 @@ namespace TalismanBag.V02.Rewards
             return false;
         }
 
+        private List<V02RewardDefinition> BuildStageCandidates(int completedRoundNumber)
+        {
+            List<V02RewardDefinition> candidates = new();
+            foreach (string rewardId in GetStageRewardIds(completedRoundNumber))
+            {
+                V02RewardDefinition reward = FindReward(rewardId);
+                if (reward == null || ContainsReward(candidates, reward.rewardId))
+                {
+                    continue;
+                }
+
+                if (runModifierState != null &&
+                    reward.rewardType != V02RewardType.NewTalisman &&
+                    runModifierState.IsRewardAlreadyApplied(reward))
+                {
+                    continue;
+                }
+
+                candidates.Add(reward);
+            }
+
+            return candidates;
+        }
+
+        private static IEnumerable<string> GetStageRewardIds(int completedRoundNumber)
+        {
+            switch (Mathf.Clamp(completedRoundNumber, 1, 6))
+            {
+                case 1:
+                    yield return RewardAddThunder;
+                    yield return RewardAddSword;
+                    yield return RewardAddSeal;
+                    break;
+                case 2:
+                    yield return RewardAddChainThunder;
+                    yield return RewardFireBurn;
+                    yield return RewardAddSpiritStone;
+                    break;
+                case 3:
+                    yield return RewardAddPurify;
+                    yield return RewardShieldBoost;
+                    yield return RewardAddQiPill;
+                    break;
+                case 4:
+                    yield return RewardAddSoulSuppress;
+                    yield return RewardAddSpiritStone;
+                    yield return RewardAddSeal;
+                    break;
+                case 5:
+                    yield return RewardCleanseCooldown;
+                    yield return RewardAddBackupOutput;
+                    yield return RewardEyeCore;
+                    break;
+                case 6:
+                    yield return RewardThunderBoost;
+                    yield return RewardChainThunderBoost;
+                    yield return RewardShieldBoost;
+                    yield return RewardAddSpiritStone;
+                    yield return RewardAddSword;
+                    break;
+            }
+        }
+
         private void ApplyReward(V02RewardDefinition reward)
         {
             switch (reward.rewardType)
@@ -154,7 +275,7 @@ namespace TalismanBag.V02.Rewards
                             inventory?.AddItem(reward.talismanToAdd);
                         }
 
-                        battleLogUI?.AddLog($"获得新符箓：{reward.talismanToAdd.displayName}");
+                        battleLogUI?.AddLog($"获得符箓：{reward.talismanToAdd.displayName}");
                     }
                     break;
                 case V02RewardType.FormationModifier:
@@ -166,37 +287,135 @@ namespace TalismanBag.V02.Rewards
             }
         }
 
-        private bool TryAddWeighted(List<V02RewardDefinition> result, EnemyDefinition nextEnemy, Predicate<V02RewardDefinition> predicate)
+        private V02RewardDefinition FindReward(string rewardId)
         {
-            List<V02RewardDefinition> candidates = new();
+            if (string.IsNullOrWhiteSpace(rewardId))
+            {
+                return null;
+            }
+
+            if (runtimeRewards.TryGetValue(rewardId, out V02RewardDefinition runtimeReward))
+            {
+                return runtimeReward;
+            }
+
+            if (rewardPool?.rewards == null)
+            {
+                return null;
+            }
+
             foreach (V02RewardDefinition reward in rewardPool.rewards)
             {
-                if (reward == null || !predicate(reward) || ContainsReward(result, reward.rewardId))
+                if (reward != null && reward.rewardId == rewardId)
                 {
-                    continue;
+                    return reward;
                 }
-
-                if (runModifierState != null && reward.rewardType != V02RewardType.NewTalisman && runModifierState.IsRewardAlreadyApplied(reward))
-                {
-                    continue;
-                }
-
-                candidates.Add(reward);
             }
 
-            if (candidates.Count == 0)
+            return null;
+        }
+
+        private void EnsureRuntimeRewards()
+        {
+            AddRuntimeNewTalisman(
+                RewardAddSeal,
+                "获得法印",
+                "获得 1 个法印，用来强化相邻符箓。",
+                SealId,
+                Array.Empty<CounterTag>(),
+                new[] { FunctionTag.Enhance },
+                10);
+
+            AddRuntimeNewTalisman(
+                RewardAddQiPill,
+                "获得丹药",
+                "获得 1 颗丹药，用来补充续航。",
+                QiPillId,
+                new[] { CounterTag.Poison, CounterTag.Burn },
+                new[] { FunctionTag.Heal },
+                10);
+
+            AddRuntimeNewTalisman(
+                RewardAddBackupOutput,
+                "备用输出符",
+                "获得 1 张火符，用来补充基础单体输出。",
+                FireTalismanId,
+                new[] { CounterTag.Group },
+                new[] { FunctionTag.Damage, FunctionTag.Burn },
+                10);
+
+            AddRuntimeBuildModifier(
+                RewardChainThunderBoost,
+                "连锁雷符强化",
+                "连锁雷符伤害提高 30%。",
+                V02BuildModifierType.ChainThunderDamageBoost,
+                0.3f,
+                new[] { CounterTag.Group, CounterTag.Summon },
+                new[] { FunctionTag.Chain, FunctionTag.AoE },
+                10);
+        }
+
+        private void AddRuntimeNewTalisman(
+            string rewardId,
+            string displayName,
+            string shortDescription,
+            string itemId,
+            CounterTag[] helpfulTags,
+            FunctionTag[] functionTags,
+            int baseWeight)
+        {
+            if (runtimeRewards.ContainsKey(rewardId))
             {
-                return false;
+                return;
             }
 
-            V02RewardDefinition selected = PickWeighted(candidates, nextEnemy);
-            if (selected == null)
+            TalismanItemDefinition talisman = inventoryAdapter != null ? inventoryAdapter.FindDefinitionById(itemId) : null;
+            if (talisman == null)
             {
-                return false;
+                return;
             }
 
-            result.Add(selected);
-            return true;
+            V02RewardDefinition reward = CreateRuntimeReward(rewardId, displayName, shortDescription, V02RewardType.NewTalisman, baseWeight);
+            reward.talismanToAdd = talisman;
+            reward.helpfulAgainstTags.AddRange(helpfulTags);
+            reward.relatedFunctionTags.AddRange(functionTags);
+            runtimeRewards[rewardId] = reward;
+        }
+
+        private void AddRuntimeBuildModifier(
+            string rewardId,
+            string displayName,
+            string shortDescription,
+            V02BuildModifierType modifierType,
+            float modifierValue,
+            CounterTag[] helpfulTags,
+            FunctionTag[] functionTags,
+            int baseWeight)
+        {
+            if (runtimeRewards.ContainsKey(rewardId))
+            {
+                return;
+            }
+
+            V02RewardDefinition reward = CreateRuntimeReward(rewardId, displayName, shortDescription, V02RewardType.BuildModifier, baseWeight);
+            reward.buildModifierType = modifierType;
+            reward.modifierValue = modifierValue;
+            reward.helpfulAgainstTags.AddRange(helpfulTags);
+            reward.relatedFunctionTags.AddRange(functionTags);
+            runtimeRewards[rewardId] = reward;
+        }
+
+        private static V02RewardDefinition CreateRuntimeReward(string rewardId, string displayName, string shortDescription, V02RewardType rewardType, int baseWeight)
+        {
+            V02RewardDefinition reward = ScriptableObject.CreateInstance<V02RewardDefinition>();
+            reward.hideFlags = HideFlags.DontSave;
+            reward.rewardId = rewardId;
+            reward.displayName = displayName;
+            reward.rewardType = rewardType;
+            reward.shortDescription = shortDescription;
+            reward.detailedDescription = shortDescription;
+            reward.baseWeight = Mathf.Max(1, baseWeight);
+            return reward;
         }
 
         private V02RewardDefinition PickWeighted(List<V02RewardDefinition> candidates, EnemyDefinition nextEnemy)
@@ -217,7 +436,7 @@ namespace TalismanBag.V02.Rewards
                 }
             }
 
-            return candidates[0];
+            return candidates.Count > 0 ? candidates[0] : null;
         }
 
         private static bool ContainsReward(List<V02RewardDefinition> rewards, string rewardId)

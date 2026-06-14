@@ -49,6 +49,7 @@ namespace TalismanBag.UI
         private DraggableTalismanItemView currentItemView;
 
         public Vector2Int GridPosition => gridPosition;
+        public TalismanBagGrid Grid => grid;
         public RectTransform ItemAnchor => itemAnchor;
         public DraggableTalismanItemView CurrentItemView => currentItemView;
         public bool CanAcceptItem => !isFormationEye;
@@ -272,6 +273,7 @@ namespace TalismanBag.UI
 
         private void RefreshPowerBadge()
         {
+            EnsurePowerBadge();
             if (powerBadge == null)
             {
                 return;
@@ -291,6 +293,46 @@ namespace TalismanBag.UI
                 FormationPowerState.WeakPowered => "\u5f31",
                 _ => "\u672a"
             };
+        }
+
+        private void EnsurePowerBadge()
+        {
+            if (powerBadge != null)
+            {
+                return;
+            }
+
+            GameObject badgeObject = new("PowerBadge_Runtime", typeof(RectTransform), typeof(Image));
+            badgeObject.transform.SetParent(transform, false);
+            RectTransform badgeRect = badgeObject.GetComponent<RectTransform>();
+            badgeRect.anchorMin = Vector2.one;
+            badgeRect.anchorMax = Vector2.one;
+            badgeRect.pivot = Vector2.one;
+            badgeRect.anchoredPosition = new Vector2(-8f, -8f);
+            badgeRect.sizeDelta = new Vector2(34f, 34f);
+
+            Image badgeImage = badgeObject.GetComponent<Image>();
+            badgeImage.color = new Color(0.78f, 0.94f, 1f, 0.95f);
+            badgeImage.raycastTarget = false;
+            powerBadge = badgeObject;
+
+            GameObject textObject = new("Text", typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(badgeObject.transform, false);
+            RectTransform textRect = textObject.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.pivot = new Vector2(0.5f, 0.5f);
+            textRect.anchoredPosition = Vector2.zero;
+            textRect.sizeDelta = Vector2.zero;
+
+            powerBadgeText = textObject.GetComponent<Text>();
+            powerBadgeText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            powerBadgeText.fontSize = 16;
+            powerBadgeText.fontStyle = FontStyle.Bold;
+            powerBadgeText.alignment = TextAnchor.MiddleCenter;
+            powerBadgeText.color = new Color(0.05f, 0.12f, 0.14f);
+            powerBadgeText.raycastTarget = false;
+            badgeObject.SetActive(false);
         }
 
         private void SetCurrentItemAlpha()

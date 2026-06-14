@@ -9,9 +9,10 @@ using UnityEngine.UI;
 
 namespace TalismanBag.UI
 {
-    public sealed class DraggableTalismanItemView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
+    public sealed class DraggableTalismanItemView : MonoBehaviour, IInitializePotentialDragHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
     {
         public static event Action<DraggableTalismanItemView> ItemClicked;
+        public static event Action<DraggableTalismanItemView> ItemDragStarted;
 
         [SerializeField] private TalismanItemDefinition definition;
         [SerializeField] private TalismanBagGrid grid;
@@ -37,7 +38,11 @@ namespace TalismanBag.UI
         private bool placedDuringDrag;
         private bool dragBlocked;
         private bool draggingFromGrid;
+        private bool hasDragWorldPointerOffset;
+        private Vector3 dragWorldPointerOffset;
+        private float suppressClickUntilTime;
         private Coroutine flashRoutine;
+        private Outline selectionOutline;
 
         public TalismanItemRuntime RuntimeItem => runtimeItem;
         public TalismanItemDefinition Definition => definition;
@@ -102,6 +107,11 @@ namespace TalismanBag.UI
             RefreshLabel();
         }
 
+        public void OnInitializePotentialDrag(PointerEventData eventData)
+        {
+            eventData.useDragThreshold = false;
+        }
+
         public void CaptureHome()
         {
             if (rectTransform == null)
@@ -127,6 +137,7 @@ namespace TalismanBag.UI
             }
 
             placedDuringDrag = false;
+            ItemDragStarted?.Invoke(this);
             originalParent = transform.parent;
             originalAnchoredPosition = rectTransform.anchoredPosition;
             originalSlot = currentSlot;
@@ -144,6 +155,7 @@ namespace TalismanBag.UI
             }
 
             transform.SetParent(rootCanvas.transform, true);
+            CaptureDragPointerOffset(eventData);
             if (canvasGroup != null)
             {
                 canvasGroup.blocksRaycasts = false;
@@ -191,12 +203,65 @@ namespace TalismanBag.UI
             }
 
             rectTransform.localScale = homeScale;
+            hasDragWorldPointerOffset = false;
+            suppressClickUntilTime = Time.unscaledTime + 0.15f;
             draggingFromGrid = false;
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
+            if (Time.unscaledTime < suppressClickUntilTime)
+            {
+                return;
+            }
+
             ItemClicked?.Invoke(this);
+        }
+
+        public void SetSelectedVisual(bool selected)
+        {
+            SetSelectedVisual(selected, new Color(1f, 0.82f, 0.28f, 1f), new Vector2(6f, -6f));
+        }
+
+        public void SetSelectedVisual(bool selected, Color outlineColor, Vector2 effectDistance)
+        {
+            if (!selected)
+            {
+                if (selectionOutline != null)
+                {
+                    selectionOutline.enabled = false;
+                }
+
+                return;
+            }
+
+            Outline outline = EnsureSelectionOutline();
+            if (outline == null)
+            {
+                return;
+            }
+
+            outline.effectColor = outlineColor;
+            outline.effectDistance = effectDistance;
+            outline.useGraphicAlpha = false;
+            outline.enabled = true;
+        }
+
+        private Outline EnsureSelectionOutline()
+        {
+            if (selectionOutline != null)
+            {
+                return selectionOutline;
+            }
+
+            GameObject outlineTarget = background != null ? background.gameObject : gameObject;
+            selectionOutline = outlineTarget.GetComponent<Outline>();
+            if (selectionOutline == null)
+            {
+                selectionOutline = outlineTarget.AddComponent<Outline>();
+            }
+
+            return selectionOutline;
         }
 
         public bool TryPlaceOnSlot(TalismanGridSlotView slot)
@@ -223,6 +288,7 @@ namespace TalismanBag.UI
 
             AttachToSlot(slot);
             placedDuringDrag = true;
+            grid.NotifyChanged();
             return true;
         }
 
@@ -303,6 +369,51 @@ namespace TalismanBag.UI
             rectTransform.localScale = homeScale;
         }
 
+
+        private void CaptureDragPointerOffset(PointerEventData eventData)
+        {
+            hasDragWorldPointerOffset = false;
+            if (rootCanvas == null || rectTransform == null)
+            {
+                return;
+            }
+
+            RectTransform canvasRect = rootCanvas.transform as RectTransform;
+            if (canvasRect == null)
+            {
+                return;
+            }
+
+            if (TryGetPointerWorldPosition(canvasRect, eventData.position, out Vector3 pointerWorldPosition))
+            {
+                dragWorldPointerOffset = rectTransform.position - pointerWorldPosition;
+                hasDragWorldPointerOffset = true;
+            }
+        }
+
+        private bool TryGetPointerWorldPosition(RectTransform canvasRect, Vector2 screenPosition, out Vector3 worldPosition)
+        {
+            Camera eventCamera = rootCanvas != null && rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas != null ? rootCanvas.worldCamera : null;
+            return RectTransformUtility.ScreenPointToWorldPointInRectangle(canvasRect, screenPosition, eventCamera, out worldPosition);
+        }
+
+        private Vector3 GetDragScreenOffsetWorldDelta(RectTransform canvasRect, PointerEventData eventData)
+        {
+            Vector2 effectiveOffset = eventData.pointerId >= 0 ? dragScreenOffset : Vector2.zero;
+            if (effectiveOffset == Vector2.zero)
+            {
+                return Vector3.zero;
+            }
+
+            if (!TryGetPointerWorldPosition(canvasRect, eventData.position, out Vector3 baseWorld) ||
+                !TryGetPointerWorldPosition(canvasRect, eventData.position + effectiveOffset, out Vector3 offsetWorld))
+            {
+                return Vector3.zero;
+            }
+
+            return offsetWorld - baseWorld;
+        }
+
         private void MoveToPointer(PointerEventData eventData)
         {
             if (rootCanvas == null || rectTransform == null)
@@ -316,10 +427,10 @@ namespace TalismanBag.UI
                 return;
             }
 
-            Camera eventCamera = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas.worldCamera;
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, eventData.position + dragScreenOffset, eventCamera, out Vector2 localPosition))
+            if (TryGetPointerWorldPosition(canvasRect, eventData.position, out Vector3 pointerWorldPosition))
             {
-                rectTransform.anchoredPosition = localPosition;
+                Vector3 preservedPointerOffset = hasDragWorldPointerOffset ? dragWorldPointerOffset : Vector3.zero;
+                rectTransform.position = pointerWorldPosition + preservedPointerOffset + GetDragScreenOffsetWorldDelta(canvasRect, eventData);
             }
         }
 

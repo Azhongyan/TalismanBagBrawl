@@ -47,6 +47,7 @@ namespace TalismanBag.Combat
         private const string PeachWoodId = "peach_wood_basic";
         private const string ExorcismBellId = "exorcism_bell_basic";
         private const string WaterTalismanId = "water_talisman_basic";
+        private const float DefaultWeakCooldownMultiplier = 1.35f;
 
         [Header("References")]
         [SerializeField] private TalismanBagGrid grid;
@@ -139,6 +140,8 @@ namespace TalismanBag.Combat
 
         private void Awake()
         {
+            EnsureFormationPowerResolver();
+
             startButton?.onClick.AddListener(StartBattle);
             resetButton?.onClick.AddListener(ResetBattle);
             autoPlaceButton?.onClick.AddListener(AutoMergeDuplicateLevelOneItems);
@@ -167,6 +170,8 @@ namespace TalismanBag.Combat
 
         private void Start()
         {
+            EnsureFormationPowerResolver();
+
             foreach (DraggableTalismanItemView view in itemViews)
             {
                 view?.CaptureHome();
@@ -197,6 +202,7 @@ namespace TalismanBag.Combat
             }
 
             float deltaTime = Time.deltaTime * (combatSpeedController != null ? combatSpeedController.CurrentSpeedMultiplier : 1f);
+            v02RunStatsTracker?.TickBattle(deltaTime);
             UpdateSeals(deltaTime);
             UpdateV02TemporaryDisables(deltaTime);
             UpdateItems(deltaTime);
@@ -284,7 +290,7 @@ namespace TalismanBag.Combat
             }
 
             ClearAllSeals();
-            formationPowerResolver?.RefreshPowerStates();
+            RefreshFormationPowerStates();
             v02RunStatsTracker?.CaptureBattleStart(formationPowerResolver, grid);
             battleBalanceLogger?.BeginBattle(currentRound, currentEnemy);
             state = TalismanCombatState.Fighting;
@@ -796,6 +802,12 @@ namespace TalismanBag.Combat
             }
 
             int damage = item.level >= 2 ? 22 : 14;
+            if (v02RunModifierState != null && v02RunModifierState.chainThunderDamageMultiplierBonus > 0f)
+            {
+                damage = Mathf.RoundToInt(damage * (1f + v02RunModifierState.chainThunderDamageMultiplierBonus));
+                Emit(BattleEventType.ComboActivated, BattleLogCategory.Combo, "[强化] 连锁雷符强化生效", item.definition.itemId, value: damage, screenPosition: GetItemPosition(item));
+            }
+
             DealDamage(item, damage, $"{GetRuntimeItemName(item)}引发连锁雷击，造成 {damage} 点雷伤害");
             return true;
         }
@@ -2037,7 +2049,7 @@ namespace TalismanBag.Combat
                 return;
             }
 
-            formationPowerResolver?.RefreshPowerStates();
+            RefreshFormationPowerStates();
             foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
             {
                 item.ResetForBattle(GetEffectiveCooldown(item));
@@ -2177,9 +2189,10 @@ namespace TalismanBag.Combat
                 cooldown *= bagExpansionController.GetCooldownMultiplier(item);
             }
 
-            if (formationPowerResolver != null)
+            FormationPowerState formationPowerState = GetCurrentFormationPowerState(item);
+            if (formationPowerState == FormationPowerState.WeakPowered)
             {
-                cooldown *= formationPowerResolver.GetCooldownMultiplier(item);
+                cooldown *= formationPowerResolver != null ? formationPowerResolver.WeakCooldownMultiplier : DefaultWeakCooldownMultiplier;
             }
 
             if (item.definition.itemId == "purify_talisman_basic")
@@ -2325,10 +2338,165 @@ namespace TalismanBag.Combat
 
         private void OnGridChanged()
         {
+            EnsureFormationPowerResolver();
             formationPowerResolver?.RefreshPowerStates();
+            SyncLiveFormationPowerStates();
             comboResolver?.RefreshCombos();
             RefreshSealHighlights();
             RefreshComboHighlights();
+        }
+
+        private void EnsureFormationPowerResolver()
+        {
+            if (grid == null || slotViews == null || slotViews.Length == 0)
+            {
+                return;
+            }
+
+            if (formationPowerResolver == null)
+            {
+                formationPowerResolver = GetComponent<FormationPowerResolver>();
+                if (formationPowerResolver == null)
+                {
+                    formationPowerResolver = gameObject.AddComponent<FormationPowerResolver>();
+                }
+            }
+
+            formationPowerResolver.Bind(grid, slotViews);
+            formationPowerResolver.BindRunModifierState(v02RunModifierState);
+        }
+
+        private void RefreshFormationPowerStates()
+        {
+            if (grid == null)
+            {
+                return;
+            }
+
+            EnsureFormationPowerResolver();
+            formationPowerResolver?.RefreshPowerStates();
+            SyncLiveFormationPowerStates();
+        }
+
+        private void SyncLiveFormationPowerStates()
+        {
+            if (grid == null)
+            {
+                return;
+            }
+
+            foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
+            {
+                if (item?.definition == null)
+                {
+                    continue;
+                }
+
+                item.powerState = GetCurrentFormationPowerState(item);
+            }
+        }
+
+        private FormationPowerState GetCurrentFormationPowerState(TalismanItemRuntime item)
+        {
+            if (item?.definition == null)
+            {
+                return FormationPowerState.Unpowered;
+            }
+
+            if (item.definition.itemId == SpiritStoneId)
+            {
+                return FormationPowerState.Powered;
+            }
+
+            return ResolveLiveFormationPowerState(item.gridPosition);
+        }
+
+        private FormationPowerState ResolveLiveFormationPowerState(Vector2Int position)
+        {
+            if (grid == null)
+            {
+                return FormationPowerState.Unpowered;
+            }
+
+            List<Vector2Int> spiritStonePositions = new();
+            foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
+            {
+                if (item?.definition != null && item.definition.itemId == SpiritStoneId)
+                {
+                    spiritStonePositions.Add(item.gridPosition);
+                }
+            }
+
+            foreach (Vector2Int source in spiritStonePositions)
+            {
+                if (Mathf.Abs(position.x - source.x) <= 1 && Mathf.Abs(position.y - source.y) <= 1)
+                {
+                    return FormationPowerState.Powered;
+                }
+            }
+
+            V02RunModifierState modifierState = v02RunModifierState != null
+                ? v02RunModifierState
+                : formationPowerResolver != null ? formationPowerResolver.RunModifierState : null;
+            if (modifierState != null &&
+                modifierState.spiritLinkBetweenStonesUnlocked &&
+                IsOnLiveSpiritLink(position, spiritStonePositions))
+            {
+                return FormationPowerState.Powered;
+            }
+
+            Vector2Int eyePosition = formationPowerResolver != null ? formationPowerResolver.FormationEyePosition : new Vector2Int(2, 1);
+            int eyeDx = Mathf.Abs(position.x - eyePosition.x);
+            int eyeDy = Mathf.Abs(position.y - eyePosition.y);
+            if (modifierState != null && modifierState.eyeCoreNineGridUnlocked && eyeDx <= 1 && eyeDy <= 1)
+            {
+                return FormationPowerState.Powered;
+            }
+
+            if (eyeDx + eyeDy == 1)
+            {
+                return FormationPowerState.Powered;
+            }
+
+            if (eyeDx == 1 && eyeDy == 1)
+            {
+                return FormationPowerState.WeakPowered;
+            }
+
+            return FormationPowerState.Unpowered;
+        }
+
+        private static bool IsOnLiveSpiritLink(Vector2Int position, List<Vector2Int> spiritStonePositions)
+        {
+            if (spiritStonePositions == null || spiritStonePositions.Count < 2)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < spiritStonePositions.Count; i++)
+            {
+                for (int j = i + 1; j < spiritStonePositions.Count; j++)
+                {
+                    Vector2Int a = spiritStonePositions[i];
+                    Vector2Int b = spiritStonePositions[j];
+                    if (a.x == b.x && position.x == a.x && IsBetweenLiveSpiritLink(position.y, a.y, b.y))
+                    {
+                        return true;
+                    }
+
+                    if (a.y == b.y && position.y == a.y && IsBetweenLiveSpiritLink(position.x, a.x, b.x))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsBetweenLiveSpiritLink(int value, int a, int b)
+        {
+            return value >= Mathf.Min(a, b) && value <= Mathf.Max(a, b);
         }
 
         private void OnCombosChanged()
@@ -2654,12 +2822,12 @@ namespace TalismanBag.Combat
 
         private bool IsFormationItemActive(TalismanItemRuntime item)
         {
-            if (formationPowerResolver == null || item?.definition == null)
+            if (item?.definition == null)
             {
                 return true;
             }
 
-            return !item.definition.requiresFormationPower || formationPowerResolver.IsItemPowered(item);
+            return !item.definition.requiresFormationPower || GetCurrentFormationPowerState(item) != FormationPowerState.Unpowered;
         }
 
         private bool HasActiveAdjacentItemId(Vector2Int position, string itemId)

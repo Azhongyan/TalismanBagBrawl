@@ -73,6 +73,7 @@ namespace TalismanBag.V02.Run
             failureTracker?.ResetTracker();
             runStatsTracker?.ResetStats();
             combatController?.ResetRunStats();
+            rewardController?.StartNewRewardRun();
             runResultPanel?.Hide();
             EnterPrep();
         }
@@ -141,7 +142,7 @@ namespace TalismanBag.V02.Run
             }
 
             SetText(prepHintText, $"\u5956\u52b1\u9636\u6bb5\uff1a\u4e0b\u4e00\u5173 {nextEnemy.displayName}");
-            rewardController?.OpenRewardSelection(nextEnemy);
+            rewardController?.OpenRewardSelection(nextEnemy, CurrentRoundNumber);
         }
 
         public void OnRewardSelected(V02RewardDefinition reward)

@@ -32,6 +32,67 @@ namespace TalismanBag.Grid
             GridChanged?.Invoke();
         }
 
+        public void NotifyChanged()
+        {
+            GridChanged?.Invoke();
+        }
+
+        public void EnsureSize(int gridWidth, int gridHeight, bool notify = true)
+        {
+            int targetWidth = Mathf.Max(width, Mathf.Max(1, gridWidth));
+            int targetHeight = Mathf.Max(height, Mathf.Max(1, gridHeight));
+            if (cells != null && targetWidth == width && targetHeight == height)
+            {
+                return;
+            }
+
+            TalismanItemRuntime[,] previousCells = cells;
+            int previousWidth = width;
+            int previousHeight = height;
+            width = targetWidth;
+            height = targetHeight;
+            cells = new TalismanItemRuntime[width, height];
+
+            if (previousCells != null)
+            {
+                int copyWidth = Mathf.Min(previousWidth, width);
+                int copyHeight = Mathf.Min(previousHeight, height);
+                for (int x = 0; x < copyWidth; x++)
+                {
+                    for (int y = 0; y < copyHeight; y++)
+                    {
+                        cells[x, y] = previousCells[x, y];
+                    }
+                }
+            }
+
+            List<TalismanItemRuntime> previousPlacedItems = new(placedItems);
+            placedItems.Clear();
+            foreach (TalismanItemRuntime item in previousPlacedItems)
+            {
+                if (item == null || !item.isPlaced || !IsInside(item.gridPosition))
+                {
+                    continue;
+                }
+
+                Vector2Int position = item.gridPosition;
+                if (cells[position.x, position.y] == null)
+                {
+                    cells[position.x, position.y] = item;
+                }
+
+                if (!placedItems.Contains(item))
+                {
+                    placedItems.Add(item);
+                }
+            }
+
+            if (notify)
+            {
+                GridChanged?.Invoke();
+            }
+        }
+
         public bool CanPlaceItem(Vector2Int position)
         {
             return IsInside(position) && cells[position.x, position.y] == null;

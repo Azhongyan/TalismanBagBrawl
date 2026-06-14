@@ -14,6 +14,7 @@ namespace TalismanBag.V02.Rewards
         public float swordCritChanceBonus;
         public float shieldAmountMultiplierBonus;
         public float cleanseCooldownReduction;
+        public float chainThunderDamageMultiplierBonus;
 
         public event Action ModifiersChanged;
 
@@ -25,7 +26,8 @@ namespace TalismanBag.V02.Rewards
             thunderShieldBreakMultiplierBonus > 0f ||
             swordCritChanceBonus > 0f ||
             shieldAmountMultiplierBonus > 0f ||
-            cleanseCooldownReduction > 0f;
+            cleanseCooldownReduction > 0f ||
+            chainThunderDamageMultiplierBonus > 0f;
 
         public void ResetState()
         {
@@ -37,6 +39,7 @@ namespace TalismanBag.V02.Rewards
             swordCritChanceBonus = 0f;
             shieldAmountMultiplierBonus = 0f;
             cleanseCooldownReduction = 0f;
+            chainThunderDamageMultiplierBonus = 0f;
             ModifiersChanged?.Invoke();
         }
 
@@ -83,6 +86,7 @@ namespace TalismanBag.V02.Rewards
                     V02BuildModifierType.SwordCritBoost => swordCritChanceBonus > 0f,
                     V02BuildModifierType.ShieldAmountBoost => shieldAmountMultiplierBonus > 0f,
                     V02BuildModifierType.CleanseCooldownReduction => cleanseCooldownReduction > 0f,
+                    V02BuildModifierType.ChainThunderDamageBoost => chainThunderDamageMultiplierBonus > 0f,
                     _ => false
                 },
                 _ => false
@@ -139,6 +143,9 @@ namespace TalismanBag.V02.Rewards
                     break;
                 case V02BuildModifierType.CleanseCooldownReduction:
                     cleanseCooldownReduction = Mathf.Max(cleanseCooldownReduction, value > 0f ? value : 0.25f);
+                    break;
+                case V02BuildModifierType.ChainThunderDamageBoost:
+                    chainThunderDamageMultiplierBonus = Mathf.Max(chainThunderDamageMultiplierBonus, value > 0f ? value : 0.3f);
                     break;
             }
         }

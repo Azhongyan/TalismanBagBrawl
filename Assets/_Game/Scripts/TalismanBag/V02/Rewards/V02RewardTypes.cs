@@ -24,6 +24,7 @@ namespace TalismanBag.V02.Rewards
         ThunderShieldBreakBoost,
         SwordCritBoost,
         ShieldAmountBoost,
-        CleanseCooldownReduction
+        CleanseCooldownReduction,
+        ChainThunderDamageBoost
     }
 }

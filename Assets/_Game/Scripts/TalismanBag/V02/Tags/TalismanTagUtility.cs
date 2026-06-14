@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using TalismanBag.Items;
@@ -46,15 +46,15 @@ namespace TalismanBag.V02.Tags
         {
             return tag switch
             {
-                ElementTag.Fire => "火",
-                ElementTag.Thunder => "雷",
-                ElementTag.Water => "水",
-                ElementTag.Wood => "木",
-                ElementTag.Metal => "金",
-                ElementTag.Earth => "土",
-                ElementTag.Sword => "剑",
-                ElementTag.Soul => "魂",
-                _ => "无"
+                ElementTag.Fire => "\u706b",
+                ElementTag.Thunder => "\u96f7",
+                ElementTag.Water => "\u6c34",
+                ElementTag.Wood => "\u6728",
+                ElementTag.Metal => "\u91d1",
+                ElementTag.Earth => "\u571f",
+                ElementTag.Sword => "\u5251",
+                ElementTag.Soul => "\u9b42",
+                _ => "\u65e0"
             };
         }
 
@@ -62,22 +62,22 @@ namespace TalismanBag.V02.Tags
         {
             return tag switch
             {
-                FunctionTag.Damage => "伤害",
-                FunctionTag.Burst => "爆发",
-                FunctionTag.Burn => "灼烧",
-                FunctionTag.Chain => "连锁",
-                FunctionTag.AoE => "群攻",
-                FunctionTag.Shield => "护盾",
-                FunctionTag.Heal => "治疗",
-                FunctionTag.Cleanse => "净化",
-                FunctionTag.Defense => "防御",
-                FunctionTag.EnergySource => "供能",
-                FunctionTag.Enhance => "强化",
-                FunctionTag.ShieldBreak => "破盾",
-                FunctionTag.AntiGhost => "驱邪",
-                FunctionTag.AntiSeal => "解封",
-                FunctionTag.AntiPoison => "解毒",
-                _ => "无"
+                FunctionTag.Damage => "\u4f24\u5bb3",
+                FunctionTag.Burst => "\u7206\u53d1",
+                FunctionTag.Burn => "\u707c\u70e7",
+                FunctionTag.Chain => "\u8fde\u9501",
+                FunctionTag.AoE => "\u7fa4\u653b",
+                FunctionTag.Shield => "\u62a4\u76fe",
+                FunctionTag.Heal => "\u6cbb\u7597",
+                FunctionTag.Cleanse => "\u51c0\u5316",
+                FunctionTag.Defense => "\u9632\u5fa1",
+                FunctionTag.EnergySource => "\u4f9b\u80fd",
+                FunctionTag.Enhance => "\u5f3a\u5316",
+                FunctionTag.ShieldBreak => "\u7834\u76fe",
+                FunctionTag.AntiGhost => "\u9a71\u90aa",
+                FunctionTag.AntiSeal => "\u89e3\u5c01",
+                FunctionTag.AntiPoison => "\u89e3\u6bd2",
+                _ => "\u65e0"
             };
         }
 
@@ -85,17 +85,17 @@ namespace TalismanBag.V02.Tags
         {
             return tag switch
             {
-                CounterTag.Shield => "护盾",
-                CounterTag.Poison => "中毒",
-                CounterTag.Burn => "灼烧",
-                CounterTag.Seal => "封印",
-                CounterTag.Ghost => "鬼怪",
-                CounterTag.StealEnergy => "偷灵气",
-                CounterTag.Summon => "召唤",
-                CounterTag.Group => "群体",
-                CounterTag.Charge => "蓄力",
-                CounterTag.Boss => "首领",
-                _ => "无"
+                CounterTag.Shield => "\u62a4\u76fe",
+                CounterTag.Poison => "\u4e2d\u6bd2",
+                CounterTag.Burn => "\u707c\u70e7",
+                CounterTag.Seal => "\u5c01\u5370",
+                CounterTag.Ghost => "\u9b3c\u602a",
+                CounterTag.StealEnergy => "\u5077\u7075\u6c14",
+                CounterTag.Summon => "\u53ec\u5524",
+                CounterTag.Group => "\u7fa4\u4f53",
+                CounterTag.Charge => "\u84c4\u529b",
+                CounterTag.Boss => "\u9996\u9886",
+                _ => "\u65e0"
             };
         }
 
@@ -103,16 +103,16 @@ namespace TalismanBag.V02.Tags
         {
             return effectType switch
             {
-                EffectType.DealDamage => "造成伤害",
-                EffectType.ApplyBurn => "施加灼烧",
-                EffectType.ChainDamage => "连锁伤害",
-                EffectType.GainShield => "获得护盾",
-                EffectType.Heal => "恢复气血",
-                EffectType.CleanseStatus => "净化异常",
-                EffectType.SuppressGhost => "镇压鬼怪",
-                EffectType.GenerateEnergy => "产生灵气",
-                EffectType.EnhanceAdjacent => "强化相邻",
-                _ => "无"
+                EffectType.DealDamage => "\u9020\u6210\u4f24\u5bb3",
+                EffectType.ApplyBurn => "\u65bd\u52a0\u707c\u70e7",
+                EffectType.ChainDamage => "\u8fde\u9501\u4f24\u5bb3",
+                EffectType.GainShield => "\u83b7\u5f97\u62a4\u76fe",
+                EffectType.Heal => "\u6062\u590d\u6c14\u8840",
+                EffectType.CleanseStatus => "\u51c0\u5316\u5f02\u5e38",
+                EffectType.SuppressGhost => "\u9547\u538b\u9b3c\u602a",
+                EffectType.GenerateEnergy => "\u4ea7\u751f\u7075\u6c14",
+                EffectType.EnhanceAdjacent => "\u5f3a\u5316\u76f8\u90bb",
+                _ => "\u65e0"
             };
         }
 
@@ -120,16 +120,16 @@ namespace TalismanBag.V02.Tags
         {
             if (item == null)
             {
-                return "[标签] <null>";
+                return "[\u6807\u7b7e] <null>";
             }
 
             StringBuilder builder = new();
-            builder.AppendLine($"[标签] {item.displayName}");
-            builder.AppendLine($"元素：{GetElementTagName(item.elementTag)}");
-            builder.AppendLine($"功能：{JoinFunctionTags(item)}");
-            builder.AppendLine($"克制：{JoinCounterTags(item)}");
-            builder.AppendLine($"效果：{GetEffectTypeName(item.effectType)}");
-            builder.AppendLine($"阵法供能：{(item.requiresFormationPower ? "需要" : "不需要")}");
+            builder.AppendLine($"[\u6807\u7b7e] {item.displayName}");
+            builder.AppendLine($"\u5143\u7d20\uff1a{GetElementTagName(item.elementTag)}");
+            builder.AppendLine($"\u529f\u80fd\uff1a{JoinFunctionTags(item)}");
+            builder.AppendLine($"\u514b\u5236\uff1a{JoinCounterTags(item)}");
+            builder.AppendLine($"\u6548\u679c\uff1a{GetEffectTypeName(item.effectType)}");
+            builder.AppendLine($"\u9635\u6cd5\u4f9b\u80fd\uff1a{(item.requiresFormationPower ? "\u9700\u8981" : "\u4e0d\u9700\u8981")}");
             return builder.ToString();
         }
 
@@ -137,7 +137,7 @@ namespace TalismanBag.V02.Tags
         {
             if (tags == null || tags.Count == 0)
             {
-                return "无";
+                return "\u65e0";
             }
 
             StringBuilder builder = new();
@@ -156,7 +156,7 @@ namespace TalismanBag.V02.Tags
                 builder.Append(nameResolver(tag));
             }
 
-            return builder.Length > 0 ? builder.ToString() : "无";
+            return builder.Length > 0 ? builder.ToString() : "\u65e0";
         }
     }
 }
