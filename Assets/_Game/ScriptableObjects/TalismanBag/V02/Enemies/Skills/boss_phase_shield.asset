@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: boss_phase_shield
   m_EditorClassIdentifier: 
   skillId: boss_phase_shield
-  displayName: "\u9996\u9886\u62A4\u76FE"
-  intentText: "\u7834\u9635\u5C0FBoss\u6B63\u5728\u51DD\u805A\u62A4\u76FE\uFF01"
+  displayName: "\u5C06\u00B7\u76FE"
+  intentText: "\u5C06\u6B63\u5728\u51DD\u805A\u62A4\u76FE\uFF01"
   effectDescription: "\u83B7\u5F97\u62A4\u76FE"
   skillType: 7
   initialDelay: 4

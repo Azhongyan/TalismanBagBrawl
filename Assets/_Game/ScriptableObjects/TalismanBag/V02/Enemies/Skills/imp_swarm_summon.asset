@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: imp_swarm_summon
   m_EditorClassIdentifier: 
   skillId: imp_swarm_summon
-  displayName: "\u547C\u5524\u5C0F\u5996"
-  intentText: "\u5C0F\u5996\u7FA4\u6B63\u5728\u547C\u5524\u66F4\u591A\u5C0F\u5996\uFF01"
+  displayName: "\u53EC\u5524"
+  intentText: "\u53EC\u6B63\u5728\u547C\u5524\u66F4\u591A\u5C0F\u5996\uFF01"
   effectDescription: "\u9020\u6210\u4E00\u6B21\u7FA4\u4F53\u538B\u5236\u4F24\u5BB3"
   skillType: 2
   initialDelay: 4

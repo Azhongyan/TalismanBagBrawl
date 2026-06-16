@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using TalismanBag.Combat;
 using TalismanBag.Enemies;
 using TalismanBag.Items;
 using TalismanBag.V02.Balance;
 using TalismanBag.V02.EnemySkills;
+using TalismanBag.V02.Status;
 using TalismanBag.V02.Tags;
 using UnityEngine;
 
@@ -82,20 +82,25 @@ namespace TalismanBag.V02.Counters
             return true;
         }
 
-        public bool TryResolveCleanse(TalismanItemRuntime talisman, CombatStats playerStatus)
+        public bool TryResolveCleanse(TalismanItemRuntime talisman, StatusEffectController statusController)
         {
-            if (playerStatus == null || !CanTalismanCounterTag(talisman, CounterTag.Poison) && !CanTalismanCounterTag(talisman, CounterTag.Burn))
+            bool canCleanseStatus = CanTalismanCounterTag(talisman, CounterTag.Poison) ||
+                                    CanTalismanCounterTag(talisman, CounterTag.Burn) ||
+                                    CanTalismanCounterTag(talisman, CounterTag.Seal);
+            if (statusController == null || !canCleanseStatus)
             {
                 return false;
             }
 
-            if (playerStatus.poisonStacks <= 0 && playerStatus.burnStacks <= 0)
+            bool hasCleansableStatus = statusController.HasStatus(StatusEffectIds.Poison) ||
+                                       statusController.HasStatus(StatusEffectIds.Burn) ||
+                                       statusController.HasStatus(StatusEffectIds.Seal);
+            if (!hasCleansableStatus)
             {
                 return false;
             }
 
-            playerStatus.poisonStacks = 0;
-            playerStatus.burnStacks = 0;
+            statusController.ClearDispellableDebuffs();
             return true;
         }
 

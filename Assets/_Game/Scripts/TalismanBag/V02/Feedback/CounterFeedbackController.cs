@@ -50,15 +50,15 @@ namespace TalismanBag.V02.Feedback
         {
             return type switch
             {
-                CounterFeedbackType.ShieldBreak => "破盾！",
-                CounterFeedbackType.Cleanse => "净化！",
-                CounterFeedbackType.Unseal => "解封！",
-                CounterFeedbackType.SoulSuppress => "镇魂反制！",
-                CounterFeedbackType.ChainClear => "连锁清场！",
-                CounterFeedbackType.FormationProtected => "阵眼保护成功！",
-                CounterFeedbackType.GuardReduce => "护身抵挡！",
-                CounterFeedbackType.CounterFailed => "克制失败",
-                _ => "克制！"
+                CounterFeedbackType.ShieldBreak => "\u7834\u76fe\uff01",
+                CounterFeedbackType.Cleanse => "\u51c0\u5316\uff01",
+                CounterFeedbackType.Unseal => "\u89e3\u5c01\uff01",
+                CounterFeedbackType.SoulSuppress => "\u9547\u9b42\u53cd\u5236\uff01",
+                CounterFeedbackType.ChainClear => "\u8fde\u9501\u6e05\u573a\uff01",
+                CounterFeedbackType.FormationProtected => "\u9635\u773c\u4fdd\u62a4\u6210\u529f\uff01",
+                CounterFeedbackType.GuardReduce => "\u62a4\u8eab\u62b5\u6321\uff01",
+                CounterFeedbackType.CounterFailed => "\u514b\u5236\u5931\u8d25",
+                _ => "\u514b\u5236\uff01"
             };
         }
 
@@ -66,15 +66,15 @@ namespace TalismanBag.V02.Feedback
         {
             return type switch
             {
-                CounterFeedbackType.ShieldBreak => "[克制] 破盾触发",
-                CounterFeedbackType.Cleanse => "[克制] 净化触发",
-                CounterFeedbackType.Unseal => "[克制] 解封触发",
-                CounterFeedbackType.SoulSuppress => "[克制] 镇魂符反制偷灵",
-                CounterFeedbackType.ChainClear => "[克制] 连锁雷符触发清场",
-                CounterFeedbackType.FormationProtected => "[克制] 阵眼保护成功",
-                CounterFeedbackType.GuardReduce => "[克制] 护身符削弱爆发伤害",
-                CounterFeedbackType.CounterFailed => "[克制] 克制失败",
-                _ => "[克制] 克制触发"
+                CounterFeedbackType.ShieldBreak => "[\u514b\u5236] \u7834\u76fe\u89e6\u53d1",
+                CounterFeedbackType.Cleanse => "[\u514b\u5236] \u51c0\u5316\u89e6\u53d1",
+                CounterFeedbackType.Unseal => "[\u514b\u5236] \u89e3\u5c01\u89e6\u53d1",
+                CounterFeedbackType.SoulSuppress => "[\u514b\u5236] \u9547\u9b42\u7b26\u53cd\u5236\u5077\u7075",
+                CounterFeedbackType.ChainClear => "[\u514b\u5236] \u8fde\u9501\u96f7\u7b26\u89e6\u53d1\u6e05\u573a",
+                CounterFeedbackType.FormationProtected => "[\u514b\u5236] \u9635\u773c\u4fdd\u62a4\u6210\u529f",
+                CounterFeedbackType.GuardReduce => "[\u514b\u5236] \u62a4\u8eab\u7b26\u524a\u5f31\u7206\u53d1\u4f24\u5bb3",
+                CounterFeedbackType.CounterFailed => "[\u514b\u5236] \u514b\u5236\u5931\u8d25",
+                _ => "[\u514b\u5236] \u514b\u5236\u89e6\u53d1"
             };
         }
     }

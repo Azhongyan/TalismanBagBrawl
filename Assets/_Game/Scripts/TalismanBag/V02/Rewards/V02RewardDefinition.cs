@@ -10,6 +10,7 @@ namespace TalismanBag.V02.Rewards
     {
         public string rewardId;
         public string displayName;
+        public bool enabled = true;
 
         public V02RewardType rewardType;
 
@@ -34,5 +35,7 @@ namespace TalismanBag.V02.Rewards
 
         [Header("Weight")]
         public int baseWeight = 10;
+        public int nextEnemyBonusWeight = 24;
+        public bool forceAsCounterOption;
     }
 }

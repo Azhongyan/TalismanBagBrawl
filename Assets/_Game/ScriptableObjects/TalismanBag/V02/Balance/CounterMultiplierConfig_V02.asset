@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26802b78c0ad4754a894e6fe1b2eabed, type: 3}
   m_Name: CounterMultiplierConfig_V02
   m_EditorClassIdentifier: 
-  strongCounterMultiplier: 1.8
-  lightCounterMultiplier: 1.35
+  strongCounterMultiplier: 1.6
+  lightCounterMultiplier: 1.2
   neutralMultiplier: 1
   resistedMultiplier: 0.7
-  hardResistedMultiplier: 0.55
+  hardResistedMultiplier: 0.45
   rewardShieldBreakMultiplier: 2.5
   groupClearMultiplier: 1.6

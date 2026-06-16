@@ -27,7 +27,7 @@ namespace TalismanBag.V02.UI
                 return;
             }
 
-            SetText(titleText, $"敌人：{enemy.displayName}");
+            SetText(titleText, $"敌人：{enemy.GetReadableLabel()}");
             SetText(bodyText, BuildBody(enemy));
         }
 

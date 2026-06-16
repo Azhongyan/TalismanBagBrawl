@@ -55,7 +55,7 @@ namespace TalismanBag.V02.UI
             if (nextEnemyText != null)
             {
                 nextEnemyText.text = nextEnemy != null
-                    ? $"下一关：{nextEnemy.displayName}"
+                    ? $"下一关：{nextEnemy.GetReadableLabel()}"
                     : "下一关：测试敌人";
             }
 

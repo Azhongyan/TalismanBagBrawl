@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: energy_thief_ghost
   m_EditorClassIdentifier: 
   enemyId: energy_thief_ghost
-  displayName: "\u5077\u7075\u9B3C"
+  displayName: "\u5077"
   enemyType: 0
   maxHp: 135
   attackDamage: 8

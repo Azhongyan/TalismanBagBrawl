@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TalismanBag.Grid;
 using TalismanBag.Items;
+using TalismanBag.V02.Balance;
 using TalismanBag.UI;
 using TalismanBag.V02.Rewards;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace TalismanBag.V02.Formation
         [SerializeField] private Vector2Int formationEyePosition = new(2, 1);
         [SerializeField] private string spiritStoneItemId = "spirit_stone_basic";
         [SerializeField] private float weakCooldownMultiplier = 1.35f;
+        [SerializeField] private V02FormationBalanceConfig formationBalanceConfig;
         [SerializeField] private V02RunModifierState runModifierState;
 
         public event Action PowerStatesChanged;
@@ -23,8 +25,12 @@ namespace TalismanBag.V02.Formation
         private bool hasDiscoveredSlotViews;
 
         public Vector2Int FormationEyePosition => formationEyePosition;
-        public float WeakCooldownMultiplier => weakCooldownMultiplier;
+        public V02FormationBalanceConfig FormationBalanceConfig => formationBalanceConfig;
+        public float WeakCooldownMultiplier => formationBalanceConfig != null ? formationBalanceConfig.weakPowerCooldownMultiplier : weakCooldownMultiplier;
         public V02RunModifierState RunModifierState => runModifierState;
+        public bool UnpoweredTalismansCanTrigger => formationBalanceConfig != null && formationBalanceConfig.unpoweredTalismansCanTrigger;
+        public float DefaultStealEnergyDisableDuration => formationBalanceConfig != null ? formationBalanceConfig.stealEnergyDisableDuration : 3f;
+        public float DefaultSealDuration => formationBalanceConfig != null ? formationBalanceConfig.sealDuration : 3f;
 
         private void OnEnable()
         {
@@ -93,6 +99,12 @@ namespace TalismanBag.V02.Formation
             RefreshPowerStates();
         }
 
+        public void BindFormationBalanceConfig(V02FormationBalanceConfig config)
+        {
+            formationBalanceConfig = config;
+            RefreshPowerStates();
+        }
+
         public void RefreshPowerStates()
         {
             if (grid == null)
@@ -157,7 +169,7 @@ namespace TalismanBag.V02.Formation
 
         public float GetCooldownMultiplier(TalismanItemRuntime item)
         {
-            return IsItemWeakPowered(item) ? weakCooldownMultiplier : 1f;
+            return IsItemWeakPowered(item) ? WeakCooldownMultiplier : 1f;
         }
 
         public int GetPoweredItemCount()
@@ -470,16 +482,20 @@ namespace TalismanBag.V02.Formation
 
         private FormationPowerState ResolveCellPowerState(Vector2Int position, List<Vector2Int> spiritStonePositions)
         {
-            foreach (Vector2Int source in spiritStonePositions)
+            if (formationBalanceConfig == null || formationBalanceConfig.spiritStoneNineGridPowerEnabled)
             {
-                if (Mathf.Abs(position.x - source.x) <= 1 && Mathf.Abs(position.y - source.y) <= 1)
+                foreach (Vector2Int source in spiritStonePositions)
                 {
-                    return FormationPowerState.Powered;
+                    if (Mathf.Abs(position.x - source.x) <= 1 && Mathf.Abs(position.y - source.y) <= 1)
+                    {
+                        return FormationPowerState.Powered;
+                    }
                 }
             }
 
             if (runModifierState != null &&
                 runModifierState.spiritLinkBetweenStonesUnlocked &&
+                (formationBalanceConfig == null || formationBalanceConfig.spiritLinkBetweenStonesEnabled) &&
                 IsOnSpiritLink(position, spiritStonePositions))
             {
                 return FormationPowerState.Powered;
@@ -487,17 +503,20 @@ namespace TalismanBag.V02.Formation
 
             int eyeDx = Mathf.Abs(position.x - formationEyePosition.x);
             int eyeDy = Mathf.Abs(position.y - formationEyePosition.y);
-            if (runModifierState != null && runModifierState.eyeCoreNineGridUnlocked && eyeDx <= 1 && eyeDy <= 1)
+            if (runModifierState != null &&
+                runModifierState.eyeCoreNineGridUnlocked &&
+                (formationBalanceConfig == null || formationBalanceConfig.upgradedEyeNineGridEnabled) &&
+                eyeDx <= 1 && eyeDy <= 1)
             {
                 return FormationPowerState.Powered;
             }
 
-            if (eyeDx + eyeDy == 1)
+            if ((formationBalanceConfig == null || formationBalanceConfig.formationEyeCrossPowerEnabled) && eyeDx + eyeDy == 1)
             {
                 return FormationPowerState.Powered;
             }
 
-            if (eyeDx == 1 && eyeDy == 1)
+            if ((formationBalanceConfig == null || formationBalanceConfig.formationEyeDiagonalWeakPowerEnabled) && eyeDx == 1 && eyeDy == 1)
             {
                 return FormationPowerState.WeakPowered;
             }

@@ -40,7 +40,7 @@ namespace TalismanBag.UI
 
             if (enemyText != null)
             {
-                enemyText.text = $"敌人：{enemy.displayName}";
+                enemyText.text = $"敌人：{enemy.GetReadableLabel()}";
             }
 
             if (weaknessText != null)

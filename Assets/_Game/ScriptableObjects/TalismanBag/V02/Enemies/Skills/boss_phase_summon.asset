@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: boss_phase_summon
   m_EditorClassIdentifier: 
   skillId: boss_phase_summon
-  displayName: "\u9996\u9886\u53EC\u5524"
-  intentText: "\u7834\u9635\u5C0FBoss\u6B63\u5728\u53EC\u5524\u5C0F\u5996\uFF01"
+  displayName: "\u5C06\u00B7\u53EC"
+  intentText: "\u5C06\u6B63\u5728\u53EC\u5524\u5C0F\u5996\uFF01"
   effectDescription: "\u9020\u6210\u7FA4\u4F53\u538B\u5236\u4F24\u5BB3"
   skillType: 8
   initialDelay: 4

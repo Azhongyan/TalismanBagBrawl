@@ -99,7 +99,7 @@ namespace TalismanBag.V02.EnemySkills
             enemyRuntime.currentCastingSkill = skill;
             enemyRuntime.currentIntentText = GetSkillIntent(skill.definition);
             intentUI?.ShowIntent(enemyRuntime.currentIntentText, skill.castTimer);
-            EmitLog($"[敌技] {enemyRuntime.definition.displayName} 准备释放：{skill.definition.displayName}");
+            EmitLog($"[敌技] {enemyRuntime.definition.GetReadableLabel()} 准备释放：{skill.definition.displayName}");
 
             if (skill.castTimer <= 0f)
             {
@@ -130,17 +130,17 @@ namespace TalismanBag.V02.EnemySkills
             {
                 case EnemySkillType.GainShield:
                 case EnemySkillType.BossPhaseShield:
-                    combatController?.V02AddEnemyShield(Mathf.Max(0, skill.value), $"[敌技] {enemyRuntime.definition.displayName} 获得 {skill.value} 点护盾");
+                    combatController?.V02AddEnemyShield(Mathf.Max(0, skill.value), $"[敌技] {enemyRuntime.definition.GetReadableLabel()} 获得 {skill.value} 点护盾");
                     break;
                 case EnemySkillType.SummonMinions:
                 case EnemySkillType.BossPhaseSummon:
-                    combatController?.V02DealDamageToPlayer(Mathf.Max(0, skill.value), $"[敌技] {enemyRuntime.definition.displayName} 发动群体压制，造成 {skill.value} 点伤害");
+                    combatController?.V02DealDamageToPlayer(Mathf.Max(0, skill.value), $"[敌技] {enemyRuntime.definition.GetReadableLabel()} 发动群体压制，造成 {skill.value} 点伤害");
                     break;
                 case EnemySkillType.ApplyPoison:
-                    combatController?.V02AddPlayerStatus(Mathf.Max(0, skill.value), Mathf.Max(0, skill.value), $"[敌技] {enemyRuntime.definition.displayName} 施加毒火，毒 {skill.value}，燃烧 {skill.value}");
+                    combatController?.V02AddPlayerStatus(Mathf.Max(0, skill.value), Mathf.Max(0, skill.value), $"[敌技] {enemyRuntime.definition.GetReadableLabel()} 施加毒火，毒 {skill.value}，燃烧 {skill.value}");
                     break;
                 case EnemySkillType.ApplyBurn:
-                    combatController?.V02AddPlayerStatus(0, Mathf.Max(0, skill.value), $"[敌技] {enemyRuntime.definition.displayName} 施加燃烧 {skill.value}");
+                    combatController?.V02AddPlayerStatus(0, Mathf.Max(0, skill.value), $"[敌技] {enemyRuntime.definition.GetReadableLabel()} 施加燃烧 {skill.value}");
                     break;
                 case EnemySkillType.StealEnergy:
                     if (combatController != null && combatController.V02TryCounterStealEnergy(skill))
@@ -148,11 +148,11 @@ namespace TalismanBag.V02.EnemySkills
                         break;
                     }
 
-                    combatController?.V02ApplyEnergyDisruption(Mathf.Max(0, skill.duration), $"[敌技] {enemyRuntime.definition.displayName} 偷取灵气，阵法供能短暂紊乱");
+                    combatController?.V02ApplyEnergyDisruption(Mathf.Max(0, skill.duration), $"[敌技] {enemyRuntime.definition.GetReadableLabel()} 偷取灵气，阵法供能短暂紊乱");
                     break;
                 case EnemySkillType.SealRowOrColumn:
                 case EnemySkillType.BossPhaseSealEye:
-                    combatController?.V02SealRandomRowOrColumn(Mathf.Max(0, skill.duration), $"[敌技] {enemyRuntime.definition.displayName} 封印了一行或一列符箓");
+                    combatController?.V02SealRandomRowOrColumn(Mathf.Max(0, skill.duration), $"[敌技] {enemyRuntime.definition.GetReadableLabel()} 封印了一行或一列符箓");
                     break;
             }
         }

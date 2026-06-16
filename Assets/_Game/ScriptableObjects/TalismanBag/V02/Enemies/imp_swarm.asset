@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: imp_swarm
   m_EditorClassIdentifier: 
   enemyId: imp_swarm
-  displayName: "\u5C0F\u5996\u7FA4"
+  displayName: "\u53EC"
   enemyType: 1
   maxHp: 150
   attackDamage: 8
@@ -31,7 +31,7 @@ MonoBehaviour:
   ghostShadowInterval: 0
   ghostShadowDamage: 0
   icon: {fileID: 0}
-  enemyClass: "\u7FA4\u602A"
+  enemyClass: "\u53EC\u5524"
   enemyArchetype: "\u7FA4\u4F53\u538B\u5236"
   intentText: "\u51C6\u5907\u547C\u5524\u66F4\u591A\u5C0F\u5996"
   recommendedCounterText: "\u8FDE\u9501\u96F7\u7B26\u548C\u706B\u7B26\u71C3\u70E7\u66F4\u9002\u5408\u6E05\u7FA4\u3002"

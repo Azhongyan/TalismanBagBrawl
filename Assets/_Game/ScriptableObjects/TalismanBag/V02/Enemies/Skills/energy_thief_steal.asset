@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: energy_thief_steal
   m_EditorClassIdentifier: 
   skillId: energy_thief_steal
-  displayName: "\u5077\u53D6\u7075\u6C14"
-  intentText: "\u5077\u7075\u9B3C\u6B63\u5728\u5077\u53D6\u7075\u6C14\uFF01"
+  displayName: "\u5077\u7075"
+  intentText: "\u5077\u6B63\u5728\u5077\u53D6\u7075\u6C14\uFF01"
   effectDescription: "\u4F7F\u4F9B\u80FD\u6E90\u9644\u8FD1\u7B26\u7B93\u77ED\u6682\u5931\u6548"
   skillType: 5
   initialDelay: 4

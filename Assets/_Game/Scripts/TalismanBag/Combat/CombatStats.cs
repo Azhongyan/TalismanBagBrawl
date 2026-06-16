@@ -13,8 +13,6 @@ namespace TalismanBag.Combat
         public int mana;
         public int attackDamage = 8;
         public float attackInterval = 2.5f;
-        public int poisonStacks;
-        public int burnStacks;
 
         public void ResetPlayer()
         {
@@ -23,8 +21,6 @@ namespace TalismanBag.Combat
             shield = 0;
             maxMana = 100;
             mana = 0;
-            poisonStacks = 0;
-            burnStacks = 0;
         }
 
         public void ResetGhost()
@@ -36,8 +32,6 @@ namespace TalismanBag.Combat
             maxMana = 0;
             attackDamage = 8;
             attackInterval = 2.5f;
-            poisonStacks = 0;
-            burnStacks = 0;
         }
 
         public void AddMana(int amount)

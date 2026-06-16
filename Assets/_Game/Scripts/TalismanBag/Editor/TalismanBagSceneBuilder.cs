@@ -23,6 +23,7 @@ using TalismanBag.V02.Formation;
 using TalismanBag.V02.Result;
 using TalismanBag.V02.Rewards;
 using TalismanBag.V02.Run;
+using TalismanBag.V02.Status;
 using TalismanBag.V02.Tags;
 using TalismanBag.V02.UI;
 using TalismanBag.VFX;
@@ -41,7 +42,6 @@ namespace TalismanBag.EditorTools
         private const string V02ScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity";
         private static readonly Vector2 ReferenceResolution = new(1080f, 1920f);
 
-        [MenuItem("Talisman Bag/Build Phase 5 Mobile Playtest Scene")]
         public static void BuildAll()
         {
             EnsureFolders();
@@ -59,7 +59,6 @@ namespace TalismanBag.EditorTools
             Debug.Log("Talisman Bag phase 5 mobile playtest scene generated.");
         }
 
-        [MenuItem("Talisman Bag/Build V0.2 Formation Counter Scene")]
         public static void BuildV02FormationCounter()
         {
             EnsureFolders();
@@ -71,7 +70,8 @@ namespace TalismanBag.EditorTools
             V02RewardPoolConfig rewardPool = CreateV02RewardPool(items);
             V02RunConfig runConfig = CreateV02RunConfig(enemies);
             V02CounterMultiplierConfig multiplierConfig = CreateV02CounterMultiplierConfig();
-            CreateV02FormationCounterScene(items, enemies["mountain_imp_basic"], enemies, rewardPool, runConfig, multiplierConfig);
+            V02FormationBalanceConfig formationConfig = CreateV02FormationBalanceConfig();
+            CreateV02FormationCounterScene(items, enemies["mountain_imp_basic"], enemies, rewardPool, runConfig, multiplierConfig, formationConfig);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("Talisman Bag V0.2 formation counter scene generated.");
@@ -450,7 +450,7 @@ namespace TalismanBag.EditorTools
             }
 
             definition.enemyId = "v02_mountain_imp";
-            definition.displayName = "\u5c71\u95f4\u5c0f\u5996";
+            definition.displayName = "攻";
             definition.enemyType = EnemyType.Ghost;
             definition.maxHp = 80;
             definition.attackDamage = 8;
@@ -476,38 +476,38 @@ namespace TalismanBag.EditorTools
             Dictionary<string, EnemySkillDefinition> skills = CreateV02EnemySkills();
             Dictionary<string, EnemyDefinition> enemies = new();
 
-            AddV02Enemy(enemies, "mountain_imp_basic", "山间小妖", EnemyType.Ghost, 80, 8, 2.5f,
-                "小妖", "普通攻击", "普通攻击",
+            AddV02Enemy(enemies, "mountain_imp_basic", "攻", EnemyType.Ghost, 80, 8, 2.5f,
+                "教学", "普通攻击", "普通攻击",
                 "把火符放到阵眼或聚灵石供能范围内。",
                 Array.Empty<CounterTag>(), Array.Empty<EnemySkillDefinition>());
 
-            AddV02Enemy(enemies, "turtle_guardian_shield", "龟甲护法", EnemyType.Ghost, 110, 7, 2.8f,
-                "护法", "护盾流", "正在积蓄护盾",
+            AddV02Enemy(enemies, "turtle_guardian_shield", "盾", EnemyType.Ghost, 110, 7, 2.8f,
+                "护盾", "周期护盾", "正在积蓄护盾",
                 "雷符可以破盾，剑丸爆发也有效。",
                 new[] { CounterTag.Shield }, new[] { skills["turtle_guardian_gain_shield"] });
 
-            AddV02Enemy(enemies, "imp_swarm", "小妖群", EnemyType.GhostSwarm, 140, 9, 2f,
-                "妖群", "数量压制", "准备呼唤更多小妖",
+            AddV02Enemy(enemies, "imp_swarm", "召", EnemyType.GhostSwarm, 140, 9, 2f,
+                "召唤", "群体压制", "准备呼唤更多小妖",
                 "连锁雷符和火符燃烧更适合清群。",
                 new[] { CounterTag.Group, CounterTag.Summon }, new[] { skills["imp_swarm_summon"] });
 
-            AddV02Enemy(enemies, "red_poison_beast", "赤毒妖", EnemyType.Ghost, 130, 8, 2.8f,
-                "毒妖", "持续伤害", "准备喷吐毒火",
+            AddV02Enemy(enemies, "red_poison_beast", "毒", EnemyType.Ghost, 130, 8, 2.8f,
+                "毒火", "持续伤害", "准备喷吐毒火",
                 "净化符可以清除毒和燃烧，护身符可以抵抗持续伤害。",
                 new[] { CounterTag.Poison, CounterTag.Burn }, new[] { skills["red_poison_apply_poison"] });
 
-            AddV02Enemy(enemies, "energy_thief_ghost", "偷灵鬼", EnemyType.Ghost, 135, 8, 2.8f,
-                "鬼修", "偷灵破阵", "准备偷取灵气",
+            AddV02Enemy(enemies, "energy_thief_ghost", "偷", EnemyType.Ghost, 135, 8, 2.8f,
+                "偷灵", "破坏供能", "准备偷取灵气",
                 "镇魂符可以反制偷灵。保护聚灵石可以稳定阵法。",
                 new[] { CounterTag.Ghost, CounterTag.StealEnergy }, new[] { skills["energy_thief_steal"] });
 
-            AddV02Enemy(enemies, "seal_talisman_taoist", "封符道人", EnemyType.EvilCultivator, 150, 10, 3f,
-                "道人", "封印控制", "准备封印符箓",
+            AddV02Enemy(enemies, "seal_talisman_taoist", "封", EnemyType.EvilCultivator, 150, 10, 3f,
+                "封印", "行列封锁", "准备封印符箓",
                 "净化符可以解封。不要把所有输出符放在同一行或同一列。",
                 new[] { CounterTag.Seal }, new[] { skills["seal_taoist_row_column"] });
 
-            AddV02Enemy(enemies, "formation_breaker_boss", "破阵小Boss", EnemyType.Boss, 240, 12, 2.8f,
-                "破阵师", "综合压制", "准备轮换破阵手段",
+            AddV02Enemy(enemies, "formation_breaker_boss", "将", EnemyType.Boss, 240, 12, 2.8f,
+                "首领", "综合压制", "准备轮换破阵手段",
                 "需要破盾、清群、净化和稳定供能。",
                 new[] { CounterTag.Shield, CounterTag.Group, CounterTag.Seal, CounterTag.Boss },
                 new[] { skills["boss_phase_shield"], skills["boss_phase_summon"], skills["boss_phase_seal"] });
@@ -519,22 +519,22 @@ namespace TalismanBag.EditorTools
         private static Dictionary<string, EnemySkillDefinition> CreateV02EnemySkills()
         {
             Dictionary<string, EnemySkillDefinition> skills = new();
-            AddV02Skill(skills, "turtle_guardian_gain_shield", "龟甲结盾", EnemySkillType.GainShield,
-                "龟甲护法正在结盾！", "每 5 秒获得护盾", 1f, 5f, 1f, 25, 0, new[] { CounterTag.Shield });
-            AddV02Skill(skills, "imp_swarm_summon", "呼唤小妖", EnemySkillType.SummonMinions,
-                "小妖群正在呼唤更多小妖！", "造成一次群体压制伤害", 1f, 6f, 1f, 10, 0, new[] { CounterTag.Group, CounterTag.Summon });
-            AddV02Skill(skills, "red_poison_apply_poison", "毒火喷吐", EnemySkillType.ApplyPoison,
-                "赤毒妖正在喷吐毒火！", "叠加中毒和燃烧", 1f, 4f, 1f, 1, 0, new[] { CounterTag.Poison, CounterTag.Burn });
-            AddV02Skill(skills, "energy_thief_steal", "偷取灵气", EnemySkillType.StealEnergy,
-                "偷灵鬼正在偷取灵气！", "使供能源附近符箓短暂失效", 1f, 6f, 1f, 0, 3, new[] { CounterTag.Ghost, CounterTag.StealEnergy });
-            AddV02Skill(skills, "seal_taoist_row_column", "封印符列", EnemySkillType.SealRowOrColumn,
-                "封符道人准备封印一列符箓！", "封印一行或一列符箓", 1f, 8f, 1.2f, 0, 3, new[] { CounterTag.Seal });
-            AddV02Skill(skills, "boss_phase_shield", "首领护盾", EnemySkillType.BossPhaseShield,
-                "破阵小Boss正在凝聚护盾！", "获得护盾", 1f, 7f, 1f, 30, 0, new[] { CounterTag.Shield, CounterTag.Boss });
-            AddV02Skill(skills, "boss_phase_summon", "首领召唤", EnemySkillType.BossPhaseSummon,
-                "破阵小Boss正在召唤小妖！", "造成群体压制伤害", 3f, 9f, 1f, 12, 0, new[] { CounterTag.Group, CounterTag.Summon, CounterTag.Boss });
-            AddV02Skill(skills, "boss_phase_seal", "首领封眼", EnemySkillType.BossPhaseSealEye,
-                "破阵小Boss准备封印阵眼附近格子！", "封印一行或一列符箓", 5f, 11f, 1.2f, 0, 3, new[] { CounterTag.Seal, CounterTag.Boss });
+            AddV02Skill(skills, "turtle_guardian_gain_shield", "结盾", EnemySkillType.GainShield,
+                "盾正在结盾！", "每 5 秒获得护盾", 1f, 5f, 1f, 25, 0, new[] { CounterTag.Shield });
+            AddV02Skill(skills, "imp_swarm_summon", "召唤", EnemySkillType.SummonMinions,
+                "召正在呼唤更多小妖！", "造成一次群体压制伤害", 1f, 6f, 1f, 10, 0, new[] { CounterTag.Group, CounterTag.Summon });
+            AddV02Skill(skills, "red_poison_apply_poison", "毒火", EnemySkillType.ApplyPoison,
+                "毒正在喷吐毒火！", "叠加中毒和燃烧", 1f, 4f, 1f, 1, 0, new[] { CounterTag.Poison, CounterTag.Burn });
+            AddV02Skill(skills, "energy_thief_steal", "偷灵", EnemySkillType.StealEnergy,
+                "偷正在偷取灵气！", "使供能源附近符箓短暂失效", 1f, 6f, 1f, 0, 3, new[] { CounterTag.Ghost, CounterTag.StealEnergy });
+            AddV02Skill(skills, "seal_taoist_row_column", "封列", EnemySkillType.SealRowOrColumn,
+                "封准备封印一列符箓！", "封印一行或一列符箓", 1f, 8f, 1.2f, 0, 3, new[] { CounterTag.Seal });
+            AddV02Skill(skills, "boss_phase_shield", "将·盾", EnemySkillType.BossPhaseShield,
+                "将正在凝聚护盾！", "获得护盾", 1f, 7f, 1f, 30, 0, new[] { CounterTag.Shield, CounterTag.Boss });
+            AddV02Skill(skills, "boss_phase_summon", "将·召", EnemySkillType.BossPhaseSummon,
+                "将正在召唤小妖！", "造成群体压制伤害", 3f, 9f, 1f, 12, 0, new[] { CounterTag.Group, CounterTag.Summon, CounterTag.Boss });
+            AddV02Skill(skills, "boss_phase_seal", "将·封", EnemySkillType.BossPhaseSealEye,
+                "将准备封印阵眼附近格子！", "封印一行或一列符箓", 5f, 11f, 1.2f, 0, 3, new[] { CounterTag.Seal, CounterTag.Boss });
             return skills;
         }
 
@@ -790,33 +790,33 @@ namespace TalismanBag.EditorTools
             config.displayName = "V0.2 15Min Formation Counter Run";
             config.rounds = new List<V02RoundConfig>
             {
-                CreateV02Round(1, "\u57fa\u7840\u5e03\u9635", enemies["mountain_imp_basic"],
+                CreateV02Round(1, "攻：基础布阵", enemies["mountain_imp_basic"],
                     "\u7406\u89e3\u7b26\u7b93\u5fc5\u987b\u88ab\u9635\u773c\u6216\u805a\u7075\u77f3\u4f9b\u80fd\u624d\u4f1a\u89e6\u53d1\u3002",
                     "\u628a\u706b\u7b26\u653e\u5230\u9635\u773c\u6216\u805a\u7075\u77f3\u4f9b\u80fd\u8303\u56f4\u5185\u3002\u672a\u4f9b\u80fd\u7684\u7b26\u7b93\u4e0d\u4f1a\u89e6\u53d1\u3002",
                     false, 45f, 60f),
-                CreateV02Round(2, "\u9f9f\u7532\u62a4\u6cd5", enemies["turtle_guardian_shield"],
+                CreateV02Round(2, "盾：周期护盾", enemies["turtle_guardian_shield"],
                     "\u7406\u89e3\u62a4\u76fe\u654c\u4eba\u9700\u8981\u96f7\u7b26\u6216\u7206\u53d1\u5904\u7406\u3002",
                     "\u654c\u4eba\u4f1a\u5468\u671f\u6027\u83b7\u5f97\u62a4\u76fe\u3002\u96f7\u7b26\u5bf9\u62a4\u76fe\u6548\u679c\u66f4\u597d\uff0c\u5251\u4e38\u7206\u53d1\u4e5f\u6709\u6548\u3002",
                     false, 75f, 100f),
-                CreateV02Round(3, "\u5c0f\u5996\u7fa4", enemies["imp_swarm"],
+                CreateV02Round(3, "召：群体压制", enemies["imp_swarm"],
                     "\u7406\u89e3\u591a\u76ee\u6807\u654c\u4eba\u9700\u8981\u8fde\u9501\u3001\u8303\u56f4\u6216\u71c3\u70e7\u5904\u7406\u3002",
-                    "\u5c0f\u5996\u7fa4\u4f1a\u7528\u6570\u91cf\u538b\u5236\u4f60\u3002\u8fde\u9501\u96f7\u7b26\u548c\u706b\u7b26\u71c3\u70e7\u66f4\u9002\u5408\u6e05\u7fa4\u3002",
+                    "召会用数量压制你。连锁雷符和火符燃烧更适合清群。",
                     false, 80f, 110f),
-                CreateV02Round(4, "\u8d64\u6bd2\u5996", enemies["red_poison_beast"],
+                CreateV02Round(4, "毒：持续伤害", enemies["red_poison_beast"],
                     "\u7406\u89e3\u4e0d\u80fd\u53ea\u5806\u8f93\u51fa\uff0c\u9632\u5fa1\u548c\u51c0\u5316\u4e5f\u91cd\u8981\u3002",
-                    "\u8d64\u6bd2\u5996\u4f1a\u53e0\u52a0\u4e2d\u6bd2\u548c\u71c3\u70e7\u3002\u51c0\u5316\u7b26\u53ef\u4ee5\u6e05\u9664\u72b6\u6001\uff0c\u62a4\u8eab\u7b26\u53ef\u4ee5\u62b5\u6297\u6301\u7eed\u4f24\u5bb3\u3002",
+                    "毒会叠加中毒和燃烧。净化符可以清除状态，护身符可以抵抗持续伤害。",
                     false, 90f, 120f),
-                CreateV02Round(5, "\u5077\u7075\u9b3c", enemies["energy_thief_ghost"],
+                CreateV02Round(5, "偷：供能干扰", enemies["energy_thief_ghost"],
                     "\u7406\u89e3\u9635\u773c\u548c\u805a\u7075\u77f3\u662f\u6838\u5fc3\u8d44\u6e90\uff0c\u4f1a\u88ab\u654c\u4eba\u9488\u5bf9\u3002",
-                    "\u5077\u7075\u9b3c\u4f1a\u5077\u53d6\u9635\u773c\u6216\u805a\u7075\u77f3\u7075\u6c14\uff0c\u4f7f\u5468\u56f4\u7b26\u7b93\u77ed\u6682\u5931\u6548\u3002\u9547\u9b42\u7b26\u53ef\u4ee5\u53cd\u5236\u5077\u7075\u3002",
+                    "偷会偷取阵眼或聚灵石灵气，使周围符箓短暂失效。镇魂符可以反制偷灵。",
                     false, 90f, 120f),
-                CreateV02Round(6, "\u5c01\u7b26\u9053\u4eba", enemies["seal_talisman_taoist"],
+                CreateV02Round(6, "封：行列封锁", enemies["seal_talisman_taoist"],
                     "\u7406\u89e3\u6838\u5fc3\u8f93\u51fa\u4e0d\u80fd\u5168\u90e8\u5806\u5728\u540c\u4e00\u884c\u6216\u540c\u4e00\u5217\u3002",
-                    "\u5c01\u7b26\u9053\u4eba\u4f1a\u5c01\u5370\u4e00\u884c\u6216\u4e00\u5217\u7b26\u7b93\u3002\u51c0\u5316\u7b26\u53ef\u4ee5\u89e3\u5c01\uff0c\u4e0d\u8981\u628a\u6240\u6709\u6838\u5fc3\u8f93\u51fa\u5806\u5728\u540c\u4e00\u6761\u7ebf\u4e0a\u3002",
+                    "封会封印一行或一列符箓。净化符可以解封，不要把所有核心输出堆在同一条线上。",
                     false, 100f, 130f),
-                CreateV02Round(7, "\u7834\u9635\u5c0fBoss", enemies["formation_breaker_boss"],
+                CreateV02Round(7, "将：综合压制", enemies["formation_breaker_boss"],
                     "\u7efc\u5408\u68c0\u9a8c\u7834\u76fe\u3001\u6e05\u7fa4\u3001\u9635\u773c\u4fdd\u62a4\u548c\u9635\u6cd5\u7a33\u5b9a\u6027\u3002",
-                    "Boss\u4f1a\u5148\u83b7\u5f97\u62a4\u76fe\uff0c\u4e2d\u6bb5\u53ec\u5524\u5c0f\u5996\uff0c\u4f4e\u8840\u91cf\u65f6\u5c01\u5370\u9635\u773c\u9644\u8fd1\u683c\u5b50\u3002\u9700\u8981\u7834\u76fe\u3001\u6e05\u7fa4\u3001\u51c0\u5316\u548c\u7a33\u5b9a\u4f9b\u80fd\u3002",
+                    "将会先获得护盾，中段召唤小妖，低血量时封印阵眼附近格子。需要破盾、清群、净化和稳定供能。",
                     true, 150f, 180f)
             };
 
@@ -860,7 +860,7 @@ namespace TalismanBag.EditorTools
                 AddV02Reward("reward_upgrade_eye_core_nine_grid", "阵眼强化", V02RewardType.FormationModifier, "阵眼供能变为九宫格。", "提升阵法稳定性，让更多符箓被阵眼直接供能。", null, V02FormationModifierType.UpgradeEyeCoreToNineGrid, V02BuildModifierType.None, 0f, new[] { CounterTag.StealEnergy, CounterTag.Seal, CounterTag.Boss }, new[] { FunctionTag.Enhance }, 9),
                 AddV02Reward("reward_spirit_link_between_stones", "灵气连线", V02RewardType.FormationModifier, "同排或同列聚灵石之间形成供能连线。", "连线经过的格子视为被供能。", null, V02FormationModifierType.SpiritLinkBetweenStones, V02BuildModifierType.None, 0f, new[] { CounterTag.Group, CounterTag.StealEnergy, CounterTag.Seal, CounterTag.Boss }, new[] { FunctionTag.EnergySource, FunctionTag.Enhance }, 8),
                 AddV02Reward("reward_outer_ring_defense_boost", "外圈护阵", V02RewardType.FormationModifier, "外圈护身符护盾 +30%，外圈净化符冷却 -15%。", "鼓励把防御符放到阵法外圈形成防护结构。", null, V02FormationModifierType.OuterRingDefenseBoost, V02BuildModifierType.None, 0f, new[] { CounterTag.Poison, CounterTag.Burn, CounterTag.Seal, CounterTag.Charge, CounterTag.Boss }, new[] { FunctionTag.Defense, FunctionTag.Cleanse }, 8),
-                AddV02Reward("reward_fire_burn_plus_one", "火符燃烧强化", V02RewardType.BuildModifier, "火符命中时额外叠加 1 层燃烧。", "强化火符持续输出，对小妖群有帮助。", null, V02FormationModifierType.None, V02BuildModifierType.FireBurnPlusOne, 1f, new[] { CounterTag.Group, CounterTag.Summon }, new[] { FunctionTag.Burn }, 8),
+                AddV02Reward("reward_fire_burn_plus_one", "火符燃烧强化", V02RewardType.BuildModifier, "火符命中时额外叠加 1 层燃烧。", "强化火符持续输出，对召有帮助。", null, V02FormationModifierType.None, V02BuildModifierType.FireBurnPlusOne, 1f, new[] { CounterTag.Group, CounterTag.Summon }, new[] { FunctionTag.Burn }, 8),
                 AddV02Reward("reward_thunder_shieldbreak_boost", "雷符破盾强化", V02RewardType.BuildModifier, "雷符对护盾伤害倍率提高。", "雷符破盾倍率从 2.0 提高到 2.5。", null, V02FormationModifierType.None, V02BuildModifierType.ThunderShieldBreakBoost, 0.5f, new[] { CounterTag.Shield, CounterTag.Boss }, new[] { FunctionTag.ShieldBreak }, 9),
                 AddV02Reward("reward_sword_crit_boost", "剑丸爆发强化", V02RewardType.BuildModifier, "剑丸有概率造成额外伤害。", "剑丸 25% 概率造成 1.8 倍伤害。", null, V02FormationModifierType.None, V02BuildModifierType.SwordCritBoost, 0.25f, new[] { CounterTag.Charge, CounterTag.Boss }, new[] { FunctionTag.Burst }, 8),
                 AddV02Reward("reward_shield_amount_boost", "护身符强化", V02RewardType.BuildModifier, "护身符生成的护盾提高。", "护盾 +30%。", null, V02FormationModifierType.None, V02BuildModifierType.ShieldAmountBoost, 0.3f, new[] { CounterTag.Poison, CounterTag.Burn, CounterTag.Charge, CounterTag.Boss }, new[] { FunctionTag.Shield, FunctionTag.Defense }, 8),
@@ -919,20 +919,33 @@ namespace TalismanBag.EditorTools
             {
                 config = ScriptableObject.CreateInstance<V02CounterMultiplierConfig>();
                 AssetDatabase.CreateAsset(config, path);
+                config.strongCounterMultiplier = 1.8f;
+                config.lightCounterMultiplier = 1.35f;
+                config.neutralMultiplier = 1f;
+                config.resistedMultiplier = 0.7f;
+                config.hardResistedMultiplier = 0.55f;
+                config.rewardShieldBreakMultiplier = 2.5f;
+                config.groupClearMultiplier = 1.6f;
             }
 
-            config.strongCounterMultiplier = 1.8f;
-            config.lightCounterMultiplier = 1.35f;
-            config.neutralMultiplier = 1f;
-            config.resistedMultiplier = 0.7f;
-            config.hardResistedMultiplier = 0.55f;
-            config.rewardShieldBreakMultiplier = 2.5f;
-            config.groupClearMultiplier = 1.6f;
             EditorUtility.SetDirty(config);
             return config;
         }
 
-        private static void CreateV02FormationCounterScene(Dictionary<string, TalismanItemDefinition> definitions, EnemyDefinition testEnemy, Dictionary<string, EnemyDefinition> testEnemies, V02RewardPoolConfig rewardPool, V02RunConfig runConfig, V02CounterMultiplierConfig multiplierConfig)
+        private static V02FormationBalanceConfig CreateV02FormationBalanceConfig()
+        {
+            const string path = "Assets/_Game/ScriptableObjects/TalismanBag/V02/Balance/FormationBalanceConfig_V02.asset";
+            V02FormationBalanceConfig config = AssetDatabase.LoadAssetAtPath<V02FormationBalanceConfig>(path);
+            if (config == null)
+            {
+                config = ScriptableObject.CreateInstance<V02FormationBalanceConfig>();
+                AssetDatabase.CreateAsset(config, path);
+            }
+
+            return config;
+        }
+
+        private static void CreateV02FormationCounterScene(Dictionary<string, TalismanItemDefinition> definitions, EnemyDefinition testEnemy, Dictionary<string, EnemyDefinition> testEnemies, V02RewardPoolConfig rewardPool, V02RunConfig runConfig, V02CounterMultiplierConfig multiplierConfig, V02FormationBalanceConfig formationConfig)
         {
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -953,8 +966,8 @@ namespace TalismanBag.EditorTools
             gridModel.transform.SetParent(uiRoot, false);
             TalismanBagGrid grid = gridModel.GetComponent<TalismanBagGrid>();
             SetField(grid, "width", 5);
-            SetField(grid, "height", 4);
-            grid.Initialize(5, 4);
+            SetField(grid, "height", 5);
+            grid.Initialize(5, 5);
 
             GameObject systems = new("TalismanBagV02Systems",
                 typeof(TalismanCombatUI),
@@ -987,7 +1000,6 @@ namespace TalismanBag.EditorTools
                 typeof(V02RewardPanel),
                 typeof(V02EnemyIntentUI),
                 typeof(V02EnemyPreviewPanel),
-                typeof(V02PlayerStatusUI),
                 typeof(V02TalismanTooltipUI),
                 typeof(V02RunResultPanel),
                 typeof(V02DebugPopupController),
@@ -1024,19 +1036,21 @@ namespace TalismanBag.EditorTools
             V02RewardPanel rewardPanel = systems.GetComponent<V02RewardPanel>();
             V02EnemyIntentUI intentUI = systems.GetComponent<V02EnemyIntentUI>();
             V02EnemyPreviewPanel previewPanel = systems.GetComponent<V02EnemyPreviewPanel>();
-            V02PlayerStatusUI playerStatusUI = systems.GetComponent<V02PlayerStatusUI>();
             V02TalismanTooltipUI tooltipUI = systems.GetComponent<V02TalismanTooltipUI>();
             V02RunResultPanel runResultPanel = systems.GetComponent<V02RunResultPanel>();
             V02DebugPopupController debugPopupController = systems.GetComponent<V02DebugPopupController>();
             V02FormationDebugController debugController = systems.GetComponent<V02FormationDebugController>();
+            StatusEffectController playerStatusController = CreateStatusEffectController(systems.transform, "PlayerStatusEffects");
+            StatusEffectController enemyStatusController = CreateStatusEffectController(systems.transform, "EnemyStatusEffects");
 
             CreateV02TopBar(uiRoot, combatUI);
-            CreateV02EnemyArea(uiRoot, combatUI, out RectTransform enemyRect, out Graphic enemyGraphic, out Image chargeFill, out Text chargeText);
-            CreateV02CombatStage(uiRoot, previewPanel, intentUI, playerStatusUI);
+            CreateV02EnemyArea(uiRoot, combatUI, out RectTransform enemyRect, out Graphic enemyGraphic, out Image chargeFill, out Text chargeText, out StatusAnchorUI enemyBuffAnchor, out StatusAnchorUI enemyDebuffAnchor);
+            CreateV02CombatStage(uiRoot, previewPanel, intentUI, out StatusAnchorUI playerBuffAnchor, out StatusAnchorUI playerDebuffAnchor);
             TalismanGridSlotView[] slots = CreateV02Grid(uiRoot, grid);
             CreateV02InfoArea(uiRoot, powerUI, tooltipUI, battleLogUI, out Text hoverHintText, out Text roundInfoText, out Text prepHintText);
             CreateV02BottomControls(uiRoot, definitions, grid, canvas, combat, debugController, out List<DraggableTalismanItemView> initialItems, out Transform inventoryContent, out DraggableTalismanItemView itemTemplate);
             RectTransform feedbackRoot = CreateFeedbackRoot(uiRoot);
+            StatusTooltipPanel statusTooltipPanel = CreateStatusTooltipPanel(feedbackRoot);
             CreateResultPanel(uiRoot, resultPanel);
             CreateV02RunResultPanel(uiRoot, runResultPanel);
             CreateV02RewardPanel(uiRoot, rewardPanel);
@@ -1055,6 +1069,7 @@ namespace TalismanBag.EditorTools
             SetField(comboHighlight, "slotViews", slots);
             SetField(floatingText, "eventRouter", eventRouter);
             SetField(floatingText, "floatingRoot", feedbackRoot);
+            SetField(floatingText, "anchorLayout", feedbackRoot.GetComponentInChildren<FloatingCombatTextAnchorLayout>(true));
             SetField(triggerFeedback, "eventRouter", eventRouter);
             SetField(enemyFeedback, "eventRouter", eventRouter);
             SetField(enemyFeedback, "enemyVisual", enemyRect);
@@ -1063,6 +1078,10 @@ namespace TalismanBag.EditorTools
             SetField(enemyFeedback, "chargeText", chargeText);
             SetField(battleLogUI, "eventRouter", eventRouter);
             SetField(battleLogUI, "maxLines", 3);
+            ConfigureStatusAnchor(playerBuffAnchor, playerStatusController, statusTooltipPanel, StatusPolarity.Buff);
+            ConfigureStatusAnchor(playerDebuffAnchor, playerStatusController, statusTooltipPanel, StatusPolarity.Debuff);
+            ConfigureStatusAnchor(enemyBuffAnchor, enemyStatusController, statusTooltipPanel, StatusPolarity.Buff);
+            ConfigureStatusAnchor(enemyDebuffAnchor, enemyStatusController, statusTooltipPanel, StatusPolarity.Debuff);
 
             SetField(enemySkillController, "combatController", combat);
             SetField(enemySkillController, "eventRouter", eventRouter);
@@ -1089,6 +1108,7 @@ namespace TalismanBag.EditorTools
             SetField(powerResolver, "slotViews", slots);
             SetField(powerResolver, "formationEyePosition", new Vector2Int(2, 1));
             SetField(powerResolver, "weakCooldownMultiplier", 1.35f);
+            SetField(powerResolver, "formationBalanceConfig", formationConfig);
             SetField(powerResolver, "runModifierState", runModifierState);
             powerResolver.RefreshPowerStates();
             powerUI.Bind(powerResolver);
@@ -1146,7 +1166,13 @@ namespace TalismanBag.EditorTools
             SetField(combat, "v02RunModifierState", runModifierState);
             SetField(combat, "v02EnemyIntentUI", intentUI);
             SetField(combat, "v02EnemyPreviewPanel", previewPanel);
-            SetField(combat, "v02PlayerStatusUI", playerStatusUI);
+            SetField(combat, "playerStatusController", playerStatusController);
+            SetField(combat, "enemyStatusController", enemyStatusController);
+            SetField(combat, "playerBuffAnchor", playerBuffAnchor);
+            SetField(combat, "playerDebuffAnchor", playerDebuffAnchor);
+            SetField(combat, "enemyBuffAnchor", enemyBuffAnchor);
+            SetField(combat, "enemyDebuffAnchor", enemyDebuffAnchor);
+            SetField(combat, "statusTooltipPanel", statusTooltipPanel);
             SetField(combat, "slotViews", slots);
             SetField(combat, "itemViews", initialItems);
 
@@ -1206,21 +1232,25 @@ namespace TalismanBag.EditorTools
             out RectTransform enemyRect,
             out Graphic enemyGraphic,
             out Image chargeFill,
-            out Text chargeText)
+            out Text chargeText,
+            out StatusAnchorUI enemyBuffAnchor,
+            out StatusAnchorUI enemyDebuffAnchor)
         {
             GameObject panel = CreatePanel("V02EnemyArea", parent, new Vector2(0f, -156f), new Vector2(1020f, 248f), new Color(0.095f, 0.105f, 0.088f), TextAnchor.UpperCenter);
             GameObject enemy = CreatePanel("EnemySilhouette", panel.transform, new Vector2(-330f, 0f), new Vector2(196f, 196f), new Color(0.2f, 0.13f, 0.18f), TextAnchor.MiddleCenter);
-            Text enemyFace = CreateText("EnemyFace", enemy.transform, "\u5996", 70, FontStyle.Bold, new Color(1f, 0.72f, 0.78f));
+            Text enemyFace = CreateText("EnemyFace", enemy.transform, "\u653b", 70, FontStyle.Bold, new Color(1f, 0.72f, 0.78f));
             SetRect(enemyFace.rectTransform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+            enemyBuffAnchor = CreateStatusAnchor("EnemyBuffAnchor", enemy.transform, new Vector2(116f, 82f), new Vector2(320f, 48f), StatusPolarity.Buff, TextAnchor.MiddleRight);
+            enemyDebuffAnchor = CreateStatusAnchor("EnemyDebuffAnchor", enemy.transform, new Vector2(116f, 34f), new Vector2(320f, 48f), StatusPolarity.Debuff, TextAnchor.MiddleRight);
 
             GameObject shield = CreatePanel("ShieldFeedback", panel.transform, new Vector2(-330f, 0f), new Vector2(220f, 220f), new Color(0.25f, 0.85f, 1f, 0f), TextAnchor.MiddleCenter);
             Image shieldImage = shield.GetComponent<Image>();
 
-            Text title = CreateText("EnemyTitle", panel.transform, "\u5c71\u95f4\u5c0f\u5996", 34, FontStyle.Bold, Color.white);
+            Text title = CreateText("EnemyTitle", panel.transform, "\u3010\u653b\u3011\u653b", 34, FontStyle.Bold, Color.white);
             title.alignment = TextAnchor.MiddleLeft;
             SetRect(title.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(300f, -34f), new Vector2(420f, 44f));
 
-            Text hp = CreateText("EnemyHPText", panel.transform, "\u5c71\u95f4\u5c0f\u5996\uff1a80/80", 28, FontStyle.Bold, new Color(1f, 0.82f, 0.7f));
+            Text hp = CreateText("EnemyHPText", panel.transform, "\u3010\u653b\u3011\u653b\uff1a80/80", 28, FontStyle.Bold, new Color(1f, 0.82f, 0.7f));
             hp.alignment = TextAnchor.MiddleLeft;
             SetRect(hp.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(300f, -84f), new Vector2(520f, 40f));
 
@@ -1235,6 +1265,8 @@ namespace TalismanBag.EditorTools
             chargeText = CreateText("ChargeText", panel.transform, string.Empty, 20, FontStyle.Bold, new Color(1f, 0.76f, 0.5f));
             SetRect(chargeText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(300f, -170f), new Vector2(520f, 30f));
 
+            SetField(combatUI, "enemyFaceText", enemyFace);
+            SetField(combatUI, "enemyTitleText", title);
             SetField(combatUI, "enemyHpText", hp);
             SetField(combatUI, "enemyVisual", enemy.GetComponent<RectTransform>());
             SetField(combatUI, "enemyFlashTarget", enemy.GetComponent<Image>());
@@ -1243,7 +1275,7 @@ namespace TalismanBag.EditorTools
             enemyGraphic = enemy.GetComponent<Image>();
         }
 
-        private static void CreateV02CombatStage(Transform parent, V02EnemyPreviewPanel previewPanel, V02EnemyIntentUI intentUI, V02PlayerStatusUI playerStatusUI)
+        private static void CreateV02CombatStage(Transform parent, V02EnemyPreviewPanel previewPanel, V02EnemyIntentUI intentUI, out StatusAnchorUI playerBuffAnchor, out StatusAnchorUI playerDebuffAnchor)
         {
             GameObject panel = CreatePanel("V02AutoCombatStage", parent, new Vector2(0f, -428f), new Vector2(1020f, 176f), new Color(0.085f, 0.095f, 0.08f), TextAnchor.UpperCenter);
 
@@ -1252,9 +1284,11 @@ namespace TalismanBag.EditorTools
             SetRect(playerFace.rectTransform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), Vector2.zero);
             Text playerName = CreateText("PlayerAvatarName", playerAvatar.transform, "\u4fee\u58eb", 20, FontStyle.Bold, new Color(0.96f, 0.9f, 0.75f));
             SetRect(playerName.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 12f), new Vector2(-18f, 26f));
+            playerBuffAnchor = CreateStatusAnchor("PlayerBuffAnchor", playerAvatar.transform, new Vector2(128f, 66f), new Vector2(290f, 48f), StatusPolarity.Buff);
+            playerDebuffAnchor = CreateStatusAnchor("PlayerDebuffAnchor", playerAvatar.transform, new Vector2(128f, 18f), new Vector2(290f, 48f), StatusPolarity.Debuff);
 
             GameObject preview = CreatePanel("V02EnemyPreviewPanel", panel.transform, new Vector2(-148f, 0f), new Vector2(410f, 142f), new Color(0.07f, 0.082f, 0.092f), TextAnchor.MiddleCenter);
-            Text previewTitle = CreateText("EnemyPreviewTitle", preview.transform, "敌人：山间小妖", 21, FontStyle.Bold, new Color(0.9f, 0.96f, 1f));
+            Text previewTitle = CreateText("EnemyPreviewTitle", preview.transform, "敌人：【攻】攻", 21, FontStyle.Bold, new Color(0.9f, 0.96f, 1f));
             previewTitle.alignment = TextAnchor.MiddleLeft;
             SetRect(previewTitle.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -18f), new Vector2(-28f, 28f));
             Text previewBody = CreateText("EnemyPreviewBody", preview.transform, string.Empty, 16, FontStyle.Normal, Color.white);
@@ -1274,12 +1308,6 @@ namespace TalismanBag.EditorTools
             intentTimer.alignment = TextAnchor.MiddleRight;
             SetRect(intentTimer.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-22f, 15f), new Vector2(78f, 28f));
 
-            GameObject status = CreatePanel("V02PlayerStatusPanel", panel.transform, new Vector2(318f, -48f), new Vector2(360f, 54f), new Color(0.078f, 0.088f, 0.075f), TextAnchor.MiddleCenter);
-            Text statusText = CreateText("PlayerStatusText", status.transform, string.Empty, 20, FontStyle.Bold, new Color(0.82f, 1f, 0.86f));
-            statusText.alignment = TextAnchor.MiddleLeft;
-            SetRect(statusText.rectTransform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(-26f, -8f));
-            status.SetActive(false);
-
             SetField(previewPanel, "panel", preview);
             SetField(previewPanel, "titleText", previewTitle);
             SetField(previewPanel, "bodyText", previewBody);
@@ -1287,8 +1315,6 @@ namespace TalismanBag.EditorTools
             SetField(intentUI, "titleText", intentTitle);
             SetField(intentUI, "intentText", intentBody);
             SetField(intentUI, "timerText", intentTimer);
-            SetField(playerStatusUI, "panel", status);
-            SetField(playerStatusUI, "statusText", statusText);
         }
 
         private static TalismanGridSlotView[] CreateV02Grid(Transform parent, TalismanBagGrid grid)
@@ -1298,9 +1324,9 @@ namespace TalismanBag.EditorTools
             outline.effectColor = new Color(0.45f, 0.82f, 1f);
             outline.effectDistance = new Vector2(4f, -4f);
 
-            GameObject gridObject = new("GridSlots_5x4", typeof(RectTransform), typeof(GridLayoutGroup));
+            GameObject gridObject = new("GridSlots_5x5", typeof(RectTransform), typeof(GridLayoutGroup));
             gridObject.transform.SetParent(frame.transform, false);
-            SetRect(gridObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 10f), new Vector2(600f, 478f));
+            SetRect(gridObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -47f), new Vector2(600f, 600f));
             GridLayoutGroup layout = gridObject.GetComponent<GridLayoutGroup>();
             layout.cellSize = new Vector2(112f, 112f);
             layout.spacing = new Vector2(10f, 10f);
@@ -1309,7 +1335,7 @@ namespace TalismanBag.EditorTools
             layout.childAlignment = TextAnchor.MiddleCenter;
 
             List<TalismanGridSlotView> slots = new();
-            for (int y = 3; y >= 0; y--)
+            for (int y = 4; y >= 0; y--)
             {
                 for (int x = 0; x < 5; x++)
                 {
@@ -1322,14 +1348,16 @@ namespace TalismanBag.EditorTools
                 }
             }
 
-            Text caption = CreateText("GridCaption", frame.transform, "5x4 V0.2 Formation Counter", 25, FontStyle.Bold, new Color(0.82f, 0.94f, 1f));
+            Text caption = CreateText("GridCaption", frame.transform, "5x5 V0.2 Formation Counter", 25, FontStyle.Bold, new Color(0.82f, 0.94f, 1f));
             SetRect(caption.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(560f, 34f));
             return slots.ToArray();
         }
 
         private static void CreateV02InfoArea(Transform parent, FormationPowerUI powerUI, V02TalismanTooltipUI tooltipUI, BattleLogUI battleLogUI, out Text hoverHintText, out Text roundInfoText, out Text prepHintText)
         {
-            GameObject panel = CreatePanel("V02FormationInfoArea", parent, new Vector2(0f, -1192f), new Vector2(1020f, 260f), new Color(0.085f, 0.095f, 0.078f), TextAnchor.UpperCenter);
+            GameObject panel = CreatePanel("V02FormationInfoArea", parent, new Vector2(0f, -1192f), new Vector2(1020f, 320f), new Color(0.085f, 0.095f, 0.078f), TextAnchor.UpperCenter);
+            Button infoClose = CreateButton("FormationInfoCloseButton", panel.transform, "\u00D7", new Color(0.36f, 0.24f, 0.2f), 30);
+            SetRect(infoClose.GetComponent<RectTransform>(), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-22f, -18f), new Vector2(54f, 54f));
 
             Text title = CreateText("InfoTitle", panel.transform, "\u9635\u6cd5\u4f9b\u80fd", 28, FontStyle.Bold, new Color(0.86f, 0.95f, 1f));
             title.alignment = TextAnchor.MiddleLeft;
@@ -1347,12 +1375,22 @@ namespace TalismanBag.EditorTools
             Text hint = CreateText("PowerHint", panel.transform, "\u7b26\u7b93\u5fc5\u987b\u88ab\u9635\u773c\u6216\u805a\u7075\u77f3\u4f9b\u80fd\u624d\u4f1a\u89e6\u53d1\u3002\n\u79fb\u52a8\u805a\u7075\u77f3\uff0c\u53ef\u4ee5\u6539\u53d8\u9635\u6cd5\u8303\u56f4\u3002", 22, FontStyle.Bold, new Color(1f, 0.84f, 0.58f));
             hint.alignment = TextAnchor.UpperLeft;
             hint.horizontalOverflow = HorizontalWrapMode.Wrap;
-            SetRect(hint.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(28f, 32f), new Vector2(940f, 58f));
+            SetRect(hint.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(500f, -202f), new Vector2(470f, 58f));
 
             hoverHintText = CreateText("SlotHoverHint", panel.transform, string.Empty, 21, FontStyle.Bold, new Color(0.72f, 0.9f, 1f));
             hoverHintText.alignment = TextAnchor.MiddleLeft;
-            SetRect(hoverHintText.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(28f, 94f), new Vector2(940f, 32f));
-            prepHintText = hoverHintText;
+            SetRect(hoverHintText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(500f, -276f), new Vector2(470f, 32f));
+
+            Text preBattleTitle = CreateText("PreBattleHintTitle", panel.transform, "\u6218\u524d\u63d0\u793a", 22, FontStyle.Bold, new Color(1f, 0.82f, 0.45f));
+            preBattleTitle.alignment = TextAnchor.MiddleLeft;
+            SetRect(preBattleTitle.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(28f, -198f), new Vector2(180f, 30f));
+
+            Text preBattleHint = CreateText("PreBattleHintText", panel.transform, "\u3010\u653b\u3011\u653b\n\u89c2\u5bdf\u654c\u4eba\u5a01\u80c1\uff0c\u5f00\u6218\u524d\u8c03\u6574\u9635\u76d8\u3002", 19, FontStyle.Bold, new Color(1f, 0.92f, 0.7f));
+            preBattleHint.alignment = TextAnchor.UpperLeft;
+            preBattleHint.horizontalOverflow = HorizontalWrapMode.Wrap;
+            preBattleHint.verticalOverflow = VerticalWrapMode.Truncate;
+            SetRect(preBattleHint.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(28f, -226f), new Vector2(430f, 54f));
+            prepHintText = preBattleHint;
 
             GameObject logPanel = CreatePanel("BattleLogPanel", panel.transform, new Vector2(250f, 26f), new Vector2(470f, 116f), new Color(0.075f, 0.083f, 0.073f), TextAnchor.MiddleCenter);
             Text logTitle = CreateText("BattleLogTitle", logPanel.transform, "\u6700\u8fd1 3 \u6761\u5173\u952e\u65e5\u5fd7", 22, FontStyle.Bold, new Color(1f, 0.82f, 0.45f));
@@ -1365,6 +1403,8 @@ namespace TalismanBag.EditorTools
             SetRect(logBody.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -20f), new Vector2(420f, 54f));
 
             GameObject tooltipPanel = CreatePanel("V02TagTooltipPanel", panel.transform, new Vector2(250f, -76f), new Vector2(470f, 104f), new Color(0.065f, 0.078f, 0.092f), TextAnchor.MiddleCenter);
+            Button tooltipClose = CreateButton("TooltipCloseButton", tooltipPanel.transform, "\u00D7", new Color(0.36f, 0.24f, 0.2f), 30);
+            SetRect(tooltipClose.GetComponent<RectTransform>(), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-22f, -18f), new Vector2(54f, 54f));
             Text tooltipTitle = CreateText("TooltipTitle", tooltipPanel.transform, "点击符箓查看标签", 21, FontStyle.Bold, new Color(0.82f, 0.94f, 1f));
             tooltipTitle.alignment = TextAnchor.MiddleLeft;
             SetRect(tooltipTitle.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -20f), new Vector2(-30f, 28f));
@@ -1381,6 +1421,7 @@ namespace TalismanBag.EditorTools
             SetField(tooltipUI, "panel", tooltipPanel);
             SetField(tooltipUI, "titleText", tooltipTitle);
             SetField(tooltipUI, "bodyText", tooltipBody);
+            SetField(tooltipUI, "closeButton", tooltipClose);
             SetField(battleLogUI, "logText", logBody);
         }
 
@@ -1774,7 +1815,7 @@ namespace TalismanBag.EditorTools
             Text title = CreateText("RewardTitle", panel.transform, "选择奖励", 42, FontStyle.Bold, new Color(1f, 0.88f, 0.56f));
             SetRect(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -54f), new Vector2(860f, 58f));
 
-            Text nextEnemy = CreateText("RewardNextEnemy", panel.transform, "下一关：龟甲护法", 26, FontStyle.Bold, new Color(0.84f, 0.96f, 1f));
+            Text nextEnemy = CreateText("RewardNextEnemy", panel.transform, "下一关：【盾】盾", 26, FontStyle.Bold, new Color(0.84f, 0.96f, 1f));
             nextEnemy.alignment = TextAnchor.MiddleCenter;
             SetRect(nextEnemy.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -112f), new Vector2(860f, 42f));
 
@@ -2527,6 +2568,97 @@ namespace TalismanBag.EditorTools
             root.transform.SetParent(parent, false);
             RectTransform rect = root.GetComponent<RectTransform>();
             SetRect(rect, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+            CreateFloatingTextAnchors(rect);
+            return rect;
+        }
+
+        private static StatusEffectController CreateStatusEffectController(Transform parent, string name)
+        {
+            GameObject controllerObject = new(name, typeof(StatusEffectController));
+            controllerObject.transform.SetParent(parent, false);
+            return controllerObject.GetComponent<StatusEffectController>();
+        }
+
+        private static StatusAnchorUI CreateStatusAnchor(string name, Transform parent, Vector2 anchoredPosition, Vector2 size, StatusPolarity polarity, TextAnchor alignment = TextAnchor.MiddleLeft)
+        {
+            GameObject anchorObject = new(name, typeof(RectTransform), typeof(StatusAnchorUI), typeof(HorizontalLayoutGroup));
+            anchorObject.transform.SetParent(parent, false);
+            RectTransform rect = anchorObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 0.5f);
+            rect.anchorMax = new Vector2(0f, 0.5f);
+            rect.pivot = new Vector2(0f, 0.5f);
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = size;
+
+            HorizontalLayoutGroup layout = anchorObject.GetComponent<HorizontalLayoutGroup>();
+            layout.childAlignment = alignment;
+            layout.spacing = 6f;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            StatusAnchorUI anchor = anchorObject.GetComponent<StatusAnchorUI>();
+            SetField(anchor, "iconAlignment", alignment);
+            SetField(anchor, "filterByPolarity", true);
+            SetField(anchor, "polarityFilter", polarity);
+            return anchor;
+        }
+
+        private static void ConfigureStatusAnchor(StatusAnchorUI anchor, StatusEffectController controller, StatusTooltipPanel tooltipPanel, StatusPolarity polarity)
+        {
+            SetField(anchor, "controller", controller);
+            SetField(anchor, "tooltipPanel", tooltipPanel);
+            SetField(anchor, "filterByPolarity", true);
+            SetField(anchor, "polarityFilter", polarity);
+        }
+
+        private static StatusTooltipPanel CreateStatusTooltipPanel(Transform parent)
+        {
+            GameObject panelObject = new("StatusTooltipRuntime", typeof(RectTransform), typeof(StatusTooltipPanel));
+            panelObject.transform.SetParent(parent, false);
+            SetRect(panelObject.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+            return panelObject.GetComponent<StatusTooltipPanel>();
+        }
+
+        private static void CreateFloatingTextAnchors(RectTransform root)
+        {
+            GameObject anchorRoot = new("FloatingTextAnchors", typeof(RectTransform), typeof(FloatingCombatTextAnchorLayout));
+            anchorRoot.transform.SetParent(root, false);
+            RectTransform anchorRootRect = anchorRoot.GetComponent<RectTransform>();
+            SetRect(anchorRootRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+
+            FloatingCombatTextAnchorLayout layout = anchorRoot.GetComponent<FloatingCombatTextAnchorLayout>();
+            SetField(layout, "damageDealtAnchor", CreateFeedbackAnchor("DamageDealtAnchor", anchorRoot.transform, new Vector2(320f, 480f)));
+            SetField(layout, "damageTakenAnchor", CreateFeedbackAnchor("DamageTakenAnchor", anchorRoot.transform, new Vector2(-320f, 480f)));
+            SetField(layout, "manaGeneratedAnchor", CreateFeedbackAnchor("ManaGeneratedAnchor", anchorRoot.transform, new Vector2(0f, 320f)));
+            SetField(layout, "manaSpentAnchor", CreateFeedbackAnchor("ManaSpentAnchor", anchorRoot.transform, new Vector2(0f, 260f)));
+            SetField(layout, "shieldGainedAnchor", CreateFeedbackAnchor("ShieldGainedAnchor", anchorRoot.transform, new Vector2(-320f, 390f)));
+            SetField(layout, "healReceivedAnchor", CreateFeedbackAnchor("HealReceivedAnchor", anchorRoot.transform, new Vector2(-320f, 540f)));
+            SetField(layout, "shieldBreakAnchor", CreateFeedbackAnchor("ShieldBreakAnchor", anchorRoot.transform, new Vector2(320f, 390f)));
+            SetField(layout, "cleanseAnchor", CreateFeedbackAnchor("CleanseAnchor", anchorRoot.transform, new Vector2(-180f, 360f)));
+            SetField(layout, "unsealAnchor", CreateFeedbackAnchor("UnsealAnchor", anchorRoot.transform, new Vector2(-80f, 420f)));
+            SetField(layout, "soulSuppressAnchor", CreateFeedbackAnchor("SoulSuppressAnchor", anchorRoot.transform, new Vector2(320f, 540f)));
+            SetField(layout, "chainClearAnchor", CreateFeedbackAnchor("ChainClearAnchor", anchorRoot.transform, new Vector2(320f, 330f)));
+            SetField(layout, "formationProtectedAnchor", CreateFeedbackAnchor("FormationProtectedAnchor", anchorRoot.transform, new Vector2(0f, 180f)));
+            SetField(layout, "guardReduceAnchor", CreateFeedbackAnchor("GuardReduceAnchor", anchorRoot.transform, new Vector2(-320f, 330f)));
+            SetField(layout, "counterFailedAnchor", CreateFeedbackAnchor("CounterFailedAnchor", anchorRoot.transform, new Vector2(0f, 520f)));
+            SetField(layout, "statusDamageAnchor", CreateFeedbackAnchor("StatusDamageAnchor", anchorRoot.transform, new Vector2(-210f, 430f)));
+            SetField(layout, "enemyInterruptedAnchor", CreateFeedbackAnchor("EnemyInterruptedAnchor", anchorRoot.transform, new Vector2(320f, 610f)));
+            SetField(layout, "enemyEnragedAnchor", CreateFeedbackAnchor("EnemyEnragedAnchor", anchorRoot.transform, new Vector2(320f, 560f)));
+            SetField(layout, "itemSealedAnchor", CreateFeedbackAnchor("ItemSealedAnchor", anchorRoot.transform, new Vector2(0f, 110f)));
+            SetField(layout, "itemUnsealedAnchor", CreateFeedbackAnchor("ItemUnsealedAnchor", anchorRoot.transform, new Vector2(0f, 150f)));
+        }
+
+        private static RectTransform CreateFeedbackAnchor(string name, Transform parent, Vector2 position)
+        {
+            GameObject anchor = new(name, typeof(RectTransform));
+            anchor.transform.SetParent(parent, false);
+            RectTransform rect = anchor.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = new Vector2(160f, 40f);
             return rect;
         }
 

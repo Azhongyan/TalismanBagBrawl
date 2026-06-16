@@ -17,6 +17,8 @@ namespace TalismanBag.Feedback
         private Coroutine flashRoutine;
         private Coroutine shakeRoutine;
         private Coroutine interruptTextRoutine;
+        private Vector2 enemyBaseAnchoredPosition;
+        private bool hasEnemyBasePosition;
         private string currentChargeLabel = "连斩蓄力中";
 
         private void Awake()
@@ -25,6 +27,8 @@ namespace TalismanBag.Feedback
             {
                 enemyBaseColor = enemyFlashTarget.color;
             }
+
+            CaptureEnemyBasePosition();
 
             if (eventRouter != null)
             {
@@ -129,9 +133,12 @@ namespace TalismanBag.Feedback
                 return;
             }
 
+            CaptureEnemyBasePosition();
+
             if (shakeRoutine != null)
             {
                 StopCoroutine(shakeRoutine);
+                enemyVisual.anchoredPosition = enemyBaseAnchoredPosition;
             }
 
             shakeRoutine = StartCoroutine(ShakeRoutine());
@@ -147,7 +154,7 @@ namespace TalismanBag.Feedback
 
         private IEnumerator ShakeRoutine()
         {
-            Vector2 start = enemyVisual.anchoredPosition;
+            Vector2 start = enemyBaseAnchoredPosition;
             for (int i = 0; i < 8; i++)
             {
                 enemyVisual.anchoredPosition = start + new Vector2(i % 2 == 0 ? 8f : -8f, 0f);
@@ -155,6 +162,18 @@ namespace TalismanBag.Feedback
             }
 
             enemyVisual.anchoredPosition = start;
+            shakeRoutine = null;
+        }
+
+        private void CaptureEnemyBasePosition()
+        {
+            if (enemyVisual == null || hasEnemyBasePosition)
+            {
+                return;
+            }
+
+            enemyBaseAnchoredPosition = enemyVisual.anchoredPosition;
+            hasEnemyBasePosition = true;
         }
 
         private IEnumerator HideInterruptTextRoutine()

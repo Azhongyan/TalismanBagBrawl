@@ -325,7 +325,7 @@ namespace TalismanBag.V02.UI
             }
 
             combatController?.SetEnemy(enemy, 1, 1);
-            battleLogUI?.AddLog($"切换敌人：{enemy.displayName}");
+            battleLogUI?.AddLog($"切换敌人：{enemy.GetReadableLabel()}");
         }
 
         public void ForceEnemySkill()

@@ -15,7 +15,7 @@ namespace TalismanBag.UI.Mobile
                 return;
             }
 
-            string enemyName = enemy != null ? enemy.displayName : "未知敌人";
+            string enemyName = enemy != null ? enemy.GetReadableLabel() : "未知敌人";
             string weakness = enemy != null && !string.IsNullOrWhiteSpace(enemy.weaknessText) ? enemy.weaknessText : GetDefaultWeakness(enemy);
             string danger = enemy != null && !string.IsNullOrWhiteSpace(enemy.dangerText) ? enemy.dangerText : GetDefaultDanger(enemy);
             string recommended = enemy != null && !string.IsNullOrWhiteSpace(enemy.recommendedBuildText) ? enemy.recommendedBuildText : "观察弱点后摆阵";

@@ -10,7 +10,7 @@ namespace TalismanBag.EditorTools
         private const string ScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_Run15Min.unity";
         private const string OutputPath = "Builds/Android/TalismanBagPrototype-v0.1.0.apk";
 
-        [MenuItem("Talisman Bag/Build Android Playtest APK")]
+        [MenuItem("Tools/Talisman Bag/Build Android Playtest APK")]
         public static void BuildPlaytestApk()
         {
             PlayerSettings.companyName = "Prototype";

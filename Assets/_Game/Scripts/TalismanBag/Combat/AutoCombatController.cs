@@ -18,6 +18,7 @@ using TalismanBag.V02.Formation;
 using TalismanBag.V02.Result;
 using TalismanBag.V02.Rewards;
 using TalismanBag.V02.Run;
+using TalismanBag.V02.Status;
 using TalismanBag.V02.Tags;
 using TalismanBag.V02.UI;
 using UnityEngine;
@@ -47,6 +48,8 @@ namespace TalismanBag.Combat
         private const string PeachWoodId = "peach_wood_basic";
         private const string ExorcismBellId = "exorcism_bell_basic";
         private const string WaterTalismanId = "water_talisman_basic";
+        private const string PurifyTalismanId = "purify_talisman_basic";
+        private const string SoulSuppressTalismanId = "soul_suppress_talisman_basic";
         private const float DefaultWeakCooldownMultiplier = 1.35f;
 
         [Header("References")]
@@ -80,7 +83,15 @@ namespace TalismanBag.Combat
         [SerializeField] private V02RunModifierState v02RunModifierState;
         [SerializeField] private V02EnemyIntentUI v02EnemyIntentUI;
         [SerializeField] private V02EnemyPreviewPanel v02EnemyPreviewPanel;
-        [SerializeField] private V02PlayerStatusUI v02PlayerStatusUI;
+        [SerializeField] private StatusEffectController playerStatusController;
+        [SerializeField] private StatusEffectController enemyStatusController;
+        [SerializeField] private StatusAnchorUI playerStatusAnchor;
+        [SerializeField] private StatusAnchorUI enemyStatusAnchor;
+        [SerializeField] private StatusAnchorUI playerBuffAnchor;
+        [SerializeField] private StatusAnchorUI playerDebuffAnchor;
+        [SerializeField] private StatusAnchorUI enemyBuffAnchor;
+        [SerializeField] private StatusAnchorUI enemyDebuffAnchor;
+        [SerializeField] private StatusTooltipPanel statusTooltipPanel;
         [SerializeField] private TalismanGridSlotView[] slotViews;
         [SerializeField] private List<DraggableTalismanItemView> itemViews = new();
 
@@ -141,6 +152,7 @@ namespace TalismanBag.Combat
         private void Awake()
         {
             EnsureFormationPowerResolver();
+            EnsureStatusEffectSystem();
 
             startButton?.onClick.AddListener(StartBattle);
             resetButton?.onClick.AddListener(ResetBattle);
@@ -171,6 +183,7 @@ namespace TalismanBag.Combat
         private void Start()
         {
             EnsureFormationPowerResolver();
+            EnsureStatusEffectSystem();
 
             foreach (DraggableTalismanItemView view in itemViews)
             {
@@ -192,6 +205,128 @@ namespace TalismanBag.Combat
             {
                 comboResolver.CombosChanged -= OnCombosChanged;
             }
+        }
+
+        private void EnsureStatusEffectSystem()
+        {
+            playerStatusController = EnsureStatusController(playerStatusController, "PlayerStatusEffects");
+            enemyStatusController = EnsureStatusController(enemyStatusController, "EnemyStatusEffects");
+            statusTooltipPanel = EnsureStatusTooltipPanel(statusTooltipPanel);
+
+            playerBuffAnchor = EnsureStatusAnchor(
+                playerBuffAnchor,
+                "PlayerBuffAnchor",
+                "V02PlayerAvatar",
+                new Vector2(128f, 66f),
+                new Vector2(290f, 48f));
+            playerDebuffAnchor = EnsureStatusAnchor(
+                playerDebuffAnchor,
+                "PlayerDebuffAnchor",
+                "V02PlayerAvatar",
+                new Vector2(128f, 18f),
+                new Vector2(290f, 48f));
+            enemyBuffAnchor = EnsureStatusAnchor(
+                enemyBuffAnchor,
+                "EnemyBuffAnchor",
+                "EnemySilhouette",
+                new Vector2(116f, 82f),
+                new Vector2(320f, 48f));
+            enemyDebuffAnchor = EnsureStatusAnchor(
+                enemyDebuffAnchor,
+                "EnemyDebuffAnchor",
+                "EnemySilhouette",
+                new Vector2(116f, 34f),
+                new Vector2(320f, 48f));
+
+            playerStatusAnchor?.Bind(playerStatusController);
+            playerStatusAnchor?.BindTooltip(statusTooltipPanel);
+            enemyStatusAnchor?.Bind(enemyStatusController);
+            enemyStatusAnchor?.BindTooltip(statusTooltipPanel);
+            ConfigureStatusAnchor(playerBuffAnchor, playerStatusController, StatusPolarity.Buff, TextAnchor.MiddleLeft);
+            ConfigureStatusAnchor(playerDebuffAnchor, playerStatusController, StatusPolarity.Debuff, TextAnchor.MiddleLeft);
+            ConfigureStatusAnchor(enemyBuffAnchor, enemyStatusController, StatusPolarity.Buff, TextAnchor.MiddleRight);
+            ConfigureStatusAnchor(enemyDebuffAnchor, enemyStatusController, StatusPolarity.Debuff, TextAnchor.MiddleRight);
+        }
+
+        private void ConfigureStatusAnchor(StatusAnchorUI anchor, StatusEffectController controller, StatusPolarity polarity, TextAnchor alignment)
+        {
+            if (anchor == null)
+            {
+                return;
+            }
+
+            anchor.SetIconAlignment(alignment);
+            anchor.Bind(controller);
+            anchor.BindTooltip(statusTooltipPanel);
+            anchor.SetPolarityFilter(true, polarity);
+        }
+
+        private StatusEffectController EnsureStatusController(StatusEffectController controller, string objectName)
+        {
+            if (controller != null)
+            {
+                return controller;
+            }
+
+            Transform existing = transform.Find(objectName);
+            if (existing != null && existing.TryGetComponent(out StatusEffectController existingController))
+            {
+                return existingController;
+            }
+
+            GameObject controllerObject = new(objectName, typeof(StatusEffectController));
+            controllerObject.transform.SetParent(transform, false);
+            return controllerObject.GetComponent<StatusEffectController>();
+        }
+
+        private StatusTooltipPanel EnsureStatusTooltipPanel(StatusTooltipPanel panel)
+        {
+            if (panel != null)
+            {
+                return panel;
+            }
+
+            Transform parent = feedbackRoot != null ? feedbackRoot : transform;
+            Transform existing = parent.Find("StatusTooltipRuntime");
+            if (existing != null && existing.TryGetComponent(out StatusTooltipPanel existingPanel))
+            {
+                return existingPanel;
+            }
+
+            GameObject panelObject = new("StatusTooltipRuntime", typeof(RectTransform), typeof(StatusTooltipPanel));
+            panelObject.transform.SetParent(parent, false);
+            RectTransform rect = panelObject.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            return panelObject.GetComponent<StatusTooltipPanel>();
+        }
+
+        private StatusAnchorUI EnsureStatusAnchor(StatusAnchorUI anchor, string objectName, string targetObjectName, Vector2 position, Vector2 size)
+        {
+            if (anchor != null)
+            {
+                return anchor;
+            }
+
+            GameObject existingObject = GameObject.Find(objectName);
+            if (existingObject != null && existingObject.TryGetComponent(out StatusAnchorUI existingAnchor))
+            {
+                return existingAnchor;
+            }
+
+            GameObject target = GameObject.Find(targetObjectName);
+            Transform parent = target != null ? target.transform : feedbackRoot != null ? feedbackRoot : transform;
+            GameObject anchorObject = new(objectName, typeof(RectTransform), typeof(StatusAnchorUI));
+            anchorObject.transform.SetParent(parent, false);
+            RectTransform rect = anchorObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 0.5f);
+            rect.anchorMax = new Vector2(0f, 0.5f);
+            rect.pivot = new Vector2(0f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            return anchorObject.GetComponent<StatusAnchorUI>();
         }
 
         private void Update()
@@ -256,7 +391,7 @@ namespace TalismanBag.Combat
             ResetCombatStatsOnly();
             state = TalismanCombatState.Preparing;
             battleLogUI?.Clear();
-            AddLog($"第 {currentRound}/{totalRounds} 场：{enemyDefinition.displayName}");
+            AddLog($"第 {currentRound}/{totalRounds} 场：{enemyDefinition.GetReadableLabel()}");
             PlaytestSessionLogger.Log($"Round {currentRound} Started: {enemyDefinition.displayName}");
             PrepareItemCooldowns();
             RefreshGridDependentUI();
@@ -577,7 +712,7 @@ namespace TalismanBag.Combat
                 return;
             }
 
-            DrainMana(currentEnemy.definition.displayName, GetManaDrainAmount());
+            DrainMana(currentEnemy.definition.GetReadableLabel(), GetManaDrainAmount());
             RefreshUI();
         }
 
@@ -675,6 +810,7 @@ namespace TalismanBag.Combat
             }
 
             sealedItems.Clear();
+            SyncPlayerFormationStatusEffects();
             RefreshGridDependentUI();
         }
 
@@ -819,7 +955,8 @@ namespace TalismanBag.Combat
                 return false;
             }
 
-            bool cleansedStatus = counterMatchResolver != null && counterMatchResolver.TryResolveCleanse(item, playerStats);
+            EnsureStatusEffectSystem();
+            bool cleansedStatus = counterMatchResolver != null && counterMatchResolver.TryResolveCleanse(item, playerStatusController);
             bool cleansedSeal = counterMatchResolver != null && counterMatchResolver.TryResolveSealCleanse(item, sealedItems);
 
             Emit(BattleEventType.ItemTriggered, BattleLogCategory.Normal, "", item.definition.itemId, value: 1, screenPosition: GetItemPosition(item));
@@ -840,6 +977,7 @@ namespace TalismanBag.Combat
 
                 v02RunStatsTracker?.RecordUnseal();
                 counterFeedbackController?.ShowCounterFeedbackAtScreen(CounterFeedbackType.Unseal, GetItemPosition(item));
+                SyncPlayerFormationStatusEffects();
                 RefreshGridDependentUI();
             }
 
@@ -848,7 +986,8 @@ namespace TalismanBag.Combat
                 Emit(BattleEventType.LogMessage, BattleLogCategory.Normal, $"{GetRuntimeItemName(item)}净化流转，但当前没有负面状态或封印", item.definition.itemId, value: 1, screenPosition: GetItemPosition(item));
             }
 
-            v02PlayerStatusUI?.Refresh(playerStats);
+            playerStatusAnchor?.Refresh();
+            playerDebuffAnchor?.Refresh();
             return true;
         }
 
@@ -1053,9 +1192,10 @@ namespace TalismanBag.Combat
                     IsThunderRewardSource(source) &&
                     currentEnemy.currentShield > 0)
                 {
-                    float boostedMultiplier = v02CounterMultiplierConfig != null
+                    float baseMultiplier = v02CounterMultiplierConfig != null
                         ? v02CounterMultiplierConfig.rewardShieldBreakMultiplier
-                        : 2f + v02RunModifierState.thunderShieldBreakMultiplierBonus;
+                        : 2f;
+                    float boostedMultiplier = baseMultiplier + v02RunModifierState.thunderShieldBreakMultiplierBonus;
                     finalDamage = Mathf.Max(finalDamage, Mathf.RoundToInt(amount * boostedMultiplier));
                     Emit(BattleEventType.ComboActivated, BattleLogCategory.Combo, "[强化] 雷符破盾强化生效", source.definition.itemId, value: finalDamage, screenPosition: GetEnemyPosition());
                 }
@@ -1143,7 +1283,7 @@ namespace TalismanBag.Combat
             }
             else if (relation == CounterRelation.Resisted || relation == CounterRelation.HardResisted)
             {
-                Emit(BattleEventType.LogMessage, BattleLogCategory.Danger, $"[\u6297\u6027] {currentEnemy.definition.displayName}\u62b5\u6297{GetRuntimeItemName(source)}\uff0c\u4f24\u5bb3 x{multiplier:0.##}", source.definition.itemId, currentEnemy.definition.enemyId, adjusted, GetEnemyPosition());
+                Emit(BattleEventType.LogMessage, BattleLogCategory.Danger, $"[抗性] {currentEnemy.definition.GetReadableLabel()}抵抗{GetRuntimeItemName(source)}，伤害 x{multiplier:0.##}", source.definition.itemId, currentEnemy.definition.enemyId, adjusted, GetEnemyPosition());
             }
 
             return adjusted;
@@ -1242,7 +1382,7 @@ namespace TalismanBag.Combat
             }
 
             currentEnemy.attackTimer += GetEnemyAttackInterval();
-            DealDamageToPlayer(currentEnemy.definition.attackDamage, $"{currentEnemy.definition.displayName}攻击，造成 {currentEnemy.definition.attackDamage} 点伤害");
+            DealDamageToPlayer(currentEnemy.definition.attackDamage, $"{currentEnemy.definition.GetReadableLabel()}攻击，造成 {currentEnemy.definition.attackDamage} 点伤害");
         }
 
         private void UpdateSwordCultivatorBehavior(float deltaTime)
@@ -1255,7 +1395,7 @@ namespace TalismanBag.Combat
                     currentEnemy.isCharging = false;
                     currentEnemy.specialTimer = GetChargeInterval();
                     int damage = GetChargeDamage();
-                    DealDamageToPlayer(damage, $"{currentEnemy.definition.displayName}释放连斩，造成 {damage} 点伤害", BattleLogCategory.Danger);
+                    DealDamageToPlayer(damage, $"{currentEnemy.definition.GetReadableLabel()}释放连斩，造成 {damage} 点伤害", BattleLogCategory.Danger);
                 }
                 else
                 {
@@ -1270,13 +1410,13 @@ namespace TalismanBag.Combat
             {
                 currentEnemy.isCharging = true;
                 currentEnemy.chargeTimer = GetChargeDuration();
-                Emit(BattleEventType.EnemyCharging, BattleLogCategory.Danger, $"{currentEnemy.definition.displayName}开始蓄力连斩", value: 1, screenPosition: GetEnemyPosition());
+                Emit(BattleEventType.EnemyCharging, BattleLogCategory.Danger, $"{currentEnemy.definition.GetReadableLabel()}开始蓄力连斩", value: 1, screenPosition: GetEnemyPosition());
             }
         }
 
         private void UpdateEvilCultivatorSpecial(float deltaTime)
         {
-            UpdateEvilCultivatorSpecial(deltaTime, currentEnemy.definition.displayName);
+            UpdateEvilCultivatorSpecial(deltaTime, currentEnemy.definition.GetReadableLabel());
         }
 
         private void UpdateEvilCultivatorSpecial(float deltaTime, string sourceName)
@@ -1303,7 +1443,7 @@ namespace TalismanBag.Combat
             {
                 currentEnemy.specialTimer += GetGhostShadowInterval();
                 int damage = GetGhostShadowDamage();
-                DealDamageToPlayer(damage, $"{currentEnemy.definition.displayName}发动鬼影攻击，造成 {damage} 点伤害", BattleLogCategory.Danger);
+                DealDamageToPlayer(damage, $"{currentEnemy.definition.GetReadableLabel()}发动鬼影攻击，造成 {damage} 点伤害", BattleLogCategory.Danger);
             }
         }
 
@@ -1325,7 +1465,7 @@ namespace TalismanBag.Combat
             }
 
             currentEnemy.manaDrainTimer += GetManaDrainInterval();
-            DrainMana(currentEnemy.definition.displayName, GetManaDrainAmount());
+            DrainMana(currentEnemy.definition.GetReadableLabel(), GetManaDrainAmount());
         }
 
         private void UpdateBossSeal(float deltaTime)
@@ -1377,7 +1517,7 @@ namespace TalismanBag.Combat
             currentEnemy.chargeIntervalTimer = GetChargeInterval();
             currentEnemy.bossChargeCooldown = currentEnemy.chargeIntervalTimer;
             statsTracker?.RecordBossChargeStarted();
-            Emit(BattleEventType.EnemyCharging, BattleLogCategory.Danger, $"{currentEnemy.definition.displayName}开始蓄力心魔冲击", currentEnemy.definition.enemyId, value: 1, screenPosition: GetEnemyPosition());
+            Emit(BattleEventType.EnemyCharging, BattleLogCategory.Danger, $"{currentEnemy.definition.GetReadableLabel()}开始蓄力心魔冲击", currentEnemy.definition.enemyId, value: 1, screenPosition: GetEnemyPosition());
         }
 
         private void ResolveBossCharge()
@@ -1420,7 +1560,7 @@ namespace TalismanBag.Combat
             currentEnemy.attackTimer = Mathf.Min(currentEnemy.attackTimer, GetEnemyAttackInterval());
             currentEnemy.sealTimer = Mathf.Min(currentEnemy.sealTimer, GetSealInterval());
             statsTracker?.RecordBossEnrage();
-            Emit(BattleEventType.EnemyEnraged, BattleLogCategory.Danger, $"{currentEnemy.definition.displayName}进入狂暴状态，攻势加快", currentEnemy.definition.enemyId, value: 1, screenPosition: GetEnemyPosition());
+            Emit(BattleEventType.EnemyEnraged, BattleLogCategory.Danger, $"{currentEnemy.definition.GetReadableLabel()}进入狂暴状态，攻势加快", currentEnemy.definition.enemyId, value: 1, screenPosition: GetEnemyPosition());
         }
 
         private void DrainMana(string sourceName, int amount)
@@ -1453,7 +1593,7 @@ namespace TalismanBag.Combat
             }
         }
 
-        private void DealDamageToPlayer(int amount, string logMessage, BattleLogCategory category = BattleLogCategory.Damage)
+        private void DealDamageToPlayer(int amount, string logMessage, BattleLogCategory category = BattleLogCategory.Damage, string sourceOverride = null, Vector2 screenPositionOverride = default)
         {
             int hpDamage = playerStats.TakeDamage(amount);
             int blocked = Mathf.Max(0, amount - hpDamage);
@@ -1462,7 +1602,9 @@ namespace TalismanBag.Combat
                 counterFeedbackController?.ShowCounterFeedbackAtScreen(CounterFeedbackType.GuardReduce, GetPlayerPosition());
             }
 
-            Emit(BattleEventType.DamageTaken, category, logMessage, currentEnemy.definition.enemyId, "player", amount, GetPlayerPosition());
+            string sourceId = string.IsNullOrWhiteSpace(sourceOverride) ? currentEnemy.definition.enemyId : sourceOverride;
+            Vector2 position = screenPositionOverride == Vector2.zero ? GetPlayerPosition() : screenPositionOverride;
+            Emit(BattleEventType.DamageTaken, category, logMessage, sourceId, "player", amount, position);
             combatUI?.FlashHP();
             CheckDefeat();
         }
@@ -1497,10 +1639,21 @@ namespace TalismanBag.Combat
                 return;
             }
 
-            playerStats.poisonStacks += Mathf.Max(0, poison);
-            playerStats.burnStacks += Mathf.Max(0, burn);
+            EnsureStatusEffectSystem();
+            string sourceId = currentEnemy?.definition != null ? currentEnemy.definition.GetReadableLabel() : "敌人";
+            if (poison > 0)
+            {
+                playerStatusController?.AddStatus(StatusEffectLibrary.Poison, sourceId, "Enemy", poison);
+            }
+
+            if (burn > 0)
+            {
+                playerStatusController?.AddStatus(StatusEffectLibrary.Burn, sourceId, "Enemy", burn);
+            }
+
             Emit(BattleEventType.LogMessage, BattleLogCategory.Danger, logMessage, currentEnemy?.definition != null ? currentEnemy.definition.enemyId : string.Empty, value: poison + burn, screenPosition: GetPlayerPosition());
-            v02PlayerStatusUI?.Refresh(playerStats);
+            playerStatusAnchor?.Refresh();
+            playerDebuffAnchor?.Refresh();
         }
 
         public bool V02TryCounterStealEnergy(EnemySkillDefinition skill)
@@ -1522,6 +1675,7 @@ namespace TalismanBag.Combat
             }
 
             v02RunStatsTracker?.RecordSoulSuppressCounter();
+            playerStatusController?.AddStatus(StatusEffectLibrary.SoulSuppressTriggered, "镇魂符", "Item", 1, 1.5f);
             counterFeedbackController?.ShowCounterFeedbackAtScreen(CounterFeedbackType.SoulSuppress, GetEnemyPosition());
             counterFeedbackController?.ShowCounterFeedbackAtScreen(CounterFeedbackType.FormationProtected, GetManaPosition());
             Emit(BattleEventType.EnemyInterrupted, BattleLogCategory.Counter, "[克制] 镇魂符反制偷灵，阵眼保护成功", currentEnemy?.definition != null ? currentEnemy.definition.enemyId : string.Empty, value: 1, screenPosition: GetEnemyPosition());
@@ -1530,7 +1684,17 @@ namespace TalismanBag.Combat
 
         public void V02ApplyEnergyDisruption(float duration, string logMessage)
         {
-            if (grid == null || duration <= 0f)
+            if (grid == null)
+            {
+                return;
+            }
+
+            if (duration <= 0f)
+            {
+                duration = formationPowerResolver != null ? formationPowerResolver.DefaultStealEnergyDisableDuration : 3f;
+            }
+
+            if (duration <= 0f)
             {
                 return;
             }
@@ -1567,6 +1731,7 @@ namespace TalismanBag.Combat
             }
 
             Emit(BattleEventType.LogMessage, BattleLogCategory.Danger, $"{logMessage}（影响 {affected} 个符箓）", currentEnemy?.definition != null ? currentEnemy.definition.enemyId : string.Empty, value: affected, screenPosition: GetEnemyPosition());
+            SyncPlayerFormationStatusEffects();
             RefreshSealHighlights();
         }
 
@@ -1609,6 +1774,7 @@ namespace TalismanBag.Combat
             }
 
             Emit(BattleEventType.ItemSealed, BattleLogCategory.Seal, $"{logMessage}（{(sealColumn ? "列" : "行")} {index + 1}，封印 {sealedCount} 个）", currentEnemy?.definition != null ? currentEnemy.definition.enemyId : string.Empty, value: sealedCount, screenPosition: GetEnemyPosition());
+            SyncPlayerFormationStatusEffects();
             RefreshGridDependentUI();
         }
 
@@ -1639,16 +1805,19 @@ namespace TalismanBag.Combat
             }
 
             Emit(BattleEventType.ItemSealed, BattleLogCategory.Seal, $"{logMessage}\uff1a{target.definition.displayName}", currentEnemy?.definition != null ? currentEnemy.definition.enemyId : string.Empty, target.definition.itemId, 1, GetItemPosition(target));
+            SyncPlayerFormationStatusEffects();
             RefreshGridDependentUI();
             return 1;
         }
 
         public void V02ClearPlayerStatuses()
         {
-            playerStats.poisonStacks = 0;
-            playerStats.burnStacks = 0;
+            playerStatusController?.RemoveStatus(StatusEffectIds.Poison);
+            playerStatusController?.RemoveStatus(StatusEffectIds.Burn);
             v02StatusTickTimer = 1f;
-            v02PlayerStatusUI?.Refresh(playerStats);
+            playerStatusAnchor?.Refresh();
+            playerBuffAnchor?.Refresh();
+            playerDebuffAnchor?.Refresh();
             AddLog("已清除玩家中毒和燃烧");
         }
 
@@ -1675,6 +1844,7 @@ namespace TalismanBag.Combat
             }
 
             RefreshSealHighlights();
+            SyncPlayerFormationStatusEffects();
         }
 
         public void ForceV02EnemySkill()
@@ -1846,7 +2016,8 @@ namespace TalismanBag.Combat
                 statsTracker?.RecordBossSeal();
             }
 
-            Emit(BattleEventType.ItemSealed, BattleLogCategory.Seal, $"{currentEnemy.definition.displayName}封印了{target.definition.displayName}", currentEnemy.definition.enemyId, target.definition.itemId, 0, GetItemPosition(target));
+            Emit(BattleEventType.ItemSealed, BattleLogCategory.Seal, $"{currentEnemy.definition.GetReadableLabel()}封印了{target.definition.displayName}", currentEnemy.definition.enemyId, target.definition.itemId, 0, GetItemPosition(target));
+            SyncPlayerFormationStatusEffects();
             RefreshGridDependentUI();
         }
 
@@ -1872,6 +2043,7 @@ namespace TalismanBag.Combat
             }
 
             RefreshSealHighlights();
+            SyncPlayerFormationStatusEffects();
         }
 
         private void UpdateV02TemporaryDisables(float deltaTime)
@@ -1901,12 +2073,15 @@ namespace TalismanBag.Combat
             if (changed)
             {
                 RefreshSealHighlights();
+                SyncPlayerFormationStatusEffects();
             }
         }
 
         private void UpdateV02PlayerStatusDamage(float deltaTime)
         {
-            int statusDamage = playerStats.poisonStacks + playerStats.burnStacks;
+            int poisonStackCount = playerStatusController != null ? playerStatusController.GetStackCount(StatusEffectIds.Poison) : 0;
+            int burnStackCount = playerStatusController != null ? playerStatusController.GetStackCount(StatusEffectIds.Burn) : 0;
+            int statusDamage = poisonStackCount + burnStackCount;
             if (statusDamage <= 0 || currentEnemy?.definition == null)
             {
                 v02StatusTickTimer = 1f;
@@ -1922,16 +2097,22 @@ namespace TalismanBag.Combat
             v02StatusTickTimer += 1f;
             if (v02FailureTracker != null)
             {
-                v02FailureTracker.poisonDamageTaken += Mathf.Max(0, playerStats.poisonStacks);
-                v02FailureTracker.burnDamageTaken += Mathf.Max(0, playerStats.burnStacks);
+                v02FailureTracker.poisonDamageTaken += Mathf.Max(0, poisonStackCount);
+                v02FailureTracker.burnDamageTaken += Mathf.Max(0, burnStackCount);
             }
 
-            DealDamageToPlayer(statusDamage, $"[状态] 中毒 {playerStats.poisonStacks} / 燃烧 {playerStats.burnStacks}，受到 {statusDamage} 点持续伤害", BattleLogCategory.Danger);
+            DealDamageToPlayer(
+                statusDamage,
+                $"[状态] 中毒 {poisonStackCount} / 燃烧 {burnStackCount}，受到 {statusDamage} 点持续伤害",
+                BattleLogCategory.Danger,
+                StatusEffectIds.StatusDamage,
+                GetPlayerStatusPosition());
         }
 
         private void UpdateV02EnemyBurnDamage(float deltaTime)
         {
-            if (currentEnemy?.definition == null || currentEnemy.burnStacks <= 0 || state != TalismanCombatState.Fighting)
+            int burnStackCount = enemyStatusController != null ? enemyStatusController.GetStackCount(StatusEffectIds.Burn) : 0;
+            if (currentEnemy?.definition == null || burnStackCount <= 0 || state != TalismanCombatState.Fighting)
             {
                 v02EnemyBurnTickTimer = 1f;
                 return;
@@ -1944,9 +2125,9 @@ namespace TalismanBag.Combat
             }
 
             v02EnemyBurnTickTimer += 1f;
-            int damage = Mathf.Max(1, currentEnemy.burnStacks);
+            int damage = Mathf.Max(1, burnStackCount);
             currentEnemy.currentHp = Mathf.Max(0, currentEnemy.currentHp - damage);
-            Emit(BattleEventType.DamageDealt, BattleLogCategory.Damage, $"[燃烧] {currentEnemy.definition.displayName}受到 {damage} 点燃烧伤害", value: damage, screenPosition: GetEnemyPosition());
+            Emit(BattleEventType.DamageDealt, BattleLogCategory.Damage, $"[燃烧] {currentEnemy.definition.GetReadableLabel()}受到 {damage} 点燃烧伤害", value: damage, screenPosition: GetEnemyPosition());
             CheckVictory();
         }
 
@@ -1958,7 +2139,7 @@ namespace TalismanBag.Combat
             }
 
             state = TalismanCombatState.Victory;
-            Emit(BattleEventType.BattleWin, BattleLogCategory.Result, $"{currentEnemy.definition.displayName}被击败，斗法胜利", value: 0, screenPosition: GetEnemyPosition());
+            Emit(BattleEventType.BattleWin, BattleLogCategory.Result, $"{currentEnemy.definition.GetReadableLabel()}被击败，斗法胜利", value: 0, screenPosition: GetEnemyPosition());
             PlaytestSessionLogger.Log($"Round {currentRound} Won: {currentEnemy.definition.displayName}");
             ClearAllSeals();
             RefreshUI();
@@ -2000,7 +2181,10 @@ namespace TalismanBag.Combat
 
         private void ResetCombatStatsOnly()
         {
+            EnsureStatusEffectSystem();
             playerStats.ResetPlayer();
+            playerStatusController?.ClearAll();
+            enemyStatusController?.ClearAll();
             ClearAllSeals();
             V02ClearTemporaryDisablesWithoutLog();
             powerSlotNoticeRuntimeIds.Clear();
@@ -2111,7 +2295,8 @@ namespace TalismanBag.Combat
                 return;
             }
 
-            currentEnemy.burnStacks += v02RunModifierState.fireBurnBonusStacks;
+            EnsureStatusEffectSystem();
+            enemyStatusController?.AddStatus(StatusEffectLibrary.Burn, GetRuntimeItemName(item), "Item", v02RunModifierState.fireBurnBonusStacks);
             Emit(BattleEventType.ComboActivated, BattleLogCategory.Combo, $"[强化] 火符燃烧强化生效，额外叠加 {v02RunModifierState.fireBurnBonusStacks} 层燃烧", item.definition.itemId, value: v02RunModifierState.fireBurnBonusStacks, screenPosition: GetEnemyPosition());
         }
 
@@ -2306,6 +2491,11 @@ namespace TalismanBag.Combat
                 return currentEnemy.definition.sealDuration;
             }
 
+            if (formationPowerResolver != null && formationPowerResolver.DefaultSealDuration > 0f)
+            {
+                return formationPowerResolver.DefaultSealDuration;
+            }
+
             return evilSealDuration;
         }
 
@@ -2427,11 +2617,18 @@ namespace TalismanBag.Combat
                 }
             }
 
-            foreach (Vector2Int source in spiritStonePositions)
+            V02FormationBalanceConfig formationConfig = formationPowerResolver != null
+                ? formationPowerResolver.FormationBalanceConfig
+                : null;
+
+            if (formationConfig == null || formationConfig.spiritStoneNineGridPowerEnabled)
             {
-                if (Mathf.Abs(position.x - source.x) <= 1 && Mathf.Abs(position.y - source.y) <= 1)
+                foreach (Vector2Int source in spiritStonePositions)
                 {
-                    return FormationPowerState.Powered;
+                    if (Mathf.Abs(position.x - source.x) <= 1 && Mathf.Abs(position.y - source.y) <= 1)
+                    {
+                        return FormationPowerState.Powered;
+                    }
                 }
             }
 
@@ -2440,6 +2637,7 @@ namespace TalismanBag.Combat
                 : formationPowerResolver != null ? formationPowerResolver.RunModifierState : null;
             if (modifierState != null &&
                 modifierState.spiritLinkBetweenStonesUnlocked &&
+                (formationConfig == null || formationConfig.spiritLinkBetweenStonesEnabled) &&
                 IsOnLiveSpiritLink(position, spiritStonePositions))
             {
                 return FormationPowerState.Powered;
@@ -2448,17 +2646,20 @@ namespace TalismanBag.Combat
             Vector2Int eyePosition = formationPowerResolver != null ? formationPowerResolver.FormationEyePosition : new Vector2Int(2, 1);
             int eyeDx = Mathf.Abs(position.x - eyePosition.x);
             int eyeDy = Mathf.Abs(position.y - eyePosition.y);
-            if (modifierState != null && modifierState.eyeCoreNineGridUnlocked && eyeDx <= 1 && eyeDy <= 1)
+            if (modifierState != null &&
+                modifierState.eyeCoreNineGridUnlocked &&
+                (formationConfig == null || formationConfig.upgradedEyeNineGridEnabled) &&
+                eyeDx <= 1 && eyeDy <= 1)
             {
                 return FormationPowerState.Powered;
             }
 
-            if (eyeDx + eyeDy == 1)
+            if ((formationConfig == null || formationConfig.formationEyeCrossPowerEnabled) && eyeDx + eyeDy == 1)
             {
                 return FormationPowerState.Powered;
             }
 
-            if (eyeDx == 1 && eyeDy == 1)
+            if ((formationConfig == null || formationConfig.formationEyeDiagonalWeakPowerEnabled) && eyeDx == 1 && eyeDy == 1)
             {
                 return FormationPowerState.WeakPowered;
             }
@@ -2571,7 +2772,7 @@ namespace TalismanBag.Combat
         {
             combatUI?.Refresh(playerStats, currentEnemy, GetStateLabel());
             v02EnemyIntentUI?.Refresh(currentEnemy);
-            v02PlayerStatusUI?.Refresh(playerStats);
+            RefreshStatusEffects();
             if (state != TalismanCombatState.Fighting)
             {
                 v02EnemyPreviewPanel?.Show(currentEnemy?.definition);
@@ -2588,6 +2789,134 @@ namespace TalismanBag.Combat
             }
 
             RefreshAutoMergeButton();
+        }
+
+        private void RefreshStatusEffects()
+        {
+            EnsureStatusEffectSystem();
+            SyncPlayerStatusEffects();
+            SyncEnemyStatusEffects();
+            playerStatusAnchor?.Refresh();
+            enemyStatusAnchor?.Refresh();
+            playerBuffAnchor?.Refresh();
+            playerDebuffAnchor?.Refresh();
+            enemyBuffAnchor?.Refresh();
+            enemyDebuffAnchor?.Refresh();
+        }
+
+        private void SyncPlayerStatusEffects()
+        {
+            if (playerStatusController == null)
+            {
+                return;
+            }
+
+            playerStatusController.SetStatus(StatusEffectLibrary.Shield, "修士", "Player", playerStats.shield);
+            SyncPlayerFormationStatusEffects();
+            SyncPlayerPassiveReadyStatuses();
+        }
+
+        private void SyncPlayerFormationStatusEffects()
+        {
+            if (playerStatusController == null)
+            {
+                return;
+            }
+
+            int sealedCount = 0;
+            float sealRemaining = 0f;
+            foreach (TalismanItemRuntime item in sealedItems)
+            {
+                if (item == null || !item.isSealed)
+                {
+                    continue;
+                }
+
+                sealedCount++;
+                sealRemaining = Mathf.Max(sealRemaining, item.sealRemaining);
+            }
+
+            playerStatusController.SetStatus(StatusEffectLibrary.Seal, currentEnemy?.definition != null ? currentEnemy.definition.GetReadableLabel() : "封印", "Enemy", sealedCount, sealRemaining);
+
+            int disabledCount = 0;
+            float disabledRemaining = 0f;
+            if (grid != null)
+            {
+                foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
+                {
+                    if (item == null || !item.isTemporarilyDisabled)
+                    {
+                        continue;
+                    }
+
+                    disabledCount++;
+                    disabledRemaining = Mathf.Max(disabledRemaining, item.temporaryDisabledRemaining);
+                }
+            }
+
+            playerStatusController.SetStatus(StatusEffectLibrary.EnergyDisrupt, currentEnemy?.definition != null ? currentEnemy.definition.GetReadableLabel() : "供能中断", "Enemy", disabledCount, disabledRemaining);
+        }
+
+        private void SyncPlayerPassiveReadyStatuses()
+        {
+            TalismanItemRuntime purify = FindActivePlacedItemById(PurifyTalismanId);
+            playerStatusController.SetStatus(StatusEffectLibrary.CleanseReady, purify != null ? GetRuntimeItemName(purify) : string.Empty, "Item", purify != null ? 1 : 0);
+
+            TalismanItemRuntime soulSuppress = FindActivePlacedItemById(SoulSuppressTalismanId);
+            playerStatusController.SetStatus(StatusEffectLibrary.SoulSuppressReady, soulSuppress != null ? GetRuntimeItemName(soulSuppress) : string.Empty, "Item", soulSuppress != null ? 1 : 0);
+        }
+
+        private void SyncEnemyStatusEffects()
+        {
+            if (enemyStatusController == null)
+            {
+                return;
+            }
+
+            if (currentEnemy?.definition == null)
+            {
+                enemyStatusController.ClearAll();
+                return;
+            }
+
+            enemyStatusController.SetStatus(StatusEffectLibrary.Shield, currentEnemy.definition.GetReadableLabel(), "Enemy", currentEnemy.currentShield);
+            SyncEnemyIntentStatus();
+            SyncEnemyBossPhaseStatus();
+        }
+
+        private void SyncEnemyIntentStatus()
+        {
+            if (currentEnemy == null)
+            {
+                enemyStatusController?.RemoveStatus(StatusEffectIds.EnemyIntent);
+                return;
+            }
+
+            bool hasIntent = currentEnemy.isCharging || currentEnemy.isCastingSkill;
+            if (!hasIntent)
+            {
+                enemyStatusController?.RemoveStatus(StatusEffectIds.EnemyIntent);
+                return;
+            }
+
+            float remaining = currentEnemy.isCastingSkill && currentEnemy.currentCastingSkill != null
+                ? currentEnemy.currentCastingSkill.castTimer
+                : Mathf.Max(0.1f, currentEnemy.chargeTimer);
+            string source = !string.IsNullOrWhiteSpace(currentEnemy.currentIntentText)
+                ? currentEnemy.currentIntentText
+                : currentEnemy.definition.GetReadableLabel();
+            enemyStatusController?.SetStatus(StatusEffectLibrary.EnemyIntent, source, "Enemy", 1, remaining);
+        }
+
+        private void SyncEnemyBossPhaseStatus()
+        {
+            if (!IsBoss() || v02BossPhaseController == null || v02BossPhaseController.CurrentPhase == V02BossPhase.None)
+            {
+                enemyStatusController?.RemoveStatus(StatusEffectIds.BossPhase);
+                return;
+            }
+
+            enemyStatusController?.SetStatus(StatusEffectLibrary.BossPhase, v02BossPhaseController.CurrentPhase.ToString(), "Boss", 1);
         }
 
         private void RefreshAutoMergeButton()
@@ -2746,6 +3075,29 @@ namespace TalismanBag.Combat
             return null;
         }
 
+        private TalismanItemRuntime FindActivePlacedItemById(string itemId)
+        {
+            if (grid == null)
+            {
+                return null;
+            }
+
+            foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
+            {
+                if (item?.definition == null || item.definition.itemId != itemId)
+                {
+                    continue;
+                }
+
+                if (!item.isSealed && !item.isTemporarilyDisabled && IsFormationItemActive(item))
+                {
+                    return item;
+                }
+            }
+
+            return null;
+        }
+
         private TalismanItemRuntime FindFormationEyeSealTarget()
         {
             if (grid == null)
@@ -2827,7 +3179,9 @@ namespace TalismanBag.Combat
                 return true;
             }
 
-            return !item.definition.requiresFormationPower || GetCurrentFormationPowerState(item) != FormationPowerState.Unpowered;
+            return !item.definition.requiresFormationPower ||
+                   formationPowerResolver != null && formationPowerResolver.UnpoweredTalismansCanTrigger ||
+                   GetCurrentFormationPowerState(item) != FormationPowerState.Unpowered;
         }
 
         private bool HasActiveAdjacentItemId(Vector2Int position, string itemId)
@@ -2992,6 +3346,21 @@ namespace TalismanBag.Combat
         private Vector2 GetPlayerPosition()
         {
             return new Vector2(-330f, 865f);
+        }
+
+        private Vector2 GetPlayerStatusPosition()
+        {
+            StatusAnchorUI anchor = playerDebuffAnchor != null ? playerDebuffAnchor : playerStatusAnchor;
+            if (anchor != null)
+            {
+                Vector2 position = anchor.GetFloatingTextPosition(feedbackRoot);
+                if (position != Vector2.zero)
+                {
+                    return position;
+                }
+            }
+
+            return GetPlayerPosition();
         }
 
         private Vector2 GetEnemyPosition()

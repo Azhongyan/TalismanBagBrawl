@@ -1,5 +1,29 @@
 # Development Log
 
+## 2026-06-15 - V0.2 Battle Status And Avatar Readability Merge
+
+### Status System
+
+- Replaced the old `V02PlayerStatusUI` text panel with a shared V0.2 status effect layer.
+- Added reusable status definitions/runtime/controller for poison, burn, shield, seal, energy disruption, cleanse-ready, soul-suppress, enemy intent, and Boss phase.
+- Removed old `poisonStacks` / `burnStacks` storage from `CombatStats` and `EnemyRuntime`; poison and burn now live in `StatusEffectController`.
+
+### Avatar Feedback
+
+- Added `StatusAnchorUI`, `StatusIconView`, and `StatusTooltipPanel` for readable status icons beside player and enemy avatars.
+- Poison and burn damage now emits status-specific floating damage near the player status anchor.
+- Scene builder now creates status controllers, avatar anchors, tooltip runtime, and a dedicated status-damage floating text anchor.
+
+### Cleanup
+
+- Removed the old `V02PlayerStatusUI` script, meta file, serialized field, and inactive scene panel/text objects.
+- Updated cleanse and fire-burn reward logic to use the unified status controller.
+
+### Verification
+
+- Static scans confirm no `V02PlayerStatusUI`, old status panel object, or old stack field references remain.
+- Unity batchmode compile could not complete because the project was already open in another Unity instance.
+
 ## 2026-06-10 - V0.2 Step 7 Balance Counter Validation
 
 ### Balance Data

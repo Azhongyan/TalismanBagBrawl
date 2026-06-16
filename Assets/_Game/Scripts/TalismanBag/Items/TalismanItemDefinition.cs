@@ -30,6 +30,7 @@ namespace TalismanBag.Items
     {
         public string itemId;
         public string displayName;
+        public bool enabled = true;
         public TalismanItemType itemType;
         public ElementType elementType;
         public Sprite icon;

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: formation_breaker_boss
   m_EditorClassIdentifier: 
   enemyId: formation_breaker_boss
-  displayName: "\u7834\u9635\u5C0FBoss"
+  displayName: "\u5C06"
   enemyType: 4
   maxHp: 260
   attackDamage: 12
@@ -31,7 +31,7 @@ MonoBehaviour:
   ghostShadowInterval: 0
   ghostShadowDamage: 0
   icon: {fileID: 0}
-  enemyClass: Boss
+  enemyClass: "\u9996\u9886"
   enemyArchetype: "\u7EFC\u5408\u538B\u529B"
   intentText: "\u51C6\u5907\u8F6E\u6362\u7834\u9635\u624B\u6BB5"
   recommendedCounterText: "\u9700\u8981\u7834\u76FE\u3001\u6E05\u7FA4\u3001\u51C0\u5316\u548C\u7A33\u5B9A\u4F9B\u80FD\u3002"

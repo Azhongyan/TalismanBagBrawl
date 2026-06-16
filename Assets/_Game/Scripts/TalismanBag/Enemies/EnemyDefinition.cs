@@ -19,6 +19,7 @@ namespace TalismanBag.Enemies
     {
         public string enemyId;
         public string displayName;
+        public bool enabled = true;
         public EnemyType enemyType;
         public int maxHp;
         public int attackDamage;
@@ -55,5 +56,22 @@ namespace TalismanBag.Enemies
 
         [Header("V0.2 Skills")]
         public List<EnemySkillDefinition> skills = new();
+
+        public string GetDisplayName()
+        {
+            return string.IsNullOrWhiteSpace(displayName) ? name : displayName.Trim();
+        }
+
+        public string GetAvatarGlyph()
+        {
+            string readableName = GetDisplayName();
+            return string.IsNullOrWhiteSpace(readableName) ? "?" : readableName[0].ToString();
+        }
+
+        public string GetReadableLabel()
+        {
+            string display = GetDisplayName();
+            return $"\u3010{GetAvatarGlyph()}\u3011{display}";
+        }
     }
 }

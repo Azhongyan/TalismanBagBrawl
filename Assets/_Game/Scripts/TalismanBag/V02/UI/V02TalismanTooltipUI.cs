@@ -50,6 +50,7 @@ namespace TalismanBag.V02.UI
         private DraggableTalismanItemView selectedItemView;
         private RectTransform panelRect;
         private Canvas parentCanvas;
+        private CanvasGroup panelCanvasGroup;
 
         public TalismanItemDefinition SelectedDefinition => selectedDefinition;
 
@@ -154,7 +155,7 @@ namespace TalismanBag.V02.UI
         {
             if (panel != null)
             {
-                panel.SetActive(true);
+                SetPanelVisible(true);
             }
 
             SetText(titleText, $"{definition.displayName}  Lv{level}");
@@ -179,8 +180,30 @@ namespace TalismanBag.V02.UI
         {
             if (panel != null)
             {
-                panel.SetActive(false);
+                SetPanelVisible(false);
             }
+        }
+
+        private void SetPanelVisible(bool visible)
+        {
+            if (panel == null)
+            {
+                return;
+            }
+
+            panel.SetActive(true);
+            if (panelCanvasGroup == null)
+            {
+                panelCanvasGroup = panel.GetComponent<CanvasGroup>();
+                if (panelCanvasGroup == null)
+                {
+                    panelCanvasGroup = panel.AddComponent<CanvasGroup>();
+                }
+            }
+
+            panelCanvasGroup.alpha = visible ? 1f : 0f;
+            panelCanvasGroup.interactable = visible;
+            panelCanvasGroup.blocksRaycasts = visible;
         }
 
         private void SetSelectedItem(DraggableTalismanItemView itemView)
@@ -380,7 +403,12 @@ namespace TalismanBag.V02.UI
 
         private bool IsPanelOpen()
         {
-            return panel != null && panel.activeInHierarchy;
+            if (panel == null || !panel.activeInHierarchy)
+            {
+                return false;
+            }
+
+            return panelCanvasGroup == null || panelCanvasGroup.alpha > 0.01f;
         }
 
         private bool TryGetPrimaryPointerDown(out Vector2 pointerPosition)

@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\u706B\u7B26\u71C3\u70E7\u5F3A\u5316"
   rewardType: 3
   shortDescription: "\u706B\u7B26\u547D\u4E2D\u65F6\u989D\u5916\u53E0\u52A0 1 \u5C42\u71C3\u70E7\u3002"
-  detailedDescription: "\u5F3A\u5316\u706B\u7B26\u6301\u7EED\u8F93\u51FA\uFF0C\u5BF9\u5C0F\u5996\u7FA4\u6709\u5E2E\u52A9\u3002"
+  detailedDescription: "\u5F3A\u5316\u706B\u7B26\u6301\u7EED\u8F93\u51FA\uFF0C\u5BF9\u53EC\u6709\u5E2E\u52A9\u3002"
   icon: {fileID: 0}
   talismanToAdd: {fileID: 0}
   formationModifierType: 0

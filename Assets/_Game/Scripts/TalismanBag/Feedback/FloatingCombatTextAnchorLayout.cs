@@ -1,4 +1,5 @@
 using TalismanBag.V02.Feedback;
+using TalismanBag.V02.Status;
 using UnityEngine;
 
 namespace TalismanBag.Feedback
@@ -24,6 +25,7 @@ namespace TalismanBag.Feedback
         [SerializeField] private RectTransform counterFailedAnchor;
 
         [Header("Status Feedback")]
+        [SerializeField] private RectTransform statusDamageAnchor;
         [SerializeField] private RectTransform enemyInterruptedAnchor;
         [SerializeField] private RectTransform enemyEnragedAnchor;
         [SerializeField] private RectTransform itemSealedAnchor;
@@ -50,6 +52,7 @@ namespace TalismanBag.Feedback
             Hide(formationProtectedAnchor);
             Hide(guardReduceAnchor);
             Hide(counterFailedAnchor);
+            Hide(statusDamageAnchor);
             Hide(enemyInterruptedAnchor);
             Hide(enemyEnragedAnchor);
             Hide(itemSealedAnchor);
@@ -81,6 +84,7 @@ namespace TalismanBag.Feedback
                 BattleEventType.ManaGenerated => manaGeneratedAnchor,
                 BattleEventType.ManaSpent => manaSpentAnchor,
                 BattleEventType.DamageDealt => damageDealtAnchor,
+                BattleEventType.DamageTaken when eventData.sourceId == StatusEffectIds.StatusDamage => statusDamageAnchor,
                 BattleEventType.DamageTaken => damageTakenAnchor,
                 BattleEventType.ShieldGained => shieldGainedAnchor,
                 BattleEventType.HealReceived => healReceivedAnchor,

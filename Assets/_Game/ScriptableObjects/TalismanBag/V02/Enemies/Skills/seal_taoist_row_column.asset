@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: seal_taoist_row_column
   m_EditorClassIdentifier: 
   skillId: seal_taoist_row_column
-  displayName: "\u5C01\u5370\u7B26\u5217"
-  intentText: "\u5C01\u7B26\u9053\u4EBA\u51C6\u5907\u5C01\u5370\u4E00\u5217\u7B26\u7B93\uFF01"
+  displayName: "\u5C01\u5217"
+  intentText: "\u5C01\u51C6\u5907\u5C01\u5370\u4E00\u5217\u7B26\u7B93\uFF01"
   effectDescription: "\u5C01\u5370\u4E00\u884C\u6216\u4E00\u5217\u7B26\u7B93"
   skillType: 6
   initialDelay: 5

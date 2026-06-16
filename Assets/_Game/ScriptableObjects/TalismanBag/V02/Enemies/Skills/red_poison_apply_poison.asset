@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: red_poison_apply_poison
   m_EditorClassIdentifier: 
   skillId: red_poison_apply_poison
-  displayName: "\u6BD2\u706B\u55B7\u5410"
-  intentText: "\u8D64\u6BD2\u5996\u6B63\u5728\u55B7\u5410\u6BD2\u706B\uFF01"
+  displayName: "\u6BD2\u706B"
+  intentText: "\u6BD2\u6B63\u5728\u55B7\u5410\u6BD2\u706B\uFF01"
   effectDescription: "\u53E0\u52A0\u4E2D\u6BD2\u548C\u71C3\u70E7"
   skillType: 3
   initialDelay: 4
-  cooldown: 7
+  cooldown: 5
   castTime: 1
-  value: 1
+  value: 12
   duration: 0
   skillTags: 0200000003000000

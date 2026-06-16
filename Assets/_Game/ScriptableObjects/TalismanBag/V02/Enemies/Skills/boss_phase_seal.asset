@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: boss_phase_seal
   m_EditorClassIdentifier: 
   skillId: boss_phase_seal
-  displayName: "\u9996\u9886\u5C01\u773C"
-  intentText: "\u7834\u9635\u5C0FBoss\u51C6\u5907\u5C01\u5370\u9635\u773C\u9644\u8FD1\u683C\u5B50\uFF01"
+  displayName: "\u5C06\u00B7\u5C01"
+  intentText: "\u5C06\u51C6\u5907\u5C01\u5370\u9635\u773C\u9644\u8FD1\u683C\u5B50\uFF01"
   effectDescription: "\u5C01\u5370\u4E00\u884C\u6216\u4E00\u5217\u7B26\u7B93"
   skillType: 9
   initialDelay: 5

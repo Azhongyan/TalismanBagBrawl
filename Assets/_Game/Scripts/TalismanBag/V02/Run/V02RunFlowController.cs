@@ -5,6 +5,7 @@ using TalismanBag.UI;
 using TalismanBag.V02.Feedback;
 using TalismanBag.V02.Result;
 using TalismanBag.V02.Rewards;
+using TalismanBag.V02.Tags;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,11 +24,19 @@ namespace TalismanBag.V02.Run
         [SerializeField] private BattleLogUI battleLogUI;
         [SerializeField] private Text roundInfoText;
         [SerializeField] private Text prepHintText;
+        [SerializeField] private GameObject formationInfoPanel;
+        [SerializeField] private Button formationInfoCloseButton;
+        [SerializeField] private GameObject tagTooltipPanel;
+        [SerializeField] private Button tagTooltipCloseButton;
         [SerializeField] private List<EnemyDefinition> testEnemies = new();
 
         private int currentRoundIndex;
         private EnemyDefinition nextEnemyOverride;
         private V02RunState state = V02RunState.None;
+        private CanvasGroup formationInfoCanvasGroup;
+        private CanvasGroup tagTooltipCanvasGroup;
+        private bool preBattlePopupButtonsBound;
+        private readonly HashSet<int> shownFormationInfoRoundIndexes = new();
 
         public int CurrentRoundNumber => CurrentRound != null ? CurrentRound.roundIndex : currentRoundIndex + 1;
         public V02RunState State => state;
@@ -44,6 +53,8 @@ namespace TalismanBag.V02.Run
             {
                 runResultPanel.RestartRequested += RestartRun;
             }
+
+            BindPreBattlePopupButtons();
         }
 
         private void Start()
@@ -62,6 +73,8 @@ namespace TalismanBag.V02.Run
             {
                 runResultPanel.RestartRequested -= RestartRun;
             }
+
+            UnbindPreBattlePopupButtons();
         }
 
         public void StartNewRun()
@@ -69,6 +82,7 @@ namespace TalismanBag.V02.Run
             state = V02RunState.Init;
             currentRoundIndex = 0;
             nextEnemyOverride = null;
+            shownFormationInfoRoundIndexes.Clear();
             runModifierState?.ResetState();
             failureTracker?.ResetTracker();
             runStatsTracker?.ResetStats();
@@ -90,6 +104,7 @@ namespace TalismanBag.V02.Run
             state = V02RunState.Prep;
             combatController?.SetEnemy(round.enemy, round.roundIndex, GetRoundCount());
             RefreshRoundTexts(round);
+            ShowPreBattlePopups();
             battleLogUI?.AddLog($"\u6218\u524d\u51c6\u5907\uff1a{round.roundTitle}");
             if (!string.IsNullOrWhiteSpace(round.preBattleHint))
             {
@@ -100,12 +115,14 @@ namespace TalismanBag.V02.Run
         public void StartCombat()
         {
             state = V02RunState.Combat;
+            HidePreBattlePopups();
             combatController?.StartBattle();
         }
 
         public void OnCombatStarted()
         {
             state = V02RunState.Combat;
+            HidePreBattlePopups();
         }
 
         public void OnBattleWin()
@@ -141,8 +158,12 @@ namespace TalismanBag.V02.Run
                 return;
             }
 
-            SetText(prepHintText, $"\u5956\u52b1\u9636\u6bb5\uff1a\u4e0b\u4e00\u5173 {nextEnemy.displayName}");
+            bool formationInfoShown = ShowRewardSelectionInfo(nextEnemy);
             rewardController?.OpenRewardSelection(nextEnemy, CurrentRoundNumber);
+            if (formationInfoShown)
+            {
+                BringFormationInfoToFront();
+            }
         }
 
         public void OnRewardSelected(V02RewardDefinition reward)
@@ -168,6 +189,7 @@ namespace TalismanBag.V02.Run
         public void FinishRunWin()
         {
             state = V02RunState.RunWin;
+            HidePreBattlePopups();
             combatController?.SetRunComplete();
             SetText(roundInfoText, "\u901a\u5173\u6210\u529f");
             SetText(prepHintText, "\u4f60\u5b8c\u6210\u4e86 7 \u573a\u9635\u6cd5\u5bf9\u6297\u3002");
@@ -177,6 +199,7 @@ namespace TalismanBag.V02.Run
         public void FinishRunLose()
         {
             state = V02RunState.RunLose;
+            HidePreBattlePopups();
             V02RoundConfig round = CurrentRound;
             if (failureTracker != null)
             {
@@ -200,7 +223,7 @@ namespace TalismanBag.V02.Run
         public void SetNextEnemy(EnemyDefinition enemy)
         {
             nextEnemyOverride = enemy;
-            battleLogUI?.AddLog(enemy != null ? $"\u4e0b\u4e00\u5173\u9884\u544a\uff1a{enemy.displayName}" : "\u4e0b\u4e00\u5173\u9884\u544a\u5df2\u6e05\u7a7a");
+            battleLogUI?.AddLog(enemy != null ? $"下一关预告：{enemy.GetReadableLabel()}" : "下一关预告已清空");
         }
 
         public void SkipToRound(int roundNumber)
@@ -221,12 +244,197 @@ namespace TalismanBag.V02.Run
             OnBattleLose();
         }
 
+        private void BindPreBattlePopupButtons()
+        {
+            if (preBattlePopupButtonsBound)
+            {
+                return;
+            }
+
+            EnsurePreBattlePopupReferences();
+            formationInfoCloseButton?.onClick.AddListener(HideFormationInfoPanel);
+            tagTooltipCloseButton?.onClick.AddListener(HideTagTooltipPanel);
+            preBattlePopupButtonsBound = true;
+        }
+
+        private void UnbindPreBattlePopupButtons()
+        {
+            if (!preBattlePopupButtonsBound)
+            {
+                return;
+            }
+
+            formationInfoCloseButton?.onClick.RemoveListener(HideFormationInfoPanel);
+            tagTooltipCloseButton?.onClick.RemoveListener(HideTagTooltipPanel);
+            preBattlePopupButtonsBound = false;
+        }
+
+        private void ShowPreBattlePopups()
+        {
+            EnsurePreBattlePopupReferences();
+            TryShowFormationInfoForRound(currentRoundIndex);
+            HideTagTooltipPanel();
+        }
+
+        private void HidePreBattlePopups()
+        {
+            EnsurePreBattlePopupReferences();
+            HideFormationInfoPanel();
+            HideTagTooltipPanel();
+        }
+
+        private void HideFormationInfoPanel()
+        {
+            SetPopupVisible(formationInfoPanel, ref formationInfoCanvasGroup, false);
+        }
+
+        private void HideTagTooltipPanel()
+        {
+            SetPopupVisible(tagTooltipPanel, ref tagTooltipCanvasGroup, false);
+        }
+
+        private bool ShowRewardSelectionInfo(EnemyDefinition nextEnemy)
+        {
+            EnsurePreBattlePopupReferences();
+
+            string enemyLabel = nextEnemy != null ? nextEnemy.GetReadableLabel() : "\u654c\u4eba\u672a\u914d\u7f6e";
+            string weaknessTags = nextEnemy != null ? TalismanTagUtility.JoinCounterTags(nextEnemy.weaknessTags) : "\u65e0";
+            SetText(roundInfoText, $"\u5956\u52b1\u9009\u62e9\uff1a\u4e0b\u4e00\u5173 {enemyLabel}");
+            SetText(prepHintText, $"\u4e09\u9009\u4e00\uff1a\u4f18\u5148\u9009\u80fd\u514b\u5236\u4e0b\u4e00\u5173\u7684\u5956\u52b1\u3002\n\u4e0b\u4e00\u5173\u5f31\u70b9\uff1a{weaknessTags}");
+
+            int nextRoundIndex = GetFormationInfoRoundIndex(nextEnemy, currentRoundIndex + 1);
+            bool shown = TryShowFormationInfoForRound(nextRoundIndex);
+            HideTagTooltipPanel();
+            return shown;
+        }
+
+        private bool TryShowFormationInfoForRound(int roundIndex)
+        {
+            EnsurePreBattlePopupReferences();
+            int safeRoundIndex = Mathf.Max(0, roundIndex);
+            if (shownFormationInfoRoundIndexes.Contains(safeRoundIndex))
+            {
+                HideFormationInfoPanel();
+                return false;
+            }
+
+            shownFormationInfoRoundIndexes.Add(safeRoundIndex);
+            SetPopupVisible(formationInfoPanel, ref formationInfoCanvasGroup, true);
+            return true;
+        }
+
+        private int GetFormationInfoRoundIndex(EnemyDefinition enemy, int fallbackIndex)
+        {
+            if (enemy != null && runConfig?.rounds != null)
+            {
+                for (int i = 0; i < runConfig.rounds.Count; i++)
+                {
+                    if (runConfig.rounds[i]?.enemy == enemy)
+                    {
+                        return i;
+                    }
+                }
+            }
+
+            return Mathf.Clamp(fallbackIndex, 0, Mathf.Max(0, GetRoundCount() - 1));
+        }
+
+        private void BringFormationInfoToFront()
+        {
+            if (formationInfoPanel != null)
+            {
+                formationInfoPanel.transform.SetAsLastSibling();
+            }
+        }
+
+        private void EnsurePreBattlePopupReferences()
+        {
+            if (formationInfoPanel == null)
+            {
+                formationInfoPanel = GameObject.Find("V02FormationInfoArea");
+            }
+
+            if (tagTooltipPanel == null)
+            {
+                tagTooltipPanel = GameObject.Find("V02TagTooltipPanel");
+            }
+
+            if (formationInfoCloseButton == null)
+            {
+                formationInfoCloseButton = FindChildButton(formationInfoPanel, "FormationInfoCloseButton");
+            }
+
+            if (tagTooltipCloseButton == null)
+            {
+                tagTooltipCloseButton = FindChildButton(tagTooltipPanel, "TooltipCloseButton");
+            }
+        }
+
+        private static Button FindChildButton(GameObject root, string childName)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            Transform[] children = root.GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in children)
+            {
+                if (child != null && child.name == childName && child.TryGetComponent(out Button button))
+                {
+                    return button;
+                }
+            }
+
+            return null;
+        }
+
+        private static void SetPopupVisible(GameObject panel, ref CanvasGroup canvasGroup, bool visible)
+        {
+            if (panel == null)
+            {
+                return;
+            }
+
+            panel.SetActive(true);
+            if (canvasGroup == null)
+            {
+                canvasGroup = panel.GetComponent<CanvasGroup>();
+                if (canvasGroup == null)
+                {
+                    canvasGroup = panel.AddComponent<CanvasGroup>();
+                }
+            }
+
+            canvasGroup.alpha = visible ? 1f : 0f;
+            canvasGroup.interactable = visible;
+            canvasGroup.blocksRaycasts = visible;
+        }
+
         private void RefreshRoundTexts(V02RoundConfig round)
         {
-            string roundLine = $"Round {round.roundIndex} / {GetRoundCount()}  {round.roundTitle}";
+            string enemyLabel = round.enemy != null ? round.enemy.GetReadableLabel() : "\u654c\u4eba\u672a\u914d\u7f6e";
+            string title = string.IsNullOrWhiteSpace(round.roundTitle) ? string.Empty : $"  {round.roundTitle}";
+            string roundLine = $"Round {round.roundIndex} / {GetRoundCount()}  {enemyLabel}{title}";
             string goal = string.IsNullOrWhiteSpace(round.teachingGoal) ? string.Empty : $"\n\u76ee\u6807\uff1a{round.teachingGoal}";
             SetText(roundInfoText, $"{roundLine}{goal}");
-            SetText(prepHintText, round.preBattleHint);
+            SetText(prepHintText, BuildPreBattleHint(round));
+        }
+
+        private static string BuildPreBattleHint(V02RoundConfig round)
+        {
+            if (round == null)
+            {
+                return string.Empty;
+            }
+
+            string enemyLabel = round.enemy != null ? round.enemy.GetReadableLabel() : "\u654c\u4eba\u672a\u914d\u7f6e";
+            string title = string.IsNullOrWhiteSpace(round.roundTitle) ? string.Empty : $"  {round.roundTitle.Trim()}";
+            string hint = string.IsNullOrWhiteSpace(round.preBattleHint)
+                ? "\u89c2\u5bdf\u654c\u4eba\u5a01\u80c1\uff0c\u5f00\u6218\u524d\u8c03\u6574\u9635\u76d8\u3002"
+                : round.preBattleHint.Trim();
+
+            return $"{enemyLabel}{title}\n{hint}";
         }
 
         private EnemyDefinition GetNextEnemy()
@@ -270,7 +478,7 @@ namespace TalismanBag.V02.Run
                 return new V02RoundConfig
                 {
                     roundIndex = index + 1,
-                    roundTitle = testEnemies[index] != null ? testEnemies[index].displayName : $"Round {index + 1}",
+                    roundTitle = testEnemies[index] != null ? testEnemies[index].GetDisplayName() : $"Round {index + 1}",
                     enemy = testEnemies[index],
                     isBossRound = testEnemies[index] != null && testEnemies[index].enemyType == EnemyType.Boss,
                     targetDurationMin = 60f,

@@ -68,7 +68,7 @@ namespace TalismanBag.UI.Mobile
 
             float hpPercent = enemy.maxHp > 0 ? Mathf.Clamp01(enemyRuntime.currentHp / (float)enemy.maxHp) : 0f;
             SetEnemyText(
-                enemy.enemyType == EnemyType.Boss && enemyRuntime.isEnraged ? $"Boss：{enemy.displayName}  狂暴" : $"敌人：{enemy.displayName}",
+                enemy.enemyType == EnemyType.Boss && enemyRuntime.isEnraged ? $"Boss：{enemy.GetReadableLabel()}  狂暴" : $"敌人：{enemy.GetReadableLabel()}",
                 $"敌人血量：{enemyRuntime.currentHp}/{enemy.maxHp}",
                 hpPercent,
                 $"弱点：{GetWeaknessTags(enemy)}",

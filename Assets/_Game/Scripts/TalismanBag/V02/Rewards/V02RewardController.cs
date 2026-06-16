@@ -102,6 +102,13 @@ namespace TalismanBag.V02.Rewards
             List<V02RewardDefinition> result = new();
             List<V02RewardDefinition> candidates = BuildStageCandidates(completedRoundNumber);
             int targetCount = Mathf.Max(1, optionCount);
+            V02RewardDefinition forcedCounterOption = PickForcedCounterOption(candidates, nextEnemy);
+            if (forcedCounterOption != null)
+            {
+                result.Add(forcedCounterOption);
+                candidates.Remove(forcedCounterOption);
+            }
+
             while (result.Count < targetCount && candidates.Count > 0)
             {
                 V02RewardDefinition selected = PickWeighted(candidates, nextEnemy);
@@ -141,15 +148,15 @@ namespace TalismanBag.V02.Rewards
 
         public int GetAdjustedWeight(V02RewardDefinition reward, EnemyDefinition nextEnemy)
         {
-            if (reward == null)
+            if (reward == null || !reward.enabled)
             {
                 return 0;
             }
 
-            int weight = Mathf.Max(1, reward.baseWeight);
+            int weight = Mathf.Max(0, reward.baseWeight);
             if (RewardHelpsAgainstEnemy(reward, nextEnemy))
             {
-                weight += 24;
+                weight += Mathf.Max(0, reward.nextEnemyBonusWeight);
             }
 
             if (reward.rewardType == V02RewardType.FormationModifier)
@@ -202,7 +209,7 @@ namespace TalismanBag.V02.Rewards
             foreach (string rewardId in GetStageRewardIds(completedRoundNumber))
             {
                 V02RewardDefinition reward = FindReward(rewardId);
-                if (reward == null || ContainsReward(candidates, reward.rewardId))
+                if (reward == null || !reward.enabled || ContainsReward(candidates, reward.rewardId))
                 {
                     continue;
                 }
@@ -418,18 +425,36 @@ namespace TalismanBag.V02.Rewards
             return reward;
         }
 
+        private V02RewardDefinition PickForcedCounterOption(List<V02RewardDefinition> candidates, EnemyDefinition nextEnemy)
+        {
+            if (candidates == null || nextEnemy == null)
+            {
+                return null;
+            }
+
+            foreach (V02RewardDefinition reward in candidates)
+            {
+                if (reward != null && reward.enabled && reward.forceAsCounterOption && RewardHelpsAgainstEnemy(reward, nextEnemy))
+                {
+                    return reward;
+                }
+            }
+
+            return null;
+        }
+
         private V02RewardDefinition PickWeighted(List<V02RewardDefinition> candidates, EnemyDefinition nextEnemy)
         {
             int totalWeight = 0;
             foreach (V02RewardDefinition reward in candidates)
             {
-                totalWeight += GetAdjustedWeight(reward, nextEnemy);
+                totalWeight += Mathf.Max(0, GetAdjustedWeight(reward, nextEnemy));
             }
 
             int roll = UnityEngine.Random.Range(0, Mathf.Max(1, totalWeight));
             foreach (V02RewardDefinition reward in candidates)
             {
-                roll -= GetAdjustedWeight(reward, nextEnemy);
+                roll -= Mathf.Max(0, GetAdjustedWeight(reward, nextEnemy));
                 if (roll < 0)
                 {
                     return reward;

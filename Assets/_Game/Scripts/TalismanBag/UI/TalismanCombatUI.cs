@@ -12,6 +12,8 @@ namespace TalismanBag.UI
         [SerializeField] private Text hpText;
         [SerializeField] private Text shieldText;
         [SerializeField] private Text manaText;
+        [SerializeField] private Text enemyFaceText;
+        [SerializeField] private Text enemyTitleText;
         [SerializeField] private Text enemyHpText;
         [SerializeField] private Text stateText;
 
@@ -26,6 +28,8 @@ namespace TalismanBag.UI
         private Coroutine hpFlashRoutine;
         private Coroutine enemyShakeRoutine;
         private Coroutine shieldRoutine;
+        private Vector2 enemyBaseAnchoredPosition;
+        private bool hasEnemyBasePosition;
 
         private void Awake()
         {
@@ -38,6 +42,8 @@ namespace TalismanBag.UI
             {
                 enemyBaseColor = enemyFlashTarget.color;
             }
+
+            CaptureEnemyBasePosition();
 
             if (shieldFeedback != null)
             {
@@ -67,12 +73,21 @@ namespace TalismanBag.UI
                 }
             }
 
-            if (enemy?.definition != null && enemyHpText != null)
+            if (enemy?.definition != null)
             {
+                SetText(enemyFaceText, enemy.definition.GetAvatarGlyph());
+                SetText(enemyTitleText, enemy.definition.GetReadableLabel());
+
                 string bossTag = enemy.isEnraged ? "  狂暴" : string.Empty;
                 string chargeTag = enemy.isCharging || enemy.isCastingSkill ? "  蓄力" : string.Empty;
                 string enemyShield = enemy.currentShield > 0 ? $"  护盾 {enemy.currentShield}" : string.Empty;
-                enemyHpText.text = $"{enemy.definition.displayName}：{enemy.currentHp}/{enemy.definition.maxHp}{enemyShield}{bossTag}{chargeTag}";
+                SetText(enemyHpText, $"{enemy.definition.GetReadableLabel()}：{enemy.currentHp}/{enemy.definition.maxHp}{enemyShield}{bossTag}{chargeTag}");
+            }
+            else
+            {
+                SetText(enemyFaceText, "?");
+                SetText(enemyTitleText, "敌人未选择");
+                SetText(enemyHpText, "敌人：--/--");
             }
 
             if (stateText != null)
@@ -118,9 +133,12 @@ namespace TalismanBag.UI
                 return;
             }
 
+            CaptureEnemyBasePosition();
+
             if (enemyShakeRoutine != null)
             {
                 StopCoroutine(enemyShakeRoutine);
+                enemyVisual.anchoredPosition = enemyBaseAnchoredPosition;
             }
 
             enemyShakeRoutine = StartCoroutine(ShakeEnemyRoutine());
@@ -145,7 +163,7 @@ namespace TalismanBag.UI
 
         private IEnumerator ShakeEnemyRoutine()
         {
-            Vector2 start = enemyVisual.anchoredPosition;
+            Vector2 start = enemyBaseAnchoredPosition;
             if (enemyFlashTarget != null)
             {
                 enemyFlashTarget.color = new Color(1f, 0.45f, 0.35f);
@@ -161,6 +179,27 @@ namespace TalismanBag.UI
             if (enemyFlashTarget != null)
             {
                 enemyFlashTarget.color = enemyBaseColor;
+            }
+
+            enemyShakeRoutine = null;
+        }
+
+        private void CaptureEnemyBasePosition()
+        {
+            if (enemyVisual == null || hasEnemyBasePosition)
+            {
+                return;
+            }
+
+            enemyBaseAnchoredPosition = enemyVisual.anchoredPosition;
+            hasEnemyBasePosition = true;
+        }
+
+        private static void SetText(Text text, string value)
+        {
+            if (text != null)
+            {
+                text.text = value;
             }
         }
     }

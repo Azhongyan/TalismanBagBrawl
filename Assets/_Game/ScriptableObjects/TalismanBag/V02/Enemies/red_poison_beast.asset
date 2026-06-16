@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: red_poison_beast
   m_EditorClassIdentifier: 
   enemyId: red_poison_beast
-  displayName: "\u8D64\u6BD2\u5996"
+  displayName: "\u6BD2"
+  enabled: 1
   enemyType: 0
-  maxHp: 130
+  maxHp: 210
   attackDamage: 7
   attackInterval: 3
   weaknessText: "\u4E2D\u6BD2, \u707C\u70E7"

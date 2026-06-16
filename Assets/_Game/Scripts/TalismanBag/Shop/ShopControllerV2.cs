@@ -464,7 +464,7 @@ namespace TalismanBag.Shop
                 return "下一场：通关";
             }
 
-            return $"下一场：{nextRound.roundTitle}\n弱点：{nextRound.enemy.weaknessText}\n危险：{nextRound.enemy.dangerText}\n推荐：{nextRound.enemy.recommendedBuildText}";
+            return $"下一场：{nextRound.enemy.GetReadableLabel()}  {nextRound.roundTitle}\n弱点：{nextRound.enemy.weaknessText}\n危险：{nextRound.enemy.dangerText}\n推荐：{nextRound.enemy.recommendedBuildText}";
         }
 
         private int GetJade()

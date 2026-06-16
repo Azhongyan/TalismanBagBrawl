@@ -51,7 +51,7 @@ namespace TalismanBag.UI
                 3 => "剑修蓄力连斩时，可以用雷符打断。",
                 4 => "邪修会封印阵位，不要把所有核心道具挤在一起。",
                 7 => "Boss 会吸灵、封印和蓄力，稳定灵气、防御和雷符打断都很重要。",
-                _ => enemy != null ? $"观察 {enemy.displayName} 的弱点后再调整阵盘。" : "观察敌人弱点后再调整阵盘。"
+                _ => enemy != null ? $"观察 {enemy.GetReadableLabel()} 的弱点后再调整阵盘。" : "观察敌人弱点后再调整阵盘。"
             };
         }
 

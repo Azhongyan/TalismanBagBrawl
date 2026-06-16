@@ -24,8 +24,6 @@ namespace TalismanBag.Enemies
         public List<EnemySkillRuntime> skillRuntimes = new();
 
         public int currentShield;
-        public int poisonStacks;
-        public int burnStacks;
 
         public string currentIntentText;
         public bool isCastingSkill;
@@ -52,8 +50,6 @@ namespace TalismanBag.Enemies
             bossChargeCooldown = 0f;
             hasTriggeredEnrage = false;
             currentShield = 0;
-            poisonStacks = 0;
-            burnStacks = 0;
             currentIntentText = definition != null ? definition.intentText : string.Empty;
             isCastingSkill = false;
             currentCastingSkill = null;
