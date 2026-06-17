@@ -8,6 +8,10 @@ namespace TalismanBag.V02.UI
 {
     public sealed class StatusIconView : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
     {
+        private const float DotTickInterval = 1f;
+        private const float DotLabelWidth = 112f;
+        private const float ShieldLabelWidth = 76f;
+
         [SerializeField] private Image background;
         [SerializeField] private Image iconImage;
         [SerializeField] private Image countdownFillImage;
@@ -18,6 +22,10 @@ namespace TalismanBag.V02.UI
         [SerializeField] private LayoutElement layoutElement;
 
         private StatusEffectRuntime status;
+        private RectTransform rectTransform;
+        private Vector2 defaultSize;
+        private float defaultPreferredWidth;
+        private float defaultPreferredHeight;
         private bool isOverflow;
         private Coroutine longPressRoutine;
 
@@ -31,6 +39,12 @@ namespace TalismanBag.V02.UI
             this.countdownText = countdownText;
             this.tooltipPanel = tooltipPanel;
             layoutElement = GetComponent<LayoutElement>();
+            rectTransform = GetComponent<RectTransform>();
+            defaultSize = rectTransform != null ? rectTransform.sizeDelta : new Vector2(42f, 42f);
+            defaultPreferredWidth = layoutElement != null && layoutElement.preferredWidth > 0f
+                ? layoutElement.preferredWidth
+                : defaultSize.x;
+            defaultPreferredHeight = layoutElement != null ? layoutElement.preferredHeight : defaultSize.y;
         }
 
         public void SetTooltipPanel(StatusTooltipPanel tooltipPanel)
@@ -54,6 +68,7 @@ namespace TalismanBag.V02.UI
             status = null;
             isOverflow = true;
             SetText(glyphText, $"+{overflowCount}");
+            RestoreDefaultLayout();
             SetText(stackText, string.Empty);
             SetText(countdownText, string.Empty);
             SetImageVisible(iconImage, false);
@@ -83,6 +98,19 @@ namespace TalismanBag.V02.UI
                 background.color = GetBackgroundColor(definition);
             }
 
+            if (IsDotTickStatus(definition))
+            {
+                RefreshDotTickStatus(definition);
+                return;
+            }
+
+            if (IsShieldStatus(definition))
+            {
+                RefreshShieldStatus(definition);
+                return;
+            }
+
+            RestoreDefaultLayout();
             if (definition.icon != null && iconImage != null)
             {
                 iconImage.sprite = definition.icon;
@@ -94,6 +122,7 @@ namespace TalismanBag.V02.UI
                 SetImageVisible(iconImage, false);
                 SetText(glyphText, GetGlyph(definition));
             }
+            ResetTextStyles();
 
             bool showStack = definition.showStackCount && status.stackCount > 1;
             SetText(stackText, showStack ? $"x{status.stackCount}" : string.Empty);
@@ -103,12 +132,56 @@ namespace TalismanBag.V02.UI
             UpdateCountdownFill(definition, showCountdown);
         }
 
+        private void RefreshDotTickStatus(StatusEffectDefinition definition)
+        {
+            SetPreferredWidth(DotLabelWidth);
+            SetImageVisible(iconImage, false);
+            SetText(stackText, string.Empty);
+            SetText(countdownText, string.Empty);
+
+            if (glyphText != null)
+            {
+                glyphText.fontSize = 12;
+                glyphText.fontStyle = FontStyle.Bold;
+                glyphText.alignment = TextAnchor.MiddleCenter;
+                glyphText.horizontalOverflow = HorizontalWrapMode.Wrap;
+                glyphText.verticalOverflow = VerticalWrapMode.Overflow;
+            }
+
+            float nextTick = Mathf.Clamp(status.remainingTime, 0f, DotTickInterval);
+            int damagePerSecond = EstimateDamagePerSecond(status);
+            SetText(glyphText, $"{GetGlyph(definition)} x{status.stackCount}\n{nextTick:0.0}s | 每秒 {damagePerSecond}");
+            UpdateDotCountdownFill(nextTick);
+        }
+
+        private void RefreshShieldStatus(StatusEffectDefinition definition)
+        {
+            SetPreferredWidth(ShieldLabelWidth);
+            SetImageVisible(iconImage, false);
+            SetText(stackText, string.Empty);
+            SetText(countdownText, string.Empty);
+            SetCountdownFillVisible(false);
+
+            if (glyphText != null)
+            {
+                glyphText.fontSize = 14;
+                glyphText.fontStyle = FontStyle.Bold;
+                glyphText.alignment = TextAnchor.MiddleCenter;
+                glyphText.horizontalOverflow = HorizontalWrapMode.Overflow;
+                glyphText.verticalOverflow = VerticalWrapMode.Truncate;
+            }
+
+            SetText(glyphText, $"{GetGlyph(definition)} x{status.stackCount}");
+        }
+
         public void Clear()
         {
             gameObject.SetActive(true);
             SetLayoutVisible(false);
             status = null;
             isOverflow = false;
+            RestoreDefaultLayout();
+            ResetTextStyles();
             SetText(glyphText, string.Empty);
             SetText(stackText, string.Empty);
             SetText(countdownText, string.Empty);
@@ -137,6 +210,17 @@ namespace TalismanBag.V02.UI
             }
 
             countdownFillImage.fillAmount = Mathf.Clamp01(status.remainingTime / definition.defaultDuration);
+        }
+
+        private void UpdateDotCountdownFill(float remainingTime)
+        {
+            if (countdownFillImage == null)
+            {
+                return;
+            }
+
+            SetCountdownFillVisible(true);
+            countdownFillImage.fillAmount = Mathf.Clamp01(remainingTime / DotTickInterval);
         }
 
         private void SetCountdownFillVisible(bool visible)
@@ -218,6 +302,80 @@ namespace TalismanBag.V02.UI
             }
         }
 
+        private void SetPreferredWidth(float width)
+        {
+            if (layoutElement == null)
+            {
+                layoutElement = GetComponent<LayoutElement>();
+            }
+
+            if (layoutElement != null)
+            {
+                layoutElement.preferredWidth = width;
+                if (defaultPreferredHeight > 0f)
+                {
+                    layoutElement.preferredHeight = defaultPreferredHeight;
+                }
+            }
+
+            if (rectTransform == null)
+            {
+                rectTransform = GetComponent<RectTransform>();
+            }
+
+            if (rectTransform != null)
+            {
+                Vector2 size = defaultSize == Vector2.zero ? rectTransform.sizeDelta : defaultSize;
+                size.x = width;
+                rectTransform.sizeDelta = size;
+            }
+        }
+
+        private void RestoreDefaultLayout()
+        {
+            if (layoutElement == null)
+            {
+                layoutElement = GetComponent<LayoutElement>();
+            }
+
+            if (layoutElement != null && defaultPreferredWidth > 0f)
+            {
+                layoutElement.preferredWidth = defaultPreferredWidth;
+                layoutElement.preferredHeight = defaultPreferredHeight;
+            }
+
+            if (rectTransform == null)
+            {
+                rectTransform = GetComponent<RectTransform>();
+            }
+
+            if (rectTransform != null && defaultSize != Vector2.zero)
+            {
+                rectTransform.sizeDelta = defaultSize;
+            }
+        }
+
+        private void ResetTextStyles()
+        {
+            ApplyTextStyle(glyphText, 22, FontStyle.Bold, TextAnchor.MiddleCenter, HorizontalWrapMode.Overflow, VerticalWrapMode.Truncate);
+            ApplyTextStyle(stackText, 13, FontStyle.Bold, TextAnchor.UpperRight, HorizontalWrapMode.Overflow, VerticalWrapMode.Truncate);
+            ApplyTextStyle(countdownText, 12, FontStyle.Bold, TextAnchor.LowerCenter, HorizontalWrapMode.Overflow, VerticalWrapMode.Truncate);
+        }
+
+        private static void ApplyTextStyle(Text text, int fontSize, FontStyle style, TextAnchor alignment, HorizontalWrapMode horizontalWrap, VerticalWrapMode verticalWrap)
+        {
+            if (text == null)
+            {
+                return;
+            }
+
+            text.fontSize = fontSize;
+            text.fontStyle = style;
+            text.alignment = alignment;
+            text.horizontalOverflow = horizontalWrap;
+            text.verticalOverflow = verticalWrap;
+        }
+
         private static string GetGlyph(StatusEffectDefinition definition)
         {
             if (!string.IsNullOrWhiteSpace(definition.glyph))
@@ -233,6 +391,22 @@ namespace TalismanBag.V02.UI
             Color color = definition.displayColor;
             color.a = 0.92f;
             return color;
+        }
+
+        private static bool IsDotTickStatus(StatusEffectDefinition definition)
+        {
+            string id = definition != null ? definition.statusId : string.Empty;
+            return id == StatusEffectIds.Poison || id == StatusEffectIds.Burn;
+        }
+
+        private static bool IsShieldStatus(StatusEffectDefinition definition)
+        {
+            return definition != null && definition.statusId == StatusEffectIds.Shield;
+        }
+
+        private static int EstimateDamagePerSecond(StatusEffectRuntime status)
+        {
+            return Mathf.Max(0, status != null ? status.stackCount : 0);
         }
 
         private static void SetImageVisible(Image image, bool visible)

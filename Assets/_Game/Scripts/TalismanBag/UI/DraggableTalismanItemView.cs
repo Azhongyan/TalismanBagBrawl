@@ -282,9 +282,10 @@ namespace TalismanBag.UI
                 return false;
             }
 
-            if (slot.CurrentItemView != null && slot.CurrentItemView != this)
+            DraggableTalismanItemView occupiedView = slot.CurrentItemView;
+            if (occupiedView != null && occupiedView != this)
             {
-                return false;
+                return TryReplaceOrSwapWithOccupiedSlot(slot, occupiedView);
             }
 
             if (!grid.PlaceItem(runtimeItem, slot.GridPosition))
@@ -293,6 +294,78 @@ namespace TalismanBag.UI
             }
 
             AttachToSlot(slot);
+            placedDuringDrag = true;
+            grid.NotifyChanged();
+            return true;
+        }
+
+        private bool TryReplaceOrSwapWithOccupiedSlot(TalismanGridSlotView targetSlot, DraggableTalismanItemView occupiedView)
+        {
+            if (targetSlot == null || occupiedView == null || occupiedView == this || grid == null || runtimeItem == null)
+            {
+                return false;
+            }
+
+            if (!targetSlot.CanAcceptItem || occupiedView.RuntimeItem == null)
+            {
+                return false;
+            }
+
+            if (draggingFromGrid)
+            {
+                return TrySwapGridItems(targetSlot, occupiedView);
+            }
+
+            return TryReplaceInventoryItem(targetSlot, occupiedView);
+        }
+
+        private bool TrySwapGridItems(TalismanGridSlotView targetSlot, DraggableTalismanItemView occupiedView)
+        {
+            if (originalSlot == null || originalSlot == targetSlot || !originalSlot.CanAcceptItem)
+            {
+                return false;
+            }
+
+            TalismanItemRuntime occupiedRuntime = occupiedView.RuntimeItem;
+            if (occupiedRuntime == null)
+            {
+                return false;
+            }
+
+            if (!grid.PlaceItem(occupiedRuntime, originalSlot.GridPosition))
+            {
+                return false;
+            }
+
+            if (!grid.PlaceItem(runtimeItem, targetSlot.GridPosition))
+            {
+                grid.PlaceItem(occupiedRuntime, targetSlot.GridPosition);
+                return false;
+            }
+
+            occupiedView.AttachToSlot(originalSlot);
+            AttachToSlot(targetSlot);
+            placedDuringDrag = true;
+            grid.NotifyChanged();
+            return true;
+        }
+
+        private bool TryReplaceInventoryItem(TalismanGridSlotView targetSlot, DraggableTalismanItemView occupiedView)
+        {
+            TalismanItemRuntime occupiedRuntime = occupiedView.RuntimeItem;
+            if (occupiedRuntime == null)
+            {
+                return false;
+            }
+
+            occupiedView.ReturnToHome();
+            if (!grid.PlaceItem(runtimeItem, targetSlot.GridPosition))
+            {
+                occupiedView.ForcePlaceOnSlot(targetSlot);
+                return false;
+            }
+
+            AttachToSlot(targetSlot);
             placedDuringDrag = true;
             grid.NotifyChanged();
             return true;

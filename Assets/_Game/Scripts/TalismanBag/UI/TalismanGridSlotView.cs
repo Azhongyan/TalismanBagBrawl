@@ -83,7 +83,7 @@ namespace TalismanBag.UI
         {
             isHovered = true;
             DraggableTalismanItemView dragged = eventData.pointerDrag != null ? eventData.pointerDrag.GetComponent<DraggableTalismanItemView>() : null;
-            isInvalidTarget = dragged != null && (!CanAcceptItem || currentItemView != null && currentItemView != dragged);
+            isInvalidTarget = dragged != null && !CanAcceptItem;
             RefreshHoverHint();
             RefreshVisuals();
         }

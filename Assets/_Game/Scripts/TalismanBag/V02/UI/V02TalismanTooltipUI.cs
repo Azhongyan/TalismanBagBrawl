@@ -298,7 +298,7 @@ namespace TalismanBag.V02.UI
                 ChainThunderId => $"\u8fde\u9501\u4f24\u5bb3 {GetChainThunderDamage(level)}",
                 SoulSuppressId => $"\u4f24\u5bb3 {GetSoulSuppressDamage(level)}",
                 PurifyId => "\u51c0\u5316\u5f02\u5e38 / \u89e3\u5c01",
-                SealId => "\u5f3a\u5316\u76f8\u90bb\u7b26\u7b93",
+                SealId => level >= 2 ? "\u76f8\u90bb\u706b\u7b26\uff1a\u4f24\u5bb3 +6\uff1b\u76f8\u90bb\u96f7\u7b26\uff1a45% \u66b4\u51fb x2" : "\u76f8\u90bb\u706b\u7b26\uff1a\u4f24\u5bb3 +3\uff1b\u76f8\u90bb\u96f7\u7b26\uff1a30% \u66b4\u51fb x2",
                 ExorcismBellId => $"\u9a71\u90aa\u4f24\u5bb3 {GetScaledValue(definition.baseValue, level)}",
                 _ => GetOutputLineByEffect(definition, level)
             };
@@ -333,9 +333,9 @@ namespace TalismanBag.V02.UI
                 QiPillId => level >= 2 ? "\u76f8\u90bb\u62a4\u8eab\u7b26\u65f6\u6cbb\u7597 +40" : "\u76f8\u90bb\u62a4\u8eab\u7b26\u65f6\u6cbb\u7597 +28",
                 WaterTalismanId => "\u76f8\u90bb\u4e39\u836f\u53ef\u7f29\u77ed\u4e39\u836f\u51b7\u5374",
                 ChainThunderId => "\u514b\u5236\u7fa4\u602a / \u53ec\u5524",
-                SoulSuppressId => "\u514b\u5236\u9b3c\u602a / \u5077\u7075\uff0c\u547d\u4e2d\u5f31\u70b9\u7ea6 x1.4",
+                SoulSuppressId => "\u88ab\u4f9b\u80fd\u65f6\uff0c\u53ef\u53cd\u5236\u5077\u7075\u7c7b\u6280\u80fd\uff0c\u964d\u4f4e\u9635\u773c\u6216\u805a\u7075\u77f3\u88ab\u5e72\u6270\u98ce\u9669\uff1b\u547d\u4e2d\u9b3c\u602a / \u5077\u7075\u5f31\u70b9\u65f6\u4f24\u5bb3\u7ea6 x1.4",
                 PurifyId => "\u9488\u5bf9\u4e2d\u6bd2\u3001\u707c\u70e7\u3001\u5c01\u5370",
-                SealId => "\u653e\u5728\u653b\u51fb\u7b26\u65c1\u8fb9\u66f4\u6709\u4ef7\u503c",
+                SealId => "\u53ea\u5f3a\u5316\u76f8\u90bb\u706b\u7b26 / \u96f7\u7b26\uff0c\u4e0d\u76f4\u63a5\u9020\u6210\u4f24\u5bb3",
                 SpiritStoneId => "\u4f9b\u80fd\u6e90\uff1a\u4e0d\u9700\u9635\u6cd5\u4f9b\u80fd",
                 _ => string.Empty
             };
@@ -359,6 +359,7 @@ namespace TalismanBag.V02.UI
                 WaterTalismanId => "\u6cbb\u7597 +8",
                 ChainThunderId => "\u8fde\u9501\u4f24\u5bb3 +8",
                 SoulSuppressId => "\u4f24\u5bb3 +6",
+                SealId => "\u706b\u7b26\u52a0\u6210 +3\uff1b\u96f7\u7b26\u66b4\u51fb\u7387 +15%",
                 _ => definition.baseValue > 0 ? $"\u6570\u503c\u7ea6 +{GetScaledValue(definition.baseValue, 2) - definition.baseValue}" : "\u4e3b\u8981\u63d0\u5347\u529f\u80fd\u8868\u73b0"
             };
         }

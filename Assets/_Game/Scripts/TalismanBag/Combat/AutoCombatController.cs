@@ -741,7 +741,7 @@ namespace TalismanBag.Combat
         {
             playerStats.TakeDamage(20);
             Emit(BattleEventType.DamageTaken, BattleLogCategory.Damage, "调试：玩家受到 20 点伤害", value: 20, screenPosition: GetPlayerPosition());
-            combatUI?.FlashHP();
+            combatUI?.FlashPlayerHit();
             RefreshUI();
             CheckDefeat();
             RefreshUI();
@@ -1604,7 +1604,7 @@ namespace TalismanBag.Combat
             string sourceId = string.IsNullOrWhiteSpace(sourceOverride) ? currentEnemy.definition.enemyId : sourceOverride;
             Vector2 position = screenPositionOverride == Vector2.zero ? GetPlayerPosition() : screenPositionOverride;
             Emit(BattleEventType.DamageTaken, category, logMessage, sourceId, "player", amount, position);
-            combatUI?.FlashHP();
+            combatUI?.FlashPlayerHit();
             RefreshUI();
             CheckDefeat();
         }
@@ -1652,6 +1652,7 @@ namespace TalismanBag.Combat
             }
 
             Emit(BattleEventType.LogMessage, BattleLogCategory.Danger, logMessage, currentEnemy?.definition != null ? currentEnemy.definition.enemyId : string.Empty, value: poison + burn, screenPosition: GetPlayerPosition());
+            SyncDotTickDisplayStatuses();
             playerStatusAnchor?.Refresh();
             playerDebuffAnchor?.Refresh();
         }
@@ -2380,6 +2381,7 @@ namespace TalismanBag.Combat
 
             EnsureStatusEffectSystem();
             enemyStatusController?.AddStatus(StatusEffectLibrary.Burn, GetRuntimeItemName(item), "Item", v02RunModifierState.fireBurnBonusStacks);
+            SyncDotTickDisplayStatuses();
             Emit(BattleEventType.ComboActivated, BattleLogCategory.Combo, $"[强化] 火符燃烧强化生效，额外叠加 {v02RunModifierState.fireBurnBonusStacks} 层燃烧", item.definition.itemId, value: v02RunModifierState.fireBurnBonusStacks, screenPosition: GetEnemyPosition());
         }
 
@@ -2877,8 +2879,27 @@ namespace TalismanBag.Combat
         private void RefreshStatusEffects()
         {
             EnsureStatusEffectSystem();
+            if (IsTerminalCombatState())
+            {
+                ClearStatusEffectsForInactiveCombat();
+                return;
+            }
+
             SyncPlayerStatusEffects();
             SyncEnemyStatusEffects();
+            SyncDotTickDisplayStatuses();
+            playerStatusAnchor?.Refresh();
+            enemyStatusAnchor?.Refresh();
+            playerBuffAnchor?.Refresh();
+            playerDebuffAnchor?.Refresh();
+            enemyBuffAnchor?.Refresh();
+            enemyDebuffAnchor?.Refresh();
+        }
+
+        private void ClearStatusEffectsForInactiveCombat()
+        {
+            playerStatusController?.ClearAll();
+            enemyStatusController?.ClearAll();
             playerStatusAnchor?.Refresh();
             enemyStatusAnchor?.Refresh();
             playerBuffAnchor?.Refresh();
@@ -2949,6 +2970,14 @@ namespace TalismanBag.Combat
             playerStatusController.SetStatus(StatusEffectLibrary.SoulSuppressReady, soulSuppress != null ? GetRuntimeItemName(soulSuppress) : string.Empty, "Item", soulSuppress != null ? 1 : 0);
         }
 
+        private void SyncDotTickDisplayStatuses()
+        {
+            float playerTickRemaining = GetTickDisplayRemaining(v02StatusTickTimer);
+            playerStatusController?.SetDisplayRemainingTime(StatusEffectIds.Poison, playerTickRemaining);
+            playerStatusController?.SetDisplayRemainingTime(StatusEffectIds.Burn, playerTickRemaining);
+            enemyStatusController?.SetDisplayRemainingTime(StatusEffectIds.Burn, GetTickDisplayRemaining(v02EnemyBurnTickTimer));
+        }
+
         private void SyncEnemyStatusEffects()
         {
             if (enemyStatusController == null)
@@ -3000,6 +3029,18 @@ namespace TalismanBag.Combat
             }
 
             enemyStatusController?.SetStatus(StatusEffectLibrary.BossPhase, v02BossPhaseController.CurrentPhase.ToString(), "Boss", 1);
+        }
+
+        private bool IsTerminalCombatState()
+        {
+            return state == TalismanCombatState.Victory ||
+                   state == TalismanCombatState.Defeat ||
+                   state == TalismanCombatState.RunComplete;
+        }
+
+        private static float GetTickDisplayRemaining(float timer)
+        {
+            return Mathf.Clamp(timer, 0f, 1f);
         }
 
         private void RefreshAutoMergeButton()

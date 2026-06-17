@@ -155,6 +155,17 @@ namespace TalismanBag.V02.Status
                 : 0;
         }
 
+        public bool SetDisplayRemainingTime(string statusId, float remainingTime)
+        {
+            if (string.IsNullOrWhiteSpace(statusId) || !statuses.TryGetValue(statusId, out StatusEffectRuntime status))
+            {
+                return false;
+            }
+
+            status.remainingTime = Mathf.Max(0f, remainingTime);
+            return true;
+        }
+
         public List<StatusEffectRuntime> GetVisibleStatuses()
         {
             visibleBuffer.Clear();

@@ -149,9 +149,22 @@ namespace TalismanBag.V02.UI
                 _ => "Neutral"
             };
             string stack = definition.showStackCount ? $"层数：{status.stackCount}" : "层数：-";
-            string remaining = definition.hasDuration && definition.showCountdown ? $"剩余：{Mathf.Max(0f, status.remainingTime):0.0}秒" : "剩余：常驻";
             string source = string.IsNullOrWhiteSpace(status.sourceId) ? "来源：-" : $"来源：{status.sourceId}";
+            if (IsDotTickStatus(definition))
+            {
+                string nextTick = $"下一跳：{Mathf.Clamp(status.remainingTime, 0f, 1f):0.0}秒";
+                string damage = $"预计每秒伤害：{Mathf.Max(0, status.stackCount)}";
+                return $"类型：{type}\n{stack}\n{nextTick}\n{damage}\n{source}\n{definition.description}";
+            }
+
+            string remaining = definition.hasDuration && definition.showCountdown ? $"剩余：{Mathf.Max(0f, status.remainingTime):0.0}秒" : "剩余：常驻";
             return $"类型：{type}\n{stack}\n{remaining}\n{source}\n{definition.description}";
+        }
+
+        private static bool IsDotTickStatus(StatusEffectDefinition definition)
+        {
+            string id = definition != null ? definition.statusId : string.Empty;
+            return id == StatusEffectIds.Poison || id == StatusEffectIds.Burn;
         }
 
         private static Vector2 ResolveTooltipPosition(RectTransform anchor, RectTransform tooltipParent)

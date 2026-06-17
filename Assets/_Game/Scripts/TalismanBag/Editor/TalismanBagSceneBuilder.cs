@@ -1124,7 +1124,7 @@ namespace TalismanBag.EditorTools
 
             CreateV02TopBar(uiRoot, combatUI);
             CreateV02EnemyArea(uiRoot, combatUI, out RectTransform enemyRect, out Graphic enemyGraphic, out Image chargeFill, out Text chargeText, out StatusAnchorUI enemyBuffAnchor, out StatusAnchorUI enemyDebuffAnchor);
-            CreateV02CombatStage(uiRoot, previewPanel, intentUI, out StatusAnchorUI playerBuffAnchor, out StatusAnchorUI playerDebuffAnchor);
+            CreateV02CombatStage(uiRoot, combatUI, previewPanel, intentUI, out StatusAnchorUI playerBuffAnchor, out StatusAnchorUI playerDebuffAnchor);
             TalismanGridSlotView[] slots = CreateV02Grid(uiRoot, grid);
             CreateV02InfoArea(uiRoot, powerUI, tooltipUI, battleLogUI, out Text hoverHintText, out Text roundInfoText, out Text prepHintText);
             CreateV02BottomControls(uiRoot, definitions, grid, canvas, combat, debugController, out List<DraggableTalismanItemView> initialItems, out Transform inventoryContent, out DraggableTalismanItemView itemTemplate);
@@ -1295,10 +1295,10 @@ namespace TalismanBag.EditorTools
             layout.padding = new RectOffset(14, 14, 14, 14);
             layout.childAlignment = TextAnchor.MiddleCenter;
 
-            Text hp = CreateStatusText("HPText", topBar.transform, "\u6c14\u8840 100/100", new Color(1f, 0.86f, 0.78f));
+            Text hp = CreateStatusText("HPText", topBar.transform, "100/100 \u6c14\u8840", new Color(1f, 0.86f, 0.78f));
             Image hpFill = CreateHpBarForStatusText(hp);
             Text shield = CreateStatusText("ShieldText", topBar.transform, "\u62a4\u76fe 0", new Color(0.78f, 0.94f, 1f));
-            Text mana = CreateStatusText("ManaText", topBar.transform, "\u7075\u6c14 0/100", new Color(0.72f, 0.9f, 1f));
+            Text mana = CreateStatusText("ManaText", topBar.transform, "0/100 \u7075\u6c14", new Color(0.72f, 0.9f, 1f));
             Text state = CreateStatusText("StateText", topBar.transform, "V0.2", new Color(0.82f, 1f, 0.7f));
 
             SetField(combatUI, "hpText", hp);
@@ -1333,7 +1333,7 @@ namespace TalismanBag.EditorTools
             title.alignment = TextAnchor.MiddleLeft;
             SetRect(title.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(300f, -34f), new Vector2(420f, 44f));
 
-            Text hp = CreateText("EnemyHPText", panel.transform, "\u3010\u653b\u3011\u653b\uff1a80/80", 28, FontStyle.Bold, new Color(1f, 0.82f, 0.7f));
+            Text hp = CreateText("EnemyHPText", panel.transform, "80/80 \u6c14\u8840", 28, FontStyle.Bold, new Color(1f, 0.82f, 0.7f));
             hp.alignment = TextAnchor.MiddleLeft;
             SetRect(hp.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(300f, -84f), new Vector2(520f, 40f));
 
@@ -1358,17 +1358,24 @@ namespace TalismanBag.EditorTools
             enemyGraphic = enemy.GetComponent<Image>();
         }
 
-        private static void CreateV02CombatStage(Transform parent, V02EnemyPreviewPanel previewPanel, V02EnemyIntentUI intentUI, out StatusAnchorUI playerBuffAnchor, out StatusAnchorUI playerDebuffAnchor)
+        private static void CreateV02CombatStage(Transform parent, TalismanCombatUI combatUI, V02EnemyPreviewPanel previewPanel, V02EnemyIntentUI intentUI, out StatusAnchorUI playerBuffAnchor, out StatusAnchorUI playerDebuffAnchor)
         {
             GameObject panel = CreatePanel("V02AutoCombatStage", parent, new Vector2(0f, -428f), new Vector2(1020f, 176f), new Color(0.085f, 0.095f, 0.08f), TextAnchor.UpperCenter);
 
             GameObject playerAvatar = CreatePanel("V02PlayerAvatar", panel.transform, new Vector2(-442f, 8f), new Vector2(126f, 126f), new Color(0.17f, 0.12f, 0.08f), TextAnchor.MiddleCenter);
+            GameObject playerHit = CreatePanel("PlayerHitFeedback", playerAvatar.transform, Vector2.zero, new Vector2(126f, 126f), new Color(1f, 0.28f, 0.22f, 0f), TextAnchor.MiddleCenter);
+            Image playerHitImage = playerHit.GetComponent<Image>();
+            playerHitImage.raycastTarget = false;
+            CanvasRenderer playerHitRenderer = playerHit.GetComponent<CanvasRenderer>();
+            playerHitRenderer.cullTransparentMesh = false;
+            SetRect(playerHit.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
             Text playerFace = CreateText("PlayerAvatarGlyph", playerAvatar.transform, "\u4fee", 48, FontStyle.Bold, new Color(1f, 0.86f, 0.55f));
             SetRect(playerFace.rectTransform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), Vector2.zero);
             Text playerName = CreateText("PlayerAvatarName", playerAvatar.transform, "\u4fee\u58eb", 20, FontStyle.Bold, new Color(0.96f, 0.9f, 0.75f));
             SetRect(playerName.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 12f), new Vector2(-18f, 26f));
             playerBuffAnchor = CreateStatusAnchor("PlayerBuffAnchor", playerAvatar.transform, new Vector2(128f, 66f), new Vector2(290f, 48f), StatusPolarity.Buff);
             playerDebuffAnchor = CreateStatusAnchor("PlayerDebuffAnchor", playerAvatar.transform, new Vector2(128f, 18f), new Vector2(290f, 48f), StatusPolarity.Debuff);
+            SetField(combatUI, "playerHitFeedback", playerHitImage);
 
             GameObject preview = CreatePanel("V02EnemyPreviewPanel", panel.transform, new Vector2(-148f, 0f), new Vector2(410f, 142f), new Color(0.07f, 0.082f, 0.092f), TextAnchor.MiddleCenter);
             Text previewTitle = CreateText("EnemyPreviewTitle", preview.transform, "敌人：【攻】攻", 21, FontStyle.Bold, new Color(0.9f, 0.96f, 1f));
@@ -2261,10 +2268,10 @@ namespace TalismanBag.EditorTools
             layout.padding = new RectOffset(18, 18, 12, 12);
             layout.childAlignment = TextAnchor.MiddleCenter;
 
-            Text hp = CreateStatusText("HPText", topBar.transform, "气血 100/100", new Color(1f, 0.88f, 0.82f));
+            Text hp = CreateStatusText("HPText", topBar.transform, "100/100 气血", new Color(1f, 0.88f, 0.82f));
             Image hpFill = CreateHpBarForStatusText(hp);
             Text shield = CreateStatusText("ShieldText", topBar.transform, "护盾 0", new Color(0.82f, 0.94f, 1f));
-            Text mana = CreateStatusText("ManaText", topBar.transform, "灵气 0/100", new Color(0.74f, 0.9f, 1f));
+            Text mana = CreateStatusText("ManaText", topBar.transform, "0/100 灵气", new Color(0.74f, 0.9f, 1f));
             Text jade = CreateStatusText("JadeText", topBar.transform, "灵玉 0", new Color(1f, 0.86f, 0.48f));
             Text state = CreateStatusText("StateText", topBar.transform, "战前整理", new Color(0.78f, 1f, 0.72f));
             Text round = CreateStatusText("RoundTopText", topBar.transform, "15分钟验证", new Color(0.92f, 0.86f, 0.72f));
@@ -2303,7 +2310,7 @@ namespace TalismanBag.EditorTools
             enemyName.alignment = TextAnchor.MiddleLeft;
             SetRect(enemyName.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(300f, -82f), new Vector2(420f, 46f));
 
-            Text hp = CreateText("EnemyHPText", panel.transform, "敌人：80/80", 28, FontStyle.Bold, new Color(1f, 0.68f, 0.68f));
+            Text hp = CreateText("EnemyHPText", panel.transform, "80/80 气血", 28, FontStyle.Bold, new Color(1f, 0.68f, 0.68f));
             hp.alignment = TextAnchor.MiddleLeft;
             SetRect(hp.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(300f, -128f), new Vector2(420f, 38f));
 

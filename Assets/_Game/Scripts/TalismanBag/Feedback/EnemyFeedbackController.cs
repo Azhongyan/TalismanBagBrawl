@@ -15,11 +15,15 @@ namespace TalismanBag.Feedback
 
         private Color enemyBaseColor = Color.white;
         private Coroutine flashRoutine;
-        private Coroutine shakeRoutine;
         private Coroutine interruptTextRoutine;
-        private Vector2 enemyBaseAnchoredPosition;
+        private Vector3 enemyBaseLocalPosition;
         private bool hasEnemyBasePosition;
-        private string currentChargeLabel = "连斩蓄力中";
+        private bool isShaking;
+        private float shakeElapsed;
+        private const int ShakeStepCount = 8;
+        private const float ShakeOffset = 8f;
+        private const float ShakeStepDuration = 0.025f;
+        private string currentChargeLabel = "\u8fde\u65a9\u84c4\u529b\u4e2d";
 
         private void Awake()
         {
@@ -44,6 +48,27 @@ namespace TalismanBag.Feedback
             {
                 eventRouter.BattleEvent -= OnBattleEvent;
             }
+        }
+
+        private void LateUpdate()
+        {
+            if (!isShaking || enemyVisual == null)
+            {
+                return;
+            }
+
+            shakeElapsed += Time.deltaTime;
+            float totalDuration = ShakeStepCount * ShakeStepDuration;
+            if (shakeElapsed >= totalDuration)
+            {
+                enemyVisual.localPosition = enemyBaseLocalPosition;
+                isShaking = false;
+                return;
+            }
+
+            int step = Mathf.FloorToInt(shakeElapsed / ShakeStepDuration);
+            float x = step % 2 == 0 ? ShakeOffset : -ShakeOffset;
+            enemyVisual.localPosition = enemyBaseLocalPosition + new Vector3(x, 0f, 0f);
         }
 
         public void SetChargeProgress(float progress, bool visible)
@@ -93,16 +118,19 @@ namespace TalismanBag.Feedback
                         }
 
                         chargeText.gameObject.SetActive(true);
-                        chargeText.text = "打断！";
+                        chargeText.text = "\u6253\u65ad\uff01";
                         interruptTextRoutine = StartCoroutine(HideInterruptTextRoutine());
                     }
+
                     Flash(Color.white);
                     Shake();
                     break;
                 case BattleEventType.EnemyCharging:
                     if (!string.IsNullOrWhiteSpace(eventData.message))
                     {
-                        currentChargeLabel = eventData.message.Contains("心魔") ? "心魔冲击蓄力中" : "连斩蓄力中";
+                        currentChargeLabel = eventData.message.Contains("\u5fc3\u9b54")
+                            ? "\u5fc3\u9b54\u51b2\u51fb\u84c4\u529b\u4e2d"
+                            : "\u8fde\u65a9\u84c4\u529b\u4e2d";
                         Flash(new Color(1f, 0.54f, 0.2f));
                     }
 
@@ -133,15 +161,16 @@ namespace TalismanBag.Feedback
                 return;
             }
 
-            CaptureEnemyBasePosition();
-
-            if (shakeRoutine != null)
+            if (isShaking)
             {
-                StopCoroutine(shakeRoutine);
-                enemyVisual.anchoredPosition = enemyBaseAnchoredPosition;
+                enemyVisual.localPosition = enemyBaseLocalPosition;
             }
 
-            shakeRoutine = StartCoroutine(ShakeRoutine());
+            enemyBaseLocalPosition = enemyVisual.localPosition;
+            hasEnemyBasePosition = true;
+            shakeElapsed = 0f;
+            isShaking = true;
+            enemyVisual.localPosition = enemyBaseLocalPosition + new Vector3(ShakeOffset, 0f, 0f);
         }
 
         private IEnumerator FlashRoutine(Color color)
@@ -152,19 +181,6 @@ namespace TalismanBag.Feedback
             flashRoutine = null;
         }
 
-        private IEnumerator ShakeRoutine()
-        {
-            Vector2 start = enemyBaseAnchoredPosition;
-            for (int i = 0; i < 8; i++)
-            {
-                enemyVisual.anchoredPosition = start + new Vector2(i % 2 == 0 ? 8f : -8f, 0f);
-                yield return new WaitForSeconds(0.025f);
-            }
-
-            enemyVisual.anchoredPosition = start;
-            shakeRoutine = null;
-        }
-
         private void CaptureEnemyBasePosition()
         {
             if (enemyVisual == null || hasEnemyBasePosition)
@@ -172,7 +188,7 @@ namespace TalismanBag.Feedback
                 return;
             }
 
-            enemyBaseAnchoredPosition = enemyVisual.anchoredPosition;
+            enemyBaseLocalPosition = enemyVisual.localPosition;
             hasEnemyBasePosition = true;
         }
 
