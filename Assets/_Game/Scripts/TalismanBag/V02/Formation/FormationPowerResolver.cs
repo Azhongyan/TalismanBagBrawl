@@ -14,7 +14,7 @@ namespace TalismanBag.V02.Formation
     {
         [SerializeField] private TalismanBagGrid grid;
         [SerializeField] private TalismanGridSlotView[] slotViews;
-        [SerializeField] private Vector2Int formationEyePosition = new(2, 1);
+        [SerializeField] private Vector2Int formationEyePosition = new(2, 2);
         [SerializeField] private string spiritStoneItemId = "spirit_stone_basic";
         [SerializeField] private float weakCooldownMultiplier = 1.35f;
         [SerializeField] private V02FormationBalanceConfig formationBalanceConfig;
@@ -31,6 +31,13 @@ namespace TalismanBag.V02.Formation
         public bool UnpoweredTalismansCanTrigger => formationBalanceConfig != null && formationBalanceConfig.unpoweredTalismansCanTrigger;
         public float DefaultStealEnergyDisableDuration => formationBalanceConfig != null ? formationBalanceConfig.stealEnergyDisableDuration : 3f;
         public float DefaultSealDuration => formationBalanceConfig != null ? formationBalanceConfig.sealDuration : 3f;
+
+        public static Vector2Int GetDefaultEyeCorePosition(int columns, int rows)
+        {
+            int x = (Mathf.Max(1, columns) - 1) / 2;
+            int y = (Mathf.Max(1, rows) - 1) / 2;
+            return new Vector2Int(x, y);
+        }
 
         private void OnEnable()
         {
@@ -115,6 +122,7 @@ namespace TalismanBag.V02.Formation
             EnsureSlotViewsCurrent();
             NormalizeSlotGridPositions();
             EnsureGridCoversSlotViews();
+            NormalizeFormationEyePosition();
 
             List<TalismanItemRuntime> placedItems = grid.GetAllPlacedItems();
             List<Vector2Int> spiritStonePositions = new();
@@ -346,6 +354,20 @@ namespace TalismanBag.V02.Formation
             if (requiredWidth > 0 && requiredHeight > 0)
             {
                 grid.EnsureSize(requiredWidth, requiredHeight, false);
+            }
+        }
+
+        private void NormalizeFormationEyePosition()
+        {
+            if (grid == null)
+            {
+                return;
+            }
+
+            Vector2Int centeredEye = GetDefaultEyeCorePosition(grid.Width, grid.Height);
+            if (formationEyePosition != centeredEye)
+            {
+                formationEyePosition = centeredEye;
             }
         }
 

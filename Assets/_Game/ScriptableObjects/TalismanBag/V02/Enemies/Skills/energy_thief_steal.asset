@@ -17,9 +17,9 @@ MonoBehaviour:
   intentText: "\u5077\u6B63\u5728\u5077\u53D6\u7075\u6C14\uFF01"
   effectDescription: "\u4F7F\u4F9B\u80FD\u6E90\u9644\u8FD1\u7B26\u7B93\u77ED\u6682\u5931\u6548"
   skillType: 5
-  initialDelay: 4
+  initialDelay: 3
   cooldown: 7
-  castTime: 1
-  value: 0
+  castTime: 0.8
+  value: 1
   duration: 4
   skillTags: 0500000006000000

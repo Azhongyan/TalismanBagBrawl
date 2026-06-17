@@ -15,8 +15,8 @@ MonoBehaviour:
   enemyId: formation_breaker_boss
   displayName: "\u5C06"
   enemyType: 4
-  maxHp: 260
-  attackDamage: 12
+  maxHp: 780
+  attackDamage: 11
   attackInterval: 2.8
   weaknessText: "\u62A4\u76FE, \u7FA4\u4F53, \u5C01\u5370, \u9996\u9886"
   dangerText: "\u7EFC\u5408\u538B\u529B"

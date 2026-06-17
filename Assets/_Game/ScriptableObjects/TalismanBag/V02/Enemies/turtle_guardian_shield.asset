@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: "\u76FE"
   enabled: 1
   enemyType: 0
-  maxHp: 200
+  maxHp: 260
   attackDamage: 8
-  attackInterval: 2.4
+  attackInterval: 2.2
   weaknessText: "\u62A4\u76FE"
   dangerText: "\u5468\u671F\u62A4\u76FE"
   recommendedBuildText: "\u96F7\u7B26\u53EF\u4EE5\u7834\u76FE\uFF0C\u5251\u4E38\u7206\u53D1\u4E5F\u6709\u6548\u3002"

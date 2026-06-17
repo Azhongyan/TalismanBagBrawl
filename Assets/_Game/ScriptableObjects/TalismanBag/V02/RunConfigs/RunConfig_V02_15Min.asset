@@ -11,112 +11,352 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 285353d9dd22a8c4695edb3b52013526, type: 3}
   m_Name: RunConfig_V02_15Min
-  m_EditorClassIdentifier: 
-  runId: v02_15min_seven_rounds
-  displayName: V0.2 15Min Formation Counter Run
+  m_EditorClassIdentifier:
+  runId: v02_main_trial_1_10
+  displayName: V0.2 Main Trial 1-10
   rounds:
-  - roundIndex: 1
-    roundTitle: "\u653B\uFF1A\u57FA\u7840\u5E03\u9635"
+  - levelId: 1-1
+    roundIndex: 1
+    roundTitle: "攻：基础布阵"
     enemy: {fileID: 11400000, guid: 0b6fe088fc1a49218a5200ef4f15d771, type: 2}
-    teachingGoal: "\u7406\u89E3\u7B26\u7B93\u5FC5\u987B\u88AB\u9635\u773C\u6216\u805A\u7075\u77F3\u4F9B\u80FD\u624D\u4F1A\u89E6\u53D1\u3002"
-    preBattleHint: "\u628A\u706B\u7B26\u653E\u5230\u9635\u773C\u6216\u805A\u7075\u77F3\u4F9B\u80FD\u8303\u56F4\u5185\u3002\u672A\u4F9B\u80FD\u7684\u7B26\u7B93\u4E0D\u4F1A\u89E6\u53D1\u3002"
-    recommendedCounterTags: 
+    intendedRole: Formation power tutorial
+    teachingGoal: "理解符箓必须被阵眼或聚灵石供能才会触发。"
+    preBattleHint: "把火符放到阵眼或聚灵石供能范围内。未供能的符箓不会触发。"
+    recommendedCounterTags: []
     isBossRound: 0
-    targetDurationMin: 45
-    targetDurationMax: 60
+    targetDurationMin: 14
+    targetDurationMax: 18
+    targetHpLossMin: 0.2
+    targetHpLossMax: 0.3
     strongCounterExpectedDuration: 0
     neutralExpectedDuration: 0
     badBuildExpectedDuration: 0
     expectedPlayerHpRemainStrongCounter: 0.8
     expectedPlayerHpRemainNeutral: 0.5
     expectedPlayerHpRemainBadBuild: 0.15
-  - roundIndex: 2
-    roundTitle: "\u76FE\uFF1A\u5468\u671F\u62A4\u76FE"
+    benchmarkRule:
+      passDurationMax: 18
+      weakDurationMax: 24
+      passHpLossMax: 0.45
+      weakHpLossMax: 0.65
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: FireBasicBuild
+      expectedGrade: Pass
+      expectedDurationMin: 14
+      expectedDurationMax: 18
+      note: Curve freeze target
+  - levelId: 1-2
+    roundIndex: 2
+    roundTitle: "盾：周期护盾"
     enemy: {fileID: 11400000, guid: c73ab9457d1841e39a189727a2ec2687, type: 2}
-    teachingGoal: "\u7406\u89E3\u62A4\u76FE\u654C\u4EBA\u9700\u8981\u96F7\u7B26\u6216\u7206\u53D1\u5904\u7406\u3002"
-    preBattleHint: "\u654C\u4EBA\u4F1A\u5468\u671F\u6027\u83B7\u5F97\u62A4\u76FE\u3002\u96F7\u7B26\u5BF9\u62A4\u76FE\u6548\u679C\u66F4\u597D\uFF0C\u5251\u4E38\u7206\u53D1\u4E5F\u6709\u6548\u3002"
-    recommendedCounterTags: 
+    intendedRole: Shield break tutorial
+    teachingGoal: "理解护盾敌人需要雷符或爆发处理。"
+    preBattleHint: "敌人会周期性获得护盾。雷符对护盾效果更好，剑丸爆发也有效。"
+    recommendedCounterTags: []
     isBossRound: 0
-    targetDurationMin: 75
-    targetDurationMax: 100
+    targetDurationMin: 18
+    targetDurationMax: 28
+    targetHpLossMin: 0.3
+    targetHpLossMax: 0.4
     strongCounterExpectedDuration: 0
     neutralExpectedDuration: 0
     badBuildExpectedDuration: 0
     expectedPlayerHpRemainStrongCounter: 0.8
     expectedPlayerHpRemainNeutral: 0.5
     expectedPlayerHpRemainBadBuild: 0.15
-  - roundIndex: 3
-    roundTitle: "\u53EC\uFF1A\u7FA4\u4F53\u538B\u5236"
+    benchmarkRule:
+      passDurationMax: 26.4
+      weakDurationMax: 35.2
+      passHpLossMax: 0.55
+      weakHpLossMax: 0.75
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: ThunderShieldBreakBuild
+      expectedGrade: Good/Pass
+      expectedDurationMin: 18
+      expectedDurationMax: 28
+      note: Curve freeze target
+    - buildId: FireBasicBuild
+      expectedGrade: Fail
+      expectedDurationMin: 60
+      expectedDurationMax: 999
+      note: Curve freeze negative target
+  - levelId: 1-3
+    roundIndex: 3
+    roundTitle: "召：群体压制"
     enemy: {fileID: 11400000, guid: 7e529c3694fd44d0a76d614cf3c06b36, type: 2}
-    teachingGoal: "\u7406\u89E3\u591A\u76EE\u6807\u654C\u4EBA\u9700\u8981\u8FDE\u9501\u3001\u8303\u56F4\u6216\u71C3\u70E7\u5904\u7406\u3002"
-    preBattleHint: "\u53EC\u4F1A\u7528\u6570\u91CF\u538B\u5236\u4F60\u3002\u8FDE\u9501\u96F7\u7B26\u548C\u706B\u7B26\u71C3\u70E7\u66F4\u9002\u5408\u6E05\u7FA4\u3002"
-    recommendedCounterTags: 
+    intendedRole: Group clear tutorial
+    teachingGoal: "理解多目标敌人需要连锁、范围或燃烧处理。"
+    preBattleHint: "召会用数量压制你。连锁雷符和火符燃烧更适合清群。"
+    recommendedCounterTags: []
     isBossRound: 0
-    targetDurationMin: 80
-    targetDurationMax: 110
+    targetDurationMin: 18
+    targetDurationMax: 26
+    targetHpLossMin: 0.35
+    targetHpLossMax: 0.45
     strongCounterExpectedDuration: 0
     neutralExpectedDuration: 0
     badBuildExpectedDuration: 0
     expectedPlayerHpRemainStrongCounter: 0.8
     expectedPlayerHpRemainNeutral: 0.5
     expectedPlayerHpRemainBadBuild: 0.15
-  - roundIndex: 4
-    roundTitle: "\u6BD2\uFF1A\u6301\u7EED\u4F24\u5BB3"
+    benchmarkRule:
+      passDurationMax: 26.4
+      weakDurationMax: 35.2
+      passHpLossMax: 0.55
+      weakHpLossMax: 0.75
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: ChainGroupClearBuild
+      expectedGrade: Good/Pass
+      expectedDurationMin: 18
+      expectedDurationMax: 26
+      note: Curve freeze target
+    - buildId: ThunderShieldBreakBuild
+      expectedGrade: Weak
+      expectedDurationMin: 28
+      expectedDurationMax: 40
+      note: Curve freeze weak target
+  - levelId: 1-4
+    roundIndex: 4
+    roundTitle: "毒：持续伤害"
     enemy: {fileID: 11400000, guid: 7c1e7e13122c4fb68ebc45e5465bb3b5, type: 2}
-    teachingGoal: "\u7406\u89E3\u4E0D\u80FD\u53EA\u5806\u8F93\u51FA\uFF0C\u9632\u5FA1\u548C\u51C0\u5316\u4E5F\u91CD\u8981\u3002"
-    preBattleHint: "\u6BD2\u4F1A\u53E0\u52A0\u4E2D\u6BD2\u548C\u71C3\u70E7\u3002\u51C0\u5316\u7B26\u53EF\u4EE5\u6E05\u9664\u72B6\u6001\uFF0C\u62A4\u8EAB\u7B26\u53EF\u4EE5\u62B5\u6297\u6301\u7EED\u4F24\u5BB3\u3002"
-    recommendedCounterTags: 
+    intendedRole: Poison sustain tutorial
+    teachingGoal: "理解不能只堆输出，防御和净化也重要。"
+    preBattleHint: "毒会叠加中毒和燃烧。净化符可以清除状态，护身符可以抵抗持续伤害。"
+    recommendedCounterTags: []
     isBossRound: 0
     targetDurationMin: 90
     targetDurationMax: 120
+    targetHpLossMin: 0.4
+    targetHpLossMax: 0.5
     strongCounterExpectedDuration: 0
     neutralExpectedDuration: 0
     badBuildExpectedDuration: 0
     expectedPlayerHpRemainStrongCounter: 0.8
     expectedPlayerHpRemainNeutral: 0.5
     expectedPlayerHpRemainBadBuild: 0.15
-  - roundIndex: 5
-    roundTitle: "\u5077\uFF1A\u4F9B\u80FD\u5E72\u6270"
-    enemy: {fileID: 11400000, guid: 01aa1e0be8f5453c8c1d705f056a6e9a, type: 2}
-    teachingGoal: "\u7406\u89E3\u9635\u773C\u548C\u805A\u7075\u77F3\u662F\u6838\u5FC3\u8D44\u6E90\uFF0C\u4F1A\u88AB\u654C\u4EBA\u9488\u5BF9\u3002"
-    preBattleHint: "\u5077\u4F1A\u5077\u53D6\u9635\u773C\u6216\u805A\u7075\u77F3\u7075\u6C14\uFF0C\u4F7F\u5468\u56F4\u7B26\u7B93\u77ED\u6682\u5931\u6548\u3002\u9547\u9B42\u7B26\u53EF\u4EE5\u53CD\u5236\u5077\u7075\u3002"
-    recommendedCounterTags: 
-    isBossRound: 0
-    targetDurationMin: 90
-    targetDurationMax: 120
-    strongCounterExpectedDuration: 0
-    neutralExpectedDuration: 0
-    badBuildExpectedDuration: 0
-    expectedPlayerHpRemainStrongCounter: 0.8
-    expectedPlayerHpRemainNeutral: 0.5
-    expectedPlayerHpRemainBadBuild: 0.15
-  - roundIndex: 6
-    roundTitle: "\u5C01\uFF1A\u884C\u5217\u5C01\u9501"
+    benchmarkRule:
+      passDurationMax: 38.4
+      weakDurationMax: 51.2
+      passHpLossMax: 0.7
+      weakHpLossMax: 0.9
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: FireBasicBuild
+      expectedGrade: Fail
+      expectedDurationMin: 50
+      expectedDurationMax: 999
+      note: Curve freeze negative target
+  - levelId: 1-5
+    roundIndex: 5
+    roundTitle: "封：行列封锁"
     enemy: {fileID: 11400000, guid: b201fc3b753c4adab4321c91239bf709, type: 2}
-    teachingGoal: "\u7406\u89E3\u6838\u5FC3\u8F93\u51FA\u4E0D\u80FD\u5168\u90E8\u5806\u5728\u540C\u4E00\u884C\u6216\u540C\u4E00\u5217\u3002"
-    preBattleHint: "\u5C01\u4F1A\u5C01\u5370\u4E00\u884C\u6216\u4E00\u5217\u7B26\u7B93\u3002\u51C0\u5316\u7B26\u53EF\u4EE5\u89E3\u5C01\uFF0C\u4E0D\u8981\u628A\u6240\u6709\u6838\u5FC3\u8F93\u51FA\u5806\u5728\u540C\u4E00\u6761\u7EBF\u4E0A\u3002"
-    recommendedCounterTags: 
+    intendedRole: Seal line tutorial
+    teachingGoal: "理解核心输出不能全部堆在同一行或同一列。"
+    preBattleHint: "封会封印一行或一列符箓。净化符可以解封，不要把所有核心输出堆在同一条线上。"
+    recommendedCounterTags: []
     isBossRound: 0
-    targetDurationMin: 100
-    targetDurationMax: 130
+    targetDurationMin: 20
+    targetDurationMax: 30
+    targetHpLossMin: 0.45
+    targetHpLossMax: 0.55
     strongCounterExpectedDuration: 0
     neutralExpectedDuration: 0
     badBuildExpectedDuration: 0
     expectedPlayerHpRemainStrongCounter: 0.8
     expectedPlayerHpRemainNeutral: 0.5
     expectedPlayerHpRemainBadBuild: 0.15
-  - roundIndex: 7
-    roundTitle: "\u5C06\uFF1A\u7EFC\u5408\u538B\u5236"
+    benchmarkRule:
+      passDurationMax: 31.2
+      weakDurationMax: 41.6
+      passHpLossMax: 0.6
+      weakHpLossMax: 0.8
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: SpreadAntiSealBuild
+      expectedGrade: Good/Pass
+      expectedDurationMin: 20
+      expectedDurationMax: 30
+      note: Curve freeze target
+  - levelId: 1-6
+    roundIndex: 6
+    roundTitle: "偷：供能干扰"
+    enemy: {fileID: 11400000, guid: 01aa1e0be8f5453c8c1d705f056a6e9a, type: 2}
+    intendedRole: Energy disruption tutorial
+    teachingGoal: "理解阵眼和聚灵石是核心资源，会被敌人针对。"
+    preBattleHint: "偷会偷取阵眼或聚灵石灵气，使周围符箓短暂失效。镇魂符可以反制偷灵。"
+    recommendedCounterTags: []
+    isBossRound: 0
+    targetDurationMin: 22
+    targetDurationMax: 32
+    targetHpLossMin: 0.42
+    targetHpLossMax: 0.52
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 33.6
+      weakDurationMax: 44.8
+      passHpLossMax: 0.65
+      weakHpLossMax: 0.85
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: SoulAntiStealBuild
+      expectedGrade: Good/Pass
+      expectedDurationMin: 22
+      expectedDurationMax: 32
+      note: Curve freeze target
+  - levelId: 1-7
+    roundIndex: 7
+    roundTitle: "组：护盾群压"
+    enemy: {fileID: 11400000, guid: 6f3b1a7de8894e54a7b69007799ec801, type: 2}
+    intendedRole: Shield and group check
+    teachingGoal: "同时检验破盾与清群，阵盘需要兼顾单点爆发和范围压制。"
+    preBattleHint: "敌人会先结盾再召唤小妖。雷符破盾，连锁雷符和火符处理群怪。"
+    recommendedCounterTags: []
+    isBossRound: 0
+    targetDurationMin: 26
+    targetDurationMax: 38
+    targetHpLossMin: 0.55
+    targetHpLossMax: 0.65
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 38.4
+      weakDurationMax: 51.2
+      passHpLossMax: 0.7
+      weakHpLossMax: 0.9
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: ThunderShieldBreakBuild
+      expectedGrade: Pass
+      expectedDurationMin: 26
+      expectedDurationMax: 38
+      note: Curve freeze target
+    - buildId: ChainGroupClearBuild
+      expectedGrade: Pass
+      expectedDurationMin: 26
+      expectedDurationMax: 38
+      note: Curve freeze target
+  - levelId: 1-8
+    roundIndex: 8
+    roundTitle: "压：毒封偷灵"
+    enemy: {fileID: 11400000, guid: bbe84c44b2ad471187c6bb3f6c0e65f2, type: 2}
+    intendedRole: Poison seal steal check
+    teachingGoal: "检验净化、镇魂和供能冗余，不能只靠输出硬打。"
+    preBattleHint: "敌人会叠加毒、封锁阵盘并偷取供能。净化符和镇魂符是关键反制。"
+    recommendedCounterTags: []
+    isBossRound: 0
+    targetDurationMin: 30
+    targetDurationMax: 45
+    targetHpLossMin: 0.6
+    targetHpLossMax: 0.7
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 43.2
+      weakDurationMax: 57.6
+      passHpLossMax: 0.75
+      weakHpLossMax: 0.95
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: PurifyAntiPoisonBuild
+      expectedGrade: Pass
+      expectedDurationMin: 30
+      expectedDurationMax: 45
+      note: Curve freeze target
+    - buildId: SoulAntiStealBuild
+      expectedGrade: Pass
+      expectedDurationMin: 30
+      expectedDurationMax: 45
+      note: Curve freeze target
+    - buildId: SpreadAntiSealBuild
+      expectedGrade: Pass
+      expectedDurationMin: 30
+      expectedDurationMax: 45
+      note: Curve freeze target
+  - levelId: 1-9
+    roundIndex: 9
+    roundTitle: "破：综合压制"
+    enemy: {fileID: 11400000, guid: 14f2f4f2f4414e8c8ffcf2be8d830617, type: 2}
+    intendedRole: Mixed pressure check
+    teachingGoal: "综合检验破盾、清群、阵眼保护和阵法稳定性。"
+    preBattleHint: "破会轮换护盾、召唤和封锁小压力。需要破盾、清群、净化和稳定供能。"
+    recommendedCounterTags: []
+    isBossRound: 0
+    targetDurationMin: 28
+    targetDurationMax: 42
+    targetHpLossMin: 0.5
+    targetHpLossMax: 0.6
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 40.8
+      weakDurationMax: 54.4
+      passHpLossMax: 0.8
+      weakHpLossMax: 0.95
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: BossReadyBuild
+      expectedGrade: Pass/Good
+      expectedDurationMin: 28
+      expectedDurationMax: 42
+      note: Curve freeze target
+  - levelId: 1-10
+    roundIndex: 10
+    roundTitle: "首：入门破阵妖"
     enemy: {fileID: 11400000, guid: af00b4c24b8d448cba58b91f4833e62b, type: 2}
-    teachingGoal: "\u7EFC\u5408\u68C0\u9A8C\u7834\u76FE\u3001\u6E05\u7FA4\u3001\u9635\u773C\u4FDD\u62A4\u548C\u9635\u6CD5\u7A33\u5B9A\u6027\u3002"
-    preBattleHint: "\u5C06\u4F1A\u5148\u83B7\u5F97\u62A4\u76FE\uFF0C\u4E2D\u6BB5\u53EC\u5524\u5C0F\u5996\uFF0C\u4F4E\u8840\u91CF\u65F6\u5C01\u5370\u9635\u773C\u9644\u8FD1\u683C\u5B50\u3002\u9700\u8981\u7834\u76FE\u3001\u6E05\u7FA4\u3001\u51C0\u5316\u548C\u7A33\u5B9A\u4F9B\u80FD\u3002"
-    recommendedCounterTags: 
+    intendedRole: Boss comprehensive check
+    teachingGoal: "作为入门 Boss 关，综合检验破盾、清群、净化、镇魂与阵眼保护。"
+    preBattleHint: "Boss 会分阶段使用护盾、召唤、封锁与供能干扰。确保核心符箓都被供能。"
+    recommendedCounterTags: []
     isBossRound: 1
-    targetDurationMin: 150
-    targetDurationMax: 180
+    targetDurationMin: 35
+    targetDurationMax: 50
+    targetHpLossMin: 0.65
+    targetHpLossMax: 0.75
     strongCounterExpectedDuration: 0
     neutralExpectedDuration: 0
     badBuildExpectedDuration: 0
     expectedPlayerHpRemainStrongCounter: 0.8
     expectedPlayerHpRemainNeutral: 0.5
     expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 50.4
+      weakDurationMax: 67.2
+      passHpLossMax: 0.85
+      weakHpLossMax: 0.95
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: BossReadyBuild
+      expectedGrade: Pass/Good
+      expectedDurationMin: 35
+      expectedDurationMax: 50
+      note: Curve freeze target

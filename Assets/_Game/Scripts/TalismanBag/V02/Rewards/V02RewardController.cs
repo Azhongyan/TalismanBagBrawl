@@ -76,18 +76,31 @@ namespace TalismanBag.V02.Rewards
             rewardPanel?.Hide();
         }
 
-        public void OpenRewardSelection(EnemyDefinition nextEnemy)
+        public bool OpenRewardSelection(EnemyDefinition nextEnemy)
         {
-            OpenRewardSelection(nextEnemy, currentCompletedRoundNumber);
+            return OpenRewardSelection(nextEnemy, currentCompletedRoundNumber);
         }
 
-        public void OpenRewardSelection(EnemyDefinition nextEnemy, int completedRoundNumber)
+        public bool OpenRewardSelection(EnemyDefinition nextEnemy, int completedRoundNumber)
         {
             currentNextEnemy = nextEnemy;
-            currentCompletedRoundNumber = Mathf.Clamp(completedRoundNumber, 1, 6);
+            currentCompletedRoundNumber = Mathf.Clamp(completedRoundNumber, 1, 9);
             currentOptions.Clear();
             currentOptions.AddRange(GenerateRewardOptions(nextEnemy, currentCompletedRoundNumber));
+            if (rewardPanel == null)
+            {
+                battleLogUI?.AddLog($"第 {currentCompletedRoundNumber} 关奖励面板缺失，自动进入下一关");
+                return false;
+            }
+
+            if (currentOptions.Count == 0)
+            {
+                battleLogUI?.AddLog($"第 {currentCompletedRoundNumber} 关奖励为空，自动进入下一关");
+                return false;
+            }
+
             rewardPanel?.Show(currentOptions, nextEnemy, ChooseReward);
+            return true;
         }
 
         public List<V02RewardDefinition> GenerateRewardOptions(EnemyDefinition nextEnemy)
@@ -144,6 +157,24 @@ namespace TalismanBag.V02.Rewards
             }
 
             ApplyReward(reward);
+        }
+
+        public void GrantBossCompletionReward()
+        {
+            TalismanItemDefinition fireTalisman = inventoryAdapter != null ? inventoryAdapter.FindDefinitionById(FireTalismanId) : null;
+            if (fireTalisman != null)
+            {
+                if (inventoryAdapter != null)
+                {
+                    inventoryAdapter.AddTalisman(fireTalisman);
+                }
+                else
+                {
+                    inventory?.AddItem(fireTalisman);
+                }
+            }
+
+            battleLogUI?.AddLog("Boss 奖励：重复火符、符纸、灵石、基础配方残页、少量修为");
         }
 
         public int GetAdjustedWeight(V02RewardDefinition reward, EnemyDefinition nextEnemy)
@@ -229,7 +260,7 @@ namespace TalismanBag.V02.Rewards
 
         private static IEnumerable<string> GetStageRewardIds(int completedRoundNumber)
         {
-            switch (Mathf.Clamp(completedRoundNumber, 1, 6))
+            switch (Mathf.Clamp(completedRoundNumber, 1, 9))
             {
                 case 1:
                     yield return RewardAddThunder;
@@ -262,6 +293,27 @@ namespace TalismanBag.V02.Rewards
                     yield return RewardShieldBoost;
                     yield return RewardAddSpiritStone;
                     yield return RewardAddSword;
+                    break;
+                case 7:
+                    yield return RewardThunderBoost;
+                    yield return RewardAddChainThunder;
+                    yield return RewardAddPurify;
+                    yield return RewardShieldBoost;
+                    yield return RewardAddSpiritStone;
+                    break;
+                case 8:
+                    yield return RewardChainThunderBoost;
+                    yield return RewardFireBurn;
+                    yield return RewardAddSoulSuppress;
+                    yield return RewardAddSpiritStone;
+                    yield return RewardAddSeal;
+                    break;
+                case 9:
+                    yield return RewardCleanseCooldown;
+                    yield return RewardThunderBoost;
+                    yield return RewardEyeCore;
+                    yield return RewardAddPurify;
+                    yield return RewardAddSpiritStone;
                     break;
             }
         }

@@ -427,7 +427,7 @@ namespace TalismanBag.Combat
             ClearAllSeals();
             RefreshFormationPowerStates();
             v02RunStatsTracker?.CaptureBattleStart(formationPowerResolver, grid);
-            battleBalanceLogger?.BeginBattle(currentRound, currentEnemy);
+            battleBalanceLogger?.BeginBattle(currentRound, currentEnemy, v02RunFlowController != null ? v02RunFlowController.CurrentRound : null);
             state = TalismanCombatState.Fighting;
             resultPanel?.Hide();
             ConfigureEnemyTimers();
@@ -666,7 +666,7 @@ namespace TalismanBag.Combat
         public void StartBossFight()
         {
             runFlowController?.SkipToRound(totalRounds);
-            AddLog("调试：进入 Round 7 Boss 战");
+            AddLog($"调试：进入 Round {totalRounds} Boss 战");
             RefreshUI();
         }
 
@@ -742,6 +742,7 @@ namespace TalismanBag.Combat
             playerStats.TakeDamage(20);
             Emit(BattleEventType.DamageTaken, BattleLogCategory.Damage, "调试：玩家受到 20 点伤害", value: 20, screenPosition: GetPlayerPosition());
             combatUI?.FlashHP();
+            RefreshUI();
             CheckDefeat();
             RefreshUI();
         }
@@ -802,16 +803,11 @@ namespace TalismanBag.Combat
         {
             foreach (TalismanItemRuntime item in sealedItems)
             {
-                if (item != null)
-                {
-                    item.isSealed = false;
-                    item.sealRemaining = 0f;
-                }
+                ClearSeal(item);
             }
 
             sealedItems.Clear();
-            SyncPlayerFormationStatusEffects();
-            RefreshGridDependentUI();
+            RefreshAfterSealStateChanged();
         }
 
         private void UpdateItems(float deltaTime)
@@ -977,8 +973,7 @@ namespace TalismanBag.Combat
 
                 v02RunStatsTracker?.RecordUnseal();
                 counterFeedbackController?.ShowCounterFeedbackAtScreen(CounterFeedbackType.Unseal, GetItemPosition(item));
-                SyncPlayerFormationStatusEffects();
-                RefreshGridDependentUI();
+                RefreshAfterSealStateChanged();
             }
 
             if (!cleansedStatus && !cleansedSeal)
@@ -1053,6 +1048,7 @@ namespace TalismanBag.Combat
             Emit(BattleEventType.ItemTriggered, BattleLogCategory.Normal, "", item.definition.itemId, value: 1, screenPosition: GetItemPosition(item));
             Emit(BattleEventType.ShieldGained, BattleLogCategory.Defense, $"{GetRuntimeItemName(item)}触发，获得 {shieldGain} 点护盾", item.definition.itemId, value: shieldGain, screenPosition: GetPlayerPosition());
             combatUI?.ShowShieldFeedback();
+            RefreshUI();
             return true;
         }
 
@@ -1079,6 +1075,7 @@ namespace TalismanBag.Combat
             Emit(BattleEventType.ItemTriggered, BattleLogCategory.Normal, "", item.definition.itemId, value: 1, screenPosition: GetItemPosition(item));
             Emit(BattleEventType.HealReceived, BattleLogCategory.Heal, $"{GetRuntimeItemName(item)}触发，恢复 {healAmount} 点气血", item.definition.itemId, value: healAmount, screenPosition: GetPlayerPosition());
             combatUI?.FlashHP();
+            RefreshUI();
             return true;
         }
 
@@ -1175,6 +1172,7 @@ namespace TalismanBag.Combat
             Emit(BattleEventType.ItemTriggered, BattleLogCategory.Normal, "", item.definition.itemId, value: 1, screenPosition: GetItemPosition(item));
             Emit(BattleEventType.HealReceived, BattleLogCategory.Heal, $"{GetRuntimeItemName(item)}流转，恢复 {heal} 点气血", item.definition.itemId, value: heal, screenPosition: GetPlayerPosition());
             combatUI?.FlashHP();
+            RefreshUI();
             return true;
         }
 
@@ -1255,6 +1253,7 @@ namespace TalismanBag.Combat
                 ? $"{logMessage}（护盾后 {finalDamage}）"
                 : shieldCountered || groupCountered ? $"{logMessage}（克制后 {finalDamage}）" : logMessage;
             Emit(BattleEventType.DamageDealt, BattleLogCategory.Damage, damageMessage, source.definition.itemId, currentEnemy.definition.enemyId, finalDamage, GetEnemyPosition());
+            RefreshUI();
             if (v02BossPhaseController == null)
             {
                 TriggerBossEnrage();
@@ -1606,6 +1605,7 @@ namespace TalismanBag.Combat
             Vector2 position = screenPositionOverride == Vector2.zero ? GetPlayerPosition() : screenPositionOverride;
             Emit(BattleEventType.DamageTaken, category, logMessage, sourceId, "player", amount, position);
             combatUI?.FlashHP();
+            RefreshUI();
             CheckDefeat();
         }
 
@@ -1682,6 +1682,79 @@ namespace TalismanBag.Combat
             return true;
         }
 
+        private List<TalismanItemRuntime> GetLegalSealTargets()
+        {
+            List<TalismanItemRuntime> targets = new();
+            if (grid == null)
+            {
+                return targets;
+            }
+
+            foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
+            {
+                if (IsLegalSealTarget(item))
+                {
+                    targets.Add(item);
+                }
+            }
+
+            return targets;
+        }
+
+        private bool IsLegalSealTarget(TalismanItemRuntime item)
+        {
+            if (item?.definition == null || item.isSealed || !item.isPlaced || grid == null)
+            {
+                return false;
+            }
+
+            if (grid.GetItemAt(item.gridPosition) != item)
+            {
+                return false;
+            }
+
+            Vector2Int eyePosition = formationPowerResolver != null
+                ? formationPowerResolver.FormationEyePosition
+                : FormationPowerResolver.GetDefaultEyeCorePosition(grid.Width, grid.Height);
+            return item.gridPosition != eyePosition;
+        }
+
+        private bool ApplySealToItem(TalismanItemRuntime item, float duration)
+        {
+            if (!IsLegalSealTarget(item))
+            {
+                return false;
+            }
+
+            item.isSealed = true;
+            item.sealRemaining = duration > 0f ? duration : GetSealDuration();
+            if (!sealedItems.Contains(item))
+            {
+                sealedItems.Add(item);
+            }
+
+            return true;
+        }
+
+        private static void ClearSeal(TalismanItemRuntime item)
+        {
+            if (item == null)
+            {
+                return;
+            }
+
+            item.isSealed = false;
+            item.sealRemaining = 0f;
+        }
+
+        private void RefreshAfterSealStateChanged()
+        {
+            RefreshFormationPowerStates();
+            RefreshSealHighlights();
+            SyncPlayerFormationStatusEffects();
+            RefreshUI();
+        }
+
         public void V02ApplyEnergyDisruption(float duration, string logMessage)
         {
             if (grid == null)
@@ -1699,7 +1772,7 @@ namespace TalismanBag.Combat
                 return;
             }
 
-            Vector2Int source = formationPowerResolver != null ? formationPowerResolver.FormationEyePosition : new Vector2Int(2, 1);
+            Vector2Int source = formationPowerResolver != null ? formationPowerResolver.FormationEyePosition : FormationPowerResolver.GetDefaultEyeCorePosition(grid.Width, grid.Height);
             foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
             {
                 if (item?.definition != null && item.definition.itemId == SpiritStoneId)
@@ -1733,6 +1806,7 @@ namespace TalismanBag.Combat
             Emit(BattleEventType.LogMessage, BattleLogCategory.Danger, $"{logMessage}（影响 {affected} 个符箓）", currentEnemy?.definition != null ? currentEnemy.definition.enemyId : string.Empty, value: affected, screenPosition: GetEnemyPosition());
             SyncPlayerFormationStatusEffects();
             RefreshSealHighlights();
+            RefreshUI();
         }
 
         public void V02SealRandomRowOrColumn(float duration, string logMessage)
@@ -1742,30 +1816,30 @@ namespace TalismanBag.Combat
                 return;
             }
 
-            bool sealColumn = Random.value > 0.5f;
-            int index = sealColumn ? Random.Range(0, grid.Width) : Random.Range(0, grid.Height);
-            int sealedCount = 0;
-            foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
+            List<TalismanItemRuntime> candidates = GetLegalSealTargets();
+            if (candidates.Count == 0)
             {
-                if (item?.definition == null || item.isSealed)
-                {
-                    continue;
-                }
+                Emit(BattleEventType.ItemSealed, BattleLogCategory.Seal, $"{logMessage}\uff08\u6ca1\u6709\u53ef\u5c01\u5370\u76ee\u6807\uff09", currentEnemy?.definition != null ? currentEnemy.definition.enemyId : string.Empty, value: 0, screenPosition: GetEnemyPosition());
+                RefreshAfterSealStateChanged();
+                return;
+            }
 
+            bool sealColumn = Random.value > 0.5f;
+            TalismanItemRuntime anchor = candidates[Random.Range(0, candidates.Count)];
+            int index = sealColumn ? anchor.gridPosition.x : anchor.gridPosition.y;
+            int sealedCount = 0;
+            foreach (TalismanItemRuntime item in candidates)
+            {
                 bool match = sealColumn ? item.gridPosition.x == index : item.gridPosition.y == index;
                 if (!match)
                 {
                     continue;
                 }
 
-                item.isSealed = true;
-                item.sealRemaining = duration > 0f ? duration : GetSealDuration();
-                if (!sealedItems.Contains(item))
+                if (ApplySealToItem(item, duration))
                 {
-                    sealedItems.Add(item);
+                    sealedCount++;
                 }
-
-                sealedCount++;
             }
 
             if (sealedCount > 0 && v02FailureTracker != null)
@@ -1774,8 +1848,7 @@ namespace TalismanBag.Combat
             }
 
             Emit(BattleEventType.ItemSealed, BattleLogCategory.Seal, $"{logMessage}（{(sealColumn ? "列" : "行")} {index + 1}，封印 {sealedCount} 个）", currentEnemy?.definition != null ? currentEnemy.definition.enemyId : string.Empty, value: sealedCount, screenPosition: GetEnemyPosition());
-            SyncPlayerFormationStatusEffects();
-            RefreshGridDependentUI();
+            RefreshAfterSealStateChanged();
         }
 
         public int V02SealFormationEyeArea(float duration, string logMessage)
@@ -1786,18 +1859,14 @@ namespace TalismanBag.Combat
             }
 
             TalismanItemRuntime target = FindFormationEyeSealTarget();
-            if (target == null || target.isSealed)
+            if (!IsLegalSealTarget(target))
             {
                 Emit(BattleEventType.ItemSealed, BattleLogCategory.Seal, $"{logMessage}\uff08\u6ca1\u6709\u53ef\u5c01\u5370\u76ee\u6807\uff09", currentEnemy?.definition != null ? currentEnemy.definition.enemyId : string.Empty, value: 0, screenPosition: GetEnemyPosition());
+                RefreshAfterSealStateChanged();
                 return 0;
             }
 
-            target.isSealed = true;
-            target.sealRemaining = duration > 0f ? duration : GetSealDuration();
-            if (!sealedItems.Contains(target))
-            {
-                sealedItems.Add(target);
-            }
+            ApplySealToItem(target, duration);
 
             if (v02FailureTracker != null)
             {
@@ -1805,8 +1874,7 @@ namespace TalismanBag.Combat
             }
 
             Emit(BattleEventType.ItemSealed, BattleLogCategory.Seal, $"{logMessage}\uff1a{target.definition.displayName}", currentEnemy?.definition != null ? currentEnemy.definition.enemyId : string.Empty, target.definition.itemId, 1, GetItemPosition(target));
-            SyncPlayerFormationStatusEffects();
-            RefreshGridDependentUI();
+            RefreshAfterSealStateChanged();
             return 1;
         }
 
@@ -1834,17 +1902,26 @@ namespace TalismanBag.Combat
                 return;
             }
 
+            bool changed = false;
             foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
             {
                 if (item != null)
                 {
+                    changed |= item.isTemporarilyDisabled || item.temporaryDisabledRemaining > 0f;
                     item.isTemporarilyDisabled = false;
                     item.temporaryDisabledRemaining = 0f;
                 }
             }
 
-            RefreshSealHighlights();
-            SyncPlayerFormationStatusEffects();
+            if (changed)
+            {
+                RefreshAfterSealStateChanged();
+            }
+            else
+            {
+                RefreshSealHighlights();
+                SyncPlayerFormationStatusEffects();
+            }
         }
 
         public void ForceV02EnemySkill()
@@ -1903,18 +1980,16 @@ namespace TalismanBag.Combat
                 return false;
             }
 
-            foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
+            foreach (TalismanItemRuntime item in GetLegalSealTargets())
             {
-                if (item?.definition == null || item.isSealed || item.definition.itemId == "purify_talisman_basic")
+                if (item.definition.itemId == "purify_talisman_basic")
                 {
                     continue;
                 }
 
-                item.isSealed = true;
-                item.sealRemaining = duration > 0f ? duration : GetSealDuration();
-                if (!sealedItems.Contains(item))
+                if (!ApplySealToItem(item, duration))
                 {
-                    sealedItems.Add(item);
+                    continue;
                 }
 
                 if (v02FailureTracker != null)
@@ -1923,7 +1998,7 @@ namespace TalismanBag.Combat
                 }
 
                 Emit(BattleEventType.ItemSealed, BattleLogCategory.Seal, $"[调试] 封印 {item.definition.displayName}", item.definition.itemId, value: 1, screenPosition: GetItemPosition(item));
-                RefreshGridDependentUI();
+                RefreshAfterSealStateChanged();
                 return true;
             }
 
@@ -1997,18 +2072,16 @@ namespace TalismanBag.Combat
                 return;
             }
 
-            List<TalismanItemRuntime> candidates = grid.GetAllPlacedItems().FindAll(item => item != null && !item.isSealed);
+            List<TalismanItemRuntime> candidates = GetLegalSealTargets();
             if (candidates.Count == 0)
             {
                 return;
             }
 
             TalismanItemRuntime target = candidates[Random.Range(0, candidates.Count)];
-            target.isSealed = true;
-            target.sealRemaining = GetSealDuration();
-            if (!sealedItems.Contains(target))
+            if (!ApplySealToItem(target, GetSealDuration()))
             {
-                sealedItems.Add(target);
+                return;
             }
 
             if (IsBoss())
@@ -2017,33 +2090,41 @@ namespace TalismanBag.Combat
             }
 
             Emit(BattleEventType.ItemSealed, BattleLogCategory.Seal, $"{currentEnemy.definition.GetReadableLabel()}封印了{target.definition.displayName}", currentEnemy.definition.enemyId, target.definition.itemId, 0, GetItemPosition(target));
-            SyncPlayerFormationStatusEffects();
-            RefreshGridDependentUI();
+            RefreshAfterSealStateChanged();
         }
 
         private void UpdateSeals(float deltaTime)
         {
+            bool changed = false;
             for (int i = sealedItems.Count - 1; i >= 0; i--)
             {
                 TalismanItemRuntime item = sealedItems[i];
                 if (item == null)
                 {
                     sealedItems.RemoveAt(i);
+                    changed = true;
                     continue;
                 }
 
                 item.sealRemaining -= deltaTime;
                 if (item.sealRemaining <= 0f)
                 {
-                    item.isSealed = false;
-                    item.sealRemaining = 0f;
+                    ClearSeal(item);
                     sealedItems.RemoveAt(i);
+                    changed = true;
                     Emit(BattleEventType.ItemUnsealed, BattleLogCategory.Seal, $"{item.definition.displayName}的封印解除", item.definition.itemId, value: 0, screenPosition: GetItemPosition(item));
                 }
             }
 
-            RefreshSealHighlights();
-            SyncPlayerFormationStatusEffects();
+            if (changed)
+            {
+                RefreshAfterSealStateChanged();
+            }
+            else
+            {
+                RefreshSealHighlights();
+                SyncPlayerFormationStatusEffects();
+            }
         }
 
         private void UpdateV02TemporaryDisables(float deltaTime)
@@ -2072,8 +2153,9 @@ namespace TalismanBag.Combat
 
             if (changed)
             {
-                RefreshSealHighlights();
+                RefreshGridDependentUI();
                 SyncPlayerFormationStatusEffects();
+                RefreshUI();
             }
         }
 
@@ -2128,6 +2210,7 @@ namespace TalismanBag.Combat
             int damage = Mathf.Max(1, burnStackCount);
             currentEnemy.currentHp = Mathf.Max(0, currentEnemy.currentHp - damage);
             Emit(BattleEventType.DamageDealt, BattleLogCategory.Damage, $"[燃烧] {currentEnemy.definition.GetReadableLabel()}受到 {damage} 点燃烧伤害", value: damage, screenPosition: GetEnemyPosition());
+            RefreshUI();
             CheckVictory();
         }
 
@@ -2643,7 +2726,7 @@ namespace TalismanBag.Combat
                 return FormationPowerState.Powered;
             }
 
-            Vector2Int eyePosition = formationPowerResolver != null ? formationPowerResolver.FormationEyePosition : new Vector2Int(2, 1);
+            Vector2Int eyePosition = formationPowerResolver != null ? formationPowerResolver.FormationEyePosition : FormationPowerResolver.GetDefaultEyeCorePosition(grid.Width, grid.Height);
             int eyeDx = Mathf.Abs(position.x - eyePosition.x);
             int eyeDy = Mathf.Abs(position.y - eyePosition.y);
             if (modifierState != null &&
@@ -3024,11 +3107,53 @@ namespace TalismanBag.Combat
         private void PlaceById(string itemId, Vector2Int position)
         {
             DraggableTalismanItemView view = FindItemViewById(itemId);
-            TalismanGridSlotView slot = FindSlot(position);
+            TalismanGridSlotView slot = FindSlotForPlacement(position);
             if (view != null && slot != null)
             {
                 view.ForcePlaceOnSlot(slot);
             }
+        }
+
+        private TalismanGridSlotView FindSlotForPlacement(Vector2Int preferredPosition)
+        {
+            TalismanGridSlotView preferred = FindSlot(preferredPosition);
+            if (CanUsePlacementSlot(preferred))
+            {
+                return preferred;
+            }
+
+            TalismanGridSlotView best = null;
+            int bestDistance = int.MaxValue;
+            if (slotViews == null)
+            {
+                return null;
+            }
+
+            foreach (TalismanGridSlotView slotView in slotViews)
+            {
+                if (!CanUsePlacementSlot(slotView))
+                {
+                    continue;
+                }
+
+                Vector2Int position = slotView.GridPosition;
+                int distance = Mathf.Abs(position.x - preferredPosition.x) + Mathf.Abs(position.y - preferredPosition.y);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = slotView;
+                }
+            }
+
+            return best;
+        }
+
+        private bool CanUsePlacementSlot(TalismanGridSlotView slot)
+        {
+            return slot != null &&
+                   slot.CanAcceptItem &&
+                   slot.CurrentItemView == null &&
+                   (grid == null || grid.GetItemAt(slot.GridPosition) == null);
         }
 
         private DraggableTalismanItemView FindItemViewById(string itemId)
@@ -3046,6 +3171,11 @@ namespace TalismanBag.Combat
 
         private TalismanGridSlotView FindSlot(Vector2Int position)
         {
+            if (slotViews == null)
+            {
+                return null;
+            }
+
             foreach (TalismanGridSlotView slotView in slotViews)
             {
                 if (slotView != null && slotView.GridPosition == position)
@@ -3105,7 +3235,7 @@ namespace TalismanBag.Combat
                 return null;
             }
 
-            Vector2Int eye = formationPowerResolver != null ? formationPowerResolver.FormationEyePosition : new Vector2Int(2, 1);
+            Vector2Int eye = formationPowerResolver != null ? formationPowerResolver.FormationEyePosition : FormationPowerResolver.GetDefaultEyeCorePosition(grid.Width, grid.Height);
             Vector2Int[] primary =
             {
                 eye + Vector2Int.up,
@@ -3136,7 +3266,7 @@ namespace TalismanBag.Combat
 
             foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
             {
-                if (item?.definition != null && !item.isSealed)
+                if (IsLegalSealTarget(item))
                 {
                     return item;
                 }
@@ -3150,7 +3280,7 @@ namespace TalismanBag.Combat
             foreach (Vector2Int position in positions)
             {
                 TalismanItemRuntime item = grid.GetItemAt(position);
-                if (item?.definition != null && !item.isSealed)
+                if (IsLegalSealTarget(item))
                 {
                     return item;
                 }

@@ -10,6 +10,7 @@ namespace TalismanBag.V02.UI
     {
         [SerializeField] private Image background;
         [SerializeField] private Image iconImage;
+        [SerializeField] private Image countdownFillImage;
         [SerializeField] private Text glyphText;
         [SerializeField] private Text stackText;
         [SerializeField] private Text countdownText;
@@ -20,10 +21,11 @@ namespace TalismanBag.V02.UI
         private bool isOverflow;
         private Coroutine longPressRoutine;
 
-        public void Setup(Image background, Image iconImage, Text glyphText, Text stackText, Text countdownText, StatusTooltipPanel tooltipPanel)
+        public void Setup(Image background, Image iconImage, Image countdownFillImage, Text glyphText, Text stackText, Text countdownText, StatusTooltipPanel tooltipPanel)
         {
             this.background = background;
             this.iconImage = iconImage;
+            this.countdownFillImage = countdownFillImage;
             this.glyphText = glyphText;
             this.stackText = stackText;
             this.countdownText = countdownText;
@@ -55,6 +57,7 @@ namespace TalismanBag.V02.UI
             SetText(stackText, string.Empty);
             SetText(countdownText, string.Empty);
             SetImageVisible(iconImage, false);
+            SetCountdownFillVisible(false);
             if (background != null)
             {
                 background.color = new Color(0.2f, 0.24f, 0.25f, 0.95f);
@@ -97,6 +100,7 @@ namespace TalismanBag.V02.UI
 
             bool showCountdown = definition.hasDuration && definition.showCountdown && status.remainingTime > 0f;
             SetText(countdownText, showCountdown ? $"{status.remainingTime:0.0}" : string.Empty);
+            UpdateCountdownFill(definition, showCountdown);
         }
 
         public void Clear()
@@ -109,11 +113,41 @@ namespace TalismanBag.V02.UI
             SetText(stackText, string.Empty);
             SetText(countdownText, string.Empty);
             SetImageVisible(iconImage, false);
+            SetCountdownFillVisible(false);
             if (background != null)
             {
                 Color color = background.color;
                 color.a = 0f;
                 background.color = color;
+            }
+        }
+
+        private void UpdateCountdownFill(StatusEffectDefinition definition, bool showCountdown)
+        {
+            if (countdownFillImage == null)
+            {
+                return;
+            }
+
+            bool visible = showCountdown && definition != null && definition.defaultDuration > 0f;
+            SetCountdownFillVisible(visible);
+            if (!visible)
+            {
+                return;
+            }
+
+            countdownFillImage.fillAmount = Mathf.Clamp01(status.remainingTime / definition.defaultDuration);
+        }
+
+        private void SetCountdownFillVisible(bool visible)
+        {
+            if (countdownFillImage != null)
+            {
+                countdownFillImage.enabled = visible;
+                if (!visible)
+                {
+                    countdownFillImage.fillAmount = 0f;
+                }
             }
         }
 

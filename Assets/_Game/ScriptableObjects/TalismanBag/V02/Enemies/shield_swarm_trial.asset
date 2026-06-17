@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cc904949755314e81026bb929a3144, type: 3}
+  m_Name: shield_swarm_trial
+  m_EditorClassIdentifier: 
+  enemyId: shield_swarm_trial
+  displayName: "\u7FA4"
+  enabled: 1
+  enemyType: 1
+  maxHp: 420
+  attackDamage: 10
+  attackInterval: 2.2
+  weaknessText: "\u62A4\u76FE, \u7FA4\u4F53, \u53EC\u5524"
+  dangerText: "\u62A4\u76FE + \u7FA4\u602A\u590D\u5408"
+  recommendedBuildText: "\u7528\u96F7\u7B26\u6253\u5F00\u62A4\u76FE\uFF0C\u7528\u8FDE\u9501\u96F7\u7B26\u548C\u706B\u7B26\u5904\u7406\u7FA4\u602A\u538B\u529B\u3002"
+  chargeInterval: 0
+  chargeDuration: 0
+  chargeAttackDamage: 0
+  manaDrainInterval: 0
+  manaDrainAmount: 0
+  sealInterval: 0
+  sealDuration: 0
+  ghostShadowInterval: 0
+  ghostShadowDamage: 0
+  icon: {fileID: 0}
+  enemyClass: "\u590D\u5408"
+  enemyArchetype: "\u62A4\u76FE + \u7FA4\u4F53\u538B\u5236"
+  intentText: "\u5148\u7ED3\u76FE\uFF0C\u518D\u53EC\u5524\u5C0F\u5996\u538B\u5236\u9635\u76D8"
+  recommendedCounterText: "\u96F7\u7B26 / \u8FDE\u9501\u96F7\u7B26 / \u706B\u7B26"
+  weaknessTags: 010000000800000007000000
+  resistTags: 
+  resistedElements: 0700000005000000
+  resistedFunctions: 02000000
+  vulnerableElements: 0200000001000000
+  vulnerableFunctions: 0b000000040000000500000003000000
+  skills:
+  - {fileID: 11400000, guid: 40c91a04c97d4a1d977cfb964e8bdf11, type: 2}
+  - {fileID: 11400000, guid: 4760f0cd7c384fb4bc429ce12d595ced, type: 2}

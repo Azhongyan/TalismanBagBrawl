@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 53cc904949755314e81026bb929a3144, type: 3}
-  m_Name: v02_mountain_imp
+  m_Name: Deprecated_v02_mountain_imp
   m_EditorClassIdentifier: 
-  enemyId: v02_mountain_imp
-  displayName: "\u653B"
-  enabled: 1
+  enemyId: Deprecated_v02_mountain_imp
+  displayName: Deprecated
+  enabled: 0
   enemyType: 0
   maxHp: 120
   attackDamage: 10
@@ -32,10 +32,10 @@ MonoBehaviour:
   ghostShadowInterval: 0
   ghostShadowDamage: 0
   icon: {fileID: 0}
-  enemyClass: 
-  enemyArchetype: 
-  intentText: 
-  recommendedCounterText: 
+  enemyClass: Deprecated
+  enemyArchetype: Legacy v02 mountain imp config
+  intentText: Deprecated legacy config. Use mountain_imp_basic for 1-1.
+  recommendedCounterText: Deprecated legacy config. Use mountain_imp_basic for 1-1.
   weaknessTags: 
   resistTags: 
   resistedElements: 

@@ -1383,3 +1383,140 @@ This pass adds the V0.2 post-battle three-choice reward draft. Rewards are desig
 ### Suggested Next Step
 
 - V0.2 Step 6: connect the full 15-minute flow, Boss pass, and failure review around the new reward draft decisions.
+
+## 2026-06-17 - V0.2 Curve Freeze Phase 2 Enemy Balance And Skills
+
+### Scope
+
+- Applied Phase 2 enemy balance values only to existing V0.2 enemy assets.
+- Applied Phase 2 enemy skill values only to existing skill assets that could be safely mapped.
+- Did not change BuildCounterMatrix, rewards, trial curve, trial stage, battle grade, benchmark target, main trial flow, boss rewards, or gameplay systems.
+- Did not add enemies, talismans, skills, rewards, or shield-duration behavior.
+
+### EnemyDefinition Assets Updated
+
+- `mountain_imp_basic` already matched target values: HP 120, attack 10, interval 2.0.
+- `turtle_guardian_shield`: HP 260, attack 12, interval 2.2.
+- `imp_swarm`: HP 300, attack 9, interval 2.0.
+- `red_poison_beast`: HP 210, attack 6, interval 2.8.
+- `seal_talisman_taoist`: HP 230, attack 9, interval 2.8.
+- `energy_thief_ghost`: HP 260, attack 9, interval 2.6.
+- `shield_swarm_trial`: HP 420, attack 10, interval 2.2.
+- `poison_seal_thief_trial`: HP 360, attack 10, interval 2.6.
+- `formation_breaker_elite`: HP 560, attack 11, interval 2.5.
+- `formation_breaker_boss`: HP 780, attack 11, interval 2.8.
+
+### EnemySkillDefinition Assets Updated
+
+- `turtle_guardian_gain_shield`: initial delay 1.5, cooldown 8.0, cast time 0.8, value 120, duration 0.
+- `red_poison_apply_poison`: mapped from `red_poison_beast_poison_fire`; initial delay 2.0, cooldown 9.0, cast time 0.8, value 2.
+- `seal_taoist_row_column`: mapped from `seal_talisman_taoist_seal`; initial delay 3.0, cooldown 8.0, cast time 0.8, value 1.
+- `energy_thief_steal`: mapped from `energy_thief_ghost_steal_energy`; initial delay 3.0, cooldown 7.0, cast time 0.8, value 1.
+
+### Skipped Skill Rows
+
+- `poison_seal_thief_trial_poison` is missing as an independent skill asset.
+- `poison_seal_thief_trial_seal` is missing as an independent skill asset.
+- `poison_seal_thief_trial_steal` is missing as an independent skill asset.
+- `poison_seal_thief_trial` currently reuses `red_poison_apply_poison`, `seal_taoist_row_column`, and `energy_thief_steal`, so composite-specific cooldowns were not hard-applied to shared skills.
+
+### Notes
+
+- `targetCapSec` does not exist on `EnemyDefinition`; no replacement field was added.
+- Shield duration was not implemented; shield gain still uses the existing instant shield value behavior.
+
+## 2026-06-17 - V0.2 Phase 2.1 Poison Seal Thief Dedicated Skills
+
+### Scope
+
+- Split the 1-8 composite enemy skill references into dedicated `EnemySkillDefinition` assets.
+- Did not add new skill types, gameplay logic, enemies, talismans, rewards, trial curve data, trial stage data, battle grade data, benchmark targets, or build counter matrix rows.
+
+### New EnemySkillDefinition Assets
+
+- `poison_seal_thief_trial_poison`
+  - Copied from `red_poison_apply_poison`.
+  - Uses existing `ApplyPoison` skill type.
+  - initial delay 2.0, cooldown 8.0, cast time 0.8, value 2, duration 0.
+- `poison_seal_thief_trial_seal`
+  - Copied from `seal_taoist_row_column`.
+  - Uses existing `SealRowOrColumn` skill type.
+  - initial delay 5.0, cooldown 10.0, cast time 0.8, value 1, duration 3.
+- `poison_seal_thief_trial_steal`
+  - Copied from `energy_thief_steal`.
+  - Uses existing `StealEnergy` skill type.
+  - initial delay 7.0, cooldown 11.0, cast time 0.8, value 1, duration 4.
+
+### Enemy Reference Update
+
+- `poison_seal_thief_trial` now references the three dedicated skills above.
+- `red_poison_beast` still references `red_poison_apply_poison`.
+- `seal_talisman_taoist` still references `seal_taoist_row_column`.
+- `energy_thief_ghost` still references `energy_thief_steal`.
+
+## 2026-06-17 - V0.2 Curve Freeze Phase 3-B1 Reward Weights
+
+### Scope
+
+- Applied Phase 3-B1 `baseWeight` changes only to five confirmed reward assets.
+- Did not change enemies, enemy skills, BuildCounterMatrix, trial curve, trial stage, battle grade, benchmark targets, main trial flow, boss rewards, or reward system logic.
+- Did not create `reward_add_spread_anti_seal` or `reward_add_boss_ready`.
+
+### Reward Assets Updated
+
+- `reward_add_thunder_talisman`: baseWeight 12 -> 35.
+- `reward_add_chain_thunder`: baseWeight 10 -> 28.
+- `reward_fire_burn_plus_one`: baseWeight 8 -> 30.
+- `reward_add_soul_suppress`: baseWeight 11 -> 24.
+- `reward_add_purify_talisman`: baseWeight 11 -> 22.
+
+### Skipped Reward Rows
+
+- `reward_add_spread_anti_seal`: skipped because there is no direct equivalent reward asset.
+- `reward_add_boss_ready`: skipped because BossReady is a build state, not a single reward asset.
+
+## 2026-06-17 - V0.2 Compile Fix Check: BuildCounterMatrixRow
+
+### Scope
+
+- Checked `BuildCounterMatrixRow.cs`, `V02CounterMultiplierConfig.cs`, `V02BuildBenchmarkUtility.cs`, `V02BuildTestRunner.cs`, and `V02BalanceDebugWindow.cs` for namespace/runtime visibility.
+- Did not change enemies, rewards, enemy skills, trial curve, trial stage, matrix values, benchmark target values, or gameplay logic.
+
+### Result
+
+- `BuildCounterMatrixRow` is in `Assets/_Game/Scripts/TalismanBag/V02/Balance`, not under an `Editor` directory.
+- `BuildCounterMatrixRow`, `V02CounterMultiplierConfig`, and `V02BuildBenchmarkUtility` are all under `TalismanBag.V02.Balance`.
+- `CounterRelation` is also under `TalismanBag.V02.Balance`, so no extra using directive is required.
+- Latest Unity Editor log tail no longer shows `CS0246 BuildCounterMatrixRow could not be found`; the earlier error was from an import/compile pass before the row file was visible to Unity.
+
+## 2026-06-17 - V0.2 Curve Freeze Final Data Closure
+
+### Scope
+
+- Added minimal benchmark target rows to `V02RoundConfig` and kept `V02RoundConfig.benchmarkRule` as the benchmark grade rule source.
+- Updated `V02BuildBenchmarkUtility` so run/round based reports read `V02RoundConfig` first and use enemy metadata only as fallback.
+- Updated the V0.2 balance debug window to show `benchmarkRule`, `benchmarkTargets`, and a target report button in the existing editor-only panel.
+- Synchronized `RunConfig_V02_15Min` to the confirmed 1-1 through 1-10 enemy order and filled 15 benchmark target rows.
+- Generated `Logs/v02_curve_final_benchmark_report.csv` from current data.
+- Did not change Enemy HP, EnemySkill, BuildCounterMatrix values, Reward weights, MainTrialFlow, BossRewardPanel, or gameplay systems in this closure pass.
+
+### Notes
+
+- `FireUpgradedBuild`, `reward_add_boss_ready`, and `reward_add_spread_anti_seal` were not created.
+- `GetLevelMetadata` remains as fallback only for enemy-only benchmark calls.
+- Several generated target report rows currently do not match expected results because the existing `benchmarkRule` HP-loss thresholds are stricter than the estimated incoming pressure; those thresholds were not widened without an explicit balance patch.
+
+## 2026-06-17 - V0.2 Phase 3-C Benchmark Rule Threshold Sync
+
+### Scope
+
+- Synchronized `V02RoundConfig.benchmarkRule` for levels 1-1 through 1-10 using the curve freeze duration and HP-loss thresholds.
+- Confirmed HP loss uses 0-1 ratio values, matching `[Range(0f, 1f)]` fields and `damageTaken / 100f` benchmark logic.
+- Added Target Report diagnostics: `actualHpLoss`, `passHpLossMax`, `weakHpLossMax`, `passDurationMax`, `weakDurationMax`, and `gradeReason`.
+- Regenerated `Logs/v02_curve_final_benchmark_report_after_rule_sync.csv`.
+- Did not change Enemy HP, EnemySkill, BuildCounterMatrix values, Reward weights, TrialStage, MainTrialFlow, BossRewardPanel, boss logic, or gameplay systems.
+
+### Notes
+
+- The report now distinguishes duration failure from HP-loss threshold failure.
+- Remaining false rows are primarily caused by estimated HP loss exceeding weak thresholds or expected Pass/Good targets grading as Weak.

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace TalismanBag.V02.Balance
@@ -15,6 +16,9 @@ namespace TalismanBag.V02.Balance
         public float rewardShieldBreakMultiplier = 2.5f;
         public float groupClearMultiplier = 1.6f;
 
+        [Header("Build Counter Matrix")]
+        public List<BuildCounterMatrixRow> buildCounterMatrix = new();
+
         public float GetMultiplier(CounterRelation relation)
         {
             return relation switch
@@ -26,6 +30,33 @@ namespace TalismanBag.V02.Balance
                 CounterRelation.Neutral => neutralMultiplier,
                 _ => neutralMultiplier
             };
+        }
+
+        public bool TryGetBuildCounterMatrixRow(string buildId, string enemyId, out BuildCounterMatrixRow row)
+        {
+            row = null;
+
+            if (string.IsNullOrEmpty(buildId) || string.IsNullOrEmpty(enemyId) || buildCounterMatrix == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < buildCounterMatrix.Count; i++)
+            {
+                BuildCounterMatrixRow current = buildCounterMatrix[i];
+                if (current == null)
+                {
+                    continue;
+                }
+
+                if (current.buildId == buildId && current.enemyId == enemyId)
+                {
+                    row = current;
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

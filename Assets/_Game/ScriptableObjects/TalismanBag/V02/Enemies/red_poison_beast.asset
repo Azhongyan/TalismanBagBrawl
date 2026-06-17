@@ -17,8 +17,8 @@ MonoBehaviour:
   enabled: 1
   enemyType: 0
   maxHp: 210
-  attackDamage: 7
-  attackInterval: 3
+  attackDamage: 6
+  attackInterval: 2.8
   weaknessText: "\u4E2D\u6BD2, \u707C\u70E7"
   dangerText: "\u6301\u7EED\u6D88\u8017"
   recommendedBuildText: "\u51C0\u5316\u7B26\u53EF\u4EE5\u6E05\u9664\u6BD2\u548C\u71C3\u70E7\uFF0C\u62A4\u8EAB\u7B26\u53EF\u4EE5\u62B5\u6297\u6301\u7EED\u4F24\u5BB3\u3002"

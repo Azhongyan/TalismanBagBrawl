@@ -14,9 +14,9 @@ namespace TalismanBag.V02.Balance.EditorTools
         private const string V02AssetRoot = "Assets/_Game/ScriptableObjects/TalismanBag/V02";
         private const string V02ItemPath = "Assets/_Game/ScriptableObjects/TalismanBag/V02/Items";
         private const string V02EnemyPath = "Assets/_Game/ScriptableObjects/TalismanBag/V02";
-        private const string EnemyDropdownPath = "Assets/_Game/ScriptableObjects/TalismanBag";
+        private const string EnemyDropdownPath = "Assets/_Game/ScriptableObjects/TalismanBag/V02/Enemies";
         private const string V02BalancePath = "Assets/_Game/ScriptableObjects/TalismanBag/V02/Balance";
-        private const int ExpectedRoundCount = 7;
+        private const int ExpectedRoundCount = 10;
 
         private readonly List<TalismanItemDefinition> talismans = new();
         private readonly List<EnemyDefinition> enemies = new();
@@ -28,6 +28,7 @@ namespace TalismanBag.V02.Balance.EditorTools
         private V02FormationBalanceConfig formationConfig;
         private V02RunConfig runConfig;
         private V02RewardPoolConfig rewardPool;
+        private bool buildCounterMatrixFoldout = true;
         private int selectedTab;
         private int selectedEnemyIndex;
         private Vector2 mainScroll;
@@ -185,6 +186,7 @@ namespace TalismanBag.V02.Balance.EditorTools
             DrawSerializedProperty(serializedConfig, "hardResistedMultiplier", "Hard Resisted / 强抵抗");
             DrawSerializedProperty(serializedConfig, "rewardShieldBreakMultiplier", "Reward Shield Break / 奖励破盾");
             DrawSerializedProperty(serializedConfig, "groupClearMultiplier", "Group Clear / 清群");
+            DrawBuildCounterMatrix(serializedConfig);
             if (EditorGUI.EndChangeCheck())
             {
                 serializedConfig.ApplyModifiedProperties();
@@ -192,6 +194,112 @@ namespace TalismanBag.V02.Balance.EditorTools
             }
 
             DrawSaveAssetsButton("Save Counter Config / 保存克制配置");
+        }
+
+        private void DrawBuildCounterMatrix(SerializedObject serializedConfig)
+        {
+            SerializedProperty matrix = serializedConfig.FindProperty("buildCounterMatrix");
+            EditorGUILayout.Space(10f);
+            buildCounterMatrixFoldout = EditorGUILayout.Foldout(buildCounterMatrixFoldout, "Build Counter Matrix / 构筑克制矩阵", true);
+            if (!buildCounterMatrixFoldout)
+            {
+                return;
+            }
+
+            if (matrix == null)
+            {
+                EditorGUILayout.HelpBox("Missing buildCounterMatrix property. / 缺少构筑克制矩阵字段。", MessageType.Warning);
+                return;
+            }
+
+            EditorGUILayout.HelpBox("Benchmark-only data. Exact buildId + enemyId rows override the fallback tag logic. / 仅用于 Benchmark：精确命中的 buildId + enemyId 行会覆盖旧标签推导。", MessageType.None);
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField($"Rows / 行数: {matrix.arraySize}", EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Add Row / 新增一行", GUILayout.Width(150f)))
+                {
+                    int index = matrix.arraySize;
+                    matrix.InsertArrayElementAtIndex(index);
+                    ResetBuildCounterMatrixRow(matrix.GetArrayElementAtIndex(index));
+                }
+            }
+
+            if (matrix.arraySize == 0)
+            {
+                EditorGUILayout.HelpBox("No matrix rows yet. Benchmark will use FallbackTagLogic until a row is added. / 当前没有矩阵行；Benchmark 会继续使用旧标签逻辑。", MessageType.Info);
+                return;
+            }
+
+            int removeIndex = -1;
+            for (int i = 0; i < matrix.arraySize; i++)
+            {
+                SerializedProperty row = matrix.GetArrayElementAtIndex(i);
+                using (new EditorGUILayout.VerticalScope("box"))
+                {
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.LabelField($"Row {i + 1} / 矩阵行 {i + 1}", EditorStyles.boldLabel);
+                        if (GUILayout.Button("Delete / 删除", GUILayout.Width(110f)))
+                        {
+                            removeIndex = i;
+                        }
+                    }
+
+                    DrawChildProperty(row, "buildId", "Build ID / 构筑 ID");
+                    DrawChildProperty(row, "enemyId", "Enemy ID / 敌人 ID");
+                    DrawChildProperty(row, "relation", "Relation / 克制关系");
+                    DrawChildProperty(row, "multiplier", "Multiplier / 倍率");
+                    DrawChildProperty(row, "note", "Note / 备注");
+                }
+            }
+
+            if (removeIndex >= 0)
+            {
+                matrix.DeleteArrayElementAtIndex(removeIndex);
+            }
+        }
+
+        private static void ResetBuildCounterMatrixRow(SerializedProperty row)
+        {
+            if (row == null)
+            {
+                return;
+            }
+
+            SetChildString(row, "buildId", string.Empty);
+            SetChildString(row, "enemyId", string.Empty);
+            SetChildEnum(row, "relation", (int)CounterRelation.Neutral);
+            SetChildFloat(row, "multiplier", 1f);
+            SetChildString(row, "note", string.Empty);
+        }
+
+        private static void SetChildString(SerializedProperty parent, string propertyName, string value)
+        {
+            SerializedProperty property = parent.FindPropertyRelative(propertyName);
+            if (property != null)
+            {
+                property.stringValue = value;
+            }
+        }
+
+        private static void SetChildEnum(SerializedProperty parent, string propertyName, int value)
+        {
+            SerializedProperty property = parent.FindPropertyRelative(propertyName);
+            if (property != null)
+            {
+                property.enumValueIndex = value;
+            }
+        }
+
+        private static void SetChildFloat(SerializedProperty parent, string propertyName, float value)
+        {
+            SerializedProperty property = parent.FindPropertyRelative(propertyName);
+            if (property != null)
+            {
+                property.floatValue = value;
+            }
         }
 
         private void DrawFormationConfigTab()
@@ -344,6 +452,7 @@ namespace TalismanBag.V02.Balance.EditorTools
                 }
 
                 EditorGUI.indentLevel++;
+                DrawChildProperty(round, "levelId", "Level ID / 主线关卡 ID");
                 DrawChildProperty(round, "roundIndex", "Round Index / 关卡序号");
                 DrawChildProperty(round, "roundTitle", "Round Title / 关卡标题（建议：盾：周期护盾）");
                 DrawRoundEnemyDropdown(round, "Enemy / 本关敌人");
@@ -356,12 +465,16 @@ namespace TalismanBag.V02.Balance.EditorTools
                 EditorGUILayout.LabelField("Pacing / 节奏目标", EditorStyles.boldLabel);
                 DrawChildProperty(round, "targetDurationMin", "Target Min Duration / 目标最短时长");
                 DrawChildProperty(round, "targetDurationMax", "Target Max Duration / 目标最长时长");
+                DrawChildProperty(round, "targetHpLossMin", "Target Min HP Loss / 目标最小掉血");
+                DrawChildProperty(round, "targetHpLossMax", "Target Max HP Loss / 目标最大掉血");
                 DrawChildProperty(round, "strongCounterExpectedDuration", "Strong Counter Duration / 强克制预期时长");
                 DrawChildProperty(round, "neutralExpectedDuration", "Neutral Duration / 普通构筑预期时长");
                 DrawChildProperty(round, "badBuildExpectedDuration", "Bad Build Duration / 错误构筑预期时长");
                 DrawChildProperty(round, "expectedPlayerHpRemainStrongCounter", "Strong Counter HP Remain / 强克制剩余血量");
                 DrawChildProperty(round, "expectedPlayerHpRemainNeutral", "Neutral HP Remain / 普通剩余血量");
                 DrawChildProperty(round, "expectedPlayerHpRemainBadBuild", "Bad Build HP Remain / 错误构筑剩余血量");
+                DrawChildProperty(round, "benchmarkRule", "Benchmark Rule / 对标判定规则");
+                DrawChildProperty(round, "benchmarkTargets", "Benchmark Targets / 构筑目标");
                 EditorGUI.indentLevel--;
             }
         }
@@ -423,7 +536,7 @@ namespace TalismanBag.V02.Balance.EditorTools
 
             string displayName = string.IsNullOrWhiteSpace(enemy.displayName) ? enemy.name : enemy.displayName.Trim();
             string enemyId = string.IsNullOrWhiteSpace(enemy.enemyId) ? enemy.name : enemy.enemyId.Trim();
-            string group = IsFormalV02Enemy(enemy) ? "V0.2 / 正式" : "None / 未归类";
+            string group = IsFormalV02Enemy(enemy) ? "V0.2 / 正式" : "Legacy / 待归档";
             string disabled = enemy.enabled ? string.Empty : "  [Disabled / 已禁用]";
             return $"{group} | {displayName} / {enemyId}{disabled}";
         }
@@ -582,19 +695,32 @@ namespace TalismanBag.V02.Balance.EditorTools
                 if (GUILayout.Button("Current Enemy Report / 当前敌人报告", GUILayout.Height(32f)))
                 {
                     EnemyDefinition enemy = enemies.Count > 0 ? enemies[Mathf.Clamp(selectedEnemyIndex, 0, enemies.Count - 1)] : null;
-                    reportText = V02BuildBenchmarkUtility.BuildEnemyReport(enemy, multiplierConfig);
+                    V02RoundConfig round = FindRoundForEnemy(enemy);
+                    reportText = round != null
+                        ? V02BuildBenchmarkUtility.BuildEnemyReport(round, multiplierConfig)
+                        : V02BuildBenchmarkUtility.BuildEnemyReport(enemy, multiplierConfig);
                     Debug.Log(reportText);
                 }
 
                 if (GUILayout.Button("All Enemies Report / 全敌人报告", GUILayout.Height(32f)))
                 {
-                    reportText = V02BuildBenchmarkUtility.BuildAllEnemiesReport(enemies, multiplierConfig);
+                    reportText = runConfig != null
+                        ? V02BuildBenchmarkUtility.BuildAllRoundsReport(runConfig, multiplierConfig)
+                        : V02BuildBenchmarkUtility.BuildAllEnemiesReport(enemies, multiplierConfig);
                     Debug.Log(reportText);
                 }
 
                 if (GUILayout.Button("Route Matrix / 路线矩阵", GUILayout.Height(32f)))
                 {
-                    reportText = V02BuildBenchmarkUtility.BuildRouteMatrix(enemies, multiplierConfig);
+                    reportText = runConfig != null
+                        ? V02BuildBenchmarkUtility.BuildRouteMatrix(runConfig, multiplierConfig)
+                        : V02BuildBenchmarkUtility.BuildRouteMatrix(enemies, multiplierConfig);
+                    Debug.Log(reportText);
+                }
+
+                if (GUILayout.Button("Target Report / 目标报告", GUILayout.Height(32f)))
+                {
+                    reportText = V02BuildBenchmarkUtility.BuildBenchmarkTargetReport(runConfig, multiplierConfig);
                     Debug.Log(reportText);
                 }
 
@@ -887,6 +1013,24 @@ namespace TalismanBag.V02.Balance.EditorTools
             rewardPool = rewardPool != null ? rewardPool : FirstOrDefault(rewardPools);
             selectedEnemyIndex = Mathf.Clamp(selectedEnemyIndex, 0, Mathf.Max(0, enemies.Count - 1));
             Repaint();
+        }
+
+        private V02RoundConfig FindRoundForEnemy(EnemyDefinition enemy)
+        {
+            if (enemy == null || runConfig?.rounds == null)
+            {
+                return null;
+            }
+
+            foreach (V02RoundConfig round in runConfig.rounds)
+            {
+                if (round != null && round.enemy == enemy)
+                {
+                    return round;
+                }
+            }
+
+            return null;
         }
 
         private string[] BuildEnemyNames()

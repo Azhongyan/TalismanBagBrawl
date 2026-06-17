@@ -184,6 +184,7 @@ namespace TalismanBag.UI
                 return;
             }
 
+            bool lockedDuringDrag = combatController != null && !combatController.CanEditLayout;
             if (canvasGroup != null)
             {
                 canvasGroup.blocksRaycasts = true;
@@ -192,7 +193,7 @@ namespace TalismanBag.UI
 
             if (!placedDuringDrag)
             {
-                if (draggingFromGrid && IsPointerInInventoryZone(eventData))
+                if (!lockedDuringDrag && draggingFromGrid && IsPointerInInventoryZone(eventData))
                 {
                     ReturnToHome();
                 }
@@ -266,6 +267,11 @@ namespace TalismanBag.UI
 
         public bool TryPlaceOnSlot(TalismanGridSlotView slot)
         {
+            if (combatController != null && !combatController.CanEditLayout)
+            {
+                return false;
+            }
+
             if (slot == null || grid == null || runtimeItem == null)
             {
                 return false;
@@ -294,6 +300,11 @@ namespace TalismanBag.UI
 
         public bool ForcePlaceOnSlot(TalismanGridSlotView slot)
         {
+            if (combatController != null && !combatController.CanEditLayout)
+            {
+                return false;
+            }
+
             originalSlot = currentSlot;
             if (currentSlot != null)
             {

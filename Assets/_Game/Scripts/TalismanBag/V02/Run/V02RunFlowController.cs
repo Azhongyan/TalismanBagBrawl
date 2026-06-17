@@ -6,6 +6,7 @@ using TalismanBag.V02.Feedback;
 using TalismanBag.V02.Result;
 using TalismanBag.V02.Rewards;
 using TalismanBag.V02.Tags;
+using TalismanBag.V02.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +22,7 @@ namespace TalismanBag.V02.Run
         [SerializeField] private V02FailureReasonResolver failureReasonResolver;
         [SerializeField] private V02RunStatsTracker runStatsTracker;
         [SerializeField] private V02RunResultPanel runResultPanel;
+        [SerializeField] private V02BossRewardPanel bossRewardPanel;
         [SerializeField] private BattleLogUI battleLogUI;
         [SerializeField] private Text roundInfoText;
         [SerializeField] private Text prepHintText;
@@ -36,6 +38,7 @@ namespace TalismanBag.V02.Run
         private CanvasGroup formationInfoCanvasGroup;
         private CanvasGroup tagTooltipCanvasGroup;
         private bool preBattlePopupButtonsBound;
+        private bool bossRewardClaimed;
         private readonly HashSet<int> shownFormationInfoRoundIndexes = new();
 
         public int CurrentRoundNumber => CurrentRound != null ? CurrentRound.roundIndex : currentRoundIndex + 1;
@@ -89,6 +92,8 @@ namespace TalismanBag.V02.Run
             combatController?.ResetRunStats();
             rewardController?.StartNewRewardRun();
             runResultPanel?.Hide();
+            bossRewardPanel?.Hide();
+            bossRewardClaimed = false;
             EnterPrep();
         }
 
@@ -134,9 +139,17 @@ namespace TalismanBag.V02.Run
                 return;
             }
 
-            if (round.isBossRound || currentRoundIndex >= GetRoundCount() - 1)
+            if (currentRoundIndex >= GetRoundCount() - 1)
             {
-                FinishRunWin();
+                if (round.isBossRound)
+                {
+                    OpenBossRewardPanel();
+                }
+                else
+                {
+                    FinishRunWin();
+                }
+
                 return;
             }
 
@@ -158,8 +171,14 @@ namespace TalismanBag.V02.Run
                 return;
             }
 
+            if (rewardController == null || !rewardController.OpenRewardSelection(nextEnemy, CurrentRoundNumber))
+            {
+                battleLogUI?.AddLog("奖励流程未打开，自动进入下一关");
+                ContinueToNextRound();
+                return;
+            }
+
             bool formationInfoShown = ShowRewardSelectionInfo(nextEnemy);
-            rewardController?.OpenRewardSelection(nextEnemy, CurrentRoundNumber);
             if (formationInfoShown)
             {
                 BringFormationInfoToFront();
@@ -190,16 +209,18 @@ namespace TalismanBag.V02.Run
         {
             state = V02RunState.RunWin;
             HidePreBattlePopups();
+            bossRewardPanel?.Hide();
             combatController?.SetRunComplete();
             SetText(roundInfoText, "\u901a\u5173\u6210\u529f");
-            SetText(prepHintText, "\u4f60\u5b8c\u6210\u4e86 7 \u573a\u9635\u6cd5\u5bf9\u6297\u3002");
-            runResultPanel?.ShowWin(runStatsTracker);
+            SetText(prepHintText, $"\u4f60\u5b8c\u6210\u4e86 {GetRoundCount()} \u573a\u4e3b\u7ebf\u8bd5\u70bc\u3002");
+            runResultPanel?.ShowWin(runStatsTracker, GetRoundCount());
         }
 
         public void FinishRunLose()
         {
             state = V02RunState.RunLose;
             HidePreBattlePopups();
+            bossRewardPanel?.Hide();
             V02RoundConfig round = CurrentRound;
             if (failureTracker != null)
             {
@@ -212,7 +233,7 @@ namespace TalismanBag.V02.Run
 
             SetText(roundInfoText, "\u4fee\u58eb\u8d25\u5317");
             SetText(prepHintText, reason.title);
-            runResultPanel?.ShowLose(CurrentRoundNumber, round != null ? round.roundTitle : string.Empty, reason, runStatsTracker);
+            runResultPanel?.ShowLose(CurrentRoundNumber, round != null ? round.roundTitle : string.Empty, reason, runStatsTracker, GetRoundCount());
         }
 
         public void RestartRun()
@@ -242,6 +263,78 @@ namespace TalismanBag.V02.Run
         public void ForceLoseCurrentRound()
         {
             OnBattleLose();
+        }
+
+        private void OpenBossRewardPanel()
+        {
+            state = V02RunState.Reward;
+            HidePreBattlePopups();
+            SetText(roundInfoText, "1-10 Boss \u5df2\u51fb\u7834");
+            SetText(prepHintText, "\u9886\u53d6 Boss \u8f7b\u91cf\u5956\u52b1\u540e\u5b8c\u6210 V0.2 \u4e3b\u7ebf\u8bd5\u70bc\u3002");
+
+            V02BossRewardPanel panel = EnsureBossRewardPanel();
+            if (panel == null)
+            {
+                ConfirmBossReward();
+                return;
+            }
+
+            panel.Show(BuildBossRewardLines(), ConfirmBossReward);
+        }
+
+        private void ConfirmBossReward()
+        {
+            if (!bossRewardClaimed)
+            {
+                rewardController?.GrantBossCompletionReward();
+                bossRewardClaimed = true;
+            }
+
+            FinishRunWin();
+        }
+
+        private V02BossRewardPanel EnsureBossRewardPanel()
+        {
+            if (bossRewardPanel != null)
+            {
+                return bossRewardPanel;
+            }
+
+            bossRewardPanel = FindObjectOfType<V02BossRewardPanel>(true);
+            if (bossRewardPanel != null)
+            {
+                return bossRewardPanel;
+            }
+
+            Canvas canvas = GetComponentInParent<Canvas>();
+            if (canvas == null)
+            {
+                canvas = FindObjectOfType<Canvas>();
+            }
+
+            try
+            {
+                bossRewardPanel = canvas != null ? V02BossRewardPanel.CreateRuntime(canvas.transform) : null;
+            }
+            catch (System.Exception exception)
+            {
+                Debug.LogException(exception);
+                bossRewardPanel = null;
+            }
+
+            return bossRewardPanel;
+        }
+
+        private static string[] BuildBossRewardLines()
+        {
+            return new[]
+            {
+                "\u91cd\u590d\u706b\u7b26 x1",
+                "\u7b26\u7eb8 x3\uff08V0.2 \u5360\u4f4d\uff09",
+                "\u7075\u77f3 x20\uff08V0.2 \u5360\u4f4d\uff09",
+                "\u57fa\u7840\u914d\u65b9\u6b8b\u9875 x1\uff08V0.2 \u5360\u4f4d\uff09",
+                "\u5c11\u91cf\u4fee\u4e3a\uff08V0.2 \u5360\u4f4d\uff09"
+            };
         }
 
         private void BindPreBattlePopupButtons()
@@ -415,7 +508,7 @@ namespace TalismanBag.V02.Run
         {
             string enemyLabel = round.enemy != null ? round.enemy.GetReadableLabel() : "\u654c\u4eba\u672a\u914d\u7f6e";
             string title = string.IsNullOrWhiteSpace(round.roundTitle) ? string.Empty : $"  {round.roundTitle}";
-            string roundLine = $"Round {round.roundIndex} / {GetRoundCount()}  {enemyLabel}{title}";
+            string roundLine = $"{GetRoundLabel(round)} / {GetRoundCount()}  {enemyLabel}{title}";
             string goal = string.IsNullOrWhiteSpace(round.teachingGoal) ? string.Empty : $"\n\u76ee\u6807\uff1a{round.teachingGoal}";
             SetText(roundInfoText, $"{roundLine}{goal}");
             SetText(prepHintText, BuildPreBattleHint(round));
@@ -477,6 +570,7 @@ namespace TalismanBag.V02.Run
             {
                 return new V02RoundConfig
                 {
+                    levelId = $"1-{index + 1}",
                     roundIndex = index + 1,
                     roundTitle = testEnemies[index] != null ? testEnemies[index].GetDisplayName() : $"Round {index + 1}",
                     enemy = testEnemies[index],
@@ -496,7 +590,17 @@ namespace TalismanBag.V02.Run
                 return runConfig.rounds.Count;
             }
 
-            return testEnemies != null && testEnemies.Count > 0 ? testEnemies.Count : 7;
+            return testEnemies != null && testEnemies.Count > 0 ? testEnemies.Count : 10;
+        }
+
+        private static string GetRoundLabel(V02RoundConfig round)
+        {
+            if (round == null)
+            {
+                return "Round ?";
+            }
+
+            return string.IsNullOrWhiteSpace(round.levelId) ? $"Round {round.roundIndex}" : round.levelId.Trim();
         }
 
         private static void SetText(Text text, string value)

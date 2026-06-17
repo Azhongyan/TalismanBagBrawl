@@ -19,3 +19,129 @@ MonoBehaviour:
   hardResistedMultiplier: 0.45
   rewardShieldBreakMultiplier: 2.5
   groupClearMultiplier: 1.6
+  buildCounterMatrix:
+  - buildId: BossReadyBuild
+    enemyId: energy_thief_ghost
+    relation: 2
+    multiplier: 1.1
+    note: "Phase1: BossReady only serves 1-9/1-10"
+  - buildId: BossReadyBuild
+    enemyId: imp_swarm
+    relation: 2
+    multiplier: 1.1
+    note: "Phase1: BossReady only serves 1-9/1-10"
+  - buildId: BossReadyBuild
+    enemyId: red_poison_beast
+    relation: 3
+    multiplier: 1
+    note: "Phase1: BossReady only serves 1-9/1-10"
+  - buildId: BossReadyBuild
+    enemyId: seal_talisman_taoist
+    relation: 3
+    multiplier: 1
+    note: "Phase1: BossReady only serves 1-9/1-10"
+  - buildId: BossReadyBuild
+    enemyId: turtle_guardian_shield
+    relation: 2
+    multiplier: 1.15
+    note: "Phase1: BossReady only serves 1-9/1-10"
+  - buildId: BossReadyBuild
+    enemyId: shield_swarm_trial
+    relation: 2
+    multiplier: 1.15
+    note: "Phase1: BossReady only serves 1-9/1-10"
+  - buildId: BossReadyBuild
+    enemyId: poison_seal_thief_trial
+    relation: 2
+    multiplier: 1.2
+    note: "Phase1: BossReady only serves 1-9/1-10"
+  - buildId: BossReadyBuild
+    enemyId: formation_breaker_elite
+    relation: 1
+    multiplier: 1.45
+    note: "Phase1: BossReady only serves 1-9/1-10"
+  - buildId: BossReadyBuild
+    enemyId: formation_breaker_boss
+    relation: 1
+    multiplier: 1.45
+    note: "Phase1: BossReady only serves 1-9/1-10"
+  - buildId: ThunderShieldBreakBuild
+    enemyId: turtle_guardian_shield
+    relation: 1
+    multiplier: 1.9
+    note: "Phase1: Thunder specializes in shield break"
+  - buildId: ThunderShieldBreakBuild
+    enemyId: shield_swarm_trial
+    relation: 1
+    multiplier: 1.6
+    note: "Phase1: Thunder specializes in shield break"
+  - buildId: ThunderShieldBreakBuild
+    enemyId: imp_swarm
+    relation: 4
+    multiplier: 0.85
+    note: "Phase1: Thunder specializes in shield break"
+  - buildId: ThunderShieldBreakBuild
+    enemyId: red_poison_beast
+    relation: 4
+    multiplier: 0.85
+    note: "Phase1: Thunder specializes in shield break"
+  - buildId: ThunderShieldBreakBuild
+    enemyId: seal_talisman_taoist
+    relation: 4
+    multiplier: 0.9
+    note: "Phase1: Thunder specializes in shield break"
+  - buildId: ThunderShieldBreakBuild
+    enemyId: energy_thief_ghost
+    relation: 4
+    multiplier: 0.9
+    note: "Phase1: Thunder specializes in shield break"
+  - buildId: ThunderShieldBreakBuild
+    enemyId: formation_breaker_elite
+    relation: 2
+    multiplier: 1.2
+    note: "Phase1: Thunder specializes in shield break"
+  - buildId: ThunderShieldBreakBuild
+    enemyId: formation_breaker_boss
+    relation: 2
+    multiplier: 1.2
+    note: "Phase1: Thunder specializes in shield break"
+  - buildId: ChainGroupClearBuild
+    enemyId: imp_swarm
+    relation: 1
+    multiplier: 1.75
+    note: "Phase1: Chain specializes in group clear"
+  - buildId: ChainGroupClearBuild
+    enemyId: shield_swarm_trial
+    relation: 1
+    multiplier: 1.55
+    note: "Phase1: Chain specializes in group clear"
+  - buildId: ChainGroupClearBuild
+    enemyId: turtle_guardian_shield
+    relation: 4
+    multiplier: 0.85
+    note: "Phase1: Chain specializes in group clear"
+  - buildId: ChainGroupClearBuild
+    enemyId: red_poison_beast
+    relation: 4
+    multiplier: 0.85
+    note: "Phase1: Chain specializes in group clear"
+  - buildId: ChainGroupClearBuild
+    enemyId: seal_talisman_taoist
+    relation: 4
+    multiplier: 0.9
+    note: "Phase1: Chain specializes in group clear"
+  - buildId: ChainGroupClearBuild
+    enemyId: energy_thief_ghost
+    relation: 4
+    multiplier: 0.9
+    note: "Phase1: Chain specializes in group clear"
+  - buildId: ChainGroupClearBuild
+    enemyId: formation_breaker_elite
+    relation: 2
+    multiplier: 1.15
+    note: "Phase1: Chain specializes in group clear"
+  - buildId: ChainGroupClearBuild
+    enemyId: formation_breaker_boss
+    relation: 2
+    multiplier: 1.15
+    note: "Phase1: Chain specializes in group clear"

@@ -91,6 +91,9 @@ namespace TalismanBag.V02.UI
         [SerializeField] private Button skipRound5Button;
         [SerializeField] private Button skipRound6Button;
         [SerializeField] private Button skipRound7Button;
+        [SerializeField] private Button skipRound8Button;
+        [SerializeField] private Button skipRound9Button;
+        [SerializeField] private Button skipRound10Button;
         [SerializeField] private Button forceWinCurrentRoundButton;
         [SerializeField] private Button forceLoseCurrentRoundButton;
         [SerializeField] private Button giveAntiShieldBuildButton;
@@ -156,6 +159,9 @@ namespace TalismanBag.V02.UI
             skipRound5Button?.onClick.AddListener(() => SkipToRound(5));
             skipRound6Button?.onClick.AddListener(() => SkipToRound(6));
             skipRound7Button?.onClick.AddListener(() => SkipToRound(7));
+            skipRound8Button?.onClick.AddListener(() => SkipToRound(8));
+            skipRound9Button?.onClick.AddListener(() => SkipToRound(9));
+            skipRound10Button?.onClick.AddListener(() => SkipToRound(10));
             forceWinCurrentRoundButton?.onClick.AddListener(ForceWinCurrentRound);
             forceLoseCurrentRoundButton?.onClick.AddListener(ForceLoseCurrentRound);
             giveAntiShieldBuildButton?.onClick.AddListener(GiveAntiShieldBuild);
@@ -570,8 +576,50 @@ namespace TalismanBag.V02.UI
         private void PlaceById(string itemId, Vector2Int position)
         {
             DraggableTalismanItemView view = FindItemViewById(itemId);
-            TalismanGridSlotView slot = FindSlot(position);
+            TalismanGridSlotView slot = FindSlotForPlacement(position);
             view?.ForcePlaceOnSlot(slot);
+        }
+
+        private TalismanGridSlotView FindSlotForPlacement(Vector2Int preferredPosition)
+        {
+            TalismanGridSlotView preferred = FindSlot(preferredPosition);
+            if (CanUsePlacementSlot(preferred))
+            {
+                return preferred;
+            }
+
+            TalismanGridSlotView best = null;
+            int bestDistance = int.MaxValue;
+            if (slotViews == null)
+            {
+                return null;
+            }
+
+            foreach (TalismanGridSlotView slotView in slotViews)
+            {
+                if (!CanUsePlacementSlot(slotView))
+                {
+                    continue;
+                }
+
+                Vector2Int position = slotView.GridPosition;
+                int distance = Mathf.Abs(position.x - preferredPosition.x) + Mathf.Abs(position.y - preferredPosition.y);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = slotView;
+                }
+            }
+
+            return best;
+        }
+
+        private bool CanUsePlacementSlot(TalismanGridSlotView slot)
+        {
+            return slot != null &&
+                   slot.CanAcceptItem &&
+                   slot.CurrentItemView == null &&
+                   (grid == null || grid.GetItemAt(slot.GridPosition) == null);
         }
 
         private DraggableTalismanItemView FindItemViewById(string itemId)

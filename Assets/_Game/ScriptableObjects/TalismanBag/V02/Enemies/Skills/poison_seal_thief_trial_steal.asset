@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8c2dff1119f44e74b9d34b705d5f2311, type: 3}
-  m_Name: red_poison_apply_poison
+  m_Name: poison_seal_thief_trial_steal
   m_EditorClassIdentifier: 
-  skillId: red_poison_apply_poison
-  displayName: "\u6BD2\u706B"
-  intentText: "\u6BD2\u6B63\u5728\u55B7\u5410\u6BD2\u706B\uFF01"
-  effectDescription: "\u53E0\u52A0\u4E2D\u6BD2\u548C\u71C3\u70E7"
-  skillType: 3
-  initialDelay: 2
-  cooldown: 9
+  skillId: poison_seal_thief_trial_steal
+  displayName: "\u538B\u00B7\u5077"
+  intentText: "\u538B\u6B63\u5728\u5077\u53D6\u7075\u6C14\uFF01"
+  effectDescription: "\u590D\u5408\u5173\u4E13\u5C5E\u5077\u7075"
+  skillType: 5
+  initialDelay: 7
+  cooldown: 11
   castTime: 0.8
-  value: 2
-  duration: 0
-  skillTags: 0200000003000000
+  value: 1
+  duration: 4
+  skillTags: 0500000006000000

@@ -15,9 +15,9 @@ MonoBehaviour:
   enemyId: seal_talisman_taoist
   displayName: "\u5C01"
   enemyType: 3
-  maxHp: 155
-  attackDamage: 8
-  attackInterval: 3
+  maxHp: 230
+  attackDamage: 9
+  attackInterval: 2.8
   weaknessText: "\u5C01\u5370"
   dangerText: "\u884C\u5217\u5C01\u9501"
   recommendedBuildText: "\u51C0\u5316\u7B26\u53EF\u4EE5\u89E3\u5C01\u3002\u4E0D\u8981\u628A\u6240\u6709\u8F93\u51FA\u7B26\u653E\u5728\u540C\u4E00\u884C\u6216\u540C\u4E00\u5217\u3002"

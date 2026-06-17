@@ -2,11 +2,22 @@ using System.Collections.Generic;
 using TalismanBag.V02.Status;
 using UnityEngine;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.SceneManagement;
+#endif
 
 namespace TalismanBag.V02.UI
 {
     public sealed class StatusAnchorUI : MonoBehaviour
     {
+        private const string StatusIconNamePrefix = "StatusIcon_";
+        private const string IconImageName = "Icon";
+        private const string CountdownFillName = "CountdownFill";
+        private const string GlyphTextName = "Glyph";
+        private const string StackTextName = "Stack";
+        private const string CountdownTextName = "Countdown";
+
         [SerializeField] private StatusEffectController controller;
         [SerializeField] private RectTransform iconRoot;
         [SerializeField] private StatusTooltipPanel tooltipPanel;
@@ -22,6 +33,37 @@ namespace TalismanBag.V02.UI
 
         public StatusEffectController Controller => controller;
         public RectTransform IconRoot => iconRoot;
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
+            EditorApplication.delayCall -= EnsureEditorPlaceholders;
+            EditorApplication.delayCall += EnsureEditorPlaceholders;
+        }
+
+        private void EnsureEditorPlaceholders()
+        {
+            if (this == null || Application.isPlaying)
+            {
+                return;
+            }
+
+            // Manual UI targets must exist before Play and keep designer-placed rects.
+            EnsureIconRoot();
+            EnsureIconCount(Mathf.Max(1, maxVisibleIcons));
+            HideAll();
+            EditorUtility.SetDirty(this);
+            if (gameObject.scene.IsValid())
+            {
+                EditorSceneManager.MarkSceneDirty(gameObject.scene);
+            }
+        }
+#endif
 
         private void Awake()
         {
@@ -207,10 +249,42 @@ namespace TalismanBag.V02.UI
 
         private void EnsureIconCount(int count)
         {
+            RefreshIconViewCache();
+
             while (iconViews.Count < count)
             {
                 iconViews.Add(CreateIconView(iconViews.Count));
             }
+
+            for (int i = 0; i < iconViews.Count; i++)
+            {
+                if (iconViews[i] != null)
+                {
+                    ConfigureIconView(iconViews[i], i, false);
+                }
+            }
+        }
+
+        private void RefreshIconViewCache()
+        {
+            iconViews.Clear();
+            if (iconRoot == null)
+            {
+                return;
+            }
+
+            StatusIconView[] existingViews = iconRoot.GetComponentsInChildren<StatusIconView>(true);
+            List<StatusIconView> directChildren = new(existingViews.Length);
+            foreach (StatusIconView view in existingViews)
+            {
+                if (view != null && view.transform.parent == iconRoot)
+                {
+                    directChildren.Add(view);
+                }
+            }
+
+            directChildren.Sort((left, right) => left.transform.GetSiblingIndex().CompareTo(right.transform.GetSiblingIndex()));
+            iconViews.AddRange(directChildren);
         }
 
         private StatusIconView CreateIconView(int index)
@@ -221,6 +295,12 @@ namespace TalismanBag.V02.UI
             }
 
             GameObject iconObject = new($"StatusIcon_{index + 1}", typeof(RectTransform), typeof(LayoutElement), typeof(Image), typeof(StatusIconView));
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                Undo.RegisterCreatedObjectUndo(iconObject, "Create status icon placeholder");
+            }
+#endif
             iconObject.transform.SetParent(iconRoot, false);
 
             RectTransform rect = iconObject.GetComponent<RectTransform>();
@@ -230,52 +310,180 @@ namespace TalismanBag.V02.UI
             layoutElement.preferredWidth = iconSize.x;
             layoutElement.preferredHeight = iconSize.y;
 
-            Image background = iconObject.GetComponent<Image>();
-            background.color = new Color(0.18f, 0.2f, 0.18f, 0.92f);
-
-            Image iconImage = CreateImage("Icon", iconObject.transform);
-            RectTransform imageRect = iconImage.rectTransform;
-            imageRect.anchorMin = Vector2.zero;
-            imageRect.anchorMax = Vector2.one;
-            imageRect.offsetMin = new Vector2(6f, 6f);
-            imageRect.offsetMax = new Vector2(-6f, -6f);
-            iconImage.enabled = false;
-
-            Text glyph = CreateText("Glyph", iconObject.transform, 22, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter);
-            Stretch(glyph.rectTransform, Vector2.zero);
-
-            Text stack = CreateText("Stack", iconObject.transform, 13, FontStyle.Bold, Color.white, TextAnchor.UpperRight);
-            Stretch(stack.rectTransform, new Vector2(-3f, -1f));
-
-            Text countdown = CreateText("Countdown", iconObject.transform, 12, FontStyle.Bold, Color.white, TextAnchor.LowerCenter);
-            RectTransform countdownRect = countdown.rectTransform;
-            countdownRect.anchorMin = new Vector2(0f, 0f);
-            countdownRect.anchorMax = new Vector2(1f, 0f);
-            countdownRect.pivot = new Vector2(0.5f, 0f);
-            countdownRect.anchoredPosition = new Vector2(0f, 2f);
-            countdownRect.sizeDelta = new Vector2(-4f, 15f);
-
             StatusIconView view = iconObject.GetComponent<StatusIconView>();
-            view.Setup(background, iconImage, glyph, stack, countdown, tooltipPanel);
+            ConfigureIconView(view, index, true);
             view.Clear();
             return view;
         }
 
-        private Image CreateImage(string name, Transform parent)
+        private void ConfigureIconView(StatusIconView view, int index, bool createdIcon)
         {
-            GameObject imageObject = new(name, typeof(RectTransform), typeof(Image));
-            imageObject.transform.SetParent(parent, false);
+            if (view == null)
+            {
+                return;
+            }
+
+            if (font == null)
+            {
+                font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            }
+
+            GameObject iconObject = view.gameObject;
+            if (createdIcon)
+            {
+                iconObject.name = $"{StatusIconNamePrefix}{index + 1}";
+            }
+
+            RectTransform rect = iconObject.GetComponent<RectTransform>();
+            if (rect == null)
+            {
+                rect = iconObject.AddComponent<RectTransform>();
+            }
+
+            if (createdIcon)
+            {
+                rect.sizeDelta = iconSize;
+            }
+
+            LayoutElement layoutElement = iconObject.GetComponent<LayoutElement>();
+            if (layoutElement == null)
+            {
+                layoutElement = iconObject.AddComponent<LayoutElement>();
+            }
+
+            layoutElement.preferredWidth = iconSize.x;
+            layoutElement.preferredHeight = iconSize.y;
+
+            Image background = iconObject.GetComponent<Image>();
+            if (background == null)
+            {
+                background = iconObject.AddComponent<Image>();
+            }
+
+            background.color = new Color(0.18f, 0.2f, 0.18f, 0.92f);
+
+            Image iconImage = GetOrCreateImage(IconImageName, iconObject.transform, out bool iconImageCreated);
+            if (iconImageCreated)
+            {
+                RectTransform imageRect = iconImage.rectTransform;
+                imageRect.anchorMin = Vector2.zero;
+                imageRect.anchorMax = Vector2.one;
+                imageRect.offsetMin = new Vector2(6f, 6f);
+                imageRect.offsetMax = new Vector2(-6f, -6f);
+            }
+
+            iconImage.enabled = false;
+
+            Image countdownFill = GetOrCreateImage(CountdownFillName, iconObject.transform, out bool countdownFillCreated);
+            if (countdownFillCreated)
+            {
+                RectTransform countdownFillRect = countdownFill.rectTransform;
+                countdownFillRect.anchorMin = Vector2.zero;
+                countdownFillRect.anchorMax = Vector2.one;
+                countdownFillRect.offsetMin = new Vector2(2f, 2f);
+                countdownFillRect.offsetMax = new Vector2(-2f, -2f);
+            }
+
+            countdownFill.color = new Color(1f, 1f, 1f, 0.28f);
+            countdownFill.type = Image.Type.Filled;
+            countdownFill.fillMethod = Image.FillMethod.Radial360;
+            countdownFill.fillOrigin = (int)Image.Origin360.Top;
+            countdownFill.fillClockwise = true;
+            countdownFill.fillAmount = 0f;
+            countdownFill.raycastTarget = false;
+            countdownFill.enabled = false;
+
+            Text glyph = GetOrCreateText(GlyphTextName, iconObject.transform, 22, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, out bool glyphCreated);
+            if (glyphCreated)
+            {
+                Stretch(glyph.rectTransform, Vector2.zero);
+            }
+
+            Text stack = GetOrCreateText(StackTextName, iconObject.transform, 13, FontStyle.Bold, Color.white, TextAnchor.UpperRight, out bool stackCreated);
+            if (stackCreated)
+            {
+                Stretch(stack.rectTransform, new Vector2(-3f, -1f));
+            }
+
+            Text countdown = GetOrCreateText(CountdownTextName, iconObject.transform, 12, FontStyle.Bold, Color.white, TextAnchor.LowerCenter, out bool countdownCreated);
+            if (countdownCreated)
+            {
+                RectTransform countdownRect = countdown.rectTransform;
+                countdownRect.anchorMin = new Vector2(0f, 0f);
+                countdownRect.anchorMax = new Vector2(1f, 0f);
+                countdownRect.pivot = new Vector2(0.5f, 0f);
+                countdownRect.anchoredPosition = new Vector2(0f, 2f);
+                countdownRect.sizeDelta = new Vector2(-4f, 15f);
+            }
+
+            view.Setup(background, iconImage, countdownFill, glyph, stack, countdown, tooltipPanel);
+        }
+
+        private Image GetOrCreateImage(string name, Transform parent, out bool created)
+        {
+            created = false;
+            Transform child = parent.Find(name);
+            GameObject imageObject;
+            if (child == null)
+            {
+                imageObject = new GameObject(name, typeof(RectTransform), typeof(Image));
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    Undo.RegisterCreatedObjectUndo(imageObject, "Create status icon child");
+                }
+#endif
+                imageObject.transform.SetParent(parent, false);
+                created = true;
+            }
+            else
+            {
+                imageObject = child.gameObject;
+            }
+
             Image image = imageObject.GetComponent<Image>();
+            if (image == null)
+            {
+                image = imageObject.AddComponent<Image>();
+            }
+
             image.raycastTarget = false;
             return image;
         }
 
-        private Text CreateText(string name, Transform parent, int size, FontStyle style, Color color, TextAnchor anchor)
+        private Text GetOrCreateText(string name, Transform parent, int size, FontStyle style, Color color, TextAnchor anchor, out bool created)
         {
-            GameObject textObject = new(name, typeof(RectTransform), typeof(Text));
-            textObject.transform.SetParent(parent, false);
+            created = false;
+            Transform child = parent.Find(name);
+            GameObject textObject;
+            if (child == null)
+            {
+                textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    Undo.RegisterCreatedObjectUndo(textObject, "Create status icon text");
+                }
+#endif
+                textObject.transform.SetParent(parent, false);
+                created = true;
+            }
+            else
+            {
+                textObject = child.gameObject;
+            }
+
             Text text = textObject.GetComponent<Text>();
-            text.font = font;
+            if (text == null)
+            {
+                text = textObject.AddComponent<Text>();
+            }
+
+            if (text.font == null)
+            {
+                text.font = font;
+            }
+
             text.fontSize = size;
             text.fontStyle = style;
             text.color = color;

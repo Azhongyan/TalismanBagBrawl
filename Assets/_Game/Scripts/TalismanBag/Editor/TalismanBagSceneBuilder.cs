@@ -449,15 +449,16 @@ namespace TalismanBag.EditorTools
                 AssetDatabase.CreateAsset(definition, path);
             }
 
-            definition.enemyId = "v02_mountain_imp";
+            definition.enemyId = "Deprecated_v02_mountain_imp";
             definition.displayName = "攻";
+            definition.enabled = false;
             definition.enemyType = EnemyType.Ghost;
             definition.maxHp = 80;
             definition.attackDamage = 8;
             definition.attackInterval = 2.5f;
             definition.weaknessText = "\u65e0\u7279\u6b8a";
             definition.dangerText = "\u666e\u901a\u653b\u51fb";
-            definition.recommendedBuildText = "\u9a8c\u8bc1\u9635\u773c\u4e0e\u805a\u7075\u77f3\u4f9b\u80fd";
+            definition.recommendedBuildText = "Deprecated legacy config. Use mountain_imp_basic for 1-1.";
             definition.chargeInterval = 0f;
             definition.chargeDuration = 0f;
             definition.chargeAttackDamage = 0;
@@ -467,6 +468,10 @@ namespace TalismanBag.EditorTools
             definition.sealDuration = 0f;
             definition.ghostShadowInterval = 0f;
             definition.ghostShadowDamage = 0;
+            definition.enemyClass = "Deprecated";
+            definition.enemyArchetype = "Legacy v02 mountain imp config";
+            definition.intentText = "Deprecated legacy config. Use mountain_imp_basic for 1-1.";
+            definition.recommendedCounterText = "Deprecated legacy config. Use mountain_imp_basic for 1-1.";
             EditorUtility.SetDirty(definition);
             return definition;
         }
@@ -505,6 +510,24 @@ namespace TalismanBag.EditorTools
                 "封印", "行列封锁", "准备封印符箓",
                 "净化符可以解封。不要把所有输出符放在同一行或同一列。",
                 new[] { CounterTag.Seal }, new[] { skills["seal_taoist_row_column"] });
+
+            AddV02Enemy(enemies, "formation_breaker_elite", "\u7834", EnemyType.EvilCultivator, 210, 10, 2.5f,
+                "\u7cbe\u82f1", "\u5c0f\u7efc\u5408", "\u8f6e\u6362\u62a4\u76fe\u3001\u53ec\u5524\u548c\u5c01\u9501\u5c0f\u538b\u529b",
+                "\u96f7\u7b26\u7834\u76fe\uff0c\u8fde\u9501\u96f7\u7b26\u6e05\u7fa4\uff0c\u51c0\u5316\u7b26\u5904\u7406\u5c01\u9501\u3002",
+                new[] { CounterTag.Shield, CounterTag.Group, CounterTag.Seal },
+                new[] { skills["turtle_guardian_gain_shield"], skills["imp_swarm_summon"], skills["seal_taoist_row_column"] });
+
+            AddV02Enemy(enemies, "shield_swarm_trial", "\u7fa4", EnemyType.GhostSwarm, 230, 9, 2.2f,
+                "\u590d\u5408", "\u62a4\u76fe + \u7fa4\u4f53\u538b\u5236", "\u5148\u7ed3\u76fe\uff0c\u518d\u53ec\u5524\u5c0f\u5996\u538b\u5236\u9635\u76d8",
+                "\u96f7\u7b26\u6253\u5f00\u62a4\u76fe\uff0c\u8fde\u9501\u96f7\u7b26\u548c\u706b\u7b26\u5904\u7406\u7fa4\u602a\u538b\u529b\u3002",
+                new[] { CounterTag.Shield, CounterTag.Group, CounterTag.Summon },
+                new[] { skills["turtle_guardian_gain_shield"], skills["imp_swarm_summon"] });
+
+            AddV02Enemy(enemies, "poison_seal_thief_trial", "\u538b", EnemyType.EvilCultivator, 250, 9, 2.6f,
+                "\u590d\u5408", "\u6bd2 + \u5c01 + \u5077\u7075", "\u6301\u7eed\u65bd\u538b\uff0c\u6253\u65ad\u4f9b\u80fd\u5e76\u5c01\u9501\u9635\u76d8",
+                "\u51c0\u5316\u7b26\u5904\u7406\u6bd2\u548c\u5c01\u5370\uff0c\u9547\u9b42\u7b26\u53cd\u5236\u5077\u7075\u3002",
+                new[] { CounterTag.Poison, CounterTag.Seal, CounterTag.StealEnergy, CounterTag.Ghost },
+                new[] { skills["red_poison_apply_poison"], skills["seal_taoist_row_column"], skills["energy_thief_steal"] });
 
             AddV02Enemy(enemies, "formation_breaker_boss", "将", EnemyType.Boss, 240, 12, 2.8f,
                 "首领", "综合压制", "准备轮换破阵手段",
@@ -644,6 +667,36 @@ namespace TalismanBag.EditorTools
                 SetV02SkillNumbers(skills, "seal_taoist_row_column", 5f, 8f, 0, 3, 1.2f);
             }
 
+            if (enemies.TryGetValue("formation_breaker_elite", out EnemyDefinition elite))
+            {
+                SetV02EnemyNumbers(elite, 210, 10, 2.5f, "\u7cbe\u82f1", "\u5c0f\u7efc\u5408");
+                SetV02EnemyAffinity(elite,
+                    new[] { ElementTag.Fire },
+                    new[] { FunctionTag.Damage },
+                    new[] { ElementTag.Thunder, ElementTag.Water },
+                    new[] { FunctionTag.ShieldBreak, FunctionTag.Chain, FunctionTag.AoE, FunctionTag.Cleanse, FunctionTag.AntiSeal });
+            }
+
+            if (enemies.TryGetValue("shield_swarm_trial", out EnemyDefinition shieldSwarm))
+            {
+                SetV02EnemyNumbers(shieldSwarm, 230, 9, 2.2f, "\u590d\u5408", "\u62a4\u76fe + \u7fa4\u4f53\u538b\u5236");
+                SetV02EnemyAffinity(shieldSwarm,
+                    new[] { ElementTag.Sword, ElementTag.Metal },
+                    new[] { FunctionTag.Burst },
+                    new[] { ElementTag.Thunder, ElementTag.Fire },
+                    new[] { FunctionTag.ShieldBreak, FunctionTag.Chain, FunctionTag.AoE, FunctionTag.Burn });
+            }
+
+            if (enemies.TryGetValue("poison_seal_thief_trial", out EnemyDefinition pressure))
+            {
+                SetV02EnemyNumbers(pressure, 250, 9, 2.6f, "\u590d\u5408", "\u6bd2 + \u5c01 + \u5077\u7075");
+                SetV02EnemyAffinity(pressure,
+                    new[] { ElementTag.Fire },
+                    new[] { FunctionTag.Burst },
+                    new[] { ElementTag.Water, ElementTag.Soul },
+                    new[] { FunctionTag.Cleanse, FunctionTag.AntiGhost, FunctionTag.AntiSeal, FunctionTag.AntiPoison });
+            }
+
             if (enemies.TryGetValue("formation_breaker_boss", out EnemyDefinition boss))
             {
                 SetV02EnemyNumbers(boss, 260, 12, 2.8f, "Boss", "\u7efc\u5408\u538b\u529b");
@@ -761,6 +814,9 @@ namespace TalismanBag.EditorTools
                 "red_poison_beast",
                 "energy_thief_ghost",
                 "seal_talisman_taoist",
+                "formation_breaker_elite",
+                "shield_swarm_trial",
+                "poison_seal_thief_trial",
                 "formation_breaker_boss"
             };
 
@@ -786,56 +842,79 @@ namespace TalismanBag.EditorTools
                 AssetDatabase.CreateAsset(config, path);
             }
 
-            config.runId = "v02_15min_seven_rounds";
-            config.displayName = "V0.2 15Min Formation Counter Run";
+            config.runId = "v02_main_trial_1_10";
+            config.displayName = "V0.2 Main Trial 1-10";
             config.rounds = new List<V02RoundConfig>
             {
-                CreateV02Round(1, "攻：基础布阵", enemies["mountain_imp_basic"],
+                CreateV02Round(1, "\u653b\uff1a\u57fa\u7840\u5e03\u9635", enemies["mountain_imp_basic"],
                     "\u7406\u89e3\u7b26\u7b93\u5fc5\u987b\u88ab\u9635\u773c\u6216\u805a\u7075\u77f3\u4f9b\u80fd\u624d\u4f1a\u89e6\u53d1\u3002",
                     "\u628a\u706b\u7b26\u653e\u5230\u9635\u773c\u6216\u805a\u7075\u77f3\u4f9b\u80fd\u8303\u56f4\u5185\u3002\u672a\u4f9b\u80fd\u7684\u7b26\u7b93\u4e0d\u4f1a\u89e6\u53d1\u3002",
-                    false, 45f, 60f),
-                CreateV02Round(2, "盾：周期护盾", enemies["turtle_guardian_shield"],
+                    false, 45f, 60f, 0.2f, 0.3f),
+                CreateV02Round(2, "\u76fe\uff1a\u5468\u671f\u62a4\u76fe", enemies["turtle_guardian_shield"],
                     "\u7406\u89e3\u62a4\u76fe\u654c\u4eba\u9700\u8981\u96f7\u7b26\u6216\u7206\u53d1\u5904\u7406\u3002",
                     "\u654c\u4eba\u4f1a\u5468\u671f\u6027\u83b7\u5f97\u62a4\u76fe\u3002\u96f7\u7b26\u5bf9\u62a4\u76fe\u6548\u679c\u66f4\u597d\uff0c\u5251\u4e38\u7206\u53d1\u4e5f\u6709\u6548\u3002",
-                    false, 75f, 100f),
-                CreateV02Round(3, "召：群体压制", enemies["imp_swarm"],
+                    false, 75f, 100f, 0.3f, 0.4f),
+                CreateV02Round(3, "\u53ec\uff1a\u7fa4\u4f53\u538b\u5236", enemies["imp_swarm"],
                     "\u7406\u89e3\u591a\u76ee\u6807\u654c\u4eba\u9700\u8981\u8fde\u9501\u3001\u8303\u56f4\u6216\u71c3\u70e7\u5904\u7406\u3002",
-                    "召会用数量压制你。连锁雷符和火符燃烧更适合清群。",
-                    false, 80f, 110f),
-                CreateV02Round(4, "毒：持续伤害", enemies["red_poison_beast"],
+                    "\u53ec\u4f1a\u7528\u6570\u91cf\u538b\u5236\u4f60\u3002\u8fde\u9501\u96f7\u7b26\u548c\u706b\u7b26\u71c3\u70e7\u66f4\u9002\u5408\u6e05\u7fa4\u3002",
+                    false, 80f, 110f, 0.35f, 0.45f),
+                CreateV02Round(4, "\u6bd2\uff1a\u6301\u7eed\u4f24\u5bb3", enemies["red_poison_beast"],
                     "\u7406\u89e3\u4e0d\u80fd\u53ea\u5806\u8f93\u51fa\uff0c\u9632\u5fa1\u548c\u51c0\u5316\u4e5f\u91cd\u8981\u3002",
-                    "毒会叠加中毒和燃烧。净化符可以清除状态，护身符可以抵抗持续伤害。",
-                    false, 90f, 120f),
-                CreateV02Round(5, "偷：供能干扰", enemies["energy_thief_ghost"],
+                    "\u6bd2\u4f1a\u53e0\u52a0\u4e2d\u6bd2\u548c\u71c3\u70e7\u3002\u51c0\u5316\u7b26\u53ef\u4ee5\u6e05\u9664\u72b6\u6001\uff0c\u62a4\u8eab\u7b26\u53ef\u4ee5\u62b5\u6297\u6301\u7eed\u4f24\u5bb3\u3002",
+                    false, 90f, 120f, 0.4f, 0.5f),
+                CreateV02Round(5, "\u5077\uff1a\u4f9b\u80fd\u5e72\u6270", enemies["energy_thief_ghost"],
                     "\u7406\u89e3\u9635\u773c\u548c\u805a\u7075\u77f3\u662f\u6838\u5fc3\u8d44\u6e90\uff0c\u4f1a\u88ab\u654c\u4eba\u9488\u5bf9\u3002",
-                    "偷会偷取阵眼或聚灵石灵气，使周围符箓短暂失效。镇魂符可以反制偷灵。",
-                    false, 90f, 120f),
-                CreateV02Round(6, "封：行列封锁", enemies["seal_talisman_taoist"],
+                    "\u5077\u4f1a\u5077\u53d6\u9635\u773c\u6216\u805a\u7075\u77f3\u7075\u6c14\uff0c\u4f7f\u5468\u56f4\u7b26\u7b93\u77ed\u6682\u5931\u6548\u3002\u9547\u9b42\u7b26\u53ef\u4ee5\u53cd\u5236\u5077\u7075\u3002",
+                    false, 90f, 120f, 0.42f, 0.52f),
+                CreateV02Round(6, "\u5c01\uff1a\u884c\u5217\u5c01\u9501", enemies["seal_talisman_taoist"],
                     "\u7406\u89e3\u6838\u5fc3\u8f93\u51fa\u4e0d\u80fd\u5168\u90e8\u5806\u5728\u540c\u4e00\u884c\u6216\u540c\u4e00\u5217\u3002",
-                    "封会封印一行或一列符箓。净化符可以解封，不要把所有核心输出堆在同一条线上。",
-                    false, 100f, 130f),
-                CreateV02Round(7, "将：综合压制", enemies["formation_breaker_boss"],
+                    "\u5c01\u4f1a\u5c01\u5370\u4e00\u884c\u6216\u4e00\u5217\u7b26\u7b93\u3002\u51c0\u5316\u7b26\u53ef\u4ee5\u89e3\u5c01\uff0c\u4e0d\u8981\u628a\u6240\u6709\u6838\u5fc3\u8f93\u51fa\u5806\u5728\u540c\u4e00\u6761\u7ebf\u4e0a\u3002",
+                    false, 100f, 130f, 0.45f, 0.55f),
+                CreateV02Round(7, "\u7834\uff1a\u7efc\u5408\u538b\u5236", enemies["formation_breaker_elite"],
                     "\u7efc\u5408\u68c0\u9a8c\u7834\u76fe\u3001\u6e05\u7fa4\u3001\u9635\u773c\u4fdd\u62a4\u548c\u9635\u6cd5\u7a33\u5b9a\u6027\u3002",
-                    "将会先获得护盾，中段召唤小妖，低血量时封印阵眼附近格子。需要破盾、清群、净化和稳定供能。",
-                    true, 150f, 180f)
+                    "\u7834\u4f1a\u8f6e\u6362\u62a4\u76fe\u3001\u53ec\u5524\u548c\u5c01\u9501\u5c0f\u538b\u529b\u3002\u9700\u8981\u7834\u76fe\u3001\u6e05\u7fa4\u3001\u51c0\u5316\u548c\u7a33\u5b9a\u4f9b\u80fd\u3002",
+                    false, 110f, 140f, 0.5f, 0.6f),
+                CreateV02Round(8, "\u7ec4\uff1a\u62a4\u76fe\u7fa4\u538b", enemies["shield_swarm_trial"],
+                    "\u540c\u65f6\u68c0\u9a8c\u7834\u76fe\u4e0e\u6e05\u7fa4\uff0c\u9635\u76d8\u9700\u8981\u517c\u987e\u5355\u70b9\u7206\u53d1\u548c\u8303\u56f4\u538b\u5236\u3002",
+                    "\u654c\u4eba\u4f1a\u5148\u7ed3\u76fe\u518d\u53ec\u5524\u5c0f\u5996\u3002\u96f7\u7b26\u7834\u76fe\uff0c\u8fde\u9501\u96f7\u7b26\u548c\u706b\u7b26\u5904\u7406\u7fa4\u602a\u3002",
+                    false, 60f, 70f, 0.55f, 0.65f),
+                CreateV02Round(9, "\u538b\uff1a\u6bd2\u5c01\u5077\u7075", enemies["poison_seal_thief_trial"],
+                    "\u68c0\u9a8c\u51c0\u5316\u3001\u9547\u9b42\u548c\u4f9b\u80fd\u5197\u4f59\uff0c\u4e0d\u80fd\u53ea\u9760\u8f93\u51fa\u786c\u6253\u3002",
+                    "\u654c\u4eba\u4f1a\u53e0\u52a0\u6bd2\u3001\u5c01\u9501\u9635\u76d8\u5e76\u5077\u53d6\u4f9b\u80fd\u3002\u51c0\u5316\u7b26\u548c\u9547\u9b42\u7b26\u662f\u5173\u952e\u53cd\u5236\u3002",
+                    false, 70f, 80f, 0.6f, 0.7f),
+                CreateV02Round(10, "\u9996\uff1a\u5165\u95e8\u7834\u9635\u5996", enemies["formation_breaker_boss"],
+                    "\u4f5c\u4e3a\u5165\u95e8 Boss \u5173\uff0c\u7efc\u5408\u68c0\u9a8c\u7834\u76fe\u3001\u6e05\u7fa4\u3001\u51c0\u5316\u3001\u9547\u9b42\u4e0e\u9635\u773c\u4fdd\u62a4\u3002",
+                    "Boss \u4f1a\u5206\u9636\u6bb5\u4f7f\u7528\u62a4\u76fe\u3001\u53ec\u5524\u3001\u5c01\u9501\u4e0e\u4f9b\u80fd\u5e72\u6270\u3002\u786e\u4fdd\u6838\u5fc3\u7b26\u7b93\u90fd\u88ab\u4f9b\u80fd\u3002",
+                    true, 90f, 110f, 0.65f, 0.75f)
             };
 
             EditorUtility.SetDirty(config);
             return config;
         }
 
-        private static V02RoundConfig CreateV02Round(int index, string title, EnemyDefinition enemy, string teachingGoal, string preBattleHint, bool isBossRound, float minDuration, float maxDuration)
+        private static V02RoundConfig CreateV02Round(int index, string title, EnemyDefinition enemy, string teachingGoal, string preBattleHint, bool isBossRound, float minDuration, float maxDuration, float minHpLoss, float maxHpLoss)
         {
             return new V02RoundConfig
             {
+                levelId = $"1-{index}",
                 roundIndex = index,
                 roundTitle = title,
                 enemy = enemy,
+                intendedRole = teachingGoal,
                 teachingGoal = teachingGoal,
                 preBattleHint = preBattleHint,
                 isBossRound = isBossRound,
                 targetDurationMin = minDuration,
-                targetDurationMax = maxDuration
+                targetDurationMax = maxDuration,
+                targetHpLossMin = minHpLoss,
+                targetHpLossMax = maxHpLoss,
+                benchmarkRule = new BenchmarkPassFailRule
+                {
+                    passDurationMax = maxDuration,
+                    weakDurationMax = maxDuration * 1.25f,
+                    passHpLossMax = maxHpLoss,
+                    weakHpLossMax = Mathf.Clamp01(maxHpLoss + 0.2f)
+                }
             };
         }
 
@@ -1054,6 +1133,7 @@ namespace TalismanBag.EditorTools
             CreateResultPanel(uiRoot, resultPanel);
             CreateV02RunResultPanel(uiRoot, runResultPanel);
             CreateV02RewardPanel(uiRoot, rewardPanel);
+            V02BossRewardPanel bossRewardPanel = V02BossRewardPanel.CreateRuntime(uiRoot);
             CreateV02DebugPopup(uiRoot, debugController, debugPopupController);
 
             foreach (TalismanGridSlotView slot in slots)
@@ -1106,7 +1186,7 @@ namespace TalismanBag.EditorTools
 
             SetField(powerResolver, "grid", grid);
             SetField(powerResolver, "slotViews", slots);
-            SetField(powerResolver, "formationEyePosition", new Vector2Int(2, 1));
+            SetField(powerResolver, "formationEyePosition", FormationPowerResolver.GetDefaultEyeCorePosition(5, 5));
             SetField(powerResolver, "weakCooldownMultiplier", 1.35f);
             SetField(powerResolver, "formationBalanceConfig", formationConfig);
             SetField(powerResolver, "runModifierState", runModifierState);
@@ -1137,6 +1217,7 @@ namespace TalismanBag.EditorTools
             SetField(v02RunFlow, "failureReasonResolver", failureReasonResolver);
             SetField(v02RunFlow, "runStatsTracker", runStatsTracker);
             SetField(v02RunFlow, "runResultPanel", runResultPanel);
+            SetField(v02RunFlow, "bossRewardPanel", bossRewardPanel);
             SetField(v02RunFlow, "battleLogUI", battleLogUI);
             SetField(v02RunFlow, "roundInfoText", roundInfoText);
             SetField(v02RunFlow, "prepHintText", prepHintText);
@@ -1215,11 +1296,13 @@ namespace TalismanBag.EditorTools
             layout.childAlignment = TextAnchor.MiddleCenter;
 
             Text hp = CreateStatusText("HPText", topBar.transform, "\u6c14\u8840 100/100", new Color(1f, 0.86f, 0.78f));
+            Image hpFill = CreateHpBarForStatusText(hp);
             Text shield = CreateStatusText("ShieldText", topBar.transform, "\u62a4\u76fe 0", new Color(0.78f, 0.94f, 1f));
             Text mana = CreateStatusText("ManaText", topBar.transform, "\u7075\u6c14 0/100", new Color(0.72f, 0.9f, 1f));
             Text state = CreateStatusText("StateText", topBar.transform, "V0.2", new Color(0.82f, 1f, 0.7f));
 
             SetField(combatUI, "hpText", hp);
+            SetField(combatUI, "hpFillImage", hpFill);
             SetField(combatUI, "shieldText", shield);
             SetField(combatUI, "manaText", mana);
             SetField(combatUI, "stateText", state);
@@ -1343,7 +1426,7 @@ namespace TalismanBag.EditorTools
                     GameObject slotObject = CreateSlot(position, grid);
                     slotObject.transform.SetParent(gridObject.transform, false);
                     TalismanGridSlotView slot = slotObject.GetComponent<TalismanGridSlotView>();
-                    slot.SetFormationEye(position == new Vector2Int(2, 1));
+                    slot.SetFormationEye(position == FormationPowerResolver.GetDefaultEyeCorePosition(5, 5));
                     slots.Add(slot);
                 }
             }
@@ -1681,7 +1764,10 @@ namespace TalismanBag.EditorTools
             Button skipRound4 = MakeDebugButton("SkipRound4Button", "Round 4", new Color(0.24f, 0.34f, 0.44f), 18);
             Button skipRound5 = MakeDebugButton("SkipRound5Button", "Round 5", new Color(0.24f, 0.34f, 0.44f), 18);
             Button skipRound6 = MakeDebugButton("SkipRound6Button", "Round 6", new Color(0.24f, 0.34f, 0.44f), 18);
-            Button skipRound7 = MakeDebugButton("SkipRound7Button", "Round 7 Boss", new Color(0.42f, 0.22f, 0.3f), 17);
+            Button skipRound7 = MakeDebugButton("SkipRound7Button", "Round 7", new Color(0.24f, 0.34f, 0.44f), 18);
+            Button skipRound8 = MakeDebugButton("SkipRound8Button", "Round 8", new Color(0.24f, 0.34f, 0.44f), 18);
+            Button skipRound9 = MakeDebugButton("SkipRound9Button", "Round 9", new Color(0.24f, 0.34f, 0.44f), 18);
+            Button skipRound10 = MakeDebugButton("SkipRound10Button", "Round 10 Boss", new Color(0.42f, 0.22f, 0.3f), 17);
             Button forceWin = MakeDebugButton("ForceWinCurrentRoundButton", "Force Win", new Color(0.32f, 0.48f, 0.26f), 18);
             Button forceLose = MakeDebugButton("ForceLoseCurrentRoundButton", "Force Lose", new Color(0.52f, 0.24f, 0.22f), 18);
             Button antiShield = MakeDebugButton("GiveAntiShieldBuildButton", "\u7ed9\u7834\u76fe", new Color(0.26f, 0.42f, 0.56f), 18);
@@ -1742,6 +1828,9 @@ namespace TalismanBag.EditorTools
             SetField(debugController, "skipRound5Button", skipRound5);
             SetField(debugController, "skipRound6Button", skipRound6);
             SetField(debugController, "skipRound7Button", skipRound7);
+            SetField(debugController, "skipRound8Button", skipRound8);
+            SetField(debugController, "skipRound9Button", skipRound9);
+            SetField(debugController, "skipRound10Button", skipRound10);
             SetField(debugController, "forceWinCurrentRoundButton", forceWin);
             SetField(debugController, "forceLoseCurrentRoundButton", forceLose);
             SetField(debugController, "giveAntiShieldBuildButton", antiShield);
@@ -2173,6 +2262,7 @@ namespace TalismanBag.EditorTools
             layout.childAlignment = TextAnchor.MiddleCenter;
 
             Text hp = CreateStatusText("HPText", topBar.transform, "气血 100/100", new Color(1f, 0.88f, 0.82f));
+            Image hpFill = CreateHpBarForStatusText(hp);
             Text shield = CreateStatusText("ShieldText", topBar.transform, "护盾 0", new Color(0.82f, 0.94f, 1f));
             Text mana = CreateStatusText("ManaText", topBar.transform, "灵气 0/100", new Color(0.74f, 0.9f, 1f));
             Text jade = CreateStatusText("JadeText", topBar.transform, "灵玉 0", new Color(1f, 0.86f, 0.48f));
@@ -2180,6 +2270,7 @@ namespace TalismanBag.EditorTools
             Text round = CreateStatusText("RoundTopText", topBar.transform, "15分钟验证", new Color(0.92f, 0.86f, 0.72f));
 
             SetField(combatUI, "hpText", hp);
+            SetField(combatUI, "hpFillImage", hpFill);
             SetField(combatUI, "shieldText", shield);
             SetField(combatUI, "manaText", mana);
             SetField(combatUI, "stateText", state);
@@ -2931,6 +3022,48 @@ namespace TalismanBag.EditorTools
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Truncate;
             return text;
+        }
+
+        private static Image CreateHpBarForStatusText(Text hpText)
+        {
+            RectTransform hpRect = hpText.rectTransform;
+            if (hpRect.parent is RectTransform parentRect)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
+            }
+
+            GameObject barObject = new("PlayerHPBar", typeof(RectTransform), typeof(LayoutElement), typeof(Image));
+            barObject.transform.SetParent(hpRect.parent, false);
+            barObject.transform.SetSiblingIndex(hpRect.GetSiblingIndex());
+
+            LayoutElement layoutElement = barObject.GetComponent<LayoutElement>();
+            layoutElement.ignoreLayout = true;
+
+            RectTransform barRect = barObject.GetComponent<RectTransform>();
+            SetRect(barRect, hpRect.anchorMin, hpRect.anchorMax, hpRect.pivot, hpRect.anchoredPosition, hpRect.sizeDelta);
+            barRect.localScale = Vector3.one;
+
+            Image background = barObject.GetComponent<Image>();
+            background.color = new Color(0.18f, 0.025f, 0.025f, 0.78f);
+            background.raycastTarget = false;
+
+            GameObject fillObject = new("Fill", typeof(RectTransform), typeof(Image));
+            fillObject.transform.SetParent(barObject.transform, false);
+            RectTransform fillRect = fillObject.GetComponent<RectTransform>();
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = new Vector2(3f, 3f);
+            fillRect.offsetMax = new Vector2(-3f, -3f);
+            fillRect.pivot = new Vector2(0f, 0.5f);
+
+            Image fill = fillObject.GetComponent<Image>();
+            fill.color = new Color(0.86f, 0.08f, 0.06f, 0.95f);
+            fill.raycastTarget = false;
+            fill.type = Image.Type.Filled;
+            fill.fillMethod = Image.FillMethod.Horizontal;
+            fill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            fill.fillAmount = 1f;
+            return fill;
         }
 
         private static GameObject CreatePanel(string name, Transform parent, Vector2 anchoredPosition, Vector2 size, Color color, TextAnchor anchor)

@@ -3,11 +3,18 @@ using TalismanBag.Combat;
 using TalismanBag.Enemies;
 using UnityEngine;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.SceneManagement;
+#endif
 
 namespace TalismanBag.UI
 {
     public sealed class TalismanCombatUI : MonoBehaviour
     {
+        private const string HpBarName = "PlayerHPBar";
+        private const string HpFillName = "Fill";
+
         [Header("Texts")]
         [SerializeField] private Text hpText;
         [SerializeField] private Text shieldText;
@@ -16,6 +23,7 @@ namespace TalismanBag.UI
         [SerializeField] private Text enemyTitleText;
         [SerializeField] private Text enemyHpText;
         [SerializeField] private Text stateText;
+        [SerializeField] private Image hpFillImage;
 
         [Header("Feedback")]
         [SerializeField] private Graphic hpFlashTarget;
@@ -28,11 +36,44 @@ namespace TalismanBag.UI
         private Coroutine hpFlashRoutine;
         private Coroutine enemyShakeRoutine;
         private Coroutine shieldRoutine;
+        private RectTransform hpBarRoot;
+        private bool generatedHpBar;
         private Vector2 enemyBaseAnchoredPosition;
         private bool hasEnemyBasePosition;
 
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
+            EditorApplication.delayCall -= EnsureHpBarInEditor;
+            EditorApplication.delayCall += EnsureHpBarInEditor;
+        }
+
+        private void EnsureHpBarInEditor()
+        {
+            if (this == null || Application.isPlaying)
+            {
+                return;
+            }
+
+            // Manual UI targets must exist before Play and keep designer-placed rects.
+            EnsureHpBar(false);
+            EditorUtility.SetDirty(this);
+            if (gameObject.scene.IsValid())
+            {
+                EditorSceneManager.MarkSceneDirty(gameObject.scene);
+            }
+        }
+#endif
+
         private void Awake()
         {
+            EnsureHpBar(Application.isPlaying);
+
             if (hpFlashTarget != null)
             {
                 hpBaseColor = hpFlashTarget.color;
@@ -55,11 +96,17 @@ namespace TalismanBag.UI
 
         public void Refresh(CombatStats player, EnemyRuntime enemy, string stateLabel)
         {
+            EnsureHpBar(Application.isPlaying);
             if (player != null)
             {
                 if (hpText != null)
                 {
                     hpText.text = $"气血 {player.hp}/{player.maxHP}";
+                }
+
+                if (hpFillImage != null)
+                {
+                    SetHpFill(player.maxHP > 0 ? player.hp / (float)player.maxHP : 0f);
                 }
 
                 if (shieldText != null)
@@ -94,6 +141,174 @@ namespace TalismanBag.UI
             {
                 stateText.text = stateLabel;
             }
+        }
+
+        private void EnsureHpBar(bool runtimeFallback)
+        {
+            if (hpText == null)
+            {
+                return;
+            }
+
+            if (hpFillImage == null)
+            {
+                hpFillImage = FindExistingHpFill();
+            }
+
+            if (hpFillImage == null)
+            {
+                RectTransform hpRect = hpText.rectTransform;
+                Transform parent = hpRect.parent;
+                if (parent == null)
+                {
+                    return;
+                }
+
+                GameObject barObject = new(HpBarName, typeof(RectTransform), typeof(LayoutElement), typeof(Image));
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    Undo.RegisterCreatedObjectUndo(barObject, "Create player HP bar");
+                }
+#endif
+                barObject.transform.SetParent(parent, false);
+                LayoutElement layoutElement = barObject.GetComponent<LayoutElement>();
+                layoutElement.ignoreLayout = true;
+
+                Image background = barObject.GetComponent<Image>();
+                background.color = new Color(0.18f, 0.025f, 0.025f, 0.78f);
+                background.raycastTarget = false;
+
+                hpBarRoot = barObject.GetComponent<RectTransform>();
+                barObject.transform.SetSiblingIndex(hpRect.GetSiblingIndex());
+                CopyHpTextRectToBar();
+
+                GameObject fillObject = new(HpFillName, typeof(RectTransform), typeof(Image));
+                fillObject.transform.SetParent(barObject.transform, false);
+                RectTransform fillRect = fillObject.GetComponent<RectTransform>();
+                fillRect.anchorMin = Vector2.zero;
+                fillRect.anchorMax = Vector2.one;
+                fillRect.offsetMin = new Vector2(3f, 3f);
+                fillRect.offsetMax = new Vector2(-3f, -3f);
+
+                hpFillImage = fillObject.GetComponent<Image>();
+                hpFillImage.color = new Color(0.86f, 0.08f, 0.06f, 0.95f);
+                hpFillImage.raycastTarget = false;
+                hpFillImage.type = Image.Type.Filled;
+                hpFillImage.fillMethod = Image.FillMethod.Horizontal;
+                hpFillImage.fillOrigin = (int)Image.OriginHorizontal.Left;
+                SetHpFill(1f);
+                generatedHpBar = runtimeFallback;
+            }
+            else if (hpBarRoot == null)
+            {
+                hpBarRoot = hpFillImage.transform.parent as RectTransform;
+            }
+
+            if (generatedHpBar)
+            {
+                SyncHpBarRect();
+            }
+        }
+
+        private Image FindExistingHpFill()
+        {
+            RectTransform hpRect = hpText.rectTransform;
+            Transform parent = hpRect.parent;
+            if (parent == null)
+            {
+                return null;
+            }
+
+            Transform bar = parent.Find(HpBarName);
+            if (bar == null)
+            {
+                return null;
+            }
+
+            Transform fill = bar.Find(HpFillName);
+            hpBarRoot = bar as RectTransform;
+            if (fill == null)
+            {
+                GameObject fillObject = new(HpFillName, typeof(RectTransform), typeof(Image));
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    Undo.RegisterCreatedObjectUndo(fillObject, "Create player HP fill");
+                }
+#endif
+                fillObject.transform.SetParent(bar, false);
+                RectTransform fillRect = fillObject.GetComponent<RectTransform>();
+                fillRect.anchorMin = Vector2.zero;
+                fillRect.anchorMax = Vector2.one;
+                fillRect.offsetMin = new Vector2(3f, 3f);
+                fillRect.offsetMax = new Vector2(-3f, -3f);
+                fill = fillObject.transform;
+            }
+
+            Image fillImage = fill.GetComponent<Image>();
+            if (fillImage == null)
+            {
+                fillImage = fill.gameObject.AddComponent<Image>();
+            }
+
+            fillImage.color = new Color(0.86f, 0.08f, 0.06f, 0.95f);
+            fillImage.raycastTarget = false;
+            fillImage.type = Image.Type.Filled;
+            fillImage.fillMethod = Image.FillMethod.Horizontal;
+            fillImage.fillOrigin = (int)Image.OriginHorizontal.Left;
+            hpFillImage = fillImage;
+            SetHpFill(1f);
+            return hpFillImage;
+        }
+
+        private void SetHpFill(float amount)
+        {
+            if (hpFillImage == null)
+            {
+                return;
+            }
+
+            float safeAmount = Mathf.Clamp01(amount);
+            hpFillImage.fillAmount = safeAmount;
+
+            RectTransform fillRect = hpFillImage.rectTransform;
+            if (fillRect == null)
+            {
+                return;
+            }
+
+            if (hpFillImage.sprite == null)
+            {
+                fillRect.anchorMin = Vector2.zero;
+                fillRect.anchorMax = Vector2.one;
+                fillRect.pivot = new Vector2(0f, 0.5f);
+                fillRect.localScale = new Vector3(safeAmount, 1f, 1f);
+                return;
+            }
+
+            fillRect.localScale = Vector3.one;
+        }
+
+        private void CopyHpTextRectToBar()
+        {
+            if (hpText == null || hpBarRoot == null)
+            {
+                return;
+            }
+
+            RectTransform source = hpText.rectTransform;
+            hpBarRoot.anchorMin = source.anchorMin;
+            hpBarRoot.anchorMax = source.anchorMax;
+            hpBarRoot.pivot = source.pivot;
+            hpBarRoot.anchoredPosition = source.anchoredPosition;
+            hpBarRoot.sizeDelta = source.sizeDelta;
+            hpBarRoot.localScale = Vector3.one;
+        }
+
+        private void SyncHpBarRect()
+        {
+            CopyHpTextRectToBar();
         }
 
         public void FlashHP()
