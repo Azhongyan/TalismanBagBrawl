@@ -1520,3 +1520,330 @@ This pass adds the V0.2 post-battle three-choice reward draft. Rewards are desig
 
 - The report now distinguishes duration failure from HP-loss threshold failure.
 - Remaining false rows are primarily caused by estimated HP loss exceeding weak thresholds or expected Pass/Good targets grading as Weak.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 02 Resource Service Foundation
+
+### Scope
+
+- Added the CoreLoop save/resource directory structure under `Assets/_Game/Scripts/TalismanBag/V02/CoreLoop`.
+- Added `SaveData`, `SaveService`, and `PlayerResourceData` as the minimal unified persistence path for CoreLoop resources.
+- Added `ResourceType`, `ResourceAmount`, and `ResourceService` for SpiritStone, TalismanPaper, Cinnabar, BasicTalismanEmbryo, and Cultivation.
+- `ResourceService` supports `GetAmount`, `Add`, `TrySpend`, and `OnResourceChanged`, and persists successful resource changes through `SaveService.Save()`.
+- Kept `SpiritJadeWallet` unchanged; it remains a run/shop currency helper and was not repurposed as CoreLoop resource storage.
+
+### Verification
+
+- Unity batchmode compile completed with no `error CS` in `Logs/codex_coreloop_resource_compile.log`.
+- Static scan confirms the new PlayerPrefs usage is isolated to `SaveService`.
+- Did not modify RunFlow, Boss reward flow, UI, battle, backpack drag/drop, formation power, shop, or reward selection systems.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 03 Item Inventory Foundation
+
+### Scope
+
+- Added `ItemStackData`, `PlayerItemInventoryData`, and `ItemInventoryService` under `Assets/_Game/Scripts/TalismanBag/V02/CoreLoop/Inventory`.
+- Extended `SaveData` with `itemInventoryData` so CoreLoop item counts share the same save path as resources.
+- `ItemInventoryService` supports `AddItem(itemId, amount)`, `HasItem(itemId)`, `GetAmount(itemId)`, and `OnItemChanged`.
+- Kept the inventory model intentionally minimal: item id plus count only, with duplicate stack normalization.
+- Did not add equipment quality, random affixes, category panels, multi-cell item behavior, rotation, item detail UI, rewards, Boss flow, or shop behavior.
+
+### Verification
+
+- The first Unity import pass compiled `SaveData` before the newly added Inventory scripts were imported and logged temporary namespace errors.
+- A second Unity batchmode compile completed with no `error CS` in `Logs/codex_coreloop_inventory_compile_retry.log`.
+- Static scan confirms the only CoreLoop PlayerPrefs usage remains centralized in `SaveService`.
+- Did not modify RunFlow, Boss reward flow, UI, battle, backpack drag/drop, formation power, shop, or reward selection systems.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 04 Reward Service Foundation
+
+### Scope
+
+- Added CoreLoop reward data types under `Assets/_Game/Scripts/TalismanBag/V02/CoreLoop/Rewards`.
+- Added `RewardConfig` for fixed reward groups and `RewardDropTable` for lightweight configured drops.
+- Added `RewardEntry`, `RewardType`, `RewardResult`, and `RewardService`.
+- `RewardService` can grant fixed rewards, chapter rewards, Boss clear rewards, and rolled drop-table rewards.
+- Reward grants route through `ResourceService.Add` or `ItemInventoryService.AddItem`; the service does not write resource or item save data directly.
+- Kept the existing V02 reward selection system untouched because it is a run/build modifier flow, not the deterministic mainline chapter reward path.
+- Did not add mainline three-choice rewards, Boss reward hookup, chapter clear UI, normal-stage drop hookup, random quality, complex loot pools, shop logic, or reward popup behavior.
+
+### Verification
+
+- Unity batchmode compile completed with no `error CS` in `Logs/codex_coreloop_reward_compile.log`.
+- Static scan confirms RewardService only depends on ResourceService and ItemInventoryService in the CoreLoop layer.
+- Did not modify RunFlow, Boss reward flow, UI, battle, backpack drag/drop, formation power, shop, or existing V02 reward selection systems.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 05 Chapter 1-10 Boss Settlement Hookup
+
+### Scope
+
+- Added `MainTrialProgressData` to persist the 1-10 Boss clear and reward-claimed state through the existing CoreLoop `SaveData`.
+- Hooked the final Boss round in `V02RunFlowController` to open the existing `V02BossRewardPanel` as a 1-10 chapter settlement panel.
+- Routed the fixed chapter reward through `RewardService.GrantChapterRewards`.
+- The fixed reward set is `sword_pill_basic x1`, SpiritStone x120, TalismanPaper x60, Cinnabar x10, BasicTalismanEmbryo x1, and Cultivation x20.
+- Resource rewards enter `ResourceService`; the sword pill enters `ItemInventoryService`.
+- Updated the Boss reward panel copy and fallback reward list from old placeholder text to 1-10 chapter settlement text.
+- Did not add normal-stage chapter rewards, mainline three-choice rewards, IdleCave, shop, PvP, crafting systems, random quality, DOT, multi-cell inventory behavior, or combat rewrites.
+
+### Verification
+
+- The first Unity import pass logged a temporary `CS0246` for `MainTrialProgressData` because `SaveData` compiled before the newly added script import completed.
+- A second Unity batchmode compile completed with no `error CS` in `Logs/codex_coreloop_chapter_clear_compile_retry.log`.
+- Existing combat, drag/drop, formation power, and V02 reward-selection systems were not rewritten.
+
+### Notes
+
+- `chapterOneBossRewardConfig` is exposed as a serialized override, but no scene asset binding was authored in this task; the runtime default config supplies the required fixed 1-10 reward set.
+- Manual Unity Play Mode verification is still recommended for the full click-through from 1-10 Boss victory to reward claim persistence.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 06 Talisman Upgrade Service Foundation
+
+### Scope
+
+- Added the CoreLoop upgrade directory and minimal permanent talisman progress model.
+- Extended `SaveData` with `talismanProgressData` so talisman levels share the same CoreLoop save path as resources, items, and main trial progress.
+- Extended `MainTrialProgressData` with `chapterOneCultivationCompleted` and `firstCultivatedTalismanId`.
+- Added `ResourceCost`, `StatModifier`, `TalismanLevelConfig`, `TalismanUpgradeConfig`, `TalismanUpgradeResult`, and `UpgradeService`.
+- Added `CoreLoopTalismanUpgradeConfig.asset` under `Assets/_Game/Resources/CoreLoop` so runtime-created services can load the default upgrade config without scene wiring.
+- Added a minimal `TalismanUpgradePanel` and hooked it after the 1-10 Boss chapter reward claim.
+- `UpgradeService.TryUpgrade` checks configured costs, spends through `ResourceService.TrySpend`, writes the new talisman level to `PlayerTalismanProgressData`, and saves through `SaveService`.
+- The default Lv.1 to Lv.2 cost is SpiritStone x100, TalismanPaper x50, Cinnabar x8, and BasicTalismanEmbryo x1; Cultivation is not consumed.
+- The allowed upgrade config covers fire, thunder, shield, purify, and soul suppress talismans only.
+- Did not add a full crafting bench, recipe system, random quality, affixes, multi-socket upgrades, backpack upgrades, or combat stat hookup.
+
+### Verification
+
+- The first Unity import pass logged temporary namespace errors because `SaveData` and `V02RunFlowController` compiled before the newly added Upgrade scripts were imported.
+- A second Unity batchmode compile completed with no `error CS` in `Logs/codex_coreloop_upgrade_compile_retry.log`.
+- Static review confirms the panel calls `UpgradeService` and does not spend resources directly.
+
+### Notes
+
+- Task 06 stores the permanent talisman level, but battle stat application is intentionally deferred to Task 07 `BattleLoadoutSnapshot`.
+- Manual Unity Play Mode verification is still recommended for the full 1-10 reward claim -> fire talisman Lv.2 upgrade -> remaining resource display path.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 07 Battle Loadout Snapshot Hookup
+
+### Scope
+
+- Added the CoreLoop battle snapshot directory under `Assets/_Game/Scripts/TalismanBag/V02/CoreLoop/Battle`.
+- Added `ComputedTalismanStats`, `BattleLoadoutItemSnapshot`, `BattleLoadoutSnapshot`, and `BattleLoadoutSnapshotBuilder`.
+- `BattleLoadoutSnapshotBuilder` reads current grid placement, formation power state, saved talisman levels, and `TalismanUpgradeConfig`.
+- Snapshot items contain `itemId`, `level`, `gridPosition`, `isPowered`, `computedDamage`, `computedCooldown`, `computedShieldValue`, `computedBreakShieldRate`, and `computedControlDuration`.
+- `AutoCombatController` now builds and applies a snapshot at battle start after formation power refresh and before item cooldown reset.
+- The battle runtime item level is synchronized from the snapshot for the current battle, so existing level-based UI labels and battle logic can read the battle-local level.
+- Fire talisman damage, thunder talisman damage, shield talisman shield value, purify cooldown, and thunder shield-break efficiency now read computed snapshot values.
+- `AutoCombatController` does not read `SaveData`, `SaveService`, or `PlayerTalismanProgressData` directly; only the snapshot builder reads permanent progression.
+- Added a shared `TalismanUpgradeConfig.DefaultResourcePath` so upgrade service and snapshot builder load the same runtime config asset.
+- Did not rewrite combat, drag/drop, formation power, enemy AI, status systems, or reward selection.
+
+### Verification
+
+- The first Unity import pass logged temporary namespace errors because `AutoCombatController` compiled before the newly added Battle snapshot scripts were imported.
+- A second Unity batchmode compile completed with no `error CS` in `Logs/codex_coreloop_battle_snapshot_compile_retry.log`.
+- Static scan confirms direct permanent progression reads are isolated to `BattleLoadoutSnapshotBuilder`, not `AutoCombatController`.
+
+### Notes
+
+- Manual Unity Play Mode verification is still recommended for the full Lv.1 vs Lv.2 combat comparison after cultivation.
+- Soul suppress `computedControlDuration` is included in the snapshot for the required boundary, but the current combat implementation has no dedicated control-duration consumer yet.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 08 Main Trial 2-10 Auto Advance
+
+### Scope
+
+- Added `MainTrialFlowService` under `Assets/_Game/Scripts/TalismanBag/V02/CoreLoop/MainTrial`.
+- Extended `MainTrialProgressData` with `currentMainTrialLevelId`, `chapterTwoUnlocked`, `chapterTwoCurrentRoundNumber`, `chapterTwoBossUnlocked`, and `chapterTwoBossDefeated`.
+- `MainTrialFlowService` builds a runtime 2-1 through 2-10 run config by cloning the existing 1-10 enemy sequence and replacing level ids with `2-x`.
+- `V02RunFlowController` now switches into the 2-10 run after the first chapter cultivation callback.
+- If the save already has chapter one cultivation completed, `StartNewRun` resumes into the chapter two run instead of restarting 1-1.
+- Main trial normal-round wins now bypass `V02RewardController.OpenRewardSelection`, so 1-1 through 1-9 and 2-1 through 2-9 no longer use mainline three-choice rewards.
+- 2-1 through 2-9 call `StartCombat` automatically when entering prep, enabling the first auto-advance version of the true idle mainline.
+- 2-1 through 2-8 victory automatically continues to the next round.
+- 2-9 victory marks `chapterTwoBossUnlocked`, switches to 2-10 Boss prep, and stops without auto-starting the Boss fight.
+- Did not add BossInfoPanel, post-battle prepare request, 2-10 Boss rewards, normal-stage drops, offline simulation, IdleCave income, or any three-choice mainline flow.
+
+### Verification
+
+- The first Unity import pass logged temporary namespace errors because `V02RunFlowController` compiled before the newly added MainTrial scripts were imported.
+- A second Unity batchmode compile completed with no `error CS` in `Logs/codex_coreloop_maintrial_autorun_compile_retry.log`.
+- Static scan confirms `OpenRewardSelection` remains present for non-mainline flows, while main trial wins are intercepted by `TryHandleMainTrialRoundWin`.
+
+### Notes
+
+- Chapter two currently reuses the 1-10 enemy sequence as a runtime clone to avoid editing existing run-config assets in this task.
+- Manual Unity Play Mode verification is still recommended for 2-1 auto-start, 2-1 to 2-9 auto-advance, and the 2-10 Boss pre-fight stop.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 09 Battle Interaction Lock
+
+### Scope
+
+- Added `BattleInteractionLock` under `Assets/_Game/Scripts/TalismanBag/V02/CoreLoop/Battle`.
+- `AutoCombatController` now keeps the interaction lock synchronized with combat state through a single state setter.
+- Drag/drop and debug formation edits now ask the combat controller for layout edit permission before changing slots.
+- During active combat, blocked edits log the required hint: `阵势已启，战后可整备`.
+- Preparation, victory, defeat, run-complete, and Boss-prep states remain editable because the lock only closes during active fighting.
+- Did not rewrite the backpack drag/drop system, formation power logic, slot placement save behavior, battle loop, or run flow.
+
+### Verification
+
+- Unity batchmode compile could not run while the project was already open in another Unity instance.
+- The open Unity Editor re-imported `AutoCombatController`, `DraggableTalismanItemView`, and `V02FormationDebugController`, then completed script compilation with `*** Tundra build success`.
+- Latest Editor.log tail after that success showed no new `error CS`.
+- Static scan confirms V02 debug formation buttons and draggable item placement now pass through `TryRequireLayoutEdit`.
+
+### Notes
+
+- Manual Unity Play Mode verification is still recommended for dragging during active 2-1 combat, post-defeat retry preparation, and the 2-10 Boss preparation state.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 10 Post-Battle Prepare And Defeat Retry
+
+### Scope
+
+- Added `PostBattlePrepareRequest` as a minimal runtime-only request object for "战后驻阵".
+- `V02RunFlowController` now lets chapter-two normal combat request post-battle prepare without interrupting the active fight.
+- Default 2-1 through 2-8 wins still continue auto巡行; if a post-battle prepare request was made, the next round enters prep and suppresses exactly one auto-start.
+- 2-9 still stops at the 2-10 Boss gate and does not auto-start Boss combat.
+- Defeat now keeps the current round, shows the existing V02 result panel, and routes the primary button to `RetryCurrentRound` instead of restarting the whole run.
+- `RetryCurrentRound` returns to current-round prep, suppresses auto-start, and keeps backpack editing available before the player manually retries.
+- `V02RunResultPanel` changes the primary button label to "调整后重试" on loss and "重新开始" on full win.
+- Added a "战后驻阵" primary action button through `TalismanBagSceneBuilder`, with a runtime fallback in `V02FormationDebugController` for already-generated scenes.
+- Did not change battle settlement numbers, enemy data, reward selection, normal win result values, backpack placement persistence, or combat logic.
+
+### Verification
+
+- The open Unity Editor imported `PostBattlePrepareRequest.cs` and recompiled scripts.
+- Latest Editor.log tail ended with `*** Tundra build success`, no new `error CS`.
+- Unity batchmode compile was not used because the project is open in the Unity Editor, but the active Editor compile completed successfully.
+- Static scan confirms the new request is routed through `V02RunFlowController`, the result panel primary action, and the V02 primary action button.
+
+### Notes
+
+- Manual Unity Play Mode verification is still recommended for requesting 战后驻阵 during 2-1 combat, confirming 2-2 stops in prep, and confirming defeat on a 2-x normal round returns to current-round prep for manual retry.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 11 2-10 Boss Info Panel
+
+### Scope
+
+- Added the minimal BossInfo module under `Assets/_Game/Scripts/TalismanBag/V02/CoreLoop/Boss`.
+- Added `BossInfoConfig`, `BossInfoViewModel`, and `BossInfoPanel`.
+- `V02RunFlowController` now opens the Boss info panel whenever the active round is the 2-10 chapter-two Boss round.
+- 2-9 still marks the 2-10 Boss as unlocked, enters 2-10 prep, and does not auto-start combat.
+- The Boss info panel displays Boss name, mechanism tags, main threats, recommended tools/talismans, and the required pre-battle prompt.
+- The panel has "调整背包" and "开始攻打" actions; adjusting only hides the panel, while starting routes through the existing `StartCombat()` path.
+- If a save resumes directly at 2-10 Boss prep, `EnterPrep` also opens the panel.
+- `TalismanBagSceneBuilder` now creates and binds `BossInfoPanel`; `V02RunFlowController` can also create it at runtime if a generated scene lacks the binding.
+- Did not add a three-choice Boss pre-fight flow, formal climbing intel system, resource changes, reward changes, or battle stat changes.
+
+### Verification
+
+- The first Unity import pass caught a real namespace-shadowing compile error in `BossInfoPanel` (`Resources.GetBuiltinResource` resolving to CoreLoop resources).
+- Fixed the call to `UnityEngine.Resources.GetBuiltinResource`.
+- The open Unity Editor recompiled the BossInfo scripts and ended with `*** Tundra build success`, no new `error CS`.
+- Static scan confirms the panel is only connected to display/adjust/start callbacks and does not touch resources or rewards.
+
+### Notes
+
+- Manual Unity Play Mode verification is still recommended for 2-9 -> BossInfoPanel, the adjust-backpack button, and the panel start button entering 2-10 Boss combat.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 12 2-10 Boss Manual Start And Clear Reward
+
+### Scope
+
+- Changed the 2-10 chapter-two Boss victory branch in `V02RunFlowController` from direct run completion to Boss clear settlement.
+- Reused the existing `V02BossRewardPanel` and added a custom-title/custom-description overload for 2-10 settlement copy.
+- Added a default 2-10 Boss fixed reward config in `V02RunFlowController`.
+- 2-10 Boss first-clear reward grants `bronze_seal_basic x1`, BasicTalismanEmbryo x1, SpiritStone x80, TalismanPaper x40, Cinnabar x6, and Cultivation x10.
+- `bronze_seal_basic` is only a minimal ItemInventory id for 青铜法印; no multi-cell, artifact, cultivation, or combat effect was added.
+- Reward grants route through `RewardService.GrantBossClearRewards`, then into `ResourceService` and `ItemInventoryService`.
+- Added `MainTrialFlowService.IsChapterTwoBossDefeated` and `MarkChapterTwoBossDefeated`.
+- Confirming the 2-10 Boss settlement marks `chapterTwoBossDefeated`, `chapterTwoBossUnlocked`, `highestClearedLevelId = 2-10`, and then finishes the run.
+- Did not add auto-Boss, Boss after three-choice, bronze-seal mechanics, artifact systems, crafting, or extra battle values.
+
+### Verification
+
+- Static scan confirms 2-10 Boss victory routes to `OpenChapterTwoBossRewardPanel`.
+- Static scan confirms 2-10 rewards route through CoreLoop `RewardService`.
+- The open Unity Editor recompiled `V02RunFlowController`, `V02BossRewardPanel`, and `MainTrialFlowService` with `*** Tundra build success`, no new `error CS`.
+
+### Notes
+
+- Manual Unity Play Mode verification is still recommended for BossInfoPanel start -> 2-10 Boss win -> settlement claim -> `chapterTwoBossDefeated` persistence.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 13 Chapter Two Normal Round Drops
+
+### Scope
+
+- Reused the existing CoreLoop `RewardDropTable` / `RewardDropEntry` / `RewardService` instead of adding a second drop system.
+- Added a serialized `chapterTwoNormalDropTable` override to `V02RunFlowController`.
+- Added a runtime default drop table for 2-1 through 2-9 normal round wins.
+- Default normal drops:
+  - SpiritStone: guaranteed 8-12
+  - TalismanPaper: 50% for 1-2
+  - Cinnabar: 30% for 1
+  - `basic_talisman_embryo_shard`: 15% for 1
+  - `basic_talisman_page`: 20% for 1
+  - `basic_tool_complete`: 5% for 1
+- Drops are granted in `TryHandleMainTrialRoundWin` only for chapter-two normal rounds, before auto-advance or the 2-10 Boss gate.
+- Drop results are written as light battle-log feedback and do not open a blocking settlement panel.
+- Did not add random quality, complex material pools, per-second income, offline income, three-choice rewards, or per-round large settlement popups.
+
+### Verification
+
+- Static scan confirms chapter-two normal drops call `RewardService.GrantDropTable`.
+- Static scan confirms 1-x mainline rounds and 2-10 Boss do not use the normal drop path.
+- Unity Editor did not automatically refresh after the Task13 source timestamp.
+- Ran Unity's generated Roslyn compile command against `Assembly-CSharp.rsp` / `Assembly-CSharp.rsp2`; it completed with exit code 0 and no `error CS`.
+
+### Notes
+
+- Manual Unity Play Mode verification is still recommended for 2-1 through 2-9 drop logs and confirming auto-advance is not interrupted.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 14 Unified Save Data Audit
+
+### Scope
+
+- Audited CoreLoop save ownership after resource, inventory, talisman growth, main-trial progress, Boss unlock, and Boss clear state were added.
+- Confirmed `SaveData` contains `resourceData`, `itemInventoryData`, `talismanProgressData`, and `mainTrialProgressData`.
+- Confirmed `MainTrialProgressData` contains chapter-one clear/reward/growth flags, current mainline level, chapter-two unlock/current round, 2-10 Boss unlock, and 2-10 Boss defeated state.
+- Confirmed CoreLoop services use `SaveService.GetOrCreate()` / `EnsureLoaded()` instead of adding independent persistence paths.
+- Confirmed the only CoreLoop direct `PlayerPrefs` usage is inside `SaveService`, under key `TalismanBag.V02.CoreLoop.SaveData`.
+- No save-file migration, cloud save, separate item DB, or independent Boss-progress persistence was added.
+
+### Verification
+
+- Static scan of `Assets/_Game/Scripts/TalismanBag/V02/CoreLoop` and `Assets/_Game/Scripts/TalismanBag/V02/Run` confirms resource, item, upgrade, battle snapshot, and main-trial flow code route through the shared `SaveService`.
+- No source changes were required for Task14, so no additional compile was triggered for this audit step.
+
+### Notes
+
+- Manual Unity Play Mode verification is still recommended for restart persistence: 1-10 reward claimed, first cultivation completed, 2-x current round, 2-10 Boss unlocked, and 2-10 Boss defeated.
+
+## 2026-06-17 - V0.2 CoreLoop01 Task 15 Full Flow Regression Scope Check
+
+### Scope
+
+- Performed a static regression pass over the CoreLoop01 path:
+  - 1-10 Boss chapter settlement.
+  - Immediate talisman cultivation.
+  - Chapter-two auto-run entry.
+  - 2-1 through 2-9 normal auto-advance and normal drops.
+  - 2-9 stop before 2-10 Boss.
+  - BossInfoPanel manual Boss start.
+  - 2-10 Boss settlement and defeated-state persistence.
+  - unified CoreLoop save path.
+- Confirmed `OpenRewardSelection()` remains available only as the older non-mainline fallback/debug path; chapter-two mainline normal wins are handled by `TryHandleMainTrialRoundWin()` before that fallback.
+- Confirmed the current CoreLoop implementation does not add IdleCave as the main path, Boss-after three-choice, shop flow, PVP, exploration, tower, crafting station, formal multi-cell item behavior, random quality, random affixes, monster mana-bar mechanics, or a new DOT instance system.
+- Did not add a new smoke-test script or extra debug button in Task15; the existing logs and debug controls are enough for the current code-level regression pass.
+
+### Verification
+
+- Static scan confirms CoreLoop save writes are centralized in `SaveService`; battle and run flow do not directly write `PlayerPrefs`.
+- Static scan confirms chapter-two normal drops route through `RewardService.GrantDropTable`.
+- Static scan confirms 2-10 Boss victory routes through `OpenChapterTwoBossRewardPanel`, then `RewardService`, then `MainTrialFlowService.MarkChapterTwoBossDefeated`.
+- Static scan confirms drag/place/auto-place/debug inventory edits route through `TryRequireLayoutEdit()` while combat is fighting.
+- Static scan confirms battle-start strength reads pass through `BattleLoadoutSnapshotBuilder`.
+- Ran Unity's generated Roslyn compile command against `Assembly-CSharp.rsp` / `Assembly-CSharp.rsp2`; it completed with exit code 0 and no `error CS`.
+
+### Notes
+
+- Full Unity Play Mode regression was not run in this environment. QA should manually verify the complete reset-save-to-2-10-clear path, including restart persistence.

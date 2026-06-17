@@ -16512,6 +16512,8 @@ MonoBehaviour:
   v02BossPhaseController: {fileID: 575476383}
   v02CounterMultiplierConfig: {fileID: 11400000, guid: a2fb14a06a7aa5a4db5ad96b8b20d641, type: 2}
   battleBalanceLogger: {fileID: 575476381}
+  battleLoadoutSnapshotBuilder: {fileID: 0}
+  battleInteractionLock: {fileID: 0}
   v02RunModifierState: {fileID: 575476380}
   v02EnemyIntentUI: {fileID: 575476379}
   v02EnemyPreviewPanel: {fileID: 575476378}
@@ -16869,6 +16871,19 @@ MonoBehaviour:
   runStatsTracker: {fileID: 575476384}
   runResultPanel: {fileID: 575476391}
   bossRewardPanel: {fileID: 0}
+  fixedRewardPanel: {fileID: 0}
+  homeGreyboxPanel: {fileID: 0}
+  bossInfoPanel: {fileID: 0}
+  coreLoopRewardService: {fileID: 0}
+  coreLoopSaveService: {fileID: 0}
+  chapterOneBossRewardConfig: {fileID: 0}
+  chapterTwoBossInfoConfig: {fileID: 0}
+  chapterTwoBossRewardConfig: {fileID: 0}
+  chapterTwoNormalDropTable: {fileID: 0}
+  mainTrialFlowService: {fileID: 0}
+  coreLoopUpgradeService: {fileID: 0}
+  talismanUpgradePanel: {fileID: 0}
+  chapterOneUpgradeItemId: fire_talisman_basic
   battleLogUI: {fileID: 575476396}
   roundInfoText: {fileID: 1561809396}
   prepHintText: {fileID: 2147479013}
@@ -17272,6 +17287,7 @@ MonoBehaviour:
   refreshPowerButton: {fileID: 1789250899}
   startBattleButton: {fileID: 1196354494}
   resetFormationButton: {fileID: 1094102497}
+  postBattlePrepareButton: {fileID: 0}
   printSelectedTagsButton: {fileID: 546168551}
   giveAllTalismansButton: {fileID: 1859451703}
   testTagQueryButton: {fileID: 437926963}

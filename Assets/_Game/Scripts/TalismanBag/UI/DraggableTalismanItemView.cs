@@ -125,12 +125,13 @@ namespace TalismanBag.UI
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            dragBlocked = combatController != null && !combatController.CanEditLayout;
-            if (dragBlocked)
+            if (combatController != null && !combatController.TryRequireLayoutEdit())
             {
+                dragBlocked = true;
                 return;
             }
 
+            dragBlocked = false;
             if (rectTransform == null)
             {
                 rectTransform = GetComponent<RectTransform>();
@@ -267,7 +268,7 @@ namespace TalismanBag.UI
 
         public bool TryPlaceOnSlot(TalismanGridSlotView slot)
         {
-            if (combatController != null && !combatController.CanEditLayout)
+            if (combatController != null && !combatController.TryRequireLayoutEdit())
             {
                 return false;
             }
@@ -373,7 +374,7 @@ namespace TalismanBag.UI
 
         public bool ForcePlaceOnSlot(TalismanGridSlotView slot)
         {
-            if (combatController != null && !combatController.CanEditLayout)
+            if (combatController != null && !combatController.TryRequireLayoutEdit())
             {
                 return false;
             }

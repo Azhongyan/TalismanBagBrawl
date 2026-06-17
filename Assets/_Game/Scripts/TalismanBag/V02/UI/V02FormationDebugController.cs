@@ -51,6 +51,7 @@ namespace TalismanBag.V02.UI
         [SerializeField] private Button refreshPowerButton;
         [SerializeField] private Button startBattleButton;
         [SerializeField] private Button resetFormationButton;
+        [SerializeField] private Button postBattlePrepareButton;
         [SerializeField] private Button printSelectedTagsButton;
         [SerializeField] private Button giveAllTalismansButton;
         [SerializeField] private Button testTagQueryButton;
@@ -114,11 +115,13 @@ namespace TalismanBag.V02.UI
 
         private void Awake()
         {
+            EnsurePostBattlePrepareButton();
             autoPlacePoweredButton?.onClick.AddListener(AutoPlacePoweredBuild);
             autoPlaceUnpoweredButton?.onClick.AddListener(AutoPlaceUnpoweredBuild);
             refreshPowerButton?.onClick.AddListener(RefreshPowerStates);
             startBattleButton?.onClick.AddListener(StartTestBattle);
             resetFormationButton?.onClick.AddListener(ResetFormation);
+            postBattlePrepareButton?.onClick.AddListener(RequestPostBattlePrepare);
             printSelectedTagsButton?.onClick.AddListener(PrintSelectedItemTags);
             giveAllTalismansButton?.onClick.AddListener(GiveAllV02Talismans);
             testTagQueryButton?.onClick.AddListener(TestTagQuery);
@@ -172,7 +175,7 @@ namespace TalismanBag.V02.UI
             giveBossReadyBuildButton?.onClick.AddListener(GiveBossReadyBuild);
             printFailureTrackerButton?.onClick.AddListener(PrintFailureTracker);
             printRunStatsButton?.onClick.AddListener(PrintRunStats);
-            resetV02RunButton?.onClick.AddListener(StartNewV02Run);
+            resetV02RunButton?.onClick.AddListener(ResetV02RunFromBeginning);
             runBalanceShieldButton?.onClick.AddListener(() => buildTestRunner?.RunShieldEnemyTest());
             runBalanceGroupButton?.onClick.AddListener(() => buildTestRunner?.RunGroupEnemyTest());
             runBalancePoisonButton?.onClick.AddListener(() => buildTestRunner?.RunPoisonEnemyTest());
@@ -245,6 +248,17 @@ namespace TalismanBag.V02.UI
             }
         }
 
+        public void RequestPostBattlePrepare()
+        {
+            if (v02RunFlowController != null)
+            {
+                v02RunFlowController.RequestPostBattlePrepare();
+                return;
+            }
+
+            battleLogUI?.AddLog("当前没有 V0.2 主线流程，无法请求战后驻阵");
+        }
+
         public void ResetFormation()
         {
             if (!CanEdit())
@@ -278,6 +292,11 @@ namespace TalismanBag.V02.UI
 
         public void GiveAllV02Talismans()
         {
+            if (!CanEdit())
+            {
+                return;
+            }
+
             foreach (DraggableTalismanItemView view in itemViews)
             {
                 if (view == null)
@@ -446,6 +465,21 @@ namespace TalismanBag.V02.UI
             RefreshPowerStates();
         }
 
+        public void ResetV02RunFromBeginning()
+        {
+            if (v02RunFlowController != null)
+            {
+                v02RunFlowController.ResetMainTrialFromBeginning();
+            }
+            else
+            {
+                combatController?.ResetBattle();
+                battleLogUI?.AddLog("未绑定 V0.2 主线流程，仅重置当前战斗。");
+            }
+
+            RefreshPowerStates();
+        }
+
         public void SkipToRound(int roundNumber)
         {
             v02RunFlowController?.SkipToRound(roundNumber);
@@ -560,7 +594,50 @@ namespace TalismanBag.V02.UI
 
         private bool CanEdit()
         {
-            return combatController == null || combatController.CanEditLayout;
+            return combatController == null || combatController.TryRequireLayoutEdit();
+        }
+
+        private void EnsurePostBattlePrepareButton()
+        {
+            Transform buttonParent = postBattlePrepareButton != null
+                ? postBattlePrepareButton.transform.parent
+                : resetFormationButton != null ? resetFormationButton.transform.parent : null;
+            if (postBattlePrepareButton == null && resetFormationButton != null && buttonParent != null)
+            {
+                postBattlePrepareButton = Instantiate(resetFormationButton, buttonParent);
+                postBattlePrepareButton.name = "PostBattlePrepareButton";
+                postBattlePrepareButton.onClick.RemoveAllListeners();
+                Image image = postBattlePrepareButton.GetComponent<Image>();
+                if (image != null)
+                {
+                    image.color = new Color(0.42f, 0.34f, 0.22f);
+                }
+            }
+
+            SetButtonLabel(postBattlePrepareButton, "战后驻阵");
+            ConfigurePrimaryActionLayout(buttonParent);
+        }
+
+        private static void ConfigurePrimaryActionLayout(Transform buttonParent)
+        {
+            if (buttonParent == null || !buttonParent.TryGetComponent(out GridLayoutGroup layout))
+            {
+                return;
+            }
+
+            layout.cellSize = new Vector2(230f, 88f);
+            layout.spacing = new Vector2(18f, 0f);
+            layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            layout.constraintCount = 4;
+        }
+
+        private static void SetButtonLabel(Button button, string label)
+        {
+            Text text = button != null ? button.GetComponentInChildren<Text>(true) : null;
+            if (text != null)
+            {
+                text.text = label;
+            }
         }
 
         private void PrepareCounterTest(string enemyId)

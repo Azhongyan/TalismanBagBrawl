@@ -44,9 +44,7 @@ namespace TalismanBag.V02.Rewards
         private static readonly string[] StarterItemIds =
         {
             FireTalismanId,
-            ShieldTalismanId,
-            SpiritStoneId,
-            QiPillId
+            SpiritStoneId
         };
 
         [SerializeField] public V02RewardPoolConfig rewardPool;
@@ -175,6 +173,67 @@ namespace TalismanBag.V02.Rewards
             }
 
             battleLogUI?.AddLog("Boss 奖励：重复火符、符纸、灵石、基础配方残页、少量修为");
+        }
+
+        public bool AddGrantedTalismanToRuntimeInventory(string itemId, int amount = 1)
+        {
+            TalismanItemDefinition definition = ResolveGrantedTalismanDefinition(itemId);
+            if (definition == null)
+            {
+                battleLogUI?.AddLog($"固定奖励入可拖拽背包失败：未找到道具定义 {itemId}");
+                return false;
+            }
+
+            int safeAmount = Mathf.Max(1, amount);
+            bool addedAny = false;
+            for (int i = 0; i < safeAmount; i++)
+            {
+                if (inventoryAdapter != null)
+                {
+                    DraggableTalismanItemView view = inventoryAdapter.AddTalisman(definition);
+                    if (view == null)
+                    {
+                        battleLogUI?.AddLog($"Reward inventory sync failed: no draggable item view for {itemId}");
+                        return addedAny;
+                    }
+
+                    addedAny = true;
+                }
+                else if (inventory != null)
+                {
+                    inventory.AddItem(definition);
+                    addedAny = true;
+                }
+                else
+                {
+                    battleLogUI?.AddLog($"Reward inventory sync failed: no inventory target for {itemId}");
+                    return addedAny;
+                }
+            }
+
+            return addedAny;
+        }
+
+        public bool EnsureGrantedTalismanInRuntimeInventory(string itemId, int amount = 1)
+        {
+            int targetAmount = Mathf.Max(1, amount);
+            int currentAmount = GetRuntimeTalismanCount(itemId);
+            if (currentAmount >= targetAmount)
+            {
+                return true;
+            }
+
+            return AddGrantedTalismanToRuntimeInventory(itemId, targetAmount - currentAmount);
+        }
+
+        public int GetRuntimeTalismanCount(string itemId)
+        {
+            if (inventory == null || string.IsNullOrWhiteSpace(itemId))
+            {
+                return 0;
+            }
+
+            return inventory.GetItemsByItemId(itemId.Trim()).Count;
         }
 
         public int GetAdjustedWeight(V02RewardDefinition reward, EnemyDefinition nextEnemy)
@@ -372,6 +431,38 @@ namespace TalismanBag.V02.Rewards
             }
 
             return null;
+        }
+
+        private TalismanItemDefinition ResolveGrantedTalismanDefinition(string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                return null;
+            }
+
+            string safeItemId = itemId.Trim();
+            if (rewardPool?.rewards != null)
+            {
+                foreach (V02RewardDefinition reward in rewardPool.rewards)
+                {
+                    TalismanItemDefinition definition = reward?.talismanToAdd;
+                    if (definition != null && definition.itemId == safeItemId)
+                    {
+                        return definition;
+                    }
+                }
+            }
+
+            foreach (V02RewardDefinition reward in runtimeRewards.Values)
+            {
+                TalismanItemDefinition definition = reward?.talismanToAdd;
+                if (definition != null && definition.itemId == safeItemId)
+                {
+                    return definition;
+                }
+            }
+
+            return inventoryAdapter != null ? inventoryAdapter.FindDefinitionById(safeItemId) : null;
         }
 
         private void EnsureRuntimeRewards()

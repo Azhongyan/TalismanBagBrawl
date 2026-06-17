@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: imp_swarm
   displayName: "\u53EC"
+  enabled: 1
   enemyType: 1
-  maxHp: 300
-  attackDamage: 9
+  maxHp: 210
+  attackDamage: 8
   attackInterval: 2
   weaknessText: "\u7FA4\u4F53, \u53EC\u5524"
   dangerText: "\u7FA4\u4F53\u538B\u5236"

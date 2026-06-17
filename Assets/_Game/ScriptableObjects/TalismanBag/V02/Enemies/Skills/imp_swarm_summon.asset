@@ -20,6 +20,6 @@ MonoBehaviour:
   initialDelay: 4
   cooldown: 7
   castTime: 1
-  value: 12
+  value: 10
   duration: 0
   skillTags: 0800000007000000

@@ -1,0 +1,115 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4d3d9ee99d54b879f5e7a0c444ef201, type: 3}
+  m_Name: CoreLoopTalismanUpgradeConfig
+  m_EditorClassIdentifier: 
+  levels:
+  - itemId: fire_talisman_basic
+    displayName: "\u706B\u7B26"
+    fromLevel: 1
+    toLevel: 2
+    costs:
+    - resourceType: 0
+      amount: 100
+    - resourceType: 1
+      amount: 50
+    - resourceType: 2
+      amount: 8
+    - resourceType: 3
+      amount: 1
+    statModifier:
+      damageMultiplier: 1.25
+      cooldownMultiplier: 1
+      shieldMultiplier: 1
+      breakShieldMultiplier: 1
+      controlDurationMultiplier: 1
+      summary: "\u4F24\u5BB3 +25%"
+  - itemId: thunder_talisman_basic
+    displayName: "\u96F7\u7B26"
+    fromLevel: 1
+    toLevel: 2
+    costs:
+    - resourceType: 0
+      amount: 100
+    - resourceType: 1
+      amount: 50
+    - resourceType: 2
+      amount: 8
+    - resourceType: 3
+      amount: 1
+    statModifier:
+      damageMultiplier: 1.15
+      cooldownMultiplier: 1
+      shieldMultiplier: 1
+      breakShieldMultiplier: 1.3
+      controlDurationMultiplier: 1
+      summary: "\u4F24\u5BB3 +15%\uFF0C\u7834\u76FE\u6548\u7387 +30%"
+  - itemId: shield_talisman_basic
+    displayName: "\u62A4\u8EAB\u7B26"
+    fromLevel: 1
+    toLevel: 2
+    costs:
+    - resourceType: 0
+      amount: 100
+    - resourceType: 1
+      amount: 50
+    - resourceType: 2
+      amount: 8
+    - resourceType: 3
+      amount: 1
+    statModifier:
+      damageMultiplier: 1
+      cooldownMultiplier: 1
+      shieldMultiplier: 1.25
+      breakShieldMultiplier: 1
+      controlDurationMultiplier: 1
+      summary: "\u62A4\u76FE\u91CF +25%"
+  - itemId: purify_talisman_basic
+    displayName: "\u51C0\u5316\u7B26"
+    fromLevel: 1
+    toLevel: 2
+    costs:
+    - resourceType: 0
+      amount: 100
+    - resourceType: 1
+      amount: 50
+    - resourceType: 2
+      amount: 8
+    - resourceType: 3
+      amount: 1
+    statModifier:
+      damageMultiplier: 1
+      cooldownMultiplier: 0.8
+      shieldMultiplier: 1
+      breakShieldMultiplier: 1
+      controlDurationMultiplier: 1
+      summary: "\u51B7\u5374 -20%"
+  - itemId: soul_suppress_talisman_basic
+    displayName: "\u9547\u9B42\u7B26"
+    fromLevel: 1
+    toLevel: 2
+    costs:
+    - resourceType: 0
+      amount: 100
+    - resourceType: 1
+      amount: 50
+    - resourceType: 2
+      amount: 8
+    - resourceType: 3
+      amount: 1
+    statModifier:
+      damageMultiplier: 1
+      cooldownMultiplier: 1
+      shieldMultiplier: 1
+      breakShieldMultiplier: 1
+      controlDurationMultiplier: 1.2
+      summary: "\u538B\u5236\u65F6\u95F4 +20%"

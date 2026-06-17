@@ -14,14 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: spirit_stone_basic
   displayName: "\u805A\u7075\u77F3"
+  enabled: 1
   itemType: 0
   elementType: 5
   icon: {fileID: 0}
   width: 1
   height: 1
-  baseCooldown: 2
+  baseCooldown: 0.8
   manaCost: 0
-  baseValue: 12
+  baseValue: 18
   uiColor: {r: 0.28, g: 0.68, b: 1, a: 1}
   description: "\u9635\u6CD5\u4F9B\u80FD\u6E90\uFF0C\u53EF\u4E3A\u9644\u8FD1\u7B26\u7B93\u4F9B\u80FD\u3002"
   elementTag: 6

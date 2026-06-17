@@ -41,8 +41,24 @@ namespace TalismanBag.V02.UI
                 panel.transform.SetAsLastSibling();
             }
 
-            SetText(titleText, "Boss 奖励");
-            SetText(descriptionText, "你击败了入门破阵妖。以下奖励仅作为 V0.2 通关反馈与后续系统占位。");
+            SetText(titleText, "1-10 章节结算");
+            SetText(descriptionText, "你击败了 1-10 Boss。领取以下固定奖励后，主线试炼进入培养阶段。");
+            SetText(rewardListText, BuildRewardText(rewards));
+        }
+
+        public void Show(string title, string description, IReadOnlyList<string> rewards, Action onConfirm)
+        {
+            BindConfirmButton();
+            confirmCallback = onConfirm;
+
+            if (panel != null)
+            {
+                panel.SetActive(true);
+                panel.transform.SetAsLastSibling();
+            }
+
+            SetText(titleText, title);
+            SetText(descriptionText, description);
             SetText(rewardListText, BuildRewardText(rewards));
         }
 
@@ -79,10 +95,10 @@ namespace TalismanBag.V02.UI
 
             V02BossRewardPanel panelComponent = root.AddComponent<V02BossRewardPanel>();
             panelComponent.panel = root;
-            panelComponent.titleText = CreateText("BossRewardTitle", root.transform, "Boss 奖励", 44, FontStyle.Bold, new Color(1f, 0.88f, 0.56f), new Vector2(0f, -72f), new Vector2(760f, 68f), TextAnchor.MiddleCenter);
+            panelComponent.titleText = CreateText("BossRewardTitle", root.transform, "1-10 章节结算", 44, FontStyle.Bold, new Color(1f, 0.88f, 0.56f), new Vector2(0f, -72f), new Vector2(760f, 68f), TextAnchor.MiddleCenter);
             panelComponent.descriptionText = CreateText("BossRewardDescription", root.transform, string.Empty, 25, FontStyle.Normal, new Color(0.88f, 0.96f, 0.9f), new Vector2(0f, -170f), new Vector2(760f, 118f), TextAnchor.UpperLeft);
             panelComponent.rewardListText = CreateText("BossRewardList", root.transform, string.Empty, 30, FontStyle.Bold, Color.white, new Vector2(0f, -390f), new Vector2(760f, 330f), TextAnchor.UpperLeft);
-            panelComponent.confirmButton = CreateButton("BossRewardConfirmButton", root.transform, "领取并完成试炼", new Vector2(0f, 98f), new Vector2(520f, 94f));
+            panelComponent.confirmButton = CreateButton("BossRewardConfirmButton", root.transform, "领取奖励", new Vector2(0f, 98f), new Vector2(520f, 94f));
             panelComponent.BindConfirmButton();
             panelComponent.Hide();
             return panelComponent;
@@ -111,7 +127,7 @@ namespace TalismanBag.V02.UI
         {
             if (rewards == null || rewards.Count == 0)
             {
-                return "- 重复火符\n- 符纸\n- 灵石\n- 基础配方残页\n- 少量修为";
+                return "- 剑丸 x1\n- 灵石 x120\n- 符纸 x60\n- 朱砂 x10\n- 初阶符胚 x1\n- 修为 x20";
             }
 
             List<string> lines = new();

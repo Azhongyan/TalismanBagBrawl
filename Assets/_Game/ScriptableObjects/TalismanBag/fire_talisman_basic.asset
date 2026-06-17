@@ -14,12 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: fire_talisman_basic
   displayName: "\u706B\u7B26"
+  enabled: 1
   itemType: 1
   elementType: 1
   icon: {fileID: 0}
   width: 1
   height: 1
-  baseCooldown: 2.5
+  baseCooldown: 2
   manaCost: 10
   baseValue: 12
   uiColor: {r: 1, g: 0.42, b: 0.2, a: 1}

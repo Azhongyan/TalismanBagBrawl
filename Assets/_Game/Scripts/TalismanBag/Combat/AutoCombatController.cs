@@ -13,6 +13,7 @@ using TalismanBag.V02.EnemySkills;
 using TalismanBag.V02.Boss;
 using TalismanBag.V02.Balance;
 using TalismanBag.V02.Counters;
+using TalismanBag.V02.CoreLoop.Battle;
 using TalismanBag.V02.Feedback;
 using TalismanBag.V02.Formation;
 using TalismanBag.V02.Result;
@@ -80,6 +81,8 @@ namespace TalismanBag.Combat
         [SerializeField] private V02BossPhaseController v02BossPhaseController;
         [SerializeField] private V02CounterMultiplierConfig v02CounterMultiplierConfig;
         [SerializeField] private BattleBalanceLogger battleBalanceLogger;
+        [SerializeField] private BattleLoadoutSnapshotBuilder battleLoadoutSnapshotBuilder;
+        [SerializeField] private BattleInteractionLock battleInteractionLock;
         [SerializeField] private V02RunModifierState v02RunModifierState;
         [SerializeField] private V02EnemyIntentUI v02EnemyIntentUI;
         [SerializeField] private V02EnemyPreviewPanel v02EnemyPreviewPanel;
@@ -137,13 +140,14 @@ namespace TalismanBag.Combat
         private readonly HashSet<string> unpoweredBlockedRuntimeIds = new();
         private EnemyRuntime currentEnemy;
         private TalismanCombatState state = TalismanCombatState.Preparing;
+        private BattleLoadoutSnapshot currentBattleLoadoutSnapshot;
         private int currentRound = 1;
         private int totalRounds = 7;
         private Text autoMergeButtonText;
         private float v02StatusTickTimer = 1f;
         private float v02EnemyBurnTickTimer = 1f;
 
-        public bool CanEditLayout => state != TalismanCombatState.Fighting;
+        public bool CanEditLayout => state != TalismanCombatState.Fighting && (battleInteractionLock == null || !battleInteractionLock.IsLocked);
         public EnemyRuntime CurrentEnemy => currentEnemy;
         public int CurrentRoundNumber => currentRound;
         public float PlayerHpRemainPercent => playerStats.maxHP > 0 ? playerStats.hp / (float)playerStats.maxHP : 0f;
@@ -153,6 +157,7 @@ namespace TalismanBag.Combat
         {
             EnsureFormationPowerResolver();
             EnsureStatusEffectSystem();
+            RefreshBattleInteractionLock();
 
             startButton?.onClick.AddListener(StartBattle);
             resetButton?.onClick.AddListener(ResetBattle);
@@ -389,7 +394,8 @@ namespace TalismanBag.Combat
             enemySkillController?.Initialize(currentEnemy);
             v02EnemyPreviewPanel?.Show(enemyDefinition);
             ResetCombatStatsOnly();
-            state = TalismanCombatState.Preparing;
+            SetCombatState(TalismanCombatState.Preparing);
+            currentBattleLoadoutSnapshot = null;
             battleLogUI?.Clear();
             AddLog($"第 {currentRound}/{totalRounds} 场：{enemyDefinition.GetReadableLabel()}");
             PlaytestSessionLogger.Log($"Round {currentRound} Started: {enemyDefinition.displayName}");
@@ -400,7 +406,7 @@ namespace TalismanBag.Combat
 
         public void SetRunComplete()
         {
-            state = TalismanCombatState.RunComplete;
+            SetCombatState(TalismanCombatState.RunComplete);
             AddLog("15分钟验证通关，阵型验证完成");
             RefreshUI();
         }
@@ -426,9 +432,10 @@ namespace TalismanBag.Combat
 
             ClearAllSeals();
             RefreshFormationPowerStates();
+            BuildAndApplyBattleLoadoutSnapshot();
             v02RunStatsTracker?.CaptureBattleStart(formationPowerResolver, grid);
             battleBalanceLogger?.BeginBattle(currentRound, currentEnemy, v02RunFlowController != null ? v02RunFlowController.CurrentRound : null);
-            state = TalismanCombatState.Fighting;
+            SetCombatState(TalismanCombatState.Fighting);
             resultPanel?.Hide();
             ConfigureEnemyTimers();
             v02BossPhaseController?.ResetPhase();
@@ -449,7 +456,8 @@ namespace TalismanBag.Combat
             }
 
             ResetCombatStatsOnly();
-            state = TalismanCombatState.Preparing;
+            SetCombatState(TalismanCombatState.Preparing);
+            currentBattleLoadoutSnapshot = null;
             v02BossPhaseController?.ResetPhase();
             battleLogUI?.Clear();
             AddLog("战前整理：观察敌人后调整阵盘");
@@ -460,7 +468,7 @@ namespace TalismanBag.Combat
 
         public void AutoPlaceStarterBuild()
         {
-            if (!CanEditLayout || grid == null || slotViews == null)
+            if (!TryRequireLayoutEdit() || grid == null || slotViews == null)
             {
                 return;
             }
@@ -484,7 +492,7 @@ namespace TalismanBag.Combat
 
         public void AutoPlaceRecommendedBuild(int roundNumber)
         {
-            if (!CanEditLayout || grid == null || slotViews == null)
+            if (!TryRequireLayoutEdit() || grid == null || slotViews == null)
             {
                 return;
             }
@@ -562,7 +570,7 @@ namespace TalismanBag.Combat
 
         public void AutoMergeDuplicateLevelOneItems()
         {
-            if (!CanEditLayout)
+            if (!TryRequireLayoutEdit())
             {
                 return;
             }
@@ -917,7 +925,7 @@ namespace TalismanBag.Combat
 
             if (baseDamage > 0 && currentEnemy != null)
             {
-                int damage = item.level >= 2 ? Mathf.RoundToInt(baseDamage * 1.5f) : baseDamage;
+                int damage = GetComputedDamage(item, item.level >= 2 ? Mathf.RoundToInt(baseDamage * 1.5f) : baseDamage);
                 DealDamage(item, damage, $"{GetRuntimeItemName(item)}: {message}");
                 return true;
             }
@@ -1011,7 +1019,7 @@ namespace TalismanBag.Combat
                 return false;
             }
 
-            int damage = item.level >= 2 ? 20 : 12;
+            int damage = GetComputedDamage(item, item.level >= 2 ? 20 : 12);
             if (HasActiveAdjacentItemId(item.gridPosition, SpiritStoneId))
             {
                 Emit(BattleEventType.ComboActivated, BattleLogCategory.Combo, "火灵连发：火符触发加速", item.definition.itemId, value: 0, screenPosition: GetItemPosition(item));
@@ -1036,7 +1044,7 @@ namespace TalismanBag.Combat
                 return false;
             }
 
-            int shieldGain = item.level >= 2 ? 28 : 18;
+            int shieldGain = GetComputedShieldValue(item, item.level >= 2 ? 28 : 18);
             float shieldMultiplier = 1f + GetShieldRewardMultiplier(item);
             if (shieldMultiplier > 1f)
             {
@@ -1086,7 +1094,7 @@ namespace TalismanBag.Combat
                 return false;
             }
 
-            int damage = item.level >= 2 ? 28 : 18;
+            int damage = GetComputedDamage(item, item.level >= 2 ? 28 : 18);
             if (IsGhostFamily())
             {
                 damage = Mathf.RoundToInt(damage * 1.5f);
@@ -1196,6 +1204,13 @@ namespace TalismanBag.Combat
                     float boostedMultiplier = baseMultiplier + v02RunModifierState.thunderShieldBreakMultiplierBonus;
                     finalDamage = Mathf.Max(finalDamage, Mathf.RoundToInt(amount * boostedMultiplier));
                     Emit(BattleEventType.ComboActivated, BattleLogCategory.Combo, "[强化] 雷符破盾强化生效", source.definition.itemId, value: finalDamage, screenPosition: GetEnemyPosition());
+                }
+
+                float trainedBreakMultiplier = GetComputedBreakShieldRate(source);
+                if (trainedBreakMultiplier > 1f && currentEnemy.currentShield > 0)
+                {
+                    finalDamage = Mathf.Max(finalDamage, Mathf.RoundToInt(amount * trainedBreakMultiplier));
+                    Emit(BattleEventType.ComboActivated, BattleLogCategory.Combo, "[培养] 雷符破盾效率提升", source.definition.itemId, value: finalDamage, screenPosition: GetEnemyPosition());
                 }
 
                 shieldCountered = true;
@@ -1951,7 +1966,7 @@ namespace TalismanBag.Combat
 
             if (state != TalismanCombatState.Fighting)
             {
-                state = TalismanCombatState.Fighting;
+                SetCombatState(TalismanCombatState.Fighting);
             }
 
             currentEnemy.currentHp = 0;
@@ -1962,7 +1977,7 @@ namespace TalismanBag.Combat
         {
             if (state != TalismanCombatState.Fighting)
             {
-                state = TalismanCombatState.Fighting;
+                SetCombatState(TalismanCombatState.Fighting);
             }
 
             playerStats.hp = 0;
@@ -2222,7 +2237,7 @@ namespace TalismanBag.Combat
                 return;
             }
 
-            state = TalismanCombatState.Victory;
+            SetCombatState(TalismanCombatState.Victory);
             Emit(BattleEventType.BattleWin, BattleLogCategory.Result, $"{currentEnemy.definition.GetReadableLabel()}被击败，斗法胜利", value: 0, screenPosition: GetEnemyPosition());
             PlaytestSessionLogger.Log($"Round {currentRound} Won: {currentEnemy.definition.displayName}");
             ClearAllSeals();
@@ -2248,7 +2263,7 @@ namespace TalismanBag.Combat
                 return;
             }
 
-            state = TalismanCombatState.Defeat;
+            SetCombatState(TalismanCombatState.Defeat);
             Emit(BattleEventType.BattleLose, BattleLogCategory.Result, "玩家气血归零，斗法失败", value: 0, screenPosition: GetPlayerPosition());
             PlaytestSessionLogger.Log($"Round {currentRound} Lost: HP reached 0");
             ClearAllSeals();
@@ -2474,7 +2489,115 @@ namespace TalismanBag.Combat
                 }
             }
 
+            float trainedCooldownMultiplier = GetComputedCooldownMultiplier(item);
+            if (!Mathf.Approximately(trainedCooldownMultiplier, 1f))
+            {
+                cooldown *= trainedCooldownMultiplier;
+            }
+
             return Mathf.Max(0.1f, cooldown);
+        }
+
+        private void BuildAndApplyBattleLoadoutSnapshot()
+        {
+            if (grid == null)
+            {
+                currentBattleLoadoutSnapshot = null;
+                return;
+            }
+
+            currentBattleLoadoutSnapshot = EnsureBattleLoadoutSnapshotBuilder().Build(grid, formationPowerResolver);
+            if (currentBattleLoadoutSnapshot?.items == null || currentBattleLoadoutSnapshot.items.Count == 0)
+            {
+                return;
+            }
+
+            foreach (TalismanItemRuntime item in grid.GetAllPlacedItems())
+            {
+                BattleLoadoutItemSnapshot snapshotItem = currentBattleLoadoutSnapshot.Find(item);
+                if (snapshotItem == null)
+                {
+                    continue;
+                }
+
+                item.level = Mathf.Max(1, snapshotItem.level);
+                SyncItemViewLevel(item, snapshotItem.level);
+            }
+
+            AddLog($"战斗快照已生成：{currentBattleLoadoutSnapshot.items.Count} 件道具");
+        }
+
+        private BattleLoadoutSnapshotBuilder EnsureBattleLoadoutSnapshotBuilder()
+        {
+            if (battleLoadoutSnapshotBuilder != null)
+            {
+                return battleLoadoutSnapshotBuilder;
+            }
+
+            battleLoadoutSnapshotBuilder = GetComponent<BattleLoadoutSnapshotBuilder>();
+            if (battleLoadoutSnapshotBuilder != null)
+            {
+                return battleLoadoutSnapshotBuilder;
+            }
+
+            battleLoadoutSnapshotBuilder = gameObject.AddComponent<BattleLoadoutSnapshotBuilder>();
+            return battleLoadoutSnapshotBuilder;
+        }
+
+        private void SyncItemViewLevel(TalismanItemRuntime item, int level)
+        {
+            if (itemViews == null)
+            {
+                return;
+            }
+
+            foreach (DraggableTalismanItemView view in itemViews)
+            {
+                if (view != null && view.RuntimeItem == item)
+                {
+                    view.SetRuntimeLevel(level);
+                    return;
+                }
+            }
+        }
+
+        private BattleLoadoutItemSnapshot GetBattleLoadoutItemSnapshot(TalismanItemRuntime item)
+        {
+            return currentBattleLoadoutSnapshot?.Find(item);
+        }
+
+        private ComputedTalismanStats GetComputedTalismanStats(TalismanItemRuntime item)
+        {
+            return GetBattleLoadoutItemSnapshot(item)?.computedStats;
+        }
+
+        private int GetComputedDamage(TalismanItemRuntime item, int fallback)
+        {
+            ComputedTalismanStats stats = GetComputedTalismanStats(item);
+            return stats != null && stats.computedDamage > 0 ? stats.computedDamage : fallback;
+        }
+
+        private int GetComputedShieldValue(TalismanItemRuntime item, int fallback)
+        {
+            ComputedTalismanStats stats = GetComputedTalismanStats(item);
+            return stats != null && stats.computedShieldValue > 0 ? stats.computedShieldValue : fallback;
+        }
+
+        private float GetComputedCooldownMultiplier(TalismanItemRuntime item)
+        {
+            ComputedTalismanStats stats = GetComputedTalismanStats(item);
+            if (stats == null || item?.definition == null || stats.computedCooldown <= 0f || item.definition.baseCooldown <= 0f)
+            {
+                return 1f;
+            }
+
+            return Mathf.Max(0.1f, stats.computedCooldown / item.definition.baseCooldown);
+        }
+
+        private float GetComputedBreakShieldRate(TalismanItemRuntime item)
+        {
+            ComputedTalismanStats stats = GetComputedTalismanStats(item);
+            return stats != null ? Mathf.Max(1f, stats.computedBreakShieldRate) : 1f;
         }
 
         private int GetManaCost(TalismanItemRuntime item)
@@ -3455,6 +3578,52 @@ namespace TalismanBag.Combat
             return currentEnemy?.definition != null &&
                    (currentEnemy.definition.enemyType == EnemyType.Ghost ||
                     currentEnemy.definition.enemyType == EnemyType.GhostSwarm);
+        }
+
+        public bool TryRequireLayoutEdit()
+        {
+            RefreshBattleInteractionLock();
+            if (CanEditLayout)
+            {
+                return true;
+            }
+
+            ShowBattleInteractionLockedHint();
+            return false;
+        }
+
+        public void ShowBattleInteractionLockedHint()
+        {
+            string message = battleInteractionLock != null ? battleInteractionLock.LockedHint : BattleInteractionLock.DefaultLockedHint;
+            AddLog(message);
+        }
+
+        private void SetCombatState(TalismanCombatState nextState)
+        {
+            state = nextState;
+            RefreshBattleInteractionLock();
+        }
+
+        private void RefreshBattleInteractionLock()
+        {
+            EnsureBattleInteractionLock().SetLocked(state == TalismanCombatState.Fighting);
+        }
+
+        private BattleInteractionLock EnsureBattleInteractionLock()
+        {
+            if (battleInteractionLock != null)
+            {
+                return battleInteractionLock;
+            }
+
+            battleInteractionLock = GetComponent<BattleInteractionLock>();
+            if (battleInteractionLock != null)
+            {
+                return battleInteractionLock;
+            }
+
+            battleInteractionLock = gameObject.AddComponent<BattleInteractionLock>();
+            return battleInteractionLock;
         }
 
         private void AddLog(string message)

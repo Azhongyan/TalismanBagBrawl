@@ -17,6 +17,7 @@ using TalismanBag.UI;
 using TalismanBag.V02.Boss;
 using TalismanBag.V02.Balance;
 using TalismanBag.V02.Counters;
+using TalismanBag.V02.CoreLoop.Boss;
 using TalismanBag.V02.EnemySkills;
 using TalismanBag.V02.Feedback;
 using TalismanBag.V02.Formation;
@@ -1134,6 +1135,7 @@ namespace TalismanBag.EditorTools
             CreateV02RunResultPanel(uiRoot, runResultPanel);
             CreateV02RewardPanel(uiRoot, rewardPanel);
             V02BossRewardPanel bossRewardPanel = V02BossRewardPanel.CreateRuntime(uiRoot);
+            BossInfoPanel bossInfoPanel = BossInfoPanel.CreateRuntime(uiRoot);
             CreateV02DebugPopup(uiRoot, debugController, debugPopupController);
 
             foreach (TalismanGridSlotView slot in slots)
@@ -1218,6 +1220,7 @@ namespace TalismanBag.EditorTools
             SetField(v02RunFlow, "runStatsTracker", runStatsTracker);
             SetField(v02RunFlow, "runResultPanel", runResultPanel);
             SetField(v02RunFlow, "bossRewardPanel", bossRewardPanel);
+            SetField(v02RunFlow, "bossInfoPanel", bossInfoPanel);
             SetField(v02RunFlow, "battleLogUI", battleLogUI);
             SetField(v02RunFlow, "roundInfoText", roundInfoText);
             SetField(v02RunFlow, "prepHintText", prepHintText);
@@ -1594,19 +1597,21 @@ namespace TalismanBag.EditorTools
             actionButtons.transform.SetParent(bottom.transform, false);
             SetRect(actionButtons.GetComponent<RectTransform>(), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 28f), new Vector2(980f, 98f));
             GridLayoutGroup actionLayout = actionButtons.GetComponent<GridLayoutGroup>();
-            actionLayout.cellSize = new Vector2(300f, 88f);
-            actionLayout.spacing = new Vector2(24f, 0f);
+            actionLayout.cellSize = new Vector2(230f, 88f);
+            actionLayout.spacing = new Vector2(18f, 0f);
             actionLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            actionLayout.constraintCount = 3;
+            actionLayout.constraintCount = 4;
             actionLayout.childAlignment = TextAnchor.MiddleCenter;
 
             Button refreshAction = CreateButton("RefreshPowerButton", actionButtons.transform, "\u5237\u65b0\u4f9b\u80fd", new Color(0.28f, 0.34f, 0.48f), 27);
             Button startAction = CreateButton("StartBattleButton", actionButtons.transform, "\u5f00\u59cb\u6597\u6cd5", new Color(0.62f, 0.32f, 0.18f), 30);
             Button resetAction = CreateButton("ResetFormationButton", actionButtons.transform, "\u91cd\u7f6e\u9635\u76d8", new Color(0.28f, 0.42f, 0.34f), 27);
+            Button postBattleAction = CreateButton("PostBattlePrepareButton", actionButtons.transform, "\u6218\u540e\u9a7b\u9635", new Color(0.42f, 0.34f, 0.22f), 25);
 
             SetField(debugController, "refreshPowerButton", refreshAction);
             SetField(debugController, "startBattleButton", startAction);
             SetField(debugController, "resetFormationButton", resetAction);
+            SetField(debugController, "postBattlePrepareButton", postBattleAction);
             return;
 
             /*

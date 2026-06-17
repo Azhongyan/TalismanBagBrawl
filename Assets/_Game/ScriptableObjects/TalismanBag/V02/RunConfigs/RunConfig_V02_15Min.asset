@@ -17,11 +17,11 @@ MonoBehaviour:
   rounds:
   - levelId: 1-1
     roundIndex: 1
-    roundTitle: "攻：基础布阵"
+    roundTitle: "游灯小祟：供能教学"
     enemy: {fileID: 11400000, guid: 0b6fe088fc1a49218a5200ef4f15d771, type: 2}
-    intendedRole: Formation power tutorial
-    teachingGoal: "理解符箓必须被阵眼或聚灵石供能才会触发。"
-    preBattleHint: "把火符放到阵眼或聚灵石供能范围内。未供能的符箓不会触发。"
+    intendedRole: Energy stone and fire talisman tutorial
+    teachingGoal: "理解聚能石会为附近符箓提供灵力，只有获得灵力的符箓才能发动。"
+    preBattleHint: "请让火符处在聚能石供能范围内。"
     recommendedCounterTags: []
     isBossRound: 0
     targetDurationMin: 14
@@ -49,11 +49,11 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-2
     roundIndex: 2
-    roundTitle: "盾：周期护盾"
+    roundTitle: "游灯小祟：基础输出复习"
     enemy: {fileID: 11400000, guid: c73ab9457d1841e39a189727a2ec2687, type: 2}
-    intendedRole: Shield break tutorial
-    teachingGoal: "理解护盾敌人需要雷符或爆发处理。"
-    preBattleHint: "敌人会周期性获得护盾。雷符对护盾效果更好，剑丸爆发也有效。"
+    intendedRole: Basic output review
+    teachingGoal: "复习火符输出和聚能石供能，胜利后获得雷符。"
+    preBattleHint: "复习基础输出。下一关会出现护盾。"
     recommendedCounterTags: []
     isBossRound: 0
     targetDurationMin: 18
@@ -86,11 +86,11 @@ MonoBehaviour:
       note: Curve freeze negative target
   - levelId: 1-3
     roundIndex: 3
-    roundTitle: "召：群体压制"
+    roundTitle: "石甲符卫：雷符破盾"
     enemy: {fileID: 11400000, guid: 7e529c3694fd44d0a76d614cf3c06b36, type: 2}
-    intendedRole: Group clear tutorial
-    teachingGoal: "理解多目标敌人需要连锁、范围或燃烧处理。"
-    preBattleHint: "召会用数量压制你。连锁雷符和火符燃烧更适合清群。"
+    intendedRole: Shield break tutorial
+    teachingGoal: "验证雷符可以快速击破低强度护盾。"
+    preBattleHint: "敌人有护盾，雷符可破盾。"
     recommendedCounterTags: []
     isBossRound: 0
     targetDurationMin: 18
@@ -123,11 +123,11 @@ MonoBehaviour:
       note: Curve freeze weak target
   - levelId: 1-4
     roundIndex: 4
-    roundTitle: "毒：持续伤害"
+    roundTitle: "石甲符卫：护盾复习"
     enemy: {fileID: 11400000, guid: 7c1e7e13122c4fb68ebc45e5465bb3b5, type: 2}
-    intendedRole: Poison sustain tutorial
-    teachingGoal: "理解不能只堆输出，防御和净化也重要。"
-    preBattleHint: "毒会叠加中毒和燃烧。净化符可以清除状态，护身符可以抵抗持续伤害。"
+    intendedRole: Shield review
+    teachingGoal: "复习破盾和基础输出，胜利后获得护身符。"
+    preBattleHint: "护盾略厚，继续用雷符处理护盾。"
     recommendedCounterTags: []
     isBossRound: 0
     targetDurationMin: 90
@@ -155,11 +155,11 @@ MonoBehaviour:
       note: Curve freeze negative target
   - levelId: 1-5
     roundIndex: 5
-    roundTitle: "封：行列封锁"
+    roundTitle: "铜爪压阵怪：承压教学"
     enemy: {fileID: 11400000, guid: b201fc3b753c4adab4321c91239bf709, type: 2}
-    intendedRole: Seal line tutorial
-    teachingGoal: "理解核心输出不能全部堆在同一行或同一列。"
-    preBattleHint: "封会封印一行或一列符箓。净化符可以解封，不要把所有核心输出堆在同一条线上。"
+    intendedRole: Pressure survival tutorial
+    teachingGoal: "验证护身符可以提高承压生存能力，胜利后获得净化符。"
+    preBattleHint: "敌人攻击更强，护身符可提高生存。"
     recommendedCounterTags: []
     isBossRound: 0
     targetDurationMin: 20
@@ -187,11 +187,11 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-6
     roundIndex: 6
-    roundTitle: "偷：供能干扰"
+    roundTitle: "灰火毒祟：净化教学"
     enemy: {fileID: 11400000, guid: 01aa1e0be8f5453c8c1d705f056a6e9a, type: 2}
-    intendedRole: Energy disruption tutorial
-    teachingGoal: "理解阵眼和聚灵石是核心资源，会被敌人针对。"
-    preBattleHint: "偷会偷取阵眼或聚灵石灵气，使周围符箓短暂失效。镇魂符可以反制偷灵。"
+    intendedRole: Debuff cleanse tutorial
+    teachingGoal: "验证净化符可以清除毒、燃烧等负面状态，胜利后获得镇魂符。"
+    preBattleHint: "敌人会施加负面状态，净化符可清除毒、燃烧等状态。"
     recommendedCounterTags: []
     isBossRound: 0
     targetDurationMin: 22
@@ -219,11 +219,11 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-7
     roundIndex: 7
-    roundTitle: "组：护盾群压"
+    roundTitle: "摄灵封符鬼：异常干扰"
     enemy: {fileID: 11400000, guid: 6f3b1a7de8894e54a7b69007799ec801, type: 2}
-    intendedRole: Shield and group check
-    teachingGoal: "同时检验破盾与清群，阵盘需要兼顾单点爆发和范围压制。"
-    preBattleHint: "敌人会先结盾再召唤小妖。雷符破盾，连锁雷符和火符处理群怪。"
+    intendedRole: Disruption counter tutorial
+    teachingGoal: "验证镇魂符可以反制偷灵、封符等异常干扰。"
+    preBattleHint: "敌人会干扰你的阵势，镇魂符可压制异常干扰。"
     recommendedCounterTags: []
     isBossRound: 0
     targetDurationMin: 26
@@ -256,11 +256,11 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-8
     roundIndex: 8
-    roundTitle: "压：毒封偷灵"
+    roundTitle: "摄灵封符鬼：干扰复习"
     enemy: {fileID: 11400000, guid: bbe84c44b2ad471187c6bb3f6c0e65f2, type: 2}
-    intendedRole: Poison seal steal check
-    teachingGoal: "检验净化、镇魂和供能冗余，不能只靠输出硬打。"
-    preBattleHint: "敌人会叠加毒、封锁阵盘并偷取供能。净化符和镇魂符是关键反制。"
+    intendedRole: Disruption review
+    teachingGoal: "复习偷灵、封符干扰，胜利后获得连锁雷符。"
+    preBattleHint: "异常干扰频率略高，但不会形成硬卡。"
     recommendedCounterTags: []
     isBossRound: 0
     targetDurationMin: 30
@@ -298,11 +298,11 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-9
     roundIndex: 9
-    roundTitle: "破：综合压制"
+    roundTitle: "游灯小祟 + 石甲符卫：Boss前综合小测"
     enemy: {fileID: 11400000, guid: 14f2f4f2f4414e8c8ffcf2be8d830617, type: 2}
-    intendedRole: Mixed pressure check
-    teachingGoal: "综合检验破盾、清群、阵眼保护和阵法稳定性。"
-    preBattleHint: "破会轮换护盾、召唤和封锁小压力。需要破盾、清群、净化和稳定供能。"
+    intendedRole: Boss pre-check with reused enemies
+    teachingGoal: "用连锁雷符和已有符箓处理多目标压力与低强度护盾。"
+    preBattleHint: "前方将进入 Boss 关，复习多目标压力和护盾处理。"
     recommendedCounterTags: []
     isBossRound: 0
     targetDurationMin: 28
@@ -330,11 +330,11 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-10
     roundIndex: 10
-    roundTitle: "首：入门破阵妖"
+    roundTitle: "破阵妖将：第一章 Boss"
     enemy: {fileID: 11400000, guid: af00b4c24b8d448cba58b91f4833e62b, type: 2}
-    intendedRole: Boss comprehensive check
-    teachingGoal: "作为入门 Boss 关，综合检验破盾、清群、净化、镇魂与阵眼保护。"
-    preBattleHint: "Boss 会分阶段使用护盾、召唤、封锁与供能干扰。确保核心符箓都被供能。"
+    intendedRole: Chapter one boss comprehensive check
+    teachingGoal: "第一章综合 Boss，检验供能、破盾、净化、镇魂和多目标处理。"
+    preBattleHint: "Boss 信息提示后再开战，确保核心符箓都被供能。"
     recommendedCounterTags: []
     isBossRound: 1
     targetDurationMin: 35
