@@ -120,8 +120,8 @@ namespace TalismanBag.V02.CoreLoop.Tutorial
                     "镇魂符",
                     "镇魂符可以压制偷灵、封符等异常干扰。\n下一关敌人会干扰你的阵势，请准备镇魂符。"),
                 CreateFixedRewardRow(
-                    "1-8",
-                    "fixed_reward_1_8_chain_thunder_talisman",
+                    "1-9",
+                    "fixed_reward_1_9_chain_thunder_talisman",
                     "chain_thunder_talisman_basic",
                     "连锁雷符",
                     "连锁雷符可以弹射攻击多个敌人。\n前方将进入综合试炼，请尝试用它处理多目标压力。"),

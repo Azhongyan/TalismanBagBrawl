@@ -16876,6 +16876,8 @@ MonoBehaviour:
   bossInfoPanel: {fileID: 0}
   coreLoopRewardService: {fileID: 0}
   coreLoopSaveService: {fileID: 0}
+  tutorialGuideConfig: {fileID: 0}
+  tutorialGuideService: {fileID: 0}
   chapterOneBossRewardConfig: {fileID: 0}
   chapterTwoBossInfoConfig: {fileID: 0}
   chapterTwoBossRewardConfig: {fileID: 0}
@@ -16887,6 +16889,7 @@ MonoBehaviour:
   battleLogUI: {fileID: 575476396}
   roundInfoText: {fileID: 1561809396}
   prepHintText: {fileID: 2147479013}
+  currentLevelText: {fileID: 0}
   formationInfoPanel: {fileID: 0}
   formationInfoCloseButton: {fileID: 0}
   tagTooltipPanel: {fileID: 0}

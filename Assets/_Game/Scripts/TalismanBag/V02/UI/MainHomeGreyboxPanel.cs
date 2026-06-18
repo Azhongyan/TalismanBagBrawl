@@ -43,6 +43,7 @@ namespace TalismanBag.V02.UI
             cultivateCallback = onCultivate;
             continueCallback = onContinue;
             closeCallback = onClose;
+            SetMainActionButtonsVisible(true);
 
             if (panel != null)
             {
@@ -53,6 +54,12 @@ namespace TalismanBag.V02.UI
             SetText(titleText, string.IsNullOrWhiteSpace(title) ? "首页灰盒" : title);
             SetText(resourceText, resources);
             SetText(statusText, status);
+        }
+
+        public void ShowComplete(string title, string resources, string status, Action onClose)
+        {
+            Show(title, resources, status, null, null, onClose);
+            SetMainActionButtonsVisible(false);
         }
 
         public void Hide()
@@ -134,6 +141,12 @@ namespace TalismanBag.V02.UI
             buttonsBound = true;
         }
 
+        private void SetMainActionButtonsVisible(bool visible)
+        {
+            cultivateButton?.gameObject.SetActive(visible);
+            continueButton?.gameObject.SetActive(visible);
+        }
+
         private static Text CreateText(string name, Transform parent, string value, int fontSize, FontStyle style, Color color, Vector2 position, Vector2 size, TextAnchor alignment)
         {
             GameObject textObject = new(name, typeof(RectTransform), typeof(Text));
@@ -186,5 +199,6 @@ namespace TalismanBag.V02.UI
                 text.text = value;
             }
         }
+
     }
 }

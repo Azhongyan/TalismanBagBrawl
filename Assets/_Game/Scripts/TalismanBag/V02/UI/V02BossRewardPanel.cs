@@ -14,24 +14,26 @@ namespace TalismanBag.V02.UI
         [SerializeField] private Button confirmButton;
 
         private Action confirmCallback;
-        private bool buttonBound;
+        private Button boundConfirmButton;
 
         private void Awake()
         {
+            ResolveReferences();
             BindConfirmButton();
             Hide();
         }
 
         private void OnDestroy()
         {
-            if (buttonBound && confirmButton != null)
+            if (boundConfirmButton != null)
             {
-                confirmButton.onClick.RemoveListener(Confirm);
+                boundConfirmButton.onClick.RemoveListener(Confirm);
             }
         }
 
         public void Show(IReadOnlyList<string> rewards, Action onConfirm)
         {
+            ResolveReferences();
             BindConfirmButton();
             confirmCallback = onConfirm;
 
@@ -44,10 +46,15 @@ namespace TalismanBag.V02.UI
             SetText(titleText, "1-10 章节结算");
             SetText(descriptionText, "你击败了 1-10 Boss。领取以下固定奖励后，主线试炼进入培养阶段。");
             SetText(rewardListText, BuildRewardText(rewards));
+            if (confirmButton != null)
+            {
+                confirmButton.interactable = true;
+            }
         }
 
         public void Show(string title, string description, IReadOnlyList<string> rewards, Action onConfirm)
         {
+            ResolveReferences();
             BindConfirmButton();
             confirmCallback = onConfirm;
 
@@ -60,6 +67,10 @@ namespace TalismanBag.V02.UI
             SetText(titleText, title);
             SetText(descriptionText, description);
             SetText(rewardListText, BuildRewardText(rewards));
+            if (confirmButton != null)
+            {
+                confirmButton.interactable = true;
+            }
         }
 
         public void Hide()
@@ -107,20 +118,60 @@ namespace TalismanBag.V02.UI
         private void Confirm()
         {
             Action callback = confirmCallback;
-            confirmCallback = null;
-            Hide();
-            callback?.Invoke();
+            if (callback == null)
+            {
+                return;
+            }
+
+            if (confirmButton != null)
+            {
+                confirmButton.interactable = false;
+            }
+
+            try
+            {
+                callback.Invoke();
+                confirmCallback = null;
+                Hide();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                if (confirmButton != null)
+                {
+                    confirmButton.interactable = true;
+                }
+            }
         }
 
         private void BindConfirmButton()
         {
-            if (buttonBound || confirmButton == null)
+            if (boundConfirmButton == confirmButton)
+            {
+                return;
+            }
+
+            if (boundConfirmButton != null)
+            {
+                boundConfirmButton.onClick.RemoveListener(Confirm);
+            }
+
+            if (confirmButton == null)
             {
                 return;
             }
 
             confirmButton.onClick.AddListener(Confirm);
-            buttonBound = true;
+            boundConfirmButton = confirmButton;
+        }
+
+        private void ResolveReferences()
+        {
+            panel ??= gameObject;
+            if (confirmButton == null)
+            {
+                confirmButton = GetComponentInChildren<Button>(true);
+            }
         }
 
         private static string BuildRewardText(IReadOnlyList<string> rewards)

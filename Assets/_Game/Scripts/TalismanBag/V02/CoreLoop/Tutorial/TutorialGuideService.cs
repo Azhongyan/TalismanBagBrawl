@@ -226,20 +226,7 @@ namespace TalismanBag.V02.CoreLoop.Tutorial
                 }
             }
 
-            if (!row.markChapterOneBossClear)
-            {
-                return;
-            }
-
-            progress.chapterOneBossCleared = true;
-            progress.chapterOneBossRewardClaimed = true;
-            string highestCleared = string.IsNullOrWhiteSpace(row.highestClearedLevelIdOnComplete)
-                ? row.GetSafeLevelId()
-                : row.highestClearedLevelIdOnComplete.Trim();
-            if (!string.IsNullOrEmpty(highestCleared))
-            {
-                progress.highestClearedLevelId = highestCleared;
-            }
+            // Main-trial completion fields are written only by MainTrialFlowService.
         }
     }
 }

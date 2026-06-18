@@ -20,7 +20,7 @@ MonoBehaviour:
   icon: {fileID: 0}
   width: 1
   height: 1
-  baseCooldown: 0.8
+  baseCooldown: 0.6
   manaCost: 0
   baseValue: 18
   uiColor: {r: 0.28, g: 0.68, b: 1, a: 1}

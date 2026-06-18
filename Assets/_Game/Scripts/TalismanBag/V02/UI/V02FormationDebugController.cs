@@ -116,6 +116,8 @@ namespace TalismanBag.V02.UI
         private void Awake()
         {
             EnsurePostBattlePrepareButton();
+            EnsureMainTrialResetButton();
+            ConfigureFocusedMainTrialDebugPanel();
             autoPlacePoweredButton?.onClick.AddListener(AutoPlacePoweredBuild);
             autoPlaceUnpoweredButton?.onClick.AddListener(AutoPlaceUnpoweredBuild);
             refreshPowerButton?.onClick.AddListener(RefreshPowerStates);
@@ -616,6 +618,169 @@ namespace TalismanBag.V02.UI
 
             SetButtonLabel(postBattlePrepareButton, "战后驻阵");
             ConfigurePrimaryActionLayout(buttonParent);
+        }
+
+        private void EnsureMainTrialResetButton()
+        {
+            Transform buttonParent = resetV02RunButton != null
+                ? resetV02RunButton.transform.parent
+                : startNewV02RunButton != null ? startNewV02RunButton.transform.parent : null;
+            Button template = startNewV02RunButton != null
+                ? startNewV02RunButton
+                : resetRunModifiersButton;
+
+            if (resetV02RunButton == null && template != null && buttonParent != null)
+            {
+                resetV02RunButton = Instantiate(template, buttonParent);
+                resetV02RunButton.name = "ResetV02RunButton_Runtime";
+                resetV02RunButton.onClick.RemoveAllListeners();
+            }
+
+            if (resetV02RunButton == null)
+            {
+                return;
+            }
+
+            SetButtonLabel(resetV02RunButton, "重置主线 1-1");
+            resetV02RunButton.transform.SetAsFirstSibling();
+            Image image = resetV02RunButton.GetComponent<Image>();
+            if (image != null)
+            {
+                image.color = new Color(0.62f, 0.22f, 0.18f);
+            }
+        }
+
+        private void ConfigureFocusedMainTrialDebugPanel()
+        {
+            Button[] visibleButtons =
+            {
+                resetV02RunButton,
+                skipRound5Button,
+                skipRound9Button,
+                skipRound10Button,
+                giveBossReadyBuildButton,
+                forceWinCurrentRoundButton,
+                forceLoseCurrentRoundButton,
+                printFailureTrackerButton,
+                printRunStatsButton
+            };
+
+            Button[] hiddenButtons =
+            {
+                autoPlacePoweredButton,
+                autoPlaceUnpoweredButton,
+                printSelectedTagsButton,
+                giveAllTalismansButton,
+                testTagQueryButton,
+                testCounterMatchButton,
+                spawnMountainImpButton,
+                spawnTurtleGuardianButton,
+                spawnImpSwarmButton,
+                spawnRedPoisonBeastButton,
+                spawnEnergyThiefGhostButton,
+                spawnSealTaoistButton,
+                spawnFormationBreakerBossButton,
+                forceEnemySkillButton,
+                clearPlayerStatusButton,
+                clearSealsButton,
+                testShieldBreakButton,
+                testCleansePoisonButton,
+                testCleanseSealButton,
+                testSoulSuppressButton,
+                testChainClearButton,
+                testCounterLogPriorityButton,
+                openRewardPanelButton,
+                setNextTurtleButton,
+                setNextSwarmButton,
+                setNextPoisonButton,
+                setNextThiefButton,
+                setNextSealButton,
+                setNextBossButton,
+                giveEyeCoreRewardButton,
+                giveSpiritLinkRewardButton,
+                giveOuterRingRewardButton,
+                printRunModifiersButton,
+                resetRunModifiersButton,
+                startNewV02RunButton,
+                skipRound1Button,
+                skipRound2Button,
+                skipRound3Button,
+                skipRound4Button,
+                skipRound6Button,
+                skipRound7Button,
+                skipRound8Button,
+                giveAntiShieldBuildButton,
+                giveAntiGroupBuildButton,
+                giveAntiPoisonBuildButton,
+                giveAntiStealBuildButton,
+                giveAntiSealBuildButton,
+                runBalanceShieldButton,
+                runBalanceGroupButton,
+                runBalancePoisonButton,
+                runBalanceStealButton,
+                runBalanceSealButton,
+                runBalanceBossButton
+            };
+
+            SetButtonsVisible(hiddenButtons, false);
+            SetButtonsVisible(visibleButtons, true);
+
+            SetButtonLabel(skipRound5Button, "跳到第 5 关");
+            SetButtonLabel(skipRound9Button, "跳到第 9 关");
+            SetButtonLabel(skipRound10Button, "跳到 Boss 关");
+            SetButtonLabel(giveBossReadyBuildButton, "Boss 测试阵容");
+            SetButtonLabel(forceWinCurrentRoundButton, "强制胜利");
+            SetButtonLabel(forceLoseCurrentRoundButton, "强制失败");
+            SetButtonLabel(printFailureTrackerButton, "失败原因日志");
+            SetButtonLabel(printRunStatsButton, "流程统计日志");
+
+            for (int i = 0; i < visibleButtons.Length; i++)
+            {
+                visibleButtons[i]?.transform.SetAsLastSibling();
+            }
+
+            Transform buttonGrid = resetV02RunButton != null ? resetV02RunButton.transform.parent : null;
+            if (buttonGrid != null && buttonGrid.TryGetComponent(out GridLayoutGroup layout))
+            {
+                layout.cellSize = new Vector2(250f, 70f);
+                layout.spacing = new Vector2(18f, 18f);
+                layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+                layout.constraintCount = 3;
+                layout.childAlignment = TextAnchor.UpperCenter;
+
+                if (buttonGrid.TryGetComponent(out RectTransform gridRect))
+                {
+                    gridRect.sizeDelta = new Vector2(820f, 300f);
+                }
+            }
+
+            Transform popup = buttonGrid != null ? buttonGrid.parent : null;
+            if (popup != null)
+            {
+                if (popup.TryGetComponent(out RectTransform popupRect))
+                {
+                    popupRect.sizeDelta = new Vector2(900f, 560f);
+                }
+
+                Text title = popup.Find("DebugPopupTitle")?.GetComponent<Text>();
+                if (title != null)
+                {
+                    title.text = "主线 QA";
+                }
+            }
+        }
+
+        private static void SetButtonsVisible(Button[] buttons, bool visible)
+        {
+            if (buttons == null)
+            {
+                return;
+            }
+
+            foreach (Button button in buttons)
+            {
+                button?.gameObject.SetActive(visible);
+            }
         }
 
         private static void ConfigurePrimaryActionLayout(Transform buttonParent)

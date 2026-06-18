@@ -5,6 +5,38 @@ using UnityEngine;
 
 namespace TalismanBag.V02.CoreLoop.MainTrial
 {
+    public enum MainTrialStartupRouteType
+    {
+        Home,
+        Battle,
+        ChapterReward,
+        UpgradeRequired,
+        BossInfo,
+        BossReward,
+        CompleteHome
+    }
+
+    [System.Serializable]
+    public sealed class MainTrialStartupRoute
+    {
+        public MainTrialStartupRouteType routeType;
+        public MainTrialPhase phase;
+        public string roundId;
+        public string reason;
+
+        public MainTrialStartupRoute(
+            MainTrialStartupRouteType routeType,
+            MainTrialPhase phase,
+            string roundId,
+            string reason)
+        {
+            this.routeType = routeType;
+            this.phase = phase;
+            this.roundId = roundId ?? string.Empty;
+            this.reason = reason ?? string.Empty;
+        }
+    }
+
     public sealed class MainTrialFlowService : MonoBehaviour
     {
         private const string ChapterOnePrefix = "1-";
@@ -28,8 +60,81 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
 
         public bool ShouldEnterChapterTwoOnStart()
         {
-            MainTrialProgressData progress = GetProgressData();
-            return progress.chapterOneCultivationCompleted && !progress.chapterTwoBossDefeated;
+            MainTrialPhase phase = GetCurrentPhase();
+            return phase == MainTrialPhase.FirstUpgradeDone ||
+                   phase == MainTrialPhase.Chapter2InProgress ||
+                   phase == MainTrialPhase.Chapter2BossReady ||
+                   phase == MainTrialPhase.Chapter2BossInProgress ||
+                   phase == MainTrialPhase.Chapter2Cleared;
+        }
+
+        public MainTrialPhase GetCurrentPhase()
+        {
+            return EnsurePhaseInitialized().mainTrialPhase;
+        }
+
+        public MainTrialStartupRoute GetStartupRoute()
+        {
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            string currentRoundId = GetCurrentRoundId(progress);
+            return progress.mainTrialPhase switch
+            {
+                MainTrialPhase.NotStarted => CreateRoute(
+                    MainTrialStartupRouteType.Battle,
+                    progress,
+                    "1-1",
+                    "New main trial save"),
+                MainTrialPhase.Chapter1InProgress => CreateRoute(
+                    MainTrialStartupRouteType.Battle,
+                    progress,
+                    IsRoundInChapter(currentRoundId, ChapterOnePrefix) ? currentRoundId : "1-1",
+                    "Resume chapter 1"),
+                MainTrialPhase.Chapter1BossCleared => CreateRoute(
+                    MainTrialStartupRouteType.ChapterReward,
+                    progress,
+                    "1-10",
+                    "Chapter 1 boss cleared; reward pending"),
+                MainTrialPhase.Chapter1RewardClaimed or MainTrialPhase.FirstUpgradeRequired => CreateRoute(
+                    MainTrialStartupRouteType.UpgradeRequired,
+                    progress,
+                    "1-10",
+                    "First upgrade required"),
+                MainTrialPhase.FirstUpgradeDone => CreateRoute(
+                    MainTrialStartupRouteType.Home,
+                    progress,
+                    "2-1",
+                    "First upgrade completed"),
+                MainTrialPhase.Chapter2InProgress => CreateRoute(
+                    MainTrialStartupRouteType.Battle,
+                    progress,
+                    IsRoundInChapter(currentRoundId, ChapterTwoPrefix) ? currentRoundId : "2-1",
+                    "Resume chapter 2"),
+                MainTrialPhase.Chapter2BossReady => CreateRoute(
+                    MainTrialStartupRouteType.BossInfo,
+                    progress,
+                    "2-10",
+                    "Chapter 2 boss ready"),
+                MainTrialPhase.Chapter2BossInProgress => CreateRoute(
+                    MainTrialStartupRouteType.Battle,
+                    progress,
+                    "2-10",
+                    "Resume chapter 2 boss battle"),
+                MainTrialPhase.Chapter2Cleared => CreateRoute(
+                    MainTrialStartupRouteType.BossReward,
+                    progress,
+                    "2-10",
+                    "Chapter 2 boss cleared; reward pending"),
+                MainTrialPhase.CoreLoopComplete => CreateRoute(
+                    MainTrialStartupRouteType.CompleteHome,
+                    progress,
+                    "2-10",
+                    "Core loop completed"),
+                _ => CreateRoute(
+                    MainTrialStartupRouteType.Battle,
+                    progress,
+                    "1-1",
+                    "Unknown phase fallback")
+            };
         }
 
         public V02RunConfig GetOrCreateChapterTwoRunConfig(V02RunConfig chapterOneTemplate)
@@ -49,7 +154,9 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
 
         public int GetChapterTwoStartIndex(V02RunConfig chapterTwoConfig)
         {
-            int roundNumber = Mathf.Clamp(GetProgressData().chapterTwoCurrentRoundNumber, 1, ChapterTwoBossRound);
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            int parsedRound = ParseRoundNumber(GetCurrentRoundId(progress));
+            int roundNumber = Mathf.Clamp(parsedRound > 0 ? parsedRound : progress.chapterTwoCurrentRoundNumber, 1, ChapterTwoBossRound);
             return Mathf.Clamp(roundNumber - 1, 0, Mathf.Max(0, chapterTwoConfig?.rounds?.Count - 1 ?? 0));
         }
 
@@ -75,7 +182,7 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
 
         public bool ShouldAutoStartRound(V02RoundConfig round)
         {
-            return IsChapterTwoNormalRound(round);
+            return (IsChapterOneRound(round) && !round.isBossRound) || IsChapterTwoNormalRound(round);
         }
 
         public bool ShouldStopBeforeChapterTwoBoss(V02RoundConfig clearedRound)
@@ -90,7 +197,124 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
 
         public bool IsChapterTwoBossDefeated()
         {
-            return GetProgressData().chapterTwoBossDefeated;
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            return progress.mainTrialPhase == MainTrialPhase.Chapter2Cleared ||
+                   progress.mainTrialPhase == MainTrialPhase.CoreLoopComplete ||
+                   progress.chapterTwoBossCleared ||
+                   progress.chapterTwoBossDefeated;
+        }
+
+        public void OnChapter1BossWin()
+        {
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            progress.mainTrialPhase = MainTrialPhase.Chapter1BossCleared;
+            progress.chapterOneBossCleared = true;
+            SetCurrentRound(progress, "1-10");
+            progress.highestClearedLevelId = "1-10";
+            SaveProgress(progress);
+        }
+
+        public void OnChapter1RewardClaimed()
+        {
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            progress.mainTrialPhase = MainTrialPhase.FirstUpgradeRequired;
+            progress.chapterOneBossCleared = true;
+            progress.chapterOneBossRewardClaimed = true;
+            SetCurrentRound(progress, "1-10");
+            SaveProgress(progress);
+        }
+
+        public void OnFirstUpgradeCompleted(string itemId = "")
+        {
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            progress.mainTrialPhase = MainTrialPhase.FirstUpgradeDone;
+            progress.firstUpgradeCompleted = true;
+            progress.chapterOneCultivationCompleted = true;
+            if (!string.IsNullOrWhiteSpace(itemId))
+            {
+                progress.firstCultivatedTalismanId = itemId.Trim();
+            }
+
+            SetCurrentRound(progress, "2-1");
+            progress.highestClearedLevelId = "1-10";
+            SaveProgress(progress);
+        }
+
+        public void OnChapter2NormalWin(string roundId)
+        {
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            int clearedRoundNumber = Mathf.Clamp(ParseRoundNumber(roundId), 1, ChapterTwoBossRound - 1);
+            int nextRoundNumber = Mathf.Clamp(clearedRoundNumber + 1, 1, ChapterTwoBossRound);
+            progress.mainTrialPhase = MainTrialPhase.Chapter2InProgress;
+            progress.chapterTwoUnlocked = true;
+            progress.chapterTwoCurrentRoundNumber = nextRoundNumber;
+            SetCurrentRound(progress, $"2-{nextRoundNumber}");
+            progress.highestClearedLevelId = $"2-{clearedRoundNumber}";
+            SaveProgress(progress);
+        }
+
+        public void OnChapter2BossReady()
+        {
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            progress.mainTrialPhase = MainTrialPhase.Chapter2BossReady;
+            progress.chapterTwoUnlocked = true;
+            progress.chapterTwoBossUnlocked = true;
+            progress.chapterTwoCurrentRoundNumber = ChapterTwoBossRound;
+            SetCurrentRound(progress, "2-10");
+            SaveProgress(progress);
+        }
+
+        public void OnChapter2BossStart()
+        {
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            if (progress.mainTrialPhase is MainTrialPhase.Chapter2Cleared or MainTrialPhase.CoreLoopComplete ||
+                progress.chapterTwoBossCleared ||
+                progress.coreLoopCompleted)
+            {
+                return;
+            }
+
+            progress.mainTrialPhase = MainTrialPhase.Chapter2BossInProgress;
+            progress.chapterTwoUnlocked = true;
+            progress.chapterTwoBossUnlocked = true;
+            progress.chapterTwoCurrentRoundNumber = ChapterTwoBossRound;
+            SetCurrentRound(progress, "2-10");
+            SaveProgress(progress);
+        }
+
+        public void OnChapter2BossWin()
+        {
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            if (progress.mainTrialPhase == MainTrialPhase.CoreLoopComplete ||
+                progress.coreLoopCompleted)
+            {
+                return;
+            }
+
+            progress.mainTrialPhase = MainTrialPhase.Chapter2Cleared;
+            progress.chapterTwoUnlocked = true;
+            progress.chapterTwoBossUnlocked = true;
+            progress.chapterTwoBossCleared = true;
+            progress.chapterTwoBossDefeated = true;
+            progress.chapterTwoCurrentRoundNumber = ChapterTwoBossRound;
+            SetCurrentRound(progress, "2-10");
+            progress.highestClearedLevelId = "2-10";
+            SaveProgress(progress);
+        }
+
+        public void OnChapter2RewardClaimed()
+        {
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            progress.mainTrialPhase = MainTrialPhase.CoreLoopComplete;
+            progress.chapterTwoUnlocked = true;
+            progress.chapterTwoBossUnlocked = true;
+            progress.chapterTwoBossCleared = true;
+            progress.chapterTwoBossDefeated = true;
+            progress.coreLoopCompleted = true;
+            progress.chapterTwoCurrentRoundNumber = ChapterTwoBossRound;
+            SetCurrentRound(progress, "2-10");
+            progress.highestClearedLevelId = "2-10";
+            SaveProgress(progress);
         }
 
         public void MarkEnteredRound(V02RoundConfig round)
@@ -100,15 +324,25 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
                 return;
             }
 
-            MainTrialProgressData progress = GetProgressData();
-            progress.currentMainTrialLevelId = round.levelId;
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            SetCurrentRound(progress, round.levelId);
+            if (IsChapterOneRound(round) &&
+                progress.mainTrialPhase is MainTrialPhase.NotStarted or MainTrialPhase.Chapter1InProgress)
+            {
+                progress.mainTrialPhase = MainTrialPhase.Chapter1InProgress;
+            }
+
             if (IsChapterTwoRound(round))
             {
                 progress.chapterTwoUnlocked = true;
                 progress.chapterTwoCurrentRoundNumber = Mathf.Clamp(ParseRoundNumber(round.levelId), 1, ChapterTwoBossRound);
+                if (!round.isBossRound)
+                {
+                    progress.mainTrialPhase = MainTrialPhase.Chapter2InProgress;
+                }
             }
 
-            saveService.Save();
+            SaveProgress(progress);
         }
 
         public void MarkRoundCleared(V02RoundConfig round)
@@ -118,46 +352,42 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
                 return;
             }
 
-            MainTrialProgressData progress = GetProgressData();
-            progress.highestClearedLevelId = round.levelId;
-            if (IsChapterTwoRound(round))
+            if (IsChapterTwoNormalRound(round))
             {
-                progress.chapterTwoUnlocked = true;
-                progress.chapterTwoCurrentRoundNumber = Mathf.Clamp(ParseRoundNumber(round.levelId) + 1, 1, ChapterTwoBossRound);
+                OnChapter2NormalWin(round.levelId);
+                return;
             }
 
-            saveService.Save();
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            progress.highestClearedLevelId = round.levelId;
+            if (IsChapterOneRound(round) && !round.isBossRound)
+            {
+                progress.mainTrialPhase = MainTrialPhase.Chapter1InProgress;
+                int nextRoundNumber = Mathf.Clamp(ParseRoundNumber(round.levelId) + 1, 1, ChapterTwoBossRound);
+                SetCurrentRound(progress, $"1-{nextRoundNumber}");
+            }
+
+            SaveProgress(progress);
         }
 
         public void MarkChapterTwoStarted()
         {
-            MainTrialProgressData progress = GetProgressData();
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            progress.mainTrialPhase = MainTrialPhase.Chapter2InProgress;
             progress.chapterTwoUnlocked = true;
             progress.chapterTwoCurrentRoundNumber = Mathf.Max(1, progress.chapterTwoCurrentRoundNumber);
-            progress.currentMainTrialLevelId = $"2-{progress.chapterTwoCurrentRoundNumber}";
-            saveService.Save();
+            SetCurrentRound(progress, $"2-{progress.chapterTwoCurrentRoundNumber}");
+            SaveProgress(progress);
         }
 
         public void MarkChapterTwoBossUnlocked()
         {
-            MainTrialProgressData progress = GetProgressData();
-            progress.chapterTwoUnlocked = true;
-            progress.chapterTwoBossUnlocked = true;
-            progress.chapterTwoCurrentRoundNumber = ChapterTwoBossRound;
-            progress.currentMainTrialLevelId = "2-10";
-            saveService.Save();
+            OnChapter2BossReady();
         }
 
         public void MarkChapterTwoBossDefeated()
         {
-            MainTrialProgressData progress = GetProgressData();
-            progress.chapterTwoUnlocked = true;
-            progress.chapterTwoBossUnlocked = true;
-            progress.chapterTwoBossDefeated = true;
-            progress.chapterTwoCurrentRoundNumber = ChapterTwoBossRound;
-            progress.currentMainTrialLevelId = "2-10";
-            progress.highestClearedLevelId = "2-10";
-            saveService.Save();
+            OnChapter2BossWin();
         }
 
         private List<V02RoundConfig> BuildChapterTwoRounds(V02RunConfig chapterOneTemplate)
@@ -228,6 +458,216 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
         {
             saveService ??= SaveService.GetOrCreate();
             return saveService;
+        }
+
+        private MainTrialProgressData EnsurePhaseInitialized()
+        {
+            SaveService service = EnsureSaveService();
+            bool hadPersistedSave = service.HasSave();
+            MainTrialProgressData progress = GetProgressData();
+            if (progress.mainTrialPhaseInitialized)
+            {
+                if (EnsureCoreLoopCompleteConsistency(progress) ||
+                    EnsureChapterTwoClearedConsistency(progress))
+                {
+                    SaveProgress(progress);
+                }
+
+                return progress;
+            }
+
+            progress.mainTrialPhase = hadPersistedSave
+                ? MigrateLegacyPhase(progress)
+                : MainTrialPhase.NotStarted;
+            progress.mainTrialPhaseInitialized = true;
+            EnsureCoreLoopCompleteConsistency(progress);
+            EnsureChapterTwoClearedConsistency(progress);
+
+            string currentRoundId = GetCurrentRoundId(progress);
+            if (string.IsNullOrWhiteSpace(currentRoundId))
+            {
+                currentRoundId = GetDefaultRoundId(progress.mainTrialPhase);
+            }
+
+            SetCurrentRound(progress, currentRoundId);
+            SaveProgress(progress);
+            Debug.Log(
+                $"[V0.2-StateMachine] Migrated phase={progress.mainTrialPhase}, " +
+                $"round={progress.currentRoundId}, legacySave={hadPersistedSave}");
+            return progress;
+        }
+
+        private static bool EnsureCoreLoopCompleteConsistency(MainTrialProgressData progress)
+        {
+            if (progress.mainTrialPhase != MainTrialPhase.CoreLoopComplete &&
+                !progress.coreLoopCompleted)
+            {
+                return false;
+            }
+
+            bool changed = progress.mainTrialPhase != MainTrialPhase.CoreLoopComplete ||
+                           !progress.coreLoopCompleted ||
+                           !progress.chapterTwoBossCleared ||
+                           !progress.chapterTwoBossDefeated ||
+                           !progress.chapterTwoBossUnlocked ||
+                           !progress.chapterTwoUnlocked ||
+                           !string.Equals(
+                               GetCurrentRoundId(progress),
+                               "2-10",
+                               System.StringComparison.OrdinalIgnoreCase);
+
+            progress.mainTrialPhase = MainTrialPhase.CoreLoopComplete;
+            progress.coreLoopCompleted = true;
+            progress.chapterTwoBossCleared = true;
+            progress.chapterTwoBossDefeated = true;
+            progress.chapterTwoBossUnlocked = true;
+            progress.chapterTwoUnlocked = true;
+            progress.chapterTwoCurrentRoundNumber = ChapterTwoBossRound;
+            SetCurrentRound(progress, "2-10");
+
+            return changed;
+        }
+
+        private static bool EnsureChapterTwoClearedConsistency(MainTrialProgressData progress)
+        {
+            if (progress.mainTrialPhase == MainTrialPhase.CoreLoopComplete ||
+                progress.coreLoopCompleted ||
+                (!progress.chapterTwoBossCleared && !progress.chapterTwoBossDefeated))
+            {
+                return false;
+            }
+
+            bool changed = progress.mainTrialPhase != MainTrialPhase.Chapter2Cleared ||
+                           !progress.chapterTwoBossCleared ||
+                           !progress.chapterTwoBossDefeated ||
+                           !progress.chapterTwoBossUnlocked ||
+                           !progress.chapterTwoUnlocked ||
+                           !string.Equals(
+                               GetCurrentRoundId(progress),
+                               "2-10",
+                               System.StringComparison.OrdinalIgnoreCase);
+
+            progress.mainTrialPhase = MainTrialPhase.Chapter2Cleared;
+            progress.chapterTwoBossCleared = true;
+            progress.chapterTwoBossDefeated = true;
+            progress.chapterTwoBossUnlocked = true;
+            progress.chapterTwoUnlocked = true;
+            progress.chapterTwoCurrentRoundNumber = ChapterTwoBossRound;
+            SetCurrentRound(progress, "2-10");
+            progress.highestClearedLevelId = "2-10";
+            return changed;
+        }
+
+        private static MainTrialPhase MigrateLegacyPhase(MainTrialProgressData progress)
+        {
+            if (progress.coreLoopCompleted)
+            {
+                return MainTrialPhase.CoreLoopComplete;
+            }
+
+            if (progress.chapterTwoBossCleared || progress.chapterTwoBossDefeated)
+            {
+                return MainTrialPhase.Chapter2Cleared;
+            }
+
+            string currentRoundId = GetCurrentRoundId(progress);
+            if (progress.chapterTwoBossUnlocked &&
+                string.Equals(currentRoundId, "2-10", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return MainTrialPhase.Chapter2BossReady;
+            }
+
+            if (IsRoundInChapter(currentRoundId, ChapterTwoPrefix) || progress.chapterTwoUnlocked)
+            {
+                return MainTrialPhase.Chapter2InProgress;
+            }
+
+            if (progress.firstUpgradeCompleted || progress.chapterOneCultivationCompleted)
+            {
+                return MainTrialPhase.FirstUpgradeDone;
+            }
+
+            if (progress.chapterOneBossRewardClaimed)
+            {
+                return MainTrialPhase.FirstUpgradeRequired;
+            }
+
+            if (progress.chapterOneBossCleared)
+            {
+                return MainTrialPhase.Chapter1BossCleared;
+            }
+
+            return MainTrialPhase.Chapter1InProgress;
+        }
+
+        private static MainTrialStartupRoute CreateRoute(
+            MainTrialStartupRouteType routeType,
+            MainTrialProgressData progress,
+            string roundId,
+            string reason)
+        {
+            return new MainTrialStartupRoute(routeType, progress.mainTrialPhase, roundId, reason);
+        }
+
+        private static string GetCurrentRoundId(MainTrialProgressData progress)
+        {
+            if (progress == null)
+            {
+                return string.Empty;
+            }
+
+            if (!string.IsNullOrWhiteSpace(progress.currentRoundId))
+            {
+                return progress.currentRoundId.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(progress.currentMainTrialLevelId))
+            {
+                return progress.currentMainTrialLevelId.Trim();
+            }
+
+            if (progress.chapterTwoUnlocked)
+            {
+                return $"2-{Mathf.Clamp(progress.chapterTwoCurrentRoundNumber, 1, ChapterTwoBossRound)}";
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetDefaultRoundId(MainTrialPhase phase)
+        {
+            return phase switch
+            {
+                MainTrialPhase.Chapter1BossCleared or
+                MainTrialPhase.Chapter1RewardClaimed or
+                MainTrialPhase.FirstUpgradeRequired => "1-10",
+                MainTrialPhase.FirstUpgradeDone or MainTrialPhase.Chapter2InProgress => "2-1",
+                MainTrialPhase.Chapter2BossReady or
+                MainTrialPhase.Chapter2BossInProgress or
+                MainTrialPhase.Chapter2Cleared or
+                MainTrialPhase.CoreLoopComplete => "2-10",
+                _ => "1-1"
+            };
+        }
+
+        private static void SetCurrentRound(MainTrialProgressData progress, string roundId)
+        {
+            string normalizedRoundId = string.IsNullOrWhiteSpace(roundId) ? string.Empty : roundId.Trim();
+            progress.currentRoundId = normalizedRoundId;
+            progress.currentMainTrialLevelId = normalizedRoundId;
+        }
+
+        private void SaveProgress(MainTrialProgressData progress)
+        {
+            progress.mainTrialPhaseInitialized = true;
+            progress.Normalize();
+            EnsureSaveService().Save();
+        }
+
+        private static bool IsRoundInChapter(string roundId, string prefix)
+        {
+            return !string.IsNullOrWhiteSpace(roundId) &&
+                   roundId.Trim().StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase);
         }
 
         private static int ParseRoundNumber(string levelId)

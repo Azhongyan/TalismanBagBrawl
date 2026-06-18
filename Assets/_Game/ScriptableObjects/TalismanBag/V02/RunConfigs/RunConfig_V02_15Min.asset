@@ -11,18 +11,18 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 285353d9dd22a8c4695edb3b52013526, type: 3}
   m_Name: RunConfig_V02_15Min
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   runId: v02_main_trial_1_10
   displayName: V0.2 Main Trial 1-10
   rounds:
   - levelId: 1-1
     roundIndex: 1
-    roundTitle: "游灯小祟：供能教学"
+    roundTitle: "\u6E38\u706F\u5C0F\u795F\uFF1A\u4F9B\u80FD\u6559\u5B66"
     enemy: {fileID: 11400000, guid: 0b6fe088fc1a49218a5200ef4f15d771, type: 2}
     intendedRole: Energy stone and fire talisman tutorial
-    teachingGoal: "理解聚能石会为附近符箓提供灵力，只有获得灵力的符箓才能发动。"
-    preBattleHint: "请让火符处在聚能石供能范围内。"
-    recommendedCounterTags: []
+    teachingGoal: "\u7406\u89E3\u805A\u80FD\u77F3\u4F1A\u4E3A\u9644\u8FD1\u7B26\u7B93\u63D0\u4F9B\u7075\u529B\uFF0C\u53EA\u6709\u83B7\u5F97\u7075\u529B\u7684\u7B26\u7B93\u624D\u80FD\u53D1\u52A8\u3002"
+    preBattleHint: "\u8BF7\u8BA9\u706B\u7B26\u5904\u5728\u805A\u80FD\u77F3\u4F9B\u80FD\u8303\u56F4\u5185\u3002"
+    recommendedCounterTags: 
     isBossRound: 0
     targetDurationMin: 14
     targetDurationMax: 18
@@ -49,12 +49,12 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-2
     roundIndex: 2
-    roundTitle: "游灯小祟：基础输出复习"
+    roundTitle: "\u6E38\u706F\u5C0F\u795F\uFF1A\u57FA\u7840\u8F93\u51FA\u590D\u4E60"
     enemy: {fileID: 11400000, guid: c73ab9457d1841e39a189727a2ec2687, type: 2}
     intendedRole: Basic output review
-    teachingGoal: "复习火符输出和聚能石供能，胜利后获得雷符。"
-    preBattleHint: "复习基础输出。下一关会出现护盾。"
-    recommendedCounterTags: []
+    teachingGoal: "\u590D\u4E60\u706B\u7B26\u8F93\u51FA\u548C\u805A\u80FD\u77F3\u4F9B\u80FD\uFF0C\u80DC\u5229\u540E\u83B7\u5F97\u96F7\u7B26\u3002"
+    preBattleHint: "\u590D\u4E60\u57FA\u7840\u8F93\u51FA\u3002\u4E0B\u4E00\u5173\u4F1A\u51FA\u73B0\u62A4\u76FE\u3002"
+    recommendedCounterTags: 
     isBossRound: 0
     targetDurationMin: 18
     targetDurationMax: 28
@@ -86,12 +86,12 @@ MonoBehaviour:
       note: Curve freeze negative target
   - levelId: 1-3
     roundIndex: 3
-    roundTitle: "石甲符卫：雷符破盾"
+    roundTitle: "\u77F3\u7532\u7B26\u536B\uFF1A\u96F7\u7B26\u7834\u76FE"
     enemy: {fileID: 11400000, guid: 7e529c3694fd44d0a76d614cf3c06b36, type: 2}
     intendedRole: Shield break tutorial
-    teachingGoal: "验证雷符可以快速击破低强度护盾。"
-    preBattleHint: "敌人有护盾，雷符可破盾。"
-    recommendedCounterTags: []
+    teachingGoal: "\u9A8C\u8BC1\u96F7\u7B26\u53EF\u4EE5\u5FEB\u901F\u51FB\u7834\u4F4E\u5F3A\u5EA6\u62A4\u76FE\u3002"
+    preBattleHint: "\u654C\u4EBA\u6709\u62A4\u76FE\uFF0C\u96F7\u7B26\u53EF\u7834\u76FE\u3002"
+    recommendedCounterTags: 
     isBossRound: 0
     targetDurationMin: 18
     targetDurationMax: 26
@@ -123,12 +123,12 @@ MonoBehaviour:
       note: Curve freeze weak target
   - levelId: 1-4
     roundIndex: 4
-    roundTitle: "石甲符卫：护盾复习"
+    roundTitle: "\u77F3\u7532\u7B26\u536B\uFF1A\u62A4\u76FE\u590D\u4E60"
     enemy: {fileID: 11400000, guid: 7c1e7e13122c4fb68ebc45e5465bb3b5, type: 2}
     intendedRole: Shield review
-    teachingGoal: "复习破盾和基础输出，胜利后获得护身符。"
-    preBattleHint: "护盾略厚，继续用雷符处理护盾。"
-    recommendedCounterTags: []
+    teachingGoal: "\u590D\u4E60\u7834\u76FE\u548C\u57FA\u7840\u8F93\u51FA\uFF0C\u80DC\u5229\u540E\u83B7\u5F97\u62A4\u8EAB\u7B26\u3002"
+    preBattleHint: "\u62A4\u76FE\u7565\u539A\uFF0C\u7EE7\u7EED\u7528\u96F7\u7B26\u5904\u7406\u62A4\u76FE\u3002"
+    recommendedCounterTags: 
     isBossRound: 0
     targetDurationMin: 90
     targetDurationMax: 120
@@ -155,12 +155,12 @@ MonoBehaviour:
       note: Curve freeze negative target
   - levelId: 1-5
     roundIndex: 5
-    roundTitle: "铜爪压阵怪：承压教学"
+    roundTitle: "\u94DC\u722A\u538B\u9635\u602A\uFF1A\u627F\u538B\u6559\u5B66"
     enemy: {fileID: 11400000, guid: b201fc3b753c4adab4321c91239bf709, type: 2}
     intendedRole: Pressure survival tutorial
-    teachingGoal: "验证护身符可以提高承压生存能力，胜利后获得净化符。"
-    preBattleHint: "敌人攻击更强，护身符可提高生存。"
-    recommendedCounterTags: []
+    teachingGoal: "\u9A8C\u8BC1\u62A4\u8EAB\u7B26\u53EF\u4EE5\u63D0\u9AD8\u627F\u538B\u751F\u5B58\u80FD\u529B\uFF0C\u80DC\u5229\u540E\u83B7\u5F97\u51C0\u5316\u7B26\u3002"
+    preBattleHint: "\u654C\u4EBA\u653B\u51FB\u66F4\u5F3A\uFF0C\u62A4\u8EAB\u7B26\u53EF\u63D0\u9AD8\u751F\u5B58\u3002"
+    recommendedCounterTags: 
     isBossRound: 0
     targetDurationMin: 20
     targetDurationMax: 30
@@ -187,12 +187,12 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-6
     roundIndex: 6
-    roundTitle: "灰火毒祟：净化教学"
+    roundTitle: "\u7070\u706B\u6BD2\u795F\uFF1A\u51C0\u5316\u6559\u5B66"
     enemy: {fileID: 11400000, guid: 01aa1e0be8f5453c8c1d705f056a6e9a, type: 2}
     intendedRole: Debuff cleanse tutorial
-    teachingGoal: "验证净化符可以清除毒、燃烧等负面状态，胜利后获得镇魂符。"
-    preBattleHint: "敌人会施加负面状态，净化符可清除毒、燃烧等状态。"
-    recommendedCounterTags: []
+    teachingGoal: "\u9A8C\u8BC1\u51C0\u5316\u7B26\u53EF\u4EE5\u6E05\u9664\u6BD2\u3001\u71C3\u70E7\u7B49\u8D1F\u9762\u72B6\u6001\uFF0C\u80DC\u5229\u540E\u83B7\u5F97\u9547\u9B42\u7B26\u3002"
+    preBattleHint: "\u654C\u4EBA\u4F1A\u65BD\u52A0\u8D1F\u9762\u72B6\u6001\uFF0C\u51C0\u5316\u7B26\u53EF\u6E05\u9664\u6BD2\u3001\u71C3\u70E7\u7B49\u72B6\u6001\u3002"
+    recommendedCounterTags: 
     isBossRound: 0
     targetDurationMin: 22
     targetDurationMax: 32
@@ -219,12 +219,12 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-7
     roundIndex: 7
-    roundTitle: "摄灵封符鬼：异常干扰"
+    roundTitle: "\u6444\u7075\u5C01\u7B26\u9B3C\uFF1A\u5F02\u5E38\u5E72\u6270"
     enemy: {fileID: 11400000, guid: 6f3b1a7de8894e54a7b69007799ec801, type: 2}
     intendedRole: Disruption counter tutorial
-    teachingGoal: "验证镇魂符可以反制偷灵、封符等异常干扰。"
-    preBattleHint: "敌人会干扰你的阵势，镇魂符可压制异常干扰。"
-    recommendedCounterTags: []
+    teachingGoal: "\u9A8C\u8BC1\u9547\u9B42\u7B26\u53EF\u4EE5\u53CD\u5236\u5077\u7075\u3001\u5C01\u7B26\u7B49\u5F02\u5E38\u5E72\u6270\u3002"
+    preBattleHint: "\u654C\u4EBA\u4F1A\u5E72\u6270\u4F60\u7684\u9635\u52BF\uFF0C\u9547\u9B42\u7B26\u53EF\u538B\u5236\u5F02\u5E38\u5E72\u6270\u3002"
+    recommendedCounterTags: 
     isBossRound: 0
     targetDurationMin: 26
     targetDurationMax: 38
@@ -256,12 +256,12 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-8
     roundIndex: 8
-    roundTitle: "摄灵封符鬼：干扰复习"
+    roundTitle: "\u6444\u7075\u5C01\u7B26\u9B3C\uFF1A\u5E72\u6270\u590D\u4E60"
     enemy: {fileID: 11400000, guid: bbe84c44b2ad471187c6bb3f6c0e65f2, type: 2}
     intendedRole: Disruption review
-    teachingGoal: "复习偷灵、封符干扰，胜利后获得连锁雷符。"
-    preBattleHint: "异常干扰频率略高，但不会形成硬卡。"
-    recommendedCounterTags: []
+    teachingGoal: "\u590D\u4E60\u5077\u7075\u3001\u5C01\u7B26\u5E72\u6270\uFF0C\u80DC\u5229\u540E\u83B7\u5F97\u8FDE\u9501\u96F7\u7B26\u3002"
+    preBattleHint: "\u5F02\u5E38\u5E72\u6270\u9891\u7387\u7565\u9AD8\uFF0C\u4F46\u4E0D\u4F1A\u5F62\u6210\u786C\u5361\u3002"
+    recommendedCounterTags: 
     isBossRound: 0
     targetDurationMin: 30
     targetDurationMax: 45
@@ -298,12 +298,12 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-9
     roundIndex: 9
-    roundTitle: "游灯小祟 + 石甲符卫：Boss前综合小测"
+    roundTitle: "\u6E38\u706F\u5C0F\u795F + \u77F3\u7532\u7B26\u536B\uFF1ABoss\u524D\u7EFC\u5408\u5C0F\u6D4B"
     enemy: {fileID: 11400000, guid: 14f2f4f2f4414e8c8ffcf2be8d830617, type: 2}
     intendedRole: Boss pre-check with reused enemies
-    teachingGoal: "用连锁雷符和已有符箓处理多目标压力与低强度护盾。"
-    preBattleHint: "前方将进入 Boss 关，复习多目标压力和护盾处理。"
-    recommendedCounterTags: []
+    teachingGoal: "\u7528\u8FDE\u9501\u96F7\u7B26\u548C\u5DF2\u6709\u7B26\u7B93\u5904\u7406\u591A\u76EE\u6807\u538B\u529B\u4E0E\u4F4E\u5F3A\u5EA6\u62A4\u76FE\u3002"
+    preBattleHint: "\u524D\u65B9\u5C06\u8FDB\u5165 Boss \u5173\uFF0C\u590D\u4E60\u591A\u76EE\u6807\u538B\u529B\u548C\u62A4\u76FE\u5904\u7406\u3002"
+    recommendedCounterTags: 
     isBossRound: 0
     targetDurationMin: 28
     targetDurationMax: 42
@@ -330,12 +330,12 @@ MonoBehaviour:
       note: Curve freeze target
   - levelId: 1-10
     roundIndex: 10
-    roundTitle: "破阵妖将：第一章 Boss"
+    roundTitle: "\u7834\u9635\u5996\u5C06\uFF1A\u7B2C\u4E00\u7AE0 Boss"
     enemy: {fileID: 11400000, guid: af00b4c24b8d448cba58b91f4833e62b, type: 2}
     intendedRole: Chapter one boss comprehensive check
-    teachingGoal: "第一章综合 Boss，检验供能、破盾、净化、镇魂和多目标处理。"
-    preBattleHint: "Boss 信息提示后再开战，确保核心符箓都被供能。"
-    recommendedCounterTags: []
+    teachingGoal: "\u7B2C\u4E00\u7AE0\u7EFC\u5408 Boss\uFF0C\u68C0\u9A8C\u4F9B\u80FD\u3001\u7834\u76FE\u3001\u51C0\u5316\u3001\u9547\u9B42\u548C\u591A\u76EE\u6807\u5904\u7406\u3002"
+    preBattleHint: "Boss \u4FE1\u606F\u63D0\u793A\u540E\u518D\u5F00\u6218\uFF0C\u786E\u4FDD\u6838\u5FC3\u7B26\u7B93\u90FD\u88AB\u4F9B\u80FD\u3002"
+    recommendedCounterTags: 
     isBossRound: 1
     targetDurationMin: 35
     targetDurationMax: 50

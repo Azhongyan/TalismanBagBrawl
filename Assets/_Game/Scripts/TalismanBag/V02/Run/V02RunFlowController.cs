@@ -114,15 +114,12 @@ namespace TalismanBag.V02.Run
         public void StartNewRun()
         {
             state = V02RunState.Init;
-            activeRunConfig = ResolveInitialRunConfig();
+            MainTrialStartupRoute startupRoute = EnsureMainTrialFlowService().GetStartupRoute();
+            activeRunConfig = ResolveRunConfigForRoute(startupRoute);
             currentRoundIndex = 0;
             suppressNextMainTrialAutoStart = false;
             suppressedAutoStartLog = string.Empty;
             postBattlePrepareRequest.Clear();
-            if (activeRunConfig != null && EnsureMainTrialFlowService().ShouldEnterChapterTwoOnStart())
-            {
-                currentRoundIndex = EnsureMainTrialFlowService().GetChapterTwoStartIndex(activeRunConfig);
-            }
 
             nextEnemyOverride = null;
             shownFormationInfoRoundIndexes.Clear();
@@ -138,7 +135,7 @@ namespace TalismanBag.V02.Run
             bossInfoPanel?.Hide();
             mainTrialRuntimeEnemies.Clear();
             bossRewardClaimed = false;
-            EnterPrep();
+            ExecuteStartupRoute(startupRoute);
         }
 
         public void ResetMainTrialFromBeginning()
@@ -186,6 +183,13 @@ namespace TalismanBag.V02.Run
 
         public void StartCombat()
         {
+            suppressNextMainTrialAutoStart = false;
+            suppressedAutoStartLog = string.Empty;
+            if (EnsureMainTrialFlowService().IsChapterTwoBossRound(CurrentRound))
+            {
+                EnsureMainTrialFlowService().OnChapter2BossStart();
+            }
+
             state = V02RunState.Combat;
             HidePreBattlePopups();
             bossInfoPanel?.Hide();
@@ -214,10 +218,12 @@ namespace TalismanBag.V02.Run
                 {
                     if (EnsureMainTrialFlowService().IsChapterTwoBossRound(round))
                     {
+                        EnsureMainTrialFlowService().OnChapter2BossWin();
                         OpenChapterTwoBossRewardPanel();
                     }
                     else
                     {
+                        EnsureMainTrialFlowService().OnChapter1BossWin();
                         OpenBossRewardPanel();
                     }
                 }
@@ -432,24 +438,42 @@ namespace TalismanBag.V02.Run
         {
             TutorialGuideRow guideRow = GetTutorialGuideRow(CurrentRound, TutorialGuideTrigger.BossClear);
             TutorialGuideService guideService = EnsureTutorialGuideService();
+            bool flowAdvancedBeforeRuntimeSync = false;
             if (guideRow != null && !guideService.IsCompleted(guideRow))
             {
                 RewardResult rewardResult = guideService.GrantReward(guideRow);
                 if (rewardResult == null || !rewardResult.HasRewards)
                 {
                     LogTutorialGuideRewardResult(guideRow, rewardResult);
+                    EnsureMainTrialFlowService().OnChapter1RewardClaimed();
                     OpenChapterOneHomeGreybox();
                     return;
                 }
 
                 guideService.MarkCompleted(guideRow);
+                EnsureMainTrialFlowService().OnChapter1RewardClaimed();
+                flowAdvancedBeforeRuntimeSync = true;
                 LogTutorialGuideRewardResult(guideRow, rewardResult);
-                SyncRewardResultToRuntimeInventory(rewardResult);
+                try
+                {
+                    SyncRewardResultToRuntimeInventory(rewardResult);
+                }
+                catch (System.Exception exception)
+                {
+                    Debug.LogException(exception);
+                    battleLogUI?.AddLog("1-10 奖励已写入存档，但运行时背包同步失败；主线将继续。");
+                }
+
                 bossRewardClaimed = true;
             }
             else if (guideRow == null && !bossRewardClaimed)
             {
                 battleLogUI?.AddLog("Boss 章节奖励配置缺失，跳过发放。");
+            }
+
+            if (!flowAdvancedBeforeRuntimeSync)
+            {
+                EnsureMainTrialFlowService().OnChapter1RewardClaimed();
             }
 
             OpenChapterOneHomeGreybox();
@@ -480,13 +504,15 @@ namespace TalismanBag.V02.Run
         private void ConfirmChapterTwoBossReward()
         {
             MainTrialFlowService flowService = EnsureMainTrialFlowService();
-            if (!flowService.IsChapterTwoBossDefeated())
+            if (flowService.GetCurrentPhase() == MainTrialPhase.CoreLoopComplete)
             {
-                RewardResult rewardResult = EnsureCoreLoopRewardService().GrantBossClearRewards(GetChapterTwoBossRewardConfig());
-                flowService.MarkChapterTwoBossDefeated();
-                LogChapterTwoBossRewardResult(rewardResult);
+                OpenCoreLoopCompleteHome();
+                return;
             }
 
+            RewardResult rewardResult = EnsureCoreLoopRewardService().GrantBossClearRewards(GetChapterTwoBossRewardConfig());
+            LogChapterTwoBossRewardResult(rewardResult);
+            flowService.OnChapter2RewardClaimed();
             FinishRunWin();
         }
 
@@ -506,6 +532,34 @@ namespace TalismanBag.V02.Run
                 "当前背包阵容已保留。继续主线后进入下一关整备，并保持手动开战。",
                 OpenChapterOneCultivationFromHome,
                 ContinuePostBattleFromHome);
+        }
+
+        private void OpenCoreLoopCompleteHome()
+        {
+            state = V02RunState.Reward;
+            HidePreBattlePopups();
+            bossRewardPanel?.Hide();
+            fixedRewardPanel?.Hide();
+            bossInfoPanel?.Hide();
+            runResultPanel?.Hide();
+
+            const string title = "核心闭环已完成";
+            const string status = "下一阶段暂未开放。\n当前进度：2-10 已完成。";
+            SetText(roundInfoText, title);
+            SetText(prepHintText, status);
+
+            MainHomeGreyboxPanel panel = EnsureHomeGreyboxPanel();
+            if (panel == null)
+            {
+                battleLogUI?.AddLog("核心闭环已完成：2-10 已完成，下一阶段暂未开放。");
+                return;
+            }
+
+            panel.ShowComplete(
+                title,
+                BuildHomeResourceText(),
+                status,
+                () => battleLogUI?.AddLog("核心闭环完成页已关闭"));
         }
 
         private void OpenHomeGreybox(string title, string status, System.Action onCultivate, System.Action onContinue)
@@ -1027,6 +1081,8 @@ namespace TalismanBag.V02.Run
                         return;
                     }
 
+                    suppressNextMainTrialAutoStart = true;
+                    suppressedAutoStartLog = "已领取教学奖励，请将新道具放入阵盘后手动开始斗法。";
                     onConfirmed?.Invoke();
                 });
             return true;
@@ -1064,7 +1120,7 @@ namespace TalismanBag.V02.Run
                 () =>
                 {
                     guideService.MarkCompleted(guideRow);
-                    TryAutoStartMainTrialRound(round);
+                    battleLogUI?.AddLog("教学说明已确认，请调整阵盘后手动开始斗法。");
                 });
             return true;
         }
@@ -1421,13 +1477,7 @@ namespace TalismanBag.V02.Run
 
         private void MarkChapterOneCultivationCompleted(string itemId)
         {
-            SaveService saveService = EnsureCoreLoopSaveService();
-            SaveData saveData = saveService.EnsureLoaded();
-            saveData.mainTrialProgressData ??= new MainTrialProgressData();
-            saveData.mainTrialProgressData.chapterOneCultivationCompleted = true;
-            saveData.mainTrialProgressData.firstCultivatedTalismanId = itemId ?? string.Empty;
-            saveData.mainTrialProgressData.highestClearedLevelId = "1-10";
-            saveService.Save();
+            EnsureMainTrialFlowService().OnFirstUpgradeCompleted(itemId);
             battleLogUI?.AddLog($"符箓培养完成：{itemId} Lv.2");
         }
 
@@ -2007,12 +2057,89 @@ namespace TalismanBag.V02.Run
             return testEnemies != null && testEnemies.Count > 0 ? testEnemies.Count : 10;
         }
 
-        private V02RunConfig ResolveInitialRunConfig()
+        private V02RunConfig ResolveRunConfigForRoute(MainTrialStartupRoute route)
         {
-            MainTrialFlowService flowService = EnsureMainTrialFlowService();
-            return flowService.ShouldEnterChapterTwoOnStart()
-                ? flowService.GetOrCreateChapterTwoRunConfig(GetBaseRunConfig())
+            bool roundIsChapterTwo = route != null &&
+                                     !string.IsNullOrWhiteSpace(route.roundId) &&
+                                     route.roundId.Trim().StartsWith("2-", System.StringComparison.OrdinalIgnoreCase);
+            bool routeUsesChapterTwo = route != null &&
+                                       route.routeType is MainTrialStartupRouteType.BossInfo or
+                                           MainTrialStartupRouteType.BossReward or
+                                           MainTrialStartupRouteType.CompleteHome;
+            return roundIsChapterTwo || routeUsesChapterTwo
+                ? EnsureMainTrialFlowService().GetOrCreateChapterTwoRunConfig(GetBaseRunConfig())
                 : GetBaseRunConfig();
+        }
+
+        private void ExecuteStartupRoute(MainTrialStartupRoute route)
+        {
+            route ??= new MainTrialStartupRoute(
+                MainTrialStartupRouteType.Battle,
+                MainTrialPhase.NotStarted,
+                "1-1",
+                "Missing route fallback");
+
+            LogStartupRoute(route);
+            SetCurrentRoundFromRoute(route);
+
+            switch (route.routeType)
+            {
+                case MainTrialStartupRouteType.CompleteHome:
+                    OpenCoreLoopCompleteHome();
+                    return;
+                case MainTrialStartupRouteType.BossReward:
+                    OpenChapterTwoBossRewardPanel();
+                    return;
+                case MainTrialStartupRouteType.ChapterReward:
+                    OpenBossRewardPanel();
+                    return;
+                case MainTrialStartupRouteType.UpgradeRequired:
+                case MainTrialStartupRouteType.Home:
+                    OpenChapterOneHomeGreybox();
+                    return;
+                case MainTrialStartupRouteType.BossInfo:
+                case MainTrialStartupRouteType.Battle:
+                default:
+                    EnterPrep();
+                    return;
+            }
+        }
+
+        private void SetCurrentRoundFromRoute(MainTrialStartupRoute route)
+        {
+            if (activeRunConfig?.rounds == null || activeRunConfig.rounds.Count == 0)
+            {
+                currentRoundIndex = 0;
+                return;
+            }
+
+            int routeIndex = FindRoundIndexByLevelId(route?.roundId);
+            if (routeIndex >= 0)
+            {
+                currentRoundIndex = routeIndex;
+                return;
+            }
+
+            bool chapterTwoRoute = route != null &&
+                                   !string.IsNullOrWhiteSpace(route.roundId) &&
+                                   route.roundId.Trim().StartsWith("2-", System.StringComparison.OrdinalIgnoreCase);
+            currentRoundIndex = chapterTwoRoute
+                ? EnsureMainTrialFlowService().GetChapterTwoStartIndex(activeRunConfig)
+                : 0;
+        }
+
+        private void LogStartupRoute(MainTrialStartupRoute route)
+        {
+            SaveData saveData = EnsureCoreLoopSaveService().EnsureLoaded();
+            MainTrialProgressData progress = saveData.mainTrialProgressData ?? new MainTrialProgressData();
+            progress.Normalize();
+
+            Debug.Log($"[V0.2-StateMachine] phase={route.phase}");
+            Debug.Log($"[V0.2-StateMachine] currentRoundId={progress.currentRoundId}");
+            Debug.Log($"[V0.2-StateMachine] chapterTwoBossCleared={progress.chapterTwoBossCleared.ToString().ToLowerInvariant()}");
+            Debug.Log($"[V0.2-StateMachine] coreLoopCompleted={progress.coreLoopCompleted.ToString().ToLowerInvariant()}");
+            Debug.Log($"[V0.2-StateMachine] startupRoute={route.routeType}, reason={route.reason}");
+            battleLogUI?.AddLog($"状态恢复：{route.phase} -> {route.routeType}（{route.reason}）");
         }
 
         private V02RunConfig GetActiveRunConfig()

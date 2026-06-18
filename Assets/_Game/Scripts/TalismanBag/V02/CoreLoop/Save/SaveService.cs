@@ -7,7 +7,6 @@ namespace TalismanBag.V02.CoreLoop.Save
         private const string SaveKey = "TalismanBag.V02.CoreLoop.SaveData";
 
         [SerializeField] private bool loadOnAwake = true;
-        [SerializeField] private bool resetOnEditorPlay = true;
 
         public SaveData Current { get; private set; }
 
@@ -19,13 +18,6 @@ namespace TalismanBag.V02.CoreLoop.Save
             {
                 Instance = this;
             }
-
-#if UNITY_EDITOR
-            if (resetOnEditorPlay)
-            {
-                ResetSave();
-            }
-#endif
 
             if (loadOnAwake)
             {
@@ -70,6 +62,11 @@ namespace TalismanBag.V02.CoreLoop.Save
 
             Current.Normalize();
             return Current;
+        }
+
+        public SaveData GetCurrentSaveData()
+        {
+            return EnsureLoaded();
         }
 
         public void Load()
