@@ -1974,3 +1974,28 @@ This pass adds the V0.2 post-battle three-choice reward draft. Rewards are desig
 
 - Did not modify verified upgrade values, add Lv.3+, random attributes, new resource types, new save fields, Tune01, 3-10, Task 9-10, or DebugPanel changes.
 - Task 9-10 remain untouched.
+
+## 2026-06-19 - V0.2 StageConfigPanel01 Task 09-10 QA Support
+
+### Scope
+
+- Extended the existing `V0.2 Balance Debug Panel` with a `Stage QA / 整包验收` tab instead of creating a second debug system.
+- Added clearly labelled `[QA / Debug Only]` controls for CoreLoop save reset, formal 1-1 start, 1-10 Boss jump, 2-10 Boss-ready jump, reward simulation by `rewardTableId`, config refresh, DataCatalog validation, main-trial state logging, resource/inventory logging, and opening StageConfigPanel01.
+- Save reset continues through `SaveService.ResetSave()`.
+- QA jump preparation is owned by minimal Editor/development-build methods in `MainTrialFlowService`; `V02RunFlowController.StartNewRun()` still executes the normal startup route and UI state.
+- Reward simulation continues through `RewardService.GrantConfig()`, then `ResourceService` / `ItemInventoryService`, then `SaveService`.
+- Added `Task09_10QaSmoke` for stage count, stage IDs, EnemyGroup resolution, 2-9 stop, 2-10 auto-start, reward assets, bronze seal, DataCatalog counts, and QA API presence.
+- Added `Docs/V0.2/StageConfigPanel01_QA_Report.md`.
+- Added `Docs/V0.2/StageConfigPanel01_KnownWarnings.md`.
+
+### Verification
+
+- Unity 2022.3.50f1c1 batch compilation completed with `Tundra build success` and no `error CS`.
+- Task 9-10 smoke completed with `SMOKE_SUCCESS stages=20, groups=20, errors=0, warnings=15, infos=0, qaMethods=7`.
+- DataCatalog completed with `Error=0`, `Warning=15`, `Info=0`.
+- Logs: `stageconfigpanel01_task9_10_compile.log`, `stageconfigpanel01_task9_10_smoke.log`, and `stageconfigpanel01_task9_10_validate.log`.
+
+### Scope Boundary
+
+- No Tune01, 3-10, new gameplay system, production GM/backend, shop, activity, PVP, exploration, tower, cave, furnace, combat rewrite, reward rewrite, resource rewrite, or SaveService rewrite was added.
+- QA Play Mode must still manually execute reset, formal 1-1 start, focused Boss jumps, reward simulation, manual 2-10 start, settlement, and Stop/Play persistence.

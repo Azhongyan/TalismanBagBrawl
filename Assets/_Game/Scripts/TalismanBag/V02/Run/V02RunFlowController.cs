@@ -148,6 +148,51 @@ namespace TalismanBag.V02.Run
             StartNewRun();
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        public void QaResetCoreLoopSave()
+        {
+            EnsureCoreLoopSaveService().ResetSave();
+            bossRewardClaimed = false;
+            battleLogUI?.AddLog("[QA / Debug Only] CoreLoop 存档已通过 SaveService.ResetSave() 重置。");
+        }
+
+        public void QaStartMainTrialFromOneOne()
+        {
+            ResetMainTrialFromBeginning();
+        }
+
+        public void QaJumpToChapterOneBoss()
+        {
+            EnsureMainTrialFlowService().PrepareChapterOneBossForQa();
+            battleLogUI?.AddLog("[QA / Debug Only] 准备 1-10 Boss 正式流程入口；未直接发放奖励。");
+            StartNewRun();
+        }
+
+        public void QaJumpToChapterTwoBossReady()
+        {
+            EnsureMainTrialFlowService().PrepareChapterTwoBossForQa();
+            battleLogUI?.AddLog("[QA / Debug Only] 准备 2-10 BossInfo 正式流程入口；未直接开启战斗或发放奖励。");
+            StartNewRun();
+        }
+
+        public RewardResult QaGrantRewardById(string rewardTableId)
+        {
+            RewardConfig config = RewardConfig.LoadById(rewardTableId);
+            if (config == null)
+            {
+                battleLogUI?.AddLog($"[QA / Debug Only] 未找到 RewardConfig：{rewardTableId}");
+                return null;
+            }
+
+            RewardResult result = EnsureCoreLoopRewardService().GrantConfig(config);
+            battleLogUI?.AddLog(
+                result != null && result.HasRewards
+                    ? $"[QA / Debug Only] RewardService 已发放：{config.GetCatalogLabel()}"
+                    : $"[QA / Debug Only] RewardService 未产生有效奖励：{config.GetCatalogLabel()}");
+            return result;
+        }
+#endif
+
         public void EnterPrep()
         {
             V02RoundConfig round = CurrentRound;

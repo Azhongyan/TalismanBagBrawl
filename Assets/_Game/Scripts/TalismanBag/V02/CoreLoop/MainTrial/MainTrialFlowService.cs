@@ -411,6 +411,48 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
             OnChapter2BossWin();
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        public void PrepareChapterOneBossForQa()
+        {
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            progress.mainTrialPhase = MainTrialPhase.Chapter1InProgress;
+            progress.mainTrialPhaseInitialized = true;
+            progress.chapterOneBossCleared = false;
+            progress.chapterOneBossRewardClaimed = false;
+            progress.firstUpgradeCompleted = false;
+            progress.chapterOneCultivationCompleted = false;
+            progress.chapterTwoUnlocked = false;
+            progress.chapterTwoCurrentRoundNumber = 1;
+            progress.chapterTwoBossUnlocked = false;
+            progress.chapterTwoBossCleared = false;
+            progress.chapterTwoBossDefeated = false;
+            progress.coreLoopCompleted = false;
+            SetCurrentRound(progress, "1-10");
+            progress.highestClearedLevelId = "1-9";
+            SaveProgress(progress);
+        }
+
+        public void PrepareChapterTwoBossForQa()
+        {
+            MainTrialProgressData progress = EnsurePhaseInitialized();
+            progress.mainTrialPhase = MainTrialPhase.Chapter2BossReady;
+            progress.mainTrialPhaseInitialized = true;
+            progress.chapterOneBossCleared = true;
+            progress.chapterOneBossRewardClaimed = true;
+            progress.firstUpgradeCompleted = true;
+            progress.chapterOneCultivationCompleted = true;
+            progress.chapterTwoUnlocked = true;
+            progress.chapterTwoCurrentRoundNumber = ChapterTwoBossRound;
+            progress.chapterTwoBossUnlocked = true;
+            progress.chapterTwoBossCleared = false;
+            progress.chapterTwoBossDefeated = false;
+            progress.coreLoopCompleted = false;
+            SetCurrentRound(progress, "2-10");
+            progress.highestClearedLevelId = "2-9";
+            SaveProgress(progress);
+        }
+#endif
+
         private List<V02RoundConfig> BuildChapterTwoRounds(V02RunConfig chapterOneTemplate)
         {
             List<V02RoundConfig> rounds = new();

@@ -1,6 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
 using TalismanBag.Enemies;
 using TalismanBag.Items;
+using TalismanBag.V02.Config.EditorTools;
+using TalismanBag.V02.CoreLoop.MainTrial;
+using TalismanBag.V02.CoreLoop.Rewards;
+using TalismanBag.V02.CoreLoop.Save;
 using TalismanBag.V02.Formation;
 using TalismanBag.V02.Rewards;
 using TalismanBag.V02.Run;
@@ -33,6 +38,8 @@ namespace TalismanBag.V02.Balance.EditorTools
         private int selectedEnemyIndex;
         private Vector2 mainScroll;
         private Vector2 outputScroll;
+        private string qaRewardTableId = "chapter_1_10_clear";
+        private string qaLastResult = "QA actions have not run yet. / 尚未执行 QA 操作。";
         private string reportText = "[Build Benchmark / 构筑对标] Press a button to generate a report. / 点击按钮生成报告。";
 
         [MenuItem("Tools/Talisman Bag/V0.2 Balance Debug Panel")]
@@ -51,17 +58,23 @@ namespace TalismanBag.V02.Balance.EditorTools
         private void OnGUI()
         {
             DrawHeader();
-            selectedTab = GUILayout.Toolbar(selectedTab, new[]
-            {
-                "Entry / 总入口",
-                "Counter Config / 克制倍率",
-                "Formation Config / 阵法供能",
-                "Round Config / 关卡配置",
-                "Reward Weights / 奖励权重",
-                "Build Benchmark / 构筑对标",
-                "Read Only Values / 只读数值",
-                "Patch Format / 补丁格式"
-            });
+            selectedTab = GUILayout.SelectionGrid(
+                selectedTab,
+                new[]
+                {
+                    "Entry / 总入口",
+                    "Counter Config / 克制倍率",
+                    "Formation Config / 阵法供能",
+                    "Round Config / 关卡配置",
+                    "Reward Weights / 奖励权重",
+                    "Build Benchmark / 构筑对标",
+                    "Read Only Values / 只读数值",
+                    "Patch Format / 补丁格式",
+                    "Stage QA / 整包验收"
+                },
+                3,
+                EditorStyles.toolbarButton,
+                GUILayout.Height(66f));
             mainScroll = EditorGUILayout.BeginScrollView(mainScroll);
             switch (selectedTab)
             {
@@ -86,8 +99,11 @@ namespace TalismanBag.V02.Balance.EditorTools
                 case 6:
                     DrawReadOnlyValuesTab();
                     break;
-                default:
+                case 7:
                     DrawPatchFormatTab();
+                    break;
+                default:
+                    DrawStageQaTab();
                     break;
             }
 
@@ -869,6 +885,190 @@ namespace TalismanBag.V02.Balance.EditorTools
                 "CounterBalanceConfig.fireVsShieldMultiplier: 0.7 -> 0.55\n" +
                 "RewardBalanceRow[reward_add_spirit_stone].baseWeight: 10 -> 14",
                 GUILayout.MinHeight(120f));
+        }
+
+        private void DrawStageQaTab()
+        {
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("StageConfigPanel01 QA / Debug Only", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "These controls are QA-only. Save reset uses SaveService; jumps prepare state through MainTrialFlowService and then execute the normal V02RunFlowController startup route; reward simulation uses RewardService.",
+                MessageType.Warning);
+
+            if (!EditorApplication.isPlaying)
+            {
+                EditorGUILayout.HelpBox(
+                    "Enter Play Mode to use save, jump, reward, and state controls. Validation, refresh, and opening StageConfigPanel01 remain available in Edit Mode.",
+                    MessageType.Info);
+            }
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("[QA / Debug Only] Refresh Config", GUILayout.Height(30f)))
+                {
+                    AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+                    ReloadAssets();
+                    qaLastResult = "Config assets refreshed through AssetDatabase.";
+                }
+
+                if (GUILayout.Button("[QA / Debug Only] Validate DataCatalog", GUILayout.Height(30f)))
+                {
+                    RunQaDataCatalogValidation();
+                }
+
+                if (GUILayout.Button("[QA / Debug Only] Open StageConfigPanel01", GUILayout.Height(30f)))
+                {
+                    DataCatalogEditorWindow.OpenTab(StageConfigPanelTab.Validation);
+                    qaLastResult = "Opened StageConfigPanel01 Validation tab.";
+                }
+            }
+
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Main Trial Flow / 主线流程", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(!EditorApplication.isPlaying))
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("[QA / Debug Only] Reset CoreLoop Save", GUILayout.Height(32f)))
+                    {
+                        ExecuteRunFlowAction(flow => flow.QaResetCoreLoopSave(), "CoreLoop save reset through SaveService.");
+                    }
+
+                    if (GUILayout.Button("[QA / Debug Only] Start Main Trial 1-1", GUILayout.Height(32f)))
+                    {
+                        ExecuteRunFlowAction(flow => flow.QaStartMainTrialFromOneOne(), "Main Trial restarted from formal 1-1 route.");
+                    }
+                }
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("[QA / Debug Only] Jump To 1-10 Boss", GUILayout.Height(32f)))
+                    {
+                        ExecuteRunFlowAction(flow => flow.QaJumpToChapterOneBoss(), "Prepared and entered the formal 1-10 Boss route.");
+                    }
+
+                    if (GUILayout.Button("[QA / Debug Only] Jump To 2-10 Boss Ready", GUILayout.Height(32f)))
+                    {
+                        ExecuteRunFlowAction(flow => flow.QaJumpToChapterTwoBossReady(), "Prepared the formal 2-10 BossInfo route.");
+                    }
+                }
+            }
+
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Reward Service / 奖励服务", EditorStyles.boldLabel);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("rewardTableId", GUILayout.Width(120f));
+                qaRewardTableId = EditorGUILayout.TextField(qaRewardTableId);
+                using (new EditorGUI.DisabledScope(!EditorApplication.isPlaying))
+                {
+                    if (GUILayout.Button("[QA / Debug Only] Simulate Reward", GUILayout.Width(220f)))
+                    {
+                        SimulateQaReward();
+                    }
+                }
+            }
+
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Read-only State / 只读状态", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(!EditorApplication.isPlaying))
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("[QA / Debug Only] Print MainTrial State", GUILayout.Height(30f)))
+                {
+                    PrintQaMainTrialState();
+                }
+
+                if (GUILayout.Button("[QA / Debug Only] Print Resource / Inventory", GUILayout.Height(30f)))
+                {
+                    PrintQaResourceInventorySummary();
+                }
+            }
+
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.HelpBox(qaLastResult, MessageType.None);
+        }
+
+        private void ExecuteRunFlowAction(System.Action<V02RunFlowController> action, string successMessage)
+        {
+            V02RunFlowController flow = FindObjectOfType<V02RunFlowController>(true);
+            if (flow == null)
+            {
+                qaLastResult = "Missing V02RunFlowController in the active Play Mode scene.";
+                Debug.LogWarning($"[StageConfigPanel01][QA] {qaLastResult}");
+                return;
+            }
+
+            action?.Invoke(flow);
+            qaLastResult = successMessage;
+            Debug.Log($"[StageConfigPanel01][QA] {successMessage}");
+        }
+
+        private void SimulateQaReward()
+        {
+            V02RunFlowController flow = FindObjectOfType<V02RunFlowController>(true);
+            if (flow == null)
+            {
+                qaLastResult = "Missing V02RunFlowController; reward was not granted.";
+                Debug.LogWarning($"[StageConfigPanel01][QA] {qaLastResult}");
+                return;
+            }
+
+            RewardResult result = flow.QaGrantRewardById(qaRewardTableId);
+            qaLastResult = result != null && result.HasRewards
+                ? $"RewardService granted {result.rewards.Count} entries from '{result.rewardId}'."
+                : $"No reward granted for rewardTableId '{qaRewardTableId}'.";
+            Debug.Log($"[StageConfigPanel01][QA] {qaLastResult}");
+        }
+
+        private void RunQaDataCatalogValidation()
+        {
+            IReadOnlyList<DataCatalogValidationResult> results = DataCatalogValidator.Validate(DataCatalog.Collect());
+            int errors = results.Count(result => result.Level == DataCatalogValidationLevel.Error);
+            int warnings = results.Count(result => result.Level == DataCatalogValidationLevel.Warning);
+            int infos = results.Count(result => result.Level == DataCatalogValidationLevel.Info);
+            qaLastResult = $"DataCatalog Error={errors}, Warning={warnings}, Info={infos}.";
+            Debug.Log($"[StageConfigPanel01][QA] {qaLastResult}");
+        }
+
+        private void PrintQaMainTrialState()
+        {
+            SaveData saveData = SaveService.GetOrCreate().EnsureLoaded();
+            MainTrialProgressData progress = saveData.mainTrialProgressData ?? new MainTrialProgressData();
+            progress.Normalize();
+            MainTrialFlowService flowService = FindObjectOfType<MainTrialFlowService>(true);
+            MainTrialStartupRoute route = flowService != null ? flowService.GetStartupRoute() : null;
+            string summary =
+                "[StageConfigPanel01][QA][MainTrial] " +
+                $"mainTrialPhase={progress.mainTrialPhase}, " +
+                $"currentRoundId={progress.currentRoundId}, " +
+                $"currentMainTrialLevelId={progress.currentMainTrialLevelId}, " +
+                $"chapterOneBossRewardClaimed={progress.chapterOneBossRewardClaimed}, " +
+                $"firstUpgradeCompleted={progress.firstUpgradeCompleted}, " +
+                $"chapterTwoBossCleared={progress.chapterTwoBossCleared}, " +
+                $"coreLoopCompleted={progress.coreLoopCompleted}, " +
+                $"startupRoute={(route != null ? route.routeType.ToString() : "Unavailable")}";
+            Debug.Log(summary);
+            qaLastResult = summary;
+        }
+
+        private void PrintQaResourceInventorySummary()
+        {
+            SaveData saveData = SaveService.GetOrCreate().EnsureLoaded();
+            saveData.Normalize();
+            string items = saveData.itemInventoryData?.items == null || saveData.itemInventoryData.items.Count == 0
+                ? "empty"
+                : string.Join(", ", saveData.itemInventoryData.items.Select(item => $"{item.itemId}x{item.amount}"));
+            string summary =
+                "[StageConfigPanel01][QA][Economy] " +
+                $"SpiritStone={saveData.resourceData.spiritStone}, " +
+                $"TalismanPaper={saveData.resourceData.talismanPaper}, " +
+                $"Cinnabar={saveData.resourceData.cinnabar}, " +
+                $"BasicTalismanEmbryo={saveData.resourceData.basicTalismanEmbryo}, " +
+                $"Cultivation={saveData.resourceData.cultivation}; " +
+                $"Inventory={items}";
+            Debug.Log(summary);
+            qaLastResult = summary;
         }
 
         private void DrawSaveAssetsButton(string label)
