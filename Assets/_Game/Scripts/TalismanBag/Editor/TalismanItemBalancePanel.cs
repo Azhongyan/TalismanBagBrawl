@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using TalismanBag.Items;
 using TalismanBag.V02.Config;
+using TalismanBag.V02.Config.EditorTools;
 using UnityEditor;
 using UnityEngine;
 
@@ -25,10 +26,7 @@ namespace TalismanBag.EditorTools
         [MenuItem("Tools/Talisman Bag/Item Balance Panel")]
         public static void Open()
         {
-            TalismanItemBalancePanel window = GetWindow<TalismanItemBalancePanel>("Item Balance / 物品总控");
-            window.minSize = new Vector2(980f, 620f);
-            window.LoadItems();
-            window.Show();
+            DataCatalogEditorWindow.OpenTab(StageConfigPanelTab.Item);
         }
 
         private void OnEnable()
@@ -352,8 +350,14 @@ namespace TalismanBag.EditorTools
             }
 
             int levelTwoValue = Mathf.RoundToInt(definition.baseValue * 1.5f);
-            EditorGUILayout.LabelField("Lv2 Value Preview / 二级数值预览", levelTwoValue.ToString(), EditorStyles.miniLabel);
-            EditorGUILayout.LabelField("Effect Hint / 效果提示", $"{definition.effectType} uses Base Value when runtime supports it.", EditorStyles.miniLabel);
+            StageConfigPanelEditorUi.ReadOnlyLabel(
+                "Lv2 Value Preview / 二级数值预览",
+                levelTwoValue.ToString(),
+                EditorStyles.miniLabel);
+            StageConfigPanelEditorUi.ReadOnlyLabel(
+                "Effect Hint / 效果提示",
+                $"{definition.effectType} uses Base Value when runtime supports it.",
+                EditorStyles.miniLabel);
         }
 
         private static void DrawProperty(SerializedObject serializedObject, string propertyName, string label)
@@ -365,7 +369,7 @@ namespace TalismanBag.EditorTools
                 return;
             }
 
-            EditorGUILayout.PropertyField(property, new GUIContent(label), true);
+            StageConfigPanelEditorUi.PropertyField(property, label);
         }
 
         private sealed class ItemRow

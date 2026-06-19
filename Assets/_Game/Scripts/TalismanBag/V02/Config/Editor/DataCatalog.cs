@@ -4,6 +4,7 @@ using TalismanBag.Enemies;
 using TalismanBag.Items;
 using TalismanBag.V02.CoreLoop.Boss;
 using TalismanBag.V02.CoreLoop.Rewards;
+using TalismanBag.V02.CoreLoop.Tutorial;
 using TalismanBag.V02.CoreLoop.Upgrades;
 using TalismanBag.V02.Run;
 using UnityEditor;
@@ -23,6 +24,7 @@ namespace TalismanBag.V02.Config.EditorTools
         public readonly List<RewardDropTable> DropTables = new();
         public readonly List<IdleDropConfig> IdleDropConfigs = new();
         public readonly List<BossInfoConfig> BossConfigs = new();
+        public readonly List<TutorialGuideConfig> TutorialConfigs = new();
         public readonly List<TalismanUpgradeConfig> UpgradeConfigs = new();
 
         public static DataCatalog Collect()
@@ -36,6 +38,7 @@ namespace TalismanBag.V02.Config.EditorTools
             LoadAssets(catalog.DropTables);
             LoadAssets(catalog.IdleDropConfigs);
             LoadAssets(catalog.BossConfigs);
+            LoadAssets(catalog.TutorialConfigs);
             LoadAssets(catalog.UpgradeConfigs);
             return catalog;
         }

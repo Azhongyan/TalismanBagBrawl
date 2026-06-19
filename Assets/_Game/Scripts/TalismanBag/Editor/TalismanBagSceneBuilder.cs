@@ -1123,7 +1123,7 @@ namespace TalismanBag.EditorTools
             StatusEffectController playerStatusController = CreateStatusEffectController(systems.transform, "PlayerStatusEffects");
             StatusEffectController enemyStatusController = CreateStatusEffectController(systems.transform, "EnemyStatusEffects");
 
-            CreateV02TopBar(uiRoot, combatUI);
+            Text currentLevelText = CreateV02TopBar(uiRoot, combatUI);
             CreateV02EnemyArea(uiRoot, combatUI, out RectTransform enemyRect, out Graphic enemyGraphic, out Image chargeFill, out Text chargeText, out StatusAnchorUI enemyBuffAnchor, out StatusAnchorUI enemyDebuffAnchor);
             CreateV02CombatStage(uiRoot, combatUI, previewPanel, intentUI, out StatusAnchorUI playerBuffAnchor, out StatusAnchorUI playerDebuffAnchor);
             TalismanGridSlotView[] slots = CreateV02Grid(uiRoot, grid);
@@ -1224,6 +1224,7 @@ namespace TalismanBag.EditorTools
             SetField(v02RunFlow, "battleLogUI", battleLogUI);
             SetField(v02RunFlow, "roundInfoText", roundInfoText);
             SetField(v02RunFlow, "prepHintText", prepHintText);
+            SetField(v02RunFlow, "currentLevelText", currentLevelText);
             SetField(v02RunFlow, "testEnemies", CreateV02EnemyList(testEnemies));
 
             SetField(combat, "grid", grid);
@@ -1287,7 +1288,7 @@ namespace TalismanBag.EditorTools
             AssetDatabase.ImportAsset(V02ScenePath);
         }
 
-        private static void CreateV02TopBar(Transform parent, TalismanCombatUI combatUI)
+        private static Text CreateV02TopBar(Transform parent, TalismanCombatUI combatUI)
         {
             GameObject topBar = CreatePanel("V02TopStatusBar", parent, new Vector2(0f, -12f), new Vector2(1020f, 128f), new Color(0.105f, 0.12f, 0.095f), TextAnchor.UpperCenter);
             GridLayoutGroup layout = topBar.AddComponent<GridLayoutGroup>();
@@ -1303,6 +1304,7 @@ namespace TalismanBag.EditorTools
             Text shield = CreateStatusText("ShieldText", topBar.transform, "\u62a4\u76fe 0", new Color(0.78f, 0.94f, 1f));
             Text mana = CreateStatusText("ManaText", topBar.transform, "0/100 \u7075\u6c14", new Color(0.72f, 0.9f, 1f));
             Text state = CreateStatusText("StateText", topBar.transform, "V0.2", new Color(0.82f, 1f, 0.7f));
+            Text currentLevel = CreateStatusText("CurrentLevelText", topBar.transform, "1-1", new Color(1f, 0.88f, 0.56f));
 
             SetField(combatUI, "hpText", hp);
             SetField(combatUI, "hpFillImage", hpFill);
@@ -1310,6 +1312,7 @@ namespace TalismanBag.EditorTools
             SetField(combatUI, "manaText", mana);
             SetField(combatUI, "stateText", state);
             SetField(combatUI, "hpFlashTarget", hp);
+            return currentLevel;
         }
 
         private static void CreateV02EnemyArea(
