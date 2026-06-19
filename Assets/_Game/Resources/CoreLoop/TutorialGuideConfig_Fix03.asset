@@ -1,0 +1,101 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66b2a040c8722574f8a0880d478438c2, type: 3}
+  m_Name: TutorialGuideConfig_Fix03
+  m_EditorClassIdentifier: 
+  configId: fix03_chapter_one_guide
+  rows:
+  - enabled: 1
+    levelId: 1-1
+    trigger: 0
+    onceFlag: tutorial_prebattle_1_1_energy_stone
+    consumeOnce: 1
+    markChapterOneBossClear: 0
+    highestClearedLevelIdOnComplete: 
+    panelTitle: "\u805A\u80FD\u77F3\u8BF4\u660E"
+    panelSubject: "\u805A\u80FD\u77F3 / \u805A\u7075\u77F3"
+    panelDescription: "\u805A\u80FD\u77F3\u4F1A\u4E3A\u9644\u8FD1\u7B26\u7B93\u63D0\u4F9B\u7075\u529B\u3002\n\u53EA\u6709\u83B7\u5F97\u7075\u529B\u7684\u7B26\u7B93\u624D\u80FD\u53D1\u52A8\u3002\n\u8BF7\u8BA9\u706B\u7B26\u5904\u5728\u805A\u80FD\u77F3\u4F9B\u80FD\u8303\u56F4\u5185\u3002"
+    rewardConfig: {fileID: 0}
+    blockFlowWhenRuntimeInventorySyncFails: 0
+  - enabled: 1
+    levelId: 1-2
+    trigger: 1
+    onceFlag: fixed_reward_1_2_thunder_talisman
+    consumeOnce: 1
+    markChapterOneBossClear: 0
+    highestClearedLevelIdOnComplete: 
+    panelTitle: "\u83B7\u5F97\uFF1A\u96F7\u7B26"
+    panelSubject: "\u96F7\u7B26 x1"
+    panelDescription: "\u96F7\u7B26\u64C5\u957F\u51FB\u7834\u62A4\u76FE\u3002\u4E0B\u4E00\u5173\u654C\u4EBA\u5E26\u6709\u62A4\u76FE\uFF0C\u8BF7\u5C06\u96F7\u7B26\u63A5\u5165\u4F9B\u80FD\u3002"
+    rewardConfig: {fileID: 11400000, guid: ca8b719bf845122468b9179b776b50da, type: 2}
+    blockFlowWhenRuntimeInventorySyncFails: 1
+  - enabled: 1
+    levelId: 1-4
+    trigger: 1
+    onceFlag: fixed_reward_1_4_shield_talisman
+    consumeOnce: 1
+    markChapterOneBossClear: 0
+    highestClearedLevelIdOnComplete: 
+    panelTitle: "\u83B7\u5F97\uFF1A\u62A4\u8EAB\u7B26"
+    panelSubject: "\u62A4\u8EAB\u7B26 x1"
+    panelDescription: "\u62A4\u8EAB\u7B26\u53EF\u4EE5\u63D0\u9AD8\u751F\u5B58\u80FD\u529B\u3002\u4E0B\u4E00\u5173\u654C\u4EBA\u653B\u51FB\u66F4\u5F3A\uFF0C\u8BF7\u5C06\u62A4\u8EAB\u7B26\u63A5\u5165\u4F9B\u80FD\u3002"
+    rewardConfig: {fileID: 11400000, guid: 7ebadcf7e971b264a9d724e6d72519d6, type: 2}
+    blockFlowWhenRuntimeInventorySyncFails: 1
+  - enabled: 1
+    levelId: 1-5
+    trigger: 1
+    onceFlag: fixed_reward_1_5_purify_talisman
+    consumeOnce: 1
+    markChapterOneBossClear: 0
+    highestClearedLevelIdOnComplete: 
+    panelTitle: "\u83B7\u5F97\uFF1A\u51C0\u5316\u7B26"
+    panelSubject: "\u51C0\u5316\u7B26 x1"
+    panelDescription: "\u51C0\u5316\u7B26\u53EF\u4EE5\u6E05\u9664\u6BD2\u3001\u71C3\u70E7\u7B49\u8D1F\u9762\u72B6\u6001\u3002\u4E0B\u4E00\u5173\u654C\u4EBA\u4F1A\u65BD\u52A0\u8D1F\u9762\u72B6\u6001\uFF0C\u8BF7\u51C6\u5907\u51C0\u5316\u7B26\u3002"
+    rewardConfig: {fileID: 11400000, guid: 6752dfb91f7b5fa4d943a103c072f8d8, type: 2}
+    blockFlowWhenRuntimeInventorySyncFails: 1
+  - enabled: 1
+    levelId: 1-6
+    trigger: 1
+    onceFlag: fixed_reward_1_6_soul_suppress_talisman
+    consumeOnce: 1
+    markChapterOneBossClear: 0
+    highestClearedLevelIdOnComplete: 
+    panelTitle: "\u83B7\u5F97\uFF1A\u9547\u9B42\u7B26"
+    panelSubject: "\u9547\u9B42\u7B26 x1"
+    panelDescription: "\u9547\u9B42\u7B26\u53EF\u4EE5\u538B\u5236\u5077\u7075\u3001\u5C01\u7B26\u7B49\u5F02\u5E38\u5E72\u6270\u3002\u4E0B\u4E00\u5173\u654C\u4EBA\u4F1A\u5E72\u6270\u4F60\u7684\u9635\u52BF\uFF0C\u8BF7\u51C6\u5907\u9547\u9B42\u7B26\u3002"
+    rewardConfig: {fileID: 11400000, guid: 8dab4bec9a108f24da0724b92d8152b5, type: 2}
+    blockFlowWhenRuntimeInventorySyncFails: 1
+  - enabled: 1
+    levelId: 1-9
+    trigger: 1
+    onceFlag: fixed_reward_1_9_chain_thunder_talisman
+    consumeOnce: 1
+    markChapterOneBossClear: 0
+    highestClearedLevelIdOnComplete: 
+    panelTitle: "\u83B7\u5F97\uFF1A\u8FDE\u9501\u96F7\u7B26"
+    panelSubject: "\u8FDE\u9501\u96F7\u7B26 x1"
+    panelDescription: "\u8FDE\u9501\u96F7\u7B26\u53EF\u4EE5\u5F39\u5C04\u653B\u51FB\u591A\u4E2A\u654C\u4EBA\u3002\u524D\u65B9\u5C06\u8FDB\u5165\u7EFC\u5408\u8BD5\u70BC\uFF0C\u8BF7\u5C1D\u8BD5\u7528\u5B83\u5904\u7406\u591A\u76EE\u6807\u538B\u529B\u3002"
+    rewardConfig: {fileID: 11400000, guid: 4254eb4b873130043847d6b578951bbc, type: 2}
+    blockFlowWhenRuntimeInventorySyncFails: 1
+  - enabled: 1
+    levelId: 1-10
+    trigger: 2
+    onceFlag: chapter_1_10_clear
+    consumeOnce: 1
+    markChapterOneBossClear: 1
+    highestClearedLevelIdOnComplete: 1-10
+    panelTitle: "1-10 Boss \u5DF2\u51FB\u7834"
+    panelSubject: "\u7AE0\u8282\u5956\u52B1"
+    panelDescription: "\u9886\u53D6\u7AE0\u8282\u7ED3\u7B97\u5956\u52B1\u540E\u5B8C\u6210
+      1-10 \u4E3B\u7EBF\u8BD5\u70BC\u3002"
+    rewardConfig: {fileID: 11400000, guid: bf3742803daa95d438129bd2b48df1b7, type: 2}
+    blockFlowWhenRuntimeInventorySyncFails: 0

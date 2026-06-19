@@ -46,3 +46,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 190ecf83a4a4402ebfbe6ece27f270f3, type: 2}
   - {fileID: 11400000, guid: ec2645c40b734044b4f705ce51ba0460, type: 2}
   - {fileID: 11400000, guid: 71423be739d24160b48769e1771298db, type: 2}
+  elementType: 0
+  factionType: 
+  mechanicTags: []
+  baseShield: 0
+  dropTableId: 
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

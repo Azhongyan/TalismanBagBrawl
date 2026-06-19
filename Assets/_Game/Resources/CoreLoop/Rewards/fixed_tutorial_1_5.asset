@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31d6eba651784ac583dbd99c0b2ae3ac, type: 3}
+  m_Name: fixed_tutorial_1_5
+  m_EditorClassIdentifier: 
+  rewardId: fixed_tutorial_1_5
+  displayName: "1-5 \u56FA\u5B9A\u6559\u5B66\u5956\u52B1"
+  description: "\u51C0\u5316\u7B26\u53EF\u4EE5\u6E05\u9664\u6BD2\u3001\u71C3\u70E7\u7B49\u8D1F\u9762\u72B6\u6001\u3002\u4E0B\u4E00\u5173\u654C\u4EBA\u4F1A\u65BD\u52A0\u8D1F\u9762\u72B6\u6001\uFF0C\u8BF7\u51C6\u5907\u51C0\u5316\u7B26\u3002"
+  rewards:
+  - rewardType: 2
+    resourceType: 0
+    itemId: purify_talisman_basic
+    amount: 1
+    displayName: "\u51C0\u5316\u7B26"
+  onceFlagKey: fixed_reward_1_5_purify_talisman
+  isFirstClearOnly: 1
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

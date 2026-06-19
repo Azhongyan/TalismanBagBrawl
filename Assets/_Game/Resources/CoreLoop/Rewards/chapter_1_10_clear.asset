@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31d6eba651784ac583dbd99c0b2ae3ac, type: 3}
+  m_Name: chapter_1_10_clear
+  m_EditorClassIdentifier: 
+  rewardId: chapter_1_10_clear
+  displayName: "1-10 \u7AE0\u8282\u7ED3\u7B97"
+  description: "1-10 Boss \u9996\u901A\u56FA\u5B9A\u5956\u52B1"
+  rewards:
+  - rewardType: 2
+    resourceType: 0
+    itemId: sword_pill_basic
+    amount: 1
+    displayName: "\u5251\u4E38"
+  - rewardType: 1
+    resourceType: 0
+    itemId: 
+    amount: 120
+    displayName: "\u7075\u77F3"
+  - rewardType: 1
+    resourceType: 1
+    itemId: 
+    amount: 60
+    displayName: "\u7B26\u7EB8"
+  - rewardType: 1
+    resourceType: 2
+    itemId: 
+    amount: 10
+    displayName: "\u6731\u7802"
+  - rewardType: 1
+    resourceType: 3
+    itemId: 
+    amount: 1
+    displayName: "\u521D\u9636\u7B26\u80DA"
+  - rewardType: 1
+    resourceType: 4
+    itemId: 
+    amount: 20
+    displayName: "\u4FEE\u4E3A"
+  onceFlagKey: chapter_1_10_clear
+  isFirstClearOnly: 1
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TalismanBag.V02.Config;
 using TalismanBag.V02.EnemySkills;
 using TalismanBag.V02.Tags;
 using UnityEngine;
@@ -57,6 +58,16 @@ namespace TalismanBag.Enemies
         [Header("V0.2 Skills")]
         public List<EnemySkillDefinition> skills = new();
 
+        [Header("Stage Config Catalog")]
+        public ElementTag elementType = ElementTag.None;
+        public string factionType;
+        public List<string> mechanicTags = new();
+        public int baseShield;
+        public string dropTableId;
+        public bool isDebugOnly;
+        public bool isDeprecated;
+        public CatalogSourceType sourceType = CatalogSourceType.Unknown;
+
         public string GetDisplayName()
         {
             return string.IsNullOrWhiteSpace(displayName) ? name : displayName.Trim();
@@ -72,6 +83,12 @@ namespace TalismanBag.Enemies
         {
             string display = GetDisplayName();
             return $"\u3010{GetAvatarGlyph()}\u3011{display}";
+        }
+
+        public string GetCatalogLabel()
+        {
+            string readableId = string.IsNullOrWhiteSpace(enemyId) ? "no_id" : enemyId.Trim();
+            return $"{GetDisplayName()} [{readableId}]";
         }
     }
 }

@@ -14,6 +14,7 @@ using TalismanBag.V02.Boss;
 using TalismanBag.V02.Balance;
 using TalismanBag.V02.Counters;
 using TalismanBag.V02.CoreLoop.Battle;
+using TalismanBag.V02.CoreLoop.Boss;
 using TalismanBag.V02.Feedback;
 using TalismanBag.V02.Formation;
 using TalismanBag.V02.Result;
@@ -402,6 +403,11 @@ namespace TalismanBag.Combat
             PrepareItemCooldowns();
             RefreshGridDependentUI();
             RefreshUI();
+        }
+
+        public void ConfigureBoss(BossInfoConfig config)
+        {
+            v02BossPhaseController?.Configure(config);
         }
 
         public void SetRunComplete()

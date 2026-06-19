@@ -47,12 +47,17 @@ namespace TalismanBag.V02.CoreLoop.Rewards
 
         public RewardResult GrantDropTable(RewardDropTable dropTable)
         {
+            return GrantDropTable(dropTable, 1);
+        }
+
+        public RewardResult GrantDropTable(RewardDropTable dropTable, int rollCount)
+        {
             if (dropTable == null)
             {
                 return CreateEmptyResult(string.Empty, string.Empty);
             }
 
-            return GrantRewards(dropTable.Roll(), dropTable.tableId, dropTable.displayName);
+            return GrantRewards(dropTable.Roll(Mathf.Max(1, rollCount)), dropTable.tableId, dropTable.displayName);
         }
 
         public RewardResult GrantRewards(IReadOnlyList<RewardEntry> rewards, string rewardId = "", string displayName = "")

@@ -182,12 +182,15 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
 
         public bool ShouldAutoStartRound(V02RoundConfig round)
         {
-            return (IsChapterOneRound(round) && !round.isBossRound) || IsChapterTwoNormalRound(round);
+            bool legacyFallback = (IsChapterOneRound(round) && !round.isBossRound) || IsChapterTwoNormalRound(round);
+            return round != null && !round.isBossRound && round.ResolveAutoAdvance(legacyFallback);
         }
 
         public bool ShouldStopBeforeChapterTwoBoss(V02RoundConfig clearedRound)
         {
-            return IsChapterTwoNormalRound(clearedRound) && ParseRoundNumber(clearedRound.levelId) >= ChapterTwoBossRound - 1;
+            bool legacyFallback = IsChapterTwoNormalRound(clearedRound) &&
+                                  ParseRoundNumber(clearedRound.levelId) >= ChapterTwoBossRound - 1;
+            return clearedRound != null && clearedRound.ResolveStopBeforeBoss(legacyFallback);
         }
 
         public bool IsChapterTwoBossRound(V02RoundConfig round)
@@ -242,13 +245,26 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
 
         public void OnChapter2NormalWin(string roundId)
         {
+            OnChapter2NormalWin(roundId, string.Empty);
+        }
+
+        public void OnChapter2NormalWin(V02RoundConfig round)
+        {
+            OnChapter2NormalWin(round?.levelId, round?.ResolveNextStageId());
+        }
+
+        private void OnChapter2NormalWin(string roundId, string configuredNextStageId)
+        {
             MainTrialProgressData progress = EnsurePhaseInitialized();
             int clearedRoundNumber = Mathf.Clamp(ParseRoundNumber(roundId), 1, ChapterTwoBossRound - 1);
             int nextRoundNumber = Mathf.Clamp(clearedRoundNumber + 1, 1, ChapterTwoBossRound);
+            string nextRoundId = string.IsNullOrWhiteSpace(configuredNextStageId)
+                ? $"2-{nextRoundNumber}"
+                : configuredNextStageId.Trim();
             progress.mainTrialPhase = MainTrialPhase.Chapter2InProgress;
             progress.chapterTwoUnlocked = true;
-            progress.chapterTwoCurrentRoundNumber = nextRoundNumber;
-            SetCurrentRound(progress, $"2-{nextRoundNumber}");
+            progress.chapterTwoCurrentRoundNumber = Mathf.Clamp(ParseRoundNumber(nextRoundId), 1, ChapterTwoBossRound);
+            SetCurrentRound(progress, nextRoundId);
             progress.highestClearedLevelId = $"2-{clearedRoundNumber}";
             SaveProgress(progress);
         }
@@ -354,7 +370,7 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
 
             if (IsChapterTwoNormalRound(round))
             {
-                OnChapter2NormalWin(round.levelId);
+                OnChapter2NormalWin(round);
                 return;
             }
 
@@ -364,7 +380,12 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
             {
                 progress.mainTrialPhase = MainTrialPhase.Chapter1InProgress;
                 int nextRoundNumber = Mathf.Clamp(ParseRoundNumber(round.levelId) + 1, 1, ChapterTwoBossRound);
-                SetCurrentRound(progress, $"1-{nextRoundNumber}");
+                string configuredNextStageId = round.ResolveNextStageId();
+                SetCurrentRound(
+                    progress,
+                    string.IsNullOrWhiteSpace(configuredNextStageId)
+                        ? $"1-{nextRoundNumber}"
+                        : configuredNextStageId);
             }
 
             SaveProgress(progress);
@@ -393,6 +414,19 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
         private List<V02RoundConfig> BuildChapterTwoRounds(V02RunConfig chapterOneTemplate)
         {
             List<V02RoundConfig> rounds = new();
+            if (chapterOneTemplate?.chapterTwoRounds != null && chapterOneTemplate.chapterTwoRounds.Count > 0)
+            {
+                foreach (V02RoundConfig configuredRound in chapterOneTemplate.chapterTwoRounds)
+                {
+                    if (configuredRound != null)
+                    {
+                        rounds.Add(CloneConfiguredRound(configuredRound));
+                    }
+                }
+
+                return rounds;
+            }
+
             if (chapterOneTemplate?.rounds == null || chapterOneTemplate.rounds.Count == 0)
             {
                 return rounds;
@@ -443,6 +477,54 @@ namespace TalismanBag.V02.CoreLoop.MainTrial
                 expectedPlayerHpRemainBadBuild = source.expectedPlayerHpRemainBadBuild,
                 benchmarkRule = source.benchmarkRule,
                 benchmarkTargets = source.benchmarkTargets != null ? new List<V02BuildBenchmarkTargetRow>(source.benchmarkTargets) : new List<V02BuildBenchmarkTargetRow>()
+            };
+        }
+
+        private static V02RoundConfig CloneConfiguredRound(V02RoundConfig source)
+        {
+            return new V02RoundConfig
+            {
+                levelId = source.levelId,
+                roundIndex = source.roundIndex,
+                roundTitle = source.roundTitle,
+                enemy = source.enemy,
+                stageConfigVersion = source.stageConfigVersion,
+                chapterId = source.chapterId,
+                nextStageId = source.nextStageId,
+                stageType = source.stageType,
+                enemyGroup = source.enemyGroup,
+                rewardConfig = source.rewardConfig,
+                dropTable = source.dropTable,
+                bossConfig = source.bossConfig,
+                tutorialGuideId = source.tutorialGuideId,
+                unlockCondition = source.unlockCondition,
+                onWinAction = source.onWinAction,
+                onLoseAction = source.onLoseAction,
+                autoAdvance = source.autoAdvance,
+                allowBackpackEdit = source.allowBackpackEdit,
+                stopBeforeBoss = source.stopBeforeBoss,
+                benchmarkTargetId = source.benchmarkTargetId,
+                intendedRole = source.intendedRole,
+                teachingGoal = source.teachingGoal,
+                preBattleHint = source.preBattleHint,
+                recommendedCounterTags = source.recommendedCounterTags != null
+                    ? new List<TalismanBag.V02.Tags.CounterTag>(source.recommendedCounterTags)
+                    : new List<TalismanBag.V02.Tags.CounterTag>(),
+                isBossRound = source.isBossRound,
+                targetDurationMin = source.targetDurationMin,
+                targetDurationMax = source.targetDurationMax,
+                targetHpLossMin = source.targetHpLossMin,
+                targetHpLossMax = source.targetHpLossMax,
+                strongCounterExpectedDuration = source.strongCounterExpectedDuration,
+                neutralExpectedDuration = source.neutralExpectedDuration,
+                badBuildExpectedDuration = source.badBuildExpectedDuration,
+                expectedPlayerHpRemainStrongCounter = source.expectedPlayerHpRemainStrongCounter,
+                expectedPlayerHpRemainNeutral = source.expectedPlayerHpRemainNeutral,
+                expectedPlayerHpRemainBadBuild = source.expectedPlayerHpRemainBadBuild,
+                benchmarkRule = source.benchmarkRule,
+                benchmarkTargets = source.benchmarkTargets != null
+                    ? new List<V02BuildBenchmarkTargetRow>(source.benchmarkTargets)
+                    : new List<V02BuildBenchmarkTargetRow>()
             };
         }
 

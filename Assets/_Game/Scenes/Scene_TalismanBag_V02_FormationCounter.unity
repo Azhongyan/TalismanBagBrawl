@@ -16882,6 +16882,7 @@ MonoBehaviour:
   chapterTwoBossInfoConfig: {fileID: 0}
   chapterTwoBossRewardConfig: {fileID: 0}
   chapterTwoNormalDropTable: {fileID: 0}
+  idleDropConfig: {fileID: 0}
   mainTrialFlowService: {fileID: 0}
   coreLoopUpgradeService: {fileID: 0}
   talismanUpgradePanel: {fileID: 0}

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: purify_talisman_basic
   displayName: "\u51C0\u5316\u7B26"
+  enabled: 1
   itemType: 5
   elementType: 2
   icon: {fileID: 0}
@@ -32,3 +33,19 @@ MonoBehaviour:
   requiresFormationPower: 1
   shortRoleDescription: "\u51C0\u5316\u5F02\u5E38\u72B6\u6001\uFF0C\u9488\u5BF9\u4E2D\u6BD2\u3001\u707C\u70E7\u3001\u5C01\u5370\u3002"
   counterDescription: "\u514B\u5236\u4E2D\u6BD2\u3001\u707C\u70E7\u548C\u5C01\u5370\u3002"
+  iconKey: 
+  rarity: 0
+  canDrop: 1
+  canUpgrade: 1
+  unlockChapter: 1
+  effectId: 
+  effectParams: []
+  elementTags: []
+  mechanicTags: []
+  schoolTags: []
+  factionTags: []
+  synergyTags: []
+  comboTags: []
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

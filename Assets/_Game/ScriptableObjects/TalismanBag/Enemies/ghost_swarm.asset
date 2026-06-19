@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: ghost_swarm
   displayName: "\u9B3C\u7FA4\u538B\u5883"
+  enabled: 1
   enemyType: 1
   maxHp: 160
   attackDamage: 9
@@ -31,3 +32,22 @@ MonoBehaviour:
   ghostShadowInterval: 7
   ghostShadowDamage: 8
   icon: {fileID: 0}
+  enemyClass: 
+  enemyArchetype: 
+  intentText: 
+  recommendedCounterText: 
+  weaknessTags: 
+  resistTags: 
+  resistedElements: 
+  resistedFunctions: 
+  vulnerableElements: 
+  vulnerableFunctions: 
+  skills: []
+  elementType: 0
+  factionType: 
+  mechanicTags: []
+  baseShield: 0
+  dropTableId: 
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 3

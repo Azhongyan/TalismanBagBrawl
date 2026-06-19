@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TalismanBag.V02.Config;
 using TalismanBag.V02.CoreLoop.Resources;
 using UnityEngine;
 
@@ -9,7 +10,24 @@ namespace TalismanBag.V02.CoreLoop.Upgrades
     {
         public const string DefaultResourcePath = "CoreLoop/CoreLoopTalismanUpgradeConfig";
 
+        [Header("Identity")]
+        public string configId = "core_loop_talisman_upgrades";
+        public string displayName = "CoreLoop 符箓培养";
+
+        [Header("Upgrade Levels")]
         public List<TalismanLevelConfig> levels = new();
+
+        [Header("Data Catalog")]
+        public CatalogSourceType sourceType = CatalogSourceType.Unknown;
+        public bool isDebugOnly;
+        public bool isDeprecated;
+
+        public string GetCatalogLabel()
+        {
+            string readableName = string.IsNullOrWhiteSpace(displayName) ? name : displayName.Trim();
+            string readableId = string.IsNullOrWhiteSpace(configId) ? "no_id" : configId.Trim();
+            return $"{readableName} [{readableId}]";
+        }
 
         public TalismanLevelConfig FindUpgrade(string itemId, int currentLevel)
         {

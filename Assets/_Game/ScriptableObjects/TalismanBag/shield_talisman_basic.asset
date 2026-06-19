@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: shield_talisman_basic
   displayName: "\u62A4\u8EAB\u7B26"
+  enabled: 1
   itemType: 2
   elementType: 5
   icon: {fileID: 0}
@@ -33,3 +34,19 @@ MonoBehaviour:
   requiresFormationPower: 1
   shortRoleDescription: 
   counterDescription: 
+  iconKey: 
+  rarity: 0
+  canDrop: 1
+  canUpgrade: 1
+  unlockChapter: 1
+  effectId: 
+  effectParams: []
+  elementTags: []
+  mechanicTags: []
+  schoolTags: []
+  factionTags: []
+  synergyTags: []
+  comboTags: []
+  isDebugOnly: 0
+  isDeprecated: 1
+  sourceType: 3

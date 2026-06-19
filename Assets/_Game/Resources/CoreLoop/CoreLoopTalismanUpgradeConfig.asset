@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4d3d9ee99d54b879f5e7a0c444ef201, type: 3}
   m_Name: CoreLoopTalismanUpgradeConfig
   m_EditorClassIdentifier: 
+  configId: core_loop_talisman_upgrades
+  displayName: "CoreLoop \u7B26\u7B93\u57F9\u517B"
   levels:
   - itemId: fire_talisman_basic
     displayName: "\u706B\u7B26"
@@ -113,3 +115,6 @@ MonoBehaviour:
       breakShieldMultiplier: 1
       controlDurationMultiplier: 1.2
       summary: "\u538B\u5236\u65F6\u95F4 +20%"
+  sourceType: 2
+  isDebugOnly: 0
+  isDeprecated: 0

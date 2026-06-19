@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cc904949755314e81026bb929a3144, type: 3}
+  m_Name: 1_4_shield_stone_talisman_guard_1_4
+  m_EditorClassIdentifier: 
+  enemyId: shield_stone_talisman_guard_1_4
+  displayName: "\u77F3\u7532\u7B26\u536B\xB7\u590D\u4E60"
+  enabled: 1
+  enemyType: 0
+  maxHp: 135
+  attackDamage: 8
+  attackInterval: 2.7
+  weaknessText: "\u62A4\u76FE\u590D\u4E60"
+  dangerText: "\u66F4\u539A\u62A4\u76FE"
+  recommendedBuildText: "\u62A4\u76FE\u7565\u539A\uFF0C\u590D\u4E60\u7834\u76FE\u548C\u8F93\u51FA\u3002"
+  chargeInterval: 0
+  chargeDuration: 0
+  chargeAttackDamage: 0
+  manaDrainInterval: 0
+  manaDrainAmount: 0
+  sealInterval: 0
+  sealDuration: 0
+  ghostShadowInterval: 0
+  ghostShadowDamage: 0
+  icon: {fileID: 0}
+  enemyClass: ChapterOneGuide
+  enemyArchetype: 1-4 reused shield guard review
+  intentText: "\u66F4\u539A\u62A4\u76FE"
+  recommendedCounterText: "\u62A4\u76FE\u7565\u539A\uFF0C\u590D\u4E60\u7834\u76FE\u548C\u8F93\u51FA\u3002"
+  weaknessTags: 01000000
+  resistTags: 
+  resistedElements: 01000000
+  resistedFunctions: 03000000
+  vulnerableElements: 02000000
+  vulnerableFunctions: 0c00000002000000
+  skills:
+  - {fileID: 11400000, guid: b045dff9494fc7c4680054bf8a237db2, type: 2}
+  elementType: 0
+  factionType: 
+  mechanicTags: []
+  baseShield: 0
+  dropTableId: 
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

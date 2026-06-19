@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c2dff1119f44e74b9d34b705d5f2311, type: 3}
+  m_Name: 1_10_boss_phase_seal
+  m_EditorClassIdentifier: 
+  skillId: 1-10_boss_phase_seal
+  displayName: "\u5C06\xB7\u5C01"
+  intentText: "\u5C06\u51C6\u5907\u5C01\u5370\u9635\u773C\u9644\u8FD1\u683C\u5B50\uFF01"
+  effectDescription: "\u5C01\u5370\u4E00\u884C\u6216\u4E00\u5217\u7B26\u7B93"
+  skillType: 9
+  initialDelay: 5
+  cooldown: 7
+  castTime: 1.2
+  value: 0
+  duration: 3
+  skillTags: 040000000a000000

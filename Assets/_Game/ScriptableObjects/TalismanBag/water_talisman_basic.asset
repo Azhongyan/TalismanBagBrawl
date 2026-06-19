@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: water_talisman_basic
   displayName: "\u6C34\u7B26"
+  enabled: 1
   itemType: 5
   elementType: 2
   icon: {fileID: 0}
@@ -32,3 +33,19 @@ MonoBehaviour:
   requiresFormationPower: 1
   shortRoleDescription: 
   counterDescription: 
+  iconKey: 
+  rarity: 0
+  canDrop: 1
+  canUpgrade: 0
+  unlockChapter: 1
+  effectId: 
+  effectParams: []
+  elementTags: []
+  mechanicTags: []
+  schoolTags: []
+  factionTags: []
+  synergyTags: []
+  comboTags: []
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 3

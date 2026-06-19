@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cc904949755314e81026bb929a3144, type: 3}
+  m_Name: 1_5_pressure_bronze_claw_wight_1_5
+  m_EditorClassIdentifier: 
+  enemyId: pressure_bronze_claw_wight_1_5
+  displayName: "\u94DC\u722A\u538B\u9635\u602A"
+  enabled: 1
+  enemyType: 0
+  maxHp: 140
+  attackDamage: 13
+  attackInterval: 2.2
+  weaknessText: "\u627F\u538B\u8FD1\u6218"
+  dangerText: "\u9AD8\u538B\u666E\u653B"
+  recommendedBuildText: "\u62A4\u8EAB\u7B26\u53EF\u4EE5\u660E\u663E\u964D\u4F4E\u627F\u538B\u98CE\u9669\u3002"
+  chargeInterval: 0
+  chargeDuration: 0
+  chargeAttackDamage: 0
+  manaDrainInterval: 0
+  manaDrainAmount: 0
+  sealInterval: 0
+  sealDuration: 0
+  ghostShadowInterval: 0
+  ghostShadowDamage: 0
+  icon: {fileID: 0}
+  enemyClass: ChapterOneGuide
+  enemyArchetype: 1-5 pressure tutorial, reused configured prototype
+  intentText: "\u9AD8\u538B\u666E\u653B"
+  recommendedCounterText: "\u62A4\u8EAB\u7B26\u53EF\u4EE5\u660E\u663E\u964D\u4F4E\u627F\u538B\u98CE\u9669\u3002"
+  weaknessTags: 09000000
+  resistTags: 
+  resistedElements: 0700000005000000
+  resistedFunctions: 02000000
+  vulnerableElements: 0100000002000000
+  vulnerableFunctions: 040000000500000003000000
+  skills: []
+  elementType: 0
+  factionType: 
+  mechanicTags: []
+  baseShield: 0
+  dropTableId: 
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

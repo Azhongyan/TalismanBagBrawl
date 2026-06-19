@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: qi_pill_basic
   displayName: "\u4E39\u836F"
+  enabled: 1
   itemType: 3
   elementType: 3
   icon: {fileID: 0}
@@ -32,3 +33,19 @@ MonoBehaviour:
   requiresFormationPower: 1
   shortRoleDescription: "\u6218\u6597\u4E2D\u6062\u590D\u6C14\u8840\u3002"
   counterDescription: "\u5E2E\u52A9\u7A33\u5B9A\u4E2D\u6BD2\u548C\u707C\u70E7\u538B\u529B\u3002"
+  iconKey: 
+  rarity: 0
+  canDrop: 1
+  canUpgrade: 0
+  unlockChapter: 1
+  effectId: 
+  effectParams: []
+  elementTags: []
+  mechanicTags: []
+  schoolTags: []
+  factionTags: []
+  synergyTags: []
+  comboTags: []
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

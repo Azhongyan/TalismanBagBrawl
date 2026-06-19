@@ -1,6 +1,7 @@
 using TalismanBag.Combat;
 using TalismanBag.Enemies;
 using TalismanBag.Feedback;
+using TalismanBag.V02.CoreLoop.Boss;
 using TalismanBag.V02.Feedback;
 using TalismanBag.V02.Result;
 using UnityEngine;
@@ -33,8 +34,15 @@ namespace TalismanBag.V02.Boss
         private V02BossPhase currentPhase = V02BossPhase.None;
         private float actionTimer;
         private float shieldPhaseSecondTimer;
+        private BossInfoConfig activeBossConfig;
 
         public V02BossPhase CurrentPhase => currentPhase;
+
+        public void Configure(BossInfoConfig config)
+        {
+            activeBossConfig = config;
+            ResetPhase();
+        }
 
         public void ResetPhase()
         {
@@ -78,29 +86,29 @@ namespace TalismanBag.V02.Boss
             {
                 case V02BossPhase.ShieldPhase:
                     Emit(BattleEventType.EnemyCharging, BattleLogCategory.Danger, "\u5165\u95e8\u7834\u9635\u5996\u6b63\u5728\u7ed3\u6210\u62a4\u76fe", "boss_phase_shield");
-                    actionTimer = shieldInterval;
-                    combatController?.V02AddEnemyShield(shieldAmount, "\u5165\u95e8\u7834\u9635\u5996\u7ed3\u6210\u62a4\u76fe");
+                    actionTimer = ShieldInterval;
+                    combatController?.V02AddEnemyShield(ShieldAmount, "\u5165\u95e8\u7834\u9635\u5996\u7ed3\u6210\u62a4\u76fe");
                     break;
                 case V02BossPhase.SummonPhase:
                     Emit(BattleEventType.EnemyCharging, BattleLogCategory.Danger, "\u5165\u95e8\u7834\u9635\u5996\u6b63\u5728\u53ec\u5524\u5c0f\u5996\u5e76\u91ca\u653e\u6bd2\u706b", "boss_phase_summon");
-                    actionTimer = summonInterval;
+                    actionTimer = SummonInterval;
                     if (failureTracker != null)
                     {
-                        failureTracker.bossSummonDamageTaken += summonDamage;
-                        failureTracker.poisonDamageTaken += poisonStack;
+                        failureTracker.bossSummonDamageTaken += SummonDamage;
+                        failureTracker.poisonDamageTaken += PoisonStack;
                     }
 
-                    combatController?.V02DealDamageToPlayer(summonDamage, $"\u5165\u95e8\u7834\u9635\u5996\u53ec\u5524\u5c0f\u5996\uff0c\u7fa4\u4f53\u538b\u5236\u9020\u6210 {summonDamage} \u70b9\u4f24\u5bb3");
-                    combatController?.V02AddPlayerStatus(poisonStack, poisonStack, $"\u5165\u95e8\u7834\u9635\u5996\u6bd2\u706b\u6269\u6563\uff0c\u4e2d\u6bd2/{poisonStack}\uff0c\u71c3\u70e7/{poisonStack}");
-                    Emit(BattleEventType.EnemyCountered, BattleLogCategory.Danger, "\u5c0f\u5996\u9a9a\u6270\u4e0e\u6bd2\u706b\u6269\u6563", "boss_phase_summon", value: summonDamage);
+                    combatController?.V02DealDamageToPlayer(SummonDamage, $"\u5165\u95e8\u7834\u9635\u5996\u53ec\u5524\u5c0f\u5996\uff0c\u7fa4\u4f53\u538b\u5236\u9020\u6210 {SummonDamage} \u70b9\u4f24\u5bb3");
+                    combatController?.V02AddPlayerStatus(PoisonStack, PoisonStack, $"\u5165\u95e8\u7834\u9635\u5996\u6bd2\u706b\u6269\u6563\uff0c\u4e2d\u6bd2/{PoisonStack}\uff0c\u71c3\u70e7/{PoisonStack}");
+                    Emit(BattleEventType.EnemyCountered, BattleLogCategory.Danger, "\u5c0f\u5996\u9a9a\u6270\u4e0e\u6bd2\u706b\u6269\u6563", "boss_phase_summon", value: SummonDamage);
                     break;
                 case V02BossPhase.SealEyePhase:
                     Emit(BattleEventType.EnemyCharging, BattleLogCategory.Danger, "\u5165\u95e8\u7834\u9635\u5996\u6b63\u5728\u5c01\u9501\u9635\u773c\u5e76\u5e72\u6270\u4f9b\u80fd", "boss_phase_seal");
-                    actionTimer = sealEyeInterval;
+                    actionTimer = SealEyeInterval;
                     int sealedCount = combatController != null
-                        ? combatController.V02SealFormationEyeArea(3f, "\u5165\u95e8\u7834\u9635\u5996\u5c01\u9501\u9635\u773c\u9644\u8fd1\u7b26\u7b93")
+                        ? combatController.V02SealFormationEyeArea(SealDuration, "\u5165\u95e8\u7834\u9635\u5996\u5c01\u9501\u9635\u773c\u9644\u8fd1\u7b26\u7b93")
                         : 0;
-                    combatController?.V02ApplyEnergyDisruption(energyDisruptionDuration, "\u5165\u95e8\u7834\u9635\u5996\u6270\u52a8\u9635\u773c\u7075\u6c14");
+                    combatController?.V02ApplyEnergyDisruption(EnergyDisruptionDuration, "\u5165\u95e8\u7834\u9635\u5996\u6270\u52a8\u9635\u773c\u7075\u6c14");
                     if (failureTracker != null)
                     {
                         failureTracker.bossEyeSealCount += Mathf.Max(1, sealedCount);
@@ -110,15 +118,15 @@ namespace TalismanBag.V02.Boss
             }
         }
 
-        private static V02BossPhase ResolvePhase(EnemyRuntime enemy)
+        private V02BossPhase ResolvePhase(EnemyRuntime enemy)
         {
             float ratio = enemy.currentHp / (float)Mathf.Max(1, enemy.definition.maxHp);
-            if (ratio > 0.7f)
+            if (ratio > ShieldPhaseMinHpRatio)
             {
                 return V02BossPhase.ShieldPhase;
             }
 
-            return ratio > 0.35f ? V02BossPhase.SummonPhase : V02BossPhase.SealEyePhase;
+            return ratio > SummonPhaseMinHpRatio ? V02BossPhase.SummonPhase : V02BossPhase.SealEyePhase;
         }
 
         private static string GetIntentText(V02BossPhase phase)
@@ -135,7 +143,7 @@ namespace TalismanBag.V02.Boss
         private void EnterPhase(V02BossPhase phase)
         {
             currentPhase = phase;
-            actionTimer = firstActionDelay;
+            actionTimer = FirstActionDelay;
             shieldPhaseSecondTimer = 0f;
 
             switch (phase)
@@ -156,5 +164,23 @@ namespace TalismanBag.V02.Boss
         {
             eventRouter?.Emit(type, category, message, sourceId, value: value);
         }
+
+        private float ShieldPhaseMinHpRatio => activeBossConfig != null
+            ? Mathf.Clamp01(activeBossConfig.shieldPhaseMinHpRatio)
+            : 0.7f;
+        private float SummonPhaseMinHpRatio => activeBossConfig != null
+            ? Mathf.Clamp(activeBossConfig.summonPhaseMinHpRatio, 0f, ShieldPhaseMinHpRatio)
+            : 0.35f;
+        private float FirstActionDelay => Mathf.Max(0.01f, activeBossConfig != null ? activeBossConfig.firstActionDelay : firstActionDelay);
+        private float ShieldInterval => Mathf.Max(0.01f, activeBossConfig != null ? activeBossConfig.shieldInterval : shieldInterval);
+        private float SummonInterval => Mathf.Max(0.01f, activeBossConfig != null ? activeBossConfig.summonInterval : summonInterval);
+        private float SealEyeInterval => Mathf.Max(0.01f, activeBossConfig != null ? activeBossConfig.sealEyeInterval : sealEyeInterval);
+        private int ShieldAmount => Mathf.Max(0, activeBossConfig != null ? activeBossConfig.shieldAmount : shieldAmount);
+        private int SummonDamage => Mathf.Max(0, activeBossConfig != null ? activeBossConfig.summonDamage : summonDamage);
+        private int PoisonStack => Mathf.Max(0, activeBossConfig != null ? activeBossConfig.poisonStack : poisonStack);
+        private float SealDuration => Mathf.Max(0.01f, activeBossConfig != null ? activeBossConfig.sealDuration : 3f);
+        private float EnergyDisruptionDuration => Mathf.Max(
+            0.01f,
+            activeBossConfig != null ? activeBossConfig.energyDisruptionDuration : energyDisruptionDuration);
     }
 }

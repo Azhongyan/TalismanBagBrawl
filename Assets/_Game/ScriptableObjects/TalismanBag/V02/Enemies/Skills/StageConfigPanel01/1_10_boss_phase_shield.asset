@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c2dff1119f44e74b9d34b705d5f2311, type: 3}
+  m_Name: 1_10_boss_phase_shield
+  m_EditorClassIdentifier: 
+  skillId: 1-10_boss_phase_shield
+  displayName: "\u5C06\xB7\u76FE"
+  intentText: "\u5C06\u6B63\u5728\u51DD\u805A\u62A4\u76FE\uFF01"
+  effectDescription: "\u83B7\u5F97\u62A4\u76FE"
+  skillType: 7
+  initialDelay: 4
+  cooldown: 5
+  castTime: 1
+  value: 30
+  duration: 0
+  skillTags: 010000000a000000

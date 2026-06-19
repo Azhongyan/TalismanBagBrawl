@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TalismanBag.Combat;
 using TalismanBag.Enemies;
 using TalismanBag.UI;
+using TalismanBag.V02.Config;
 using TalismanBag.V02.CoreLoop.Boss;
 using TalismanBag.V02.CoreLoop.MainTrial;
 using TalismanBag.V02.CoreLoop.Rewards;
@@ -42,6 +43,7 @@ namespace TalismanBag.V02.Run
         [SerializeField] private BossInfoConfig chapterTwoBossInfoConfig;
         [SerializeField] private RewardConfig chapterTwoBossRewardConfig;
         [SerializeField] private RewardDropTable chapterTwoNormalDropTable;
+        [SerializeField] private IdleDropConfig idleDropConfig;
         [SerializeField] private MainTrialFlowService mainTrialFlowService;
         [SerializeField] private UpgradeService coreLoopUpgradeService;
         [SerializeField] private TalismanUpgradePanel talismanUpgradePanel;
@@ -149,7 +151,7 @@ namespace TalismanBag.V02.Run
         public void EnterPrep()
         {
             V02RoundConfig round = CurrentRound;
-            if (round?.enemy == null)
+            if (round == null || ResolveMainTrialEnemy(round) == null)
             {
                 battleLogUI?.AddLog("\u7f3a\u5c11 V0.2 \u5173\u5361\u6216\u654c\u4eba\u914d\u7f6e");
                 return;
@@ -158,6 +160,10 @@ namespace TalismanBag.V02.Run
             state = V02RunState.Prep;
             EnemyDefinition resolvedEnemy = ResolveMainTrialEnemy(round);
             combatController?.SetEnemy(resolvedEnemy, round.roundIndex, GetRoundCount());
+            BossInfoConfig bossConfig = round.bossConfig != null
+                ? round.bossConfig
+                : EnsureMainTrialFlowService().IsChapterTwoBossRound(round) ? GetChapterTwoBossInfoConfig() : null;
+            combatController?.ConfigureBoss(bossConfig);
             RefreshRoundTexts(round, resolvedEnemy);
             ShowPreBattlePopups();
             EnsureMainTrialFlowService().MarkEnteredRound(round);
@@ -286,7 +292,11 @@ namespace TalismanBag.V02.Run
             }
             else
             {
-                currentRoundIndex = Mathf.Clamp(currentRoundIndex + 1, 0, Mathf.Max(0, GetRoundCount() - 1));
+                string nextStageId = CurrentRound?.ResolveNextStageId();
+                int configuredIndex = FindRoundIndexByLevelId(nextStageId);
+                currentRoundIndex = configuredIndex >= 0
+                    ? configuredIndex
+                    : Mathf.Clamp(currentRoundIndex + 1, 0, Mathf.Max(0, GetRoundCount() - 1));
             }
 
             EnterPrep();
@@ -743,7 +753,8 @@ namespace TalismanBag.V02.Run
 
             if (tutorialGuideConfig == null)
             {
-                tutorialGuideConfig = TutorialGuideConfig.CreateFix03RuntimeDefaults(chapterOneBossRewardConfig);
+                tutorialGuideConfig = Resources.Load<TutorialGuideConfig>("CoreLoop/TutorialGuideConfig_Fix03");
+                tutorialGuideConfig ??= TutorialGuideConfig.CreateFix03RuntimeDefaults(chapterOneBossRewardConfig);
             }
 
             tutorialGuideService.Bind(tutorialGuideConfig, EnsureCoreLoopRewardService(), EnsureCoreLoopSaveService());
@@ -760,14 +771,25 @@ namespace TalismanBag.V02.Run
         {
             return chapterTwoBossRewardConfig != null
                 ? chapterTwoBossRewardConfig
-                : BuildDefaultChapterTwoBossRewardConfig();
+                : RewardConfig.LoadById("boss_2_10_clear") ?? BuildDefaultChapterTwoBossRewardConfig();
         }
 
-        private RewardDropTable GetChapterTwoNormalDropTable()
+        private RewardDropTable GetChapterTwoNormalDropTable(V02RoundConfig round)
         {
+            if (round?.dropTable != null)
+            {
+                return round.dropTable;
+            }
+
             return chapterTwoNormalDropTable != null
                 ? chapterTwoNormalDropTable
-                : BuildDefaultChapterTwoNormalDropTable();
+                : GetIdleDropConfig()?.normalStageDropTable ?? BuildDefaultChapterTwoNormalDropTable();
+        }
+
+        private IdleDropConfig GetIdleDropConfig()
+        {
+            idleDropConfig ??= IdleDropConfig.LoadDefault();
+            return idleDropConfig;
         }
 
         private static RewardDropTable BuildDefaultChapterTwoNormalDropTable()
@@ -957,7 +979,16 @@ namespace TalismanBag.V02.Run
                 return;
             }
 
-            RewardResult rewardResult = EnsureCoreLoopRewardService().GrantDropTable(GetChapterTwoNormalDropTable());
+            IdleDropConfig config = GetIdleDropConfig();
+            if (config != null && !config.grantOnNormalStageClear)
+            {
+                return;
+            }
+
+            int rollCount = config != null ? Mathf.Max(1, config.rollsPerStageClear) : 1;
+            RewardResult rewardResult = EnsureCoreLoopRewardService().GrantDropTable(
+                GetChapterTwoNormalDropTable(round),
+                rollCount);
             if (rewardResult == null || !rewardResult.HasRewards)
             {
                 battleLogUI?.AddLog($"{round.levelId} \u6389\u843d\uff1a\u65e0");
@@ -1299,7 +1330,8 @@ namespace TalismanBag.V02.Run
 
             SetText(roundInfoText, "2-10 Boss 前停止");
             SetText(prepHintText, "前方煞气聚阵，请先查看敌情并整备背包。");
-            BossInfoViewModel viewModel = BossInfoViewModel.From(GetChapterTwoBossInfoConfig(), round?.enemy);
+            BossInfoConfig infoConfig = round?.bossConfig != null ? round.bossConfig : GetChapterTwoBossInfoConfig();
+            BossInfoViewModel viewModel = BossInfoViewModel.From(infoConfig, ResolveMainTrialEnemy(round));
             panel.Show(viewModel, HideChapterTwoBossInfoForPrepare, StartChapterTwoBossCombat);
             battleLogUI?.AddLog("2-10 Boss 信息已展开，请整备后手动开战。");
             return true;
@@ -1379,9 +1411,14 @@ namespace TalismanBag.V02.Run
 
         private BossInfoConfig GetChapterTwoBossInfoConfig()
         {
-            return chapterTwoBossInfoConfig != null
-                ? chapterTwoBossInfoConfig
-                : BuildDefaultChapterTwoBossInfoConfig();
+            if (chapterTwoBossInfoConfig != null)
+            {
+                return chapterTwoBossInfoConfig;
+            }
+
+            BossInfoConfig resourceConfig = UnityEngine.Resources.Load<BossInfoConfig>(
+                "CoreLoop/BossConfigs/boss_2_10_formation_breaker");
+            return resourceConfig != null ? resourceConfig : BuildDefaultChapterTwoBossInfoConfig();
         }
 
         private static BossInfoConfig BuildDefaultChapterTwoBossInfoConfig()
@@ -1598,7 +1635,9 @@ namespace TalismanBag.V02.Run
             {
                 for (int i = 0; i < currentConfig.rounds.Count; i++)
                 {
-                    if (currentConfig.rounds[i]?.enemy == enemy)
+                    V02RoundConfig round = currentConfig.rounds[i];
+                    if (round != null &&
+                        (round.enemy == enemy || round.ResolveEnemyDefinition() == enemy))
                     {
                         return i;
                     }
@@ -1718,7 +1757,7 @@ namespace TalismanBag.V02.Run
                 return string.Empty;
             }
 
-            EnemyDefinition enemy = resolvedEnemy != null ? resolvedEnemy : round.enemy;
+            EnemyDefinition enemy = resolvedEnemy != null ? resolvedEnemy : round.ResolveEnemyDefinition();
             string enemyLabel = enemy != null ? enemy.GetReadableLabel() : "\u654c\u4eba\u672a\u914d\u7f6e";
             string title = string.IsNullOrWhiteSpace(round.roundTitle) ? string.Empty : $"  {round.roundTitle.Trim()}";
             string hint = string.IsNullOrWhiteSpace(round.preBattleHint)
@@ -1735,12 +1774,33 @@ namespace TalismanBag.V02.Run
                 return null;
             }
 
+            string levelId = NormalizeLevelId(round.levelId);
+            if (round.enemyGroup != null)
+            {
+                if (!string.IsNullOrEmpty(levelId) &&
+                    mainTrialRuntimeEnemies.TryGetValue(levelId, out EnemyDefinition configuredEnemy) &&
+                    configuredEnemy != null)
+                {
+                    return configuredEnemy;
+                }
+
+                EnemyDefinition groupEnemy = round.enemyGroup.BuildPrimaryRuntimeEnemy();
+                if (groupEnemy != null)
+                {
+                    if (!string.IsNullOrEmpty(levelId))
+                    {
+                        mainTrialRuntimeEnemies[levelId] = groupEnemy;
+                    }
+
+                    return groupEnemy;
+                }
+            }
+
             if (!EnsureMainTrialFlowService().IsChapterOneRound(round))
             {
                 return round.enemy;
             }
 
-            string levelId = NormalizeLevelId(round.levelId);
             if (string.IsNullOrEmpty(levelId))
             {
                 return round.enemy;
@@ -1984,7 +2044,7 @@ namespace TalismanBag.V02.Run
             {
                 if (round != null && string.Equals(NormalizeLevelId(round.levelId), levelId, System.StringComparison.Ordinal))
                 {
-                    return round.enemy;
+                    return round.ResolveEnemyDefinition();
                 }
             }
 
@@ -1998,7 +2058,9 @@ namespace TalismanBag.V02.Run
                 return nextEnemyOverride;
             }
 
-            V02RoundConfig next = GetRound(currentRoundIndex + 1);
+            string nextStageId = CurrentRound?.ResolveNextStageId();
+            int nextIndex = FindRoundIndexByLevelId(nextStageId);
+            V02RoundConfig next = GetRound(nextIndex >= 0 ? nextIndex : currentRoundIndex + 1);
             return ResolveMainTrialEnemy(next);
         }
 
@@ -2012,7 +2074,9 @@ namespace TalismanBag.V02.Run
 
             for (int i = 0; i < currentConfig.rounds.Count; i++)
             {
-                if (currentConfig.rounds[i]?.enemy == enemy)
+                V02RoundConfig round = currentConfig.rounds[i];
+                if (round != null &&
+                    (round.enemy == enemy || round.ResolveEnemyDefinition() == enemy))
                 {
                     return i;
                 }

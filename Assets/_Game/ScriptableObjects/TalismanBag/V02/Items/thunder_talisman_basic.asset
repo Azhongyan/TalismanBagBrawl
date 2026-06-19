@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: thunder_talisman_basic
   displayName: "\u96F7\u7B26"
+  enabled: 1
   itemType: 1
   elementType: 6
   icon: {fileID: 0}
@@ -32,3 +33,19 @@ MonoBehaviour:
   requiresFormationPower: 1
   shortRoleDescription: "\u96F7\u6CD5\u4F24\u5BB3\uFF0C\u5E26\u7834\u76FE\u503E\u5411\u3002"
   counterDescription: "\u514B\u5236\u5E26\u62A4\u76FE\u7684\u654C\u4EBA\u3002"
+  iconKey: 
+  rarity: 0
+  canDrop: 1
+  canUpgrade: 1
+  unlockChapter: 1
+  effectId: 
+  effectParams: []
+  elementTags: []
+  mechanicTags: []
+  schoolTags: []
+  factionTags: []
+  synergyTags: []
+  comboTags: []
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

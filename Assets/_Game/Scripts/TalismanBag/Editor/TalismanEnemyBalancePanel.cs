@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using TalismanBag.Enemies;
+using TalismanBag.V02.Config;
 using TalismanBag.V02.EnemySkills;
 using UnityEditor;
 using UnityEngine;
@@ -19,6 +20,9 @@ namespace TalismanBag.EditorTools
         private bool showV02Fields = true;
         private bool showSkillDetails = true;
         private bool showVisualFields;
+        private bool showDebugEnemies;
+        private bool showDeprecatedEnemies;
+        private bool showLegacyEnemies;
 
         [MenuItem("Tools/Talisman Bag/Enemy Identity Panel")]
         public static void Open()
@@ -49,7 +53,9 @@ namespace TalismanBag.EditorTools
             int visibleCount = 0;
             foreach (EnemyRow row in rows)
             {
-                if (row.Definition == null || !MatchesSearch(row.Definition))
+                if (row.Definition == null ||
+                    !ShouldShow(row.Definition) ||
+                    !MatchesSearch(row.Definition))
                 {
                     continue;
                 }
@@ -92,6 +98,9 @@ namespace TalismanBag.EditorTools
             showV02Fields = EditorGUILayout.ToggleLeft("V0.2 Fields / V0.2 字段", showV02Fields, GUILayout.Width(180f));
             showSkillDetails = EditorGUILayout.ToggleLeft("Inline Skills / 内联技能", showSkillDetails, GUILayout.Width(170f));
             showVisualFields = EditorGUILayout.ToggleLeft("Visual / 视觉字段", showVisualFields, GUILayout.Width(140f));
+            showDebugEnemies = EditorGUILayout.ToggleLeft("Debug", showDebugEnemies, GUILayout.Width(80f));
+            showDeprecatedEnemies = EditorGUILayout.ToggleLeft("Deprecated", showDeprecatedEnemies, GUILayout.Width(110f));
+            showLegacyEnemies = EditorGUILayout.ToggleLeft("Legacy", showLegacyEnemies, GUILayout.Width(85f));
             GUILayout.FlexibleSpace();
             GUILayout.Label($"Loaded / 已载入: {rows.Count}", EditorStyles.miniLabel);
             EditorGUILayout.EndHorizontal();
@@ -150,6 +159,7 @@ namespace TalismanBag.EditorTools
                 DrawProperty(serializedObject, "maxHp", "Max HP / 最大气血");
                 DrawProperty(serializedObject, "attackDamage", "Attack Damage / 攻击伤害");
                 DrawProperty(serializedObject, "attackInterval", "Attack Interval / 攻击间隔");
+                DrawProperty(serializedObject, "baseShield", "Base Shield / 基础护盾");
 
                 DrawSection("Player-Facing Notes / 玩家提示文本");
                 DrawProperty(serializedObject, "weaknessText", "Weakness Text / 弱点提示");
@@ -175,6 +185,13 @@ namespace TalismanBag.EditorTools
                     DrawSection("V0.2 Identity & Intent / V0.2 身份与意图");
                     DrawProperty(serializedObject, "enemyClass", "Enemy Class / 怪物职能");
                     DrawProperty(serializedObject, "enemyArchetype", "Enemy Archetype / 怪物原型");
+                    DrawProperty(serializedObject, "elementType", "Element Type / 元素（预留）");
+                    DrawProperty(serializedObject, "factionType", "Faction Type / 阵营（预留）");
+                    DrawProperty(serializedObject, "mechanicTags", "Mechanic Tags / 机制标签");
+                    DrawProperty(serializedObject, "dropTableId", "Drop Table ID / 掉落表 ID");
+                    DrawProperty(serializedObject, "sourceType", "Source Type / 数据来源");
+                    DrawProperty(serializedObject, "isDebugOnly", "Debug Only / 仅调试");
+                    DrawProperty(serializedObject, "isDeprecated", "Deprecated / 已废弃");
                     DrawProperty(serializedObject, "intentText", "Intent Text / 意图说明");
                     DrawProperty(serializedObject, "recommendedCounterText", "Recommended Counter / 推荐克制");
 
@@ -268,6 +285,26 @@ namespace TalismanBag.EditorTools
                    ContainsSkill(definition, needle);
         }
 
+        private bool ShouldShow(EnemyDefinition definition)
+        {
+            if (definition == null)
+            {
+                return false;
+            }
+
+            if (!showDebugEnemies && (definition.isDebugOnly || definition.sourceType is CatalogSourceType.Debug or CatalogSourceType.Test))
+            {
+                return false;
+            }
+
+            if (!showDeprecatedEnemies && definition.isDeprecated)
+            {
+                return false;
+            }
+
+            return showLegacyEnemies || definition.sourceType != CatalogSourceType.Legacy;
+        }
+
         private static int CompareEnemyGuids(string leftGuid, string rightGuid)
         {
             EnemyDefinition left = AssetDatabase.LoadAssetAtPath<EnemyDefinition>(AssetDatabase.GUIDToAssetPath(leftGuid));
@@ -290,7 +327,7 @@ namespace TalismanBag.EditorTools
 
             string displayName = definition.GetDisplayName();
             string enemyId = string.IsNullOrWhiteSpace(definition.enemyId) ? "no_id" : definition.enemyId;
-            return $"【{definition.GetAvatarGlyph()}】{displayName} / {enemyId}";
+            return $"【{definition.GetAvatarGlyph()}】{displayName} [{enemyId}]";
         }
 
         private static void DrawAvatarGlyphPreview(EnemyDefinition definition)

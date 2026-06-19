@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e6a6c801b3b450eb52ad5c49eb6fcb6, type: 3}
+  m_Name: boss_2_10_formation_breaker
+  m_EditorClassIdentifier:
+  bossId: formation_breaker_boss
+  bossName: "2-10 Boss\uFF1A\u715E\u6C14\u805A\u9635"
+  bossEnemy: {fileID: 11400000, guid: af00b4c24b8d448cba58b91f4833e62b, type: 2}
+  mechanismTags: "\u62A4\u76FE\u538B\u5236 / \u5996\u7FA4\u53EC\u5524 / \u9635\u773C\u5C01\u5370"
+  mainThreats: "Boss \u4F1A\u8F6E\u6D41\u65BD\u52A0\u62A4\u76FE\u538B\u529B\u3001\u5996\u7FA4\u538B\u529B\u548C\u9635\u773C\u5C01\u5370\u538B\u529B\u3002"
+  recommendedTools: "\u63A8\u8350\u643A\u5E26\u96F7\u7B26\u3001\u51C0\u5316\u7B26\u3001\u9547\u9B42\u7B26\u3001\u62A4\u8EAB\u7B26\uFF0C\u5E76\u4FDD\u6301\u6838\u5FC3\u7B26\u7B93\u4F9B\u80FD\u3002"
+  preBattlePrompt: "\u524D\u65B9\u715E\u6C14\u805A\u9635\uFF0C\u8BF7\u5148\u67E5\u770B\u654C\u60C5\u5E76\u6574\u5907\u80CC\u5305\u3002"
+  shieldPhaseMinHpRatio: 0.7
+  summonPhaseMinHpRatio: 0.35
+  firstActionDelay: 4
+  shieldInterval: 5
+  summonInterval: 6
+  sealEyeInterval: 7
+  shieldAmount: 30
+  summonDamage: 12
+  poisonStack: 1
+  sealDuration: 3
+  energyDisruptionDuration: 3
+  sourceType: 2
+  isDebugOnly: 0
+  isDeprecated: 0

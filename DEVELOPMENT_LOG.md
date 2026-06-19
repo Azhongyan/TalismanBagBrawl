@@ -1847,3 +1847,130 @@ This pass adds the V0.2 post-battle three-choice reward draft. Rewards are desig
 ### Notes
 
 - Full Unity Play Mode regression was not run in this environment. QA should manually verify the complete reset-save-to-2-10-clear path, including restart persistence.
+
+## 2026-06-18 - V0.2 StageConfigPanel01 First Recovery Package (Task 0-5)
+
+### Scope
+
+- Completed the current data-source audit and added `Docs/V0.2/StageConfigPanel01_DataSourceAudit.md`.
+- Added a reusable editor-only DataCatalog collector, validator, result levels, and `Tools/Talisman Bag/Stage Config Panel 01`.
+- Extended existing Item and Enemy definitions with catalog/debug/deprecated/source metadata while preserving verified combat values.
+- Reused the existing Item and Enemy editor panels; labels now use `displayName [id]`, with Debug/Deprecated/Legacy rows hidden by default.
+- Added `EnemyGroupConfig` and generated 1-1 through 1-10 plus 2-1 through 2-10 groups.
+- Converted the existing verified chapter-one runtime enemy snapshots into ScriptableObject assets; kept the old runtime builder as a compatibility fallback.
+- Extended `V02RunConfig` / `V02RoundConfig` to expose 1-10 and 2-10 stage configuration, including next stage, group, reward, actions, auto-advance, and stop-before-boss fields.
+- Preserved `MainTrialFlowService` as the flow owner and `V02RunFlowController` as the executor.
+- Added configurable fixed tutorial rewards, 1-10 chapter rewards, and 2-10 Boss rewards under `Resources/CoreLoop/Rewards`.
+- Reward delivery still routes through `RewardService`, then `ResourceService` / `ItemInventoryService`, then `SaveService`.
+- Did not implement Task 6-10, Tune01, 3-10, a new reward system, a new save system, or a configuration-panel flow controller.
+
+### Verification
+
+- Unity 2022.3.50f1c1 batch compilation completed with return code 0 and no `error CS`.
+- DataCatalog validation completed with `Error=0`, `Warning=15`, `Info=0`.
+- Warnings identify retained legacy duplicate item IDs and one historical same-name Boss placeholder pair.
+- Static asset check confirms 10 chapter-one stages, 10 chapter-two stages, 20 enemy-group references, 7 reward references, and exactly one `stopBeforeBoss` stage at 2-9.
+- Migration and smoke-test logs are retained locally for review.
+
+### Notes
+
+- Full Play Mode regression was not run. QA should verify configured enemy swaps/multipliers, configured next-stage flow, 2-9 Boss stop, 2-10 manual start, and actual reward delivery.
+
+## 2026-06-19 - V0.2 StageConfigPanel01 First Recovery Package Continuation Verification
+
+### Verification
+
+- Preserved all existing tracked and untracked work from the interrupted thread; no reset, clean, rollback, asset deletion, or migration rerun was performed.
+- Read-only smoke verification completed with `SMOKE_SUCCESS stages=20, validation=15` and Unity return code 0.
+- DataCatalog validation completed with `Error=0`, `Warning=15`, `Info=0`; warnings remain the retained legacy duplicate item IDs and historical same-name Boss placeholder data.
+- Final Unity 2022.3.50f1c1 batch compilation completed with `Tundra build success`, return code 0, and no `error CS`.
+- Continuation logs: `stageconfigpanel01_smoke_continuation.log`, `stageconfigpanel01_validate_continuation.log`, and `stageconfigpanel01_compile_continuation.log`.
+
+### Scope Boundary
+
+- No Task 6-10, Tune01, 3-10, new gameplay system, or DebugPanel expansion work was performed.
+- Full Play Mode regression remains a QA follow-up.
+
+## 2026-06-19 - V0.2 StageConfigPanel01 Task 06 DropTable / IdleDropConfig
+
+### Scope
+
+- Assetized the verified chapter-two normal-stage drop table at `Resources/CoreLoop/DropTables/chapter_2_normal_round_drops.asset`.
+- Added `IdleDropConfig` at `Resources/CoreLoop/IdleDropConfig.asset` with one roll per normal-stage clear.
+- Attached the same verified drop table directly to Stage 2-1 through 2-9; 2-10 Boss remains excluded.
+- Preserved the verified runtime values: SpiritStone 8-12 at 100%, TalismanPaper 1-2 at 50%, Cinnabar 1 at 30%, embryo shard at 15%, talisman page at 20%, and complete basic tool at 5%.
+- Added active ItemDefinition assets for `basic_talisman_embryo_shard`, `basic_talisman_page`, and `basic_tool_complete`, closing the previous string-only inventory references.
+- Runtime resolution now prefers the Stage drop table, then the existing scene override, then `IdleDropConfig`, while retaining the old runtime constructor as compatibility fallback.
+- Reused `RewardDropTable`, `RewardService`, `ResourceService`, `ItemInventoryService`, and `SaveService`; no second reward or persistence system was introduced.
+- Extended StageConfigPanel01 with a Drop tab for `RewardDropTable` and `IdleDropConfig`.
+- Extended DataCatalog validation for IdleNormal stage references, empty/invalid drop entries, orphan drop item IDs, and invalid IdleDropConfig references.
+
+### Verification
+
+- Migration completed with `[StageConfigPanel01][Task06] MIGRATION_SUCCESS`.
+- Task 6 smoke completed with `SMOKE_SUCCESS stages=9, drops=6, validation=15`.
+- DataCatalog completed with `Error=0`, `Warning=15`, `Info=0`; the 15 warnings remain the retained legacy duplicates and historical Boss placeholder warning.
+- Unity 2022.3.50f1c1 migration-precheck compilation completed with `Tundra build success` and no `error CS` after fixing the `UnityEngine.Resources` namespace qualification.
+- Final Unity batch compilation completed with `Tundra build success`, return code 0, and no `error CS`.
+- Task 0-5 regression smoke completed with `SMOKE_SUCCESS stages=20, validation=15`.
+
+### Scope Boundary
+
+- No offline-time simulation, IdleCave income, batch offline settlement, new save fields, Task 7-10, Tune01, 3-10, or DebugPanel expansion was implemented.
+- QA should verify 2-1 through 2-9 drop logs, inventory/resource persistence, auto-advance continuity, and that 2-10 Boss does not grant normal-stage drops.
+
+## 2026-06-19 - V0.2 StageConfigPanel01 Task 07 BossConfig
+
+### Scope
+
+- Expanded the existing `BossInfoConfig` into the shared Boss configuration source for identity, pre-battle briefing, phase thresholds, phase timing, phase effects, and catalog metadata.
+- Added verified BossConfig assets for 1-10 and 2-10 under `Resources/CoreLoop/BossConfigs`.
+- Attached the BossConfig assets directly to the 1-10 and 2-10 Stage rows in `RunConfig_V02_15Min`.
+- Preserved the verified phase values: shield above 70% HP, summon above 35% HP, first action delay 4 seconds, phase intervals 5/6/7 seconds, shield 30, summon damage 12, poison/burn stack 1, seal 3 seconds, and energy disruption 3 seconds.
+- Reused `V02BossPhaseController`; it now reads the active Stage BossConfig first and falls back to the existing serialized values when no config is supplied.
+- Reused `BossInfoPanel` / `BossInfoViewModel`; 2-10 still stops before the Boss and opens the existing manual-start information panel.
+- Added a Boss tab to StageConfigPanel01 and extended DataCatalog validation for missing/mismatched Boss stage configs, orphan/non-Boss enemy references, invalid thresholds, invalid timing, and negative effect values.
+- Kept the old `chapterTwoBossInfoConfig` scene override and runtime default constructor as compatibility fallbacks.
+
+### Verification
+
+- The open Unity Editor detected the final Task 7 sources and assets, completed `Tundra build success`, reloaded assemblies, and imported both BossConfig assets without `error CS`.
+- Unity's generated Roslyn response files compiled both runtime and Editor assemblies with exit code 0 and no `error CS`.
+- Task 7 read-only smoke completed with `SMOKE_SUCCESS bosses=2, validation=15`.
+- DataCatalog completed with `Error=0`, `Warning=15`, `Info=0`; warnings remain the retained legacy duplicate item IDs and historical same-name Boss placeholder warning.
+- Static asset verification confirms exactly two active verified BossConfig assets, with 1-10 and 2-10 referencing their matching Boss enemies.
+- Static stage verification confirms only 1-10 and 2-10 reference BossConfig assets; all normal stages remain null.
+- A separate Unity batch attempt was blocked before compilation because the same project was open in the interactive Unity Editor; this was a project-lock message, not a code compilation error.
+
+### Scope Boundary
+
+- Did not add a second Boss combat system, new Boss skills, new rewards, new save data, Tune01 values, 3-10, Task 8-10, or DebugPanel changes.
+- Task 8-10 remain untouched.
+
+## 2026-06-19 - V0.2 StageConfigPanel01 Task 08 UpgradeConfig
+
+### Scope
+
+- Reused the existing `CoreLoopTalismanUpgradeConfig.asset` as the single verified upgrade data source; no duplicate UpgradeConfig asset or second upgrade service was created.
+- Added configuration identity, display label, source type, Debug, and Deprecated metadata to `TalismanUpgradeConfig`.
+- Added an Upgrade tab to StageConfigPanel01 for editing the verified level rows, resource costs, stat multipliers, and summaries.
+- Preserved the five verified Lv.1 to Lv.2 rows: fire, thunder, shield, purify, and soul suppress talismans.
+- Preserved common costs: SpiritStone 100, TalismanPaper 50, Cinnabar 8, and BasicTalismanEmbryo 1.
+- Preserved verified effects: fire damage 1.25x; thunder damage 1.15x and shield break 1.3x; shield amount 1.25x; purify cooldown 0.8x; soul suppress control duration 1.2x.
+- Extended DataCatalog validation for UpgradeConfig identity, empty/null rows, orphan or non-upgradeable ItemDefinitions, invalid level ranges, duplicate/gapped level keys, invalid or duplicate costs, missing/non-positive modifiers, and no-effect modifiers.
+- `UpgradeService` and `BattleLoadoutSnapshotBuilder` continue loading the same Resources asset through `TalismanUpgradeConfig.DefaultResourcePath`.
+
+### Verification
+
+- Task 8 migration completed with `[StageConfigPanel01][Task08] MIGRATION_SUCCESS`.
+- Task 8 smoke completed with `SMOKE_SUCCESS upgrades=5, validation=15`.
+- DataCatalog completed with `Error=0`, `Warning=15`, `Info=0`; warnings remain the retained legacy duplicate item IDs and historical same-name Boss placeholder warning.
+- Task 0-5 regression smoke completed with `SMOKE_SUCCESS stages=20, validation=15`.
+- Task 6 regression smoke completed with `SMOKE_SUCCESS stages=9, drops=6, validation=15`.
+- Task 7 regression smoke completed with `SMOKE_SUCCESS bosses=2, validation=15`.
+- Final Unity 2022.3.50f1c1 batch compilation completed with `Tundra build success`, return code 0, and no `error CS`.
+
+### Scope Boundary
+
+- Did not modify verified upgrade values, add Lv.3+, random attributes, new resource types, new save fields, Tune01, 3-10, Task 9-10, or DebugPanel changes.
+- Task 9-10 remain untouched.

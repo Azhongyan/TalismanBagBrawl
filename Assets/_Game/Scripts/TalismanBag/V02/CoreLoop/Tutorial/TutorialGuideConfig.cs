@@ -165,7 +165,8 @@ namespace TalismanBag.V02.CoreLoop.Tutorial
                 panelTitle = $"获得：{itemName}",
                 panelSubject = $"{itemName} x1",
                 panelDescription = description,
-                rewardConfig = CreateSingleItemRewardConfig(levelId, itemId, itemName, description),
+                rewardConfig = RewardConfig.LoadById($"fixed_tutorial_{NormalizeLevelId(levelId).Replace("-", "_")}")
+                               ?? CreateSingleItemRewardConfig(levelId, itemId, itemName, description),
                 blockFlowWhenRuntimeInventorySyncFails = true
             };
         }
@@ -182,7 +183,9 @@ namespace TalismanBag.V02.CoreLoop.Tutorial
                 panelTitle = "1-10 Boss 已击破",
                 panelSubject = "章节奖励",
                 panelDescription = "领取章节结算奖励后完成 1-10 主线试炼。",
-                rewardConfig = rewardOverride != null ? rewardOverride : CreateChapterOneBossRewardConfig(),
+                rewardConfig = rewardOverride != null
+                    ? rewardOverride
+                    : RewardConfig.LoadById("chapter_1_10_clear") ?? CreateChapterOneBossRewardConfig(),
                 blockFlowWhenRuntimeInventorySyncFails = false
             };
         }

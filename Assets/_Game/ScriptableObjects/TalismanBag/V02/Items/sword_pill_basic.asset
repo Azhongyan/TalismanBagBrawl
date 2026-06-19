@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: sword_pill_basic
   displayName: "\u5251\u4E38"
+  enabled: 1
   itemType: 1
   elementType: 4
   icon: {fileID: 0}
@@ -32,3 +33,19 @@ MonoBehaviour:
   requiresFormationPower: 1
   shortRoleDescription: "\u5355\u4F53\u7206\u53D1\u6CD5\u5668\uFF0C\u9002\u5408\u6293\u8F93\u51FA\u7A97\u53E3\u3002"
   counterDescription: "\u514B\u5236\u84C4\u529B\u548C\u9996\u9886\u9636\u6BB5\u3002"
+  iconKey: 
+  rarity: 0
+  canDrop: 1
+  canUpgrade: 0
+  unlockChapter: 1
+  effectId: 
+  effectParams: []
+  elementTags: []
+  mechanicTags: []
+  schoolTags: []
+  factionTags: []
+  synergyTags: []
+  comboTags: []
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

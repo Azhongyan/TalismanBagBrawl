@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TalismanBag.V02.Config;
 using UnityEngine;
 
 namespace TalismanBag.V02.CoreLoop.Rewards
@@ -10,25 +11,43 @@ namespace TalismanBag.V02.CoreLoop.Rewards
         public string tableId;
         public string displayName;
         public List<RewardDropEntry> drops = new();
+        public bool isDebugOnly;
+        public bool isDeprecated;
+        public CatalogSourceType sourceType = CatalogSourceType.Production;
 
         public List<RewardEntry> Roll()
         {
+            return Roll(1);
+        }
+
+        public List<RewardEntry> Roll(int rollCount)
+        {
             List<RewardEntry> result = new();
-            if (drops == null)
+            if (drops == null || rollCount <= 0)
             {
                 return result;
             }
 
-            foreach (RewardDropEntry drop in drops)
+            for (int rollIndex = 0; rollIndex < rollCount; rollIndex++)
             {
-                RewardEntry reward = drop?.Roll();
-                if (reward != null && reward.IsValid)
+                foreach (RewardDropEntry drop in drops)
                 {
-                    result.Add(reward);
+                    RewardEntry reward = drop?.Roll();
+                    if (reward != null && reward.IsValid)
+                    {
+                        result.Add(reward);
+                    }
                 }
             }
 
             return result;
+        }
+
+        public string GetCatalogLabel()
+        {
+            string readableName = string.IsNullOrWhiteSpace(displayName) ? name : displayName.Trim();
+            string readableId = string.IsNullOrWhiteSpace(tableId) ? "no_id" : tableId.Trim();
+            return $"{readableName} [{readableId}]";
         }
     }
 

@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cc904949755314e81026bb929a3144, type: 3}
+  m_Name: 1_10_boss_array_breaking_warlord_1_10
+  m_EditorClassIdentifier: 
+  enemyId: boss_array_breaking_warlord_1_10
+  displayName: "\u7834\u9635\u5996\u5C06"
+  enabled: 1
+  enemyType: 4
+  maxHp: 240
+  attackDamage: 12
+  attackInterval: 2.8
+  weaknessText: "\u7B2C\u4E00\u7AE0 Boss \u7EFC\u5408\u9898"
+  dangerText: "\u62A4\u76FE / \u53EC\u5524 / \u5C01\u7B26\u7EFC\u5408"
+  recommendedBuildText: "\u7B2C\u4E00\u7AE0\u7EFC\u5408 Boss\uFF0C\u4E0D\u505A\u6570\u503C\u5899\u3002"
+  chargeInterval: 0
+  chargeDuration: 0
+  chargeAttackDamage: 0
+  manaDrainInterval: 0
+  manaDrainAmount: 0
+  sealInterval: 0
+  sealDuration: 0
+  ghostShadowInterval: 0
+  ghostShadowDamage: 0
+  icon: {fileID: 0}
+  enemyClass: ChapterOneGuide
+  enemyArchetype: 1-10 chapter boss
+  intentText: "\u62A4\u76FE / \u53EC\u5524 / \u5C01\u7B26\u7EFC\u5408"
+  recommendedCounterText: "\u7B2C\u4E00\u7AE0\u7EFC\u5408 Boss\uFF0C\u4E0D\u505A\u6570\u503C\u5899\u3002"
+  weaknessTags: 010000000800000004000000060000000a000000
+  resistTags: 
+  resistedElements: 01000000
+  resistedFunctions: 01000000
+  vulnerableElements: 020000000800000003000000
+  vulnerableFunctions: 0c0000000400000005000000080000000d0000000e000000
+  skills:
+  - {fileID: 11400000, guid: f1625990bf8c8744f9ec6ed96eb3d28b, type: 2}
+  - {fileID: 11400000, guid: f2d5c9b5f34b9cf40b50243002263fd5, type: 2}
+  - {fileID: 11400000, guid: 1a714f232d12c104d8f3050a286c5172, type: 2}
+  elementType: 0
+  factionType: 
+  mechanicTags: []
+  baseShield: 0
+  dropTableId: 
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

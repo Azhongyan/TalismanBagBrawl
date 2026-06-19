@@ -9,5 +9,6 @@ namespace TalismanBag.V02.Run
         public string runId;
         public string displayName;
         public List<V02RoundConfig> rounds = new();
+        public List<V02RoundConfig> chapterTwoRounds = new();
     }
 }

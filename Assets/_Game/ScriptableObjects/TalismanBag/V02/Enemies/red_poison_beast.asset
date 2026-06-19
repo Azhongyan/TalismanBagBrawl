@@ -44,3 +44,11 @@ MonoBehaviour:
   vulnerableFunctions: 080000000f0000000600000009000000
   skills:
   - {fileID: 11400000, guid: a8719d0776264f3886af1990aa4d617b, type: 2}
+  elementType: 0
+  factionType: 
+  mechanicTags: []
+  baseShield: 0
+  dropTableId: 
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57ff4d720328f3d4699d22073893942a, type: 3}
+  m_Name: IdleDropConfig
+  m_EditorClassIdentifier: 
+  configId: chapter_2_idle_drop
+  displayName: "\u7B2C\u4E8C\u7AE0\u5DE1\u884C\u6389\u843D"
+  normalStageDropTable: {fileID: 11400000, guid: dc0b9636a5f89f247a241aac9b1f8ed9, type: 2}
+  rollsPerStageClear: 1
+  grantOnNormalStageClear: 1
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

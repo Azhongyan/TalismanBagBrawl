@@ -43,3 +43,11 @@ MonoBehaviour:
   vulnerableElements: 
   vulnerableFunctions: 
   skills: []
+  elementType: 0
+  factionType: 
+  mechanicTags: []
+  baseShield: 0
+  dropTableId: 
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 3

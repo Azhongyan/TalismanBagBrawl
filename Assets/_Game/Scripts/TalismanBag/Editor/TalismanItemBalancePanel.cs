@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using TalismanBag.Items;
+using TalismanBag.V02.Config;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,6 +18,9 @@ namespace TalismanBag.EditorTools
         private bool showVisualFields;
         private bool showTechnicalFields = true;
         private bool showDescriptionFields = true;
+        private bool showDebugItems;
+        private bool showDeprecatedItems;
+        private bool showLegacyItems;
 
         [MenuItem("Tools/Talisman Bag/Item Balance Panel")]
         public static void Open()
@@ -47,7 +51,9 @@ namespace TalismanBag.EditorTools
             int visibleCount = 0;
             foreach (ItemRow row in rows)
             {
-                if (row.Definition == null || !MatchesSearch(row.Definition))
+                if (row.Definition == null ||
+                    !ShouldShow(row.Definition) ||
+                    !MatchesSearch(row.Definition))
                 {
                     continue;
                 }
@@ -89,6 +95,9 @@ namespace TalismanBag.EditorTools
             showTechnicalFields = EditorGUILayout.ToggleLeft("Technical / 技术字段", showTechnicalFields, GUILayout.Width(170f));
             showVisualFields = EditorGUILayout.ToggleLeft("Visual / 视觉字段", showVisualFields, GUILayout.Width(140f));
             showDescriptionFields = EditorGUILayout.ToggleLeft("Description / 描述字段", showDescriptionFields, GUILayout.Width(170f));
+            showDebugItems = EditorGUILayout.ToggleLeft("Debug", showDebugItems, GUILayout.Width(80f));
+            showDeprecatedItems = EditorGUILayout.ToggleLeft("Deprecated", showDeprecatedItems, GUILayout.Width(110f));
+            showLegacyItems = EditorGUILayout.ToggleLeft("Legacy", showLegacyItems, GUILayout.Width(85f));
             GUILayout.FlexibleSpace();
             GUILayout.Label($"Loaded / 已载入: {rows.Count}", EditorStyles.miniLabel);
             EditorGUILayout.EndHorizontal();
@@ -118,6 +127,11 @@ namespace TalismanBag.EditorTools
                 EditorGUIUtility.PingObject(definition);
             }
 
+            if (GUILayout.Button("Duplicate Config / 复用机制", GUILayout.Width(150f)))
+            {
+                DuplicateConfig(definition);
+            }
+
             if (GUILayout.Button("Save / 保存", GUILayout.Width(88f)))
             {
                 serializedObject.ApplyModifiedProperties();
@@ -142,6 +156,14 @@ namespace TalismanBag.EditorTools
                     DrawProperty(serializedObject, "itemType", "Item Type / 物品类型");
                     DrawProperty(serializedObject, "width", "Width / 宽度");
                     DrawProperty(serializedObject, "height", "Height / 高度");
+                    DrawProperty(serializedObject, "rarity", "Rarity / 稀有度");
+                    DrawProperty(serializedObject, "iconKey", "Icon Key / 图标键");
+                    DrawProperty(serializedObject, "canDrop", "Can Drop / 可掉落");
+                    DrawProperty(serializedObject, "canUpgrade", "Can Upgrade / 可培养");
+                    DrawProperty(serializedObject, "unlockChapter", "Unlock Chapter / 解锁章节");
+                    DrawProperty(serializedObject, "sourceType", "Source Type / 数据来源");
+                    DrawProperty(serializedObject, "isDebugOnly", "Debug Only / 仅调试");
+                    DrawProperty(serializedObject, "isDeprecated", "Deprecated / 已废弃");
                 }
 
                 DrawSection("Combat Numbers / 战斗数值");
@@ -156,6 +178,13 @@ namespace TalismanBag.EditorTools
                 DrawProperty(serializedObject, "functionTags", "Function Tags / 功能标签");
                 DrawProperty(serializedObject, "counterTags", "Counter Tags / 克制标签");
                 DrawProperty(serializedObject, "effectType", "Effect Type / 效果类型");
+                DrawProperty(serializedObject, "effectId", "Effect ID / 效果 ID");
+                DrawProperty(serializedObject, "effectParams", "Effect Params / 效果参数");
+                DrawProperty(serializedObject, "mechanicTags", "Mechanic Tags / 机制标签");
+                DrawProperty(serializedObject, "schoolTags", "School Tags / 流派标签");
+                DrawProperty(serializedObject, "factionTags", "Faction Tags / 阵营标签（预留）");
+                DrawProperty(serializedObject, "synergyTags", "Synergy Tags / 协同标签（预留）");
+                DrawProperty(serializedObject, "comboTags", "Combo Tags / 连携标签（预留）");
 
                 DrawSection("Formation Power / 阵法供能");
                 DrawProperty(serializedObject, "requiresFormationPower", "Requires Power / 需要供能");
@@ -240,6 +269,26 @@ namespace TalismanBag.EditorTools
                    Contains(definition.enabled ? "enabled 启用" : "disabled 停用", needle);
         }
 
+        private bool ShouldShow(TalismanItemDefinition definition)
+        {
+            if (definition == null)
+            {
+                return false;
+            }
+
+            if (!showDebugItems && (definition.isDebugOnly || definition.sourceType is CatalogSourceType.Debug or CatalogSourceType.Test))
+            {
+                return false;
+            }
+
+            if (!showDeprecatedItems && definition.isDeprecated)
+            {
+                return false;
+            }
+
+            return showLegacyItems || definition.sourceType != CatalogSourceType.Legacy;
+        }
+
         private static int CompareItemGuids(string leftGuid, string rightGuid)
         {
             TalismanItemDefinition left = AssetDatabase.LoadAssetAtPath<TalismanItemDefinition>(AssetDatabase.GUIDToAssetPath(leftGuid));
@@ -262,7 +311,31 @@ namespace TalismanBag.EditorTools
 
             string displayName = string.IsNullOrWhiteSpace(definition.displayName) ? definition.name : definition.displayName;
             string itemId = string.IsNullOrWhiteSpace(definition.itemId) ? "no_id" : definition.itemId;
-            return $"{displayName} / {itemId}";
+            return $"{displayName} [{itemId}]";
+        }
+
+        private void DuplicateConfig(TalismanItemDefinition source)
+        {
+            if (source == null)
+            {
+                return;
+            }
+
+            string sourcePath = AssetDatabase.GetAssetPath(source);
+            string directory = System.IO.Path.GetDirectoryName(sourcePath)?.Replace('\\', '/');
+            string targetPath = AssetDatabase.GenerateUniqueAssetPath($"{directory}/{source.name}_variant.asset");
+            TalismanItemDefinition copy = Instantiate(source);
+            copy.name = System.IO.Path.GetFileNameWithoutExtension(targetPath);
+            copy.itemId = $"{source.itemId}_variant";
+            copy.displayName = $"{source.displayName}变体";
+            copy.isDebugOnly = true;
+            copy.isDeprecated = false;
+            copy.sourceType = CatalogSourceType.Debug;
+            AssetDatabase.CreateAsset(copy, targetPath);
+            AssetDatabase.SaveAssets();
+            Selection.activeObject = copy;
+            EditorGUIUtility.PingObject(copy);
+            LoadItems();
         }
 
         private static void DrawSection(string label)

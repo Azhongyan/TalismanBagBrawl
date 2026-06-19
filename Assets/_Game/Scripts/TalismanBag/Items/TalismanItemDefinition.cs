@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TalismanBag.V02.Config;
 using TalismanBag.V02.Tags;
 using UnityEngine;
 
@@ -23,6 +24,15 @@ namespace TalismanBag.Items
         Metal,
         Earth,
         Thunder
+    }
+
+    public enum ItemRarity
+    {
+        Common,
+        Uncommon,
+        Rare,
+        Epic,
+        Legendary
     }
 
     [CreateAssetMenu(menuName = "Talisman Bag/Item Definition", fileName = "TalismanItemDefinition")]
@@ -55,5 +65,30 @@ namespace TalismanBag.Items
         [Header("V0.2 Description")]
         [TextArea] public string shortRoleDescription;
         [TextArea] public string counterDescription;
+
+        [Header("Stage Config Catalog")]
+        public string iconKey;
+        public ItemRarity rarity;
+        public bool canDrop = true;
+        public bool canUpgrade;
+        public int unlockChapter = 1;
+        public string effectId;
+        public List<string> effectParams = new();
+        public List<string> elementTags = new();
+        public List<string> mechanicTags = new();
+        public List<string> schoolTags = new();
+        public List<string> factionTags = new();
+        public List<string> synergyTags = new();
+        public List<string> comboTags = new();
+        public bool isDebugOnly;
+        public bool isDeprecated;
+        public CatalogSourceType sourceType = CatalogSourceType.Unknown;
+
+        public string GetCatalogLabel()
+        {
+            string readableName = string.IsNullOrWhiteSpace(displayName) ? name : displayName.Trim();
+            string readableId = string.IsNullOrWhiteSpace(itemId) ? "no_id" : itemId.Trim();
+            return $"{readableName} [{readableId}]";
+        }
     }
 }

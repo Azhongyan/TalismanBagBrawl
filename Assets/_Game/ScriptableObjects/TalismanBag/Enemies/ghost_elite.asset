@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: ghost_elite
   displayName: "\u5F3A\u5316\u9B3C\u602A"
+  enabled: 1
   enemyType: 0
   maxHp: 110
   attackDamage: 10
@@ -31,3 +32,22 @@ MonoBehaviour:
   ghostShadowInterval: 0
   ghostShadowDamage: 0
   icon: {fileID: 0}
+  enemyClass: 
+  enemyArchetype: 
+  intentText: 
+  recommendedCounterText: 
+  weaknessTags: 
+  resistTags: 
+  resistedElements: 
+  resistedFunctions: 
+  vulnerableElements: 
+  vulnerableFunctions: 
+  skills: []
+  elementType: 0
+  factionType: 
+  mechanicTags: []
+  baseShield: 0
+  dropTableId: 
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 3

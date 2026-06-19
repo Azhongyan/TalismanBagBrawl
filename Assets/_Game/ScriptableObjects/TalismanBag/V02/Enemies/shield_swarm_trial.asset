@@ -45,3 +45,11 @@ MonoBehaviour:
   skills:
   - {fileID: 11400000, guid: 40c91a04c97d4a1d977cfb964e8bdf11, type: 2}
   - {fileID: 11400000, guid: 4760f0cd7c384fb4bc429ce12d595ced, type: 2}
+  elementType: 0
+  factionType: 
+  mechanicTags: []
+  baseShield: 0
+  dropTableId: 
+  isDebugOnly: 0
+  isDeprecated: 0
+  sourceType: 2

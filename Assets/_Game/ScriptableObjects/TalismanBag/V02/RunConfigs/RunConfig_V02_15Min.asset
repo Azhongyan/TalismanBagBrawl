@@ -19,6 +19,22 @@ MonoBehaviour:
     roundIndex: 1
     roundTitle: "\u6E38\u706F\u5C0F\u795F\uFF1A\u4F9B\u80FD\u6559\u5B66"
     enemy: {fileID: 11400000, guid: 0b6fe088fc1a49218a5200ef4f15d771, type: 2}
+    stageConfigVersion: 1
+    chapterId: 1
+    nextStageId: 1-2
+    stageType: 0
+    enemyGroup: {fileID: 11400000, guid: f6a1cb38f4484ba42a38340a8592a34f, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 0}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 1-1
     intendedRole: Energy stone and fire talisman tutorial
     teachingGoal: "\u7406\u89E3\u805A\u80FD\u77F3\u4F1A\u4E3A\u9644\u8FD1\u7B26\u7B93\u63D0\u4F9B\u7075\u529B\uFF0C\u53EA\u6709\u83B7\u5F97\u7075\u529B\u7684\u7B26\u7B93\u624D\u80FD\u53D1\u52A8\u3002"
     preBattleHint: "\u8BF7\u8BA9\u706B\u7B26\u5904\u5728\u805A\u80FD\u77F3\u4F9B\u80FD\u8303\u56F4\u5185\u3002"
@@ -51,6 +67,22 @@ MonoBehaviour:
     roundIndex: 2
     roundTitle: "\u6E38\u706F\u5C0F\u795F\uFF1A\u57FA\u7840\u8F93\u51FA\u590D\u4E60"
     enemy: {fileID: 11400000, guid: c73ab9457d1841e39a189727a2ec2687, type: 2}
+    stageConfigVersion: 1
+    chapterId: 1
+    nextStageId: 1-3
+    stageType: 0
+    enemyGroup: {fileID: 11400000, guid: a4e4a96e0cd9be24c9d769e404e1dfc3, type: 2}
+    rewardConfig: {fileID: 11400000, guid: ca8b719bf845122468b9179b776b50da, type: 2}
+    dropTable: {fileID: 0}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: fixed_reward_1_2_thunder_talisman
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 1-2
     intendedRole: Basic output review
     teachingGoal: "\u590D\u4E60\u706B\u7B26\u8F93\u51FA\u548C\u805A\u80FD\u77F3\u4F9B\u80FD\uFF0C\u80DC\u5229\u540E\u83B7\u5F97\u96F7\u7B26\u3002"
     preBattleHint: "\u590D\u4E60\u57FA\u7840\u8F93\u51FA\u3002\u4E0B\u4E00\u5173\u4F1A\u51FA\u73B0\u62A4\u76FE\u3002"
@@ -88,6 +120,22 @@ MonoBehaviour:
     roundIndex: 3
     roundTitle: "\u77F3\u7532\u7B26\u536B\uFF1A\u96F7\u7B26\u7834\u76FE"
     enemy: {fileID: 11400000, guid: 7e529c3694fd44d0a76d614cf3c06b36, type: 2}
+    stageConfigVersion: 1
+    chapterId: 1
+    nextStageId: 1-4
+    stageType: 0
+    enemyGroup: {fileID: 11400000, guid: d6174ef74543dec4a96e908d4f686db2, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 0}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 1-3
     intendedRole: Shield break tutorial
     teachingGoal: "\u9A8C\u8BC1\u96F7\u7B26\u53EF\u4EE5\u5FEB\u901F\u51FB\u7834\u4F4E\u5F3A\u5EA6\u62A4\u76FE\u3002"
     preBattleHint: "\u654C\u4EBA\u6709\u62A4\u76FE\uFF0C\u96F7\u7B26\u53EF\u7834\u76FE\u3002"
@@ -125,6 +173,22 @@ MonoBehaviour:
     roundIndex: 4
     roundTitle: "\u77F3\u7532\u7B26\u536B\uFF1A\u62A4\u76FE\u590D\u4E60"
     enemy: {fileID: 11400000, guid: 7c1e7e13122c4fb68ebc45e5465bb3b5, type: 2}
+    stageConfigVersion: 1
+    chapterId: 1
+    nextStageId: 1-5
+    stageType: 0
+    enemyGroup: {fileID: 11400000, guid: 7e13f7214dbca6f4f999c5b757ff20de, type: 2}
+    rewardConfig: {fileID: 11400000, guid: 7ebadcf7e971b264a9d724e6d72519d6, type: 2}
+    dropTable: {fileID: 0}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: fixed_reward_1_4_shield_talisman
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 1-4
     intendedRole: Shield review
     teachingGoal: "\u590D\u4E60\u7834\u76FE\u548C\u57FA\u7840\u8F93\u51FA\uFF0C\u80DC\u5229\u540E\u83B7\u5F97\u62A4\u8EAB\u7B26\u3002"
     preBattleHint: "\u62A4\u76FE\u7565\u539A\uFF0C\u7EE7\u7EED\u7528\u96F7\u7B26\u5904\u7406\u62A4\u76FE\u3002"
@@ -157,6 +221,22 @@ MonoBehaviour:
     roundIndex: 5
     roundTitle: "\u94DC\u722A\u538B\u9635\u602A\uFF1A\u627F\u538B\u6559\u5B66"
     enemy: {fileID: 11400000, guid: b201fc3b753c4adab4321c91239bf709, type: 2}
+    stageConfigVersion: 1
+    chapterId: 1
+    nextStageId: 1-6
+    stageType: 0
+    enemyGroup: {fileID: 11400000, guid: 9f6fe122c7d104f4cb3efb97e348d734, type: 2}
+    rewardConfig: {fileID: 11400000, guid: 6752dfb91f7b5fa4d943a103c072f8d8, type: 2}
+    dropTable: {fileID: 0}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: fixed_reward_1_5_purify_talisman
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 1-5
     intendedRole: Pressure survival tutorial
     teachingGoal: "\u9A8C\u8BC1\u62A4\u8EAB\u7B26\u53EF\u4EE5\u63D0\u9AD8\u627F\u538B\u751F\u5B58\u80FD\u529B\uFF0C\u80DC\u5229\u540E\u83B7\u5F97\u51C0\u5316\u7B26\u3002"
     preBattleHint: "\u654C\u4EBA\u653B\u51FB\u66F4\u5F3A\uFF0C\u62A4\u8EAB\u7B26\u53EF\u63D0\u9AD8\u751F\u5B58\u3002"
@@ -189,6 +269,22 @@ MonoBehaviour:
     roundIndex: 6
     roundTitle: "\u7070\u706B\u6BD2\u795F\uFF1A\u51C0\u5316\u6559\u5B66"
     enemy: {fileID: 11400000, guid: 01aa1e0be8f5453c8c1d705f056a6e9a, type: 2}
+    stageConfigVersion: 1
+    chapterId: 1
+    nextStageId: 1-7
+    stageType: 0
+    enemyGroup: {fileID: 11400000, guid: 4bad818892684f54c932a23b5ebf3a88, type: 2}
+    rewardConfig: {fileID: 11400000, guid: 8dab4bec9a108f24da0724b92d8152b5, type: 2}
+    dropTable: {fileID: 0}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: fixed_reward_1_6_soul_suppress_talisman
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 1-6
     intendedRole: Debuff cleanse tutorial
     teachingGoal: "\u9A8C\u8BC1\u51C0\u5316\u7B26\u53EF\u4EE5\u6E05\u9664\u6BD2\u3001\u71C3\u70E7\u7B49\u8D1F\u9762\u72B6\u6001\uFF0C\u80DC\u5229\u540E\u83B7\u5F97\u9547\u9B42\u7B26\u3002"
     preBattleHint: "\u654C\u4EBA\u4F1A\u65BD\u52A0\u8D1F\u9762\u72B6\u6001\uFF0C\u51C0\u5316\u7B26\u53EF\u6E05\u9664\u6BD2\u3001\u71C3\u70E7\u7B49\u72B6\u6001\u3002"
@@ -221,6 +317,22 @@ MonoBehaviour:
     roundIndex: 7
     roundTitle: "\u6444\u7075\u5C01\u7B26\u9B3C\uFF1A\u5F02\u5E38\u5E72\u6270"
     enemy: {fileID: 11400000, guid: 6f3b1a7de8894e54a7b69007799ec801, type: 2}
+    stageConfigVersion: 1
+    chapterId: 1
+    nextStageId: 1-8
+    stageType: 0
+    enemyGroup: {fileID: 11400000, guid: 73267b06c072fa94ea4daa5edcf976bb, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 0}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 1-7
     intendedRole: Disruption counter tutorial
     teachingGoal: "\u9A8C\u8BC1\u9547\u9B42\u7B26\u53EF\u4EE5\u53CD\u5236\u5077\u7075\u3001\u5C01\u7B26\u7B49\u5F02\u5E38\u5E72\u6270\u3002"
     preBattleHint: "\u654C\u4EBA\u4F1A\u5E72\u6270\u4F60\u7684\u9635\u52BF\uFF0C\u9547\u9B42\u7B26\u53EF\u538B\u5236\u5F02\u5E38\u5E72\u6270\u3002"
@@ -258,6 +370,22 @@ MonoBehaviour:
     roundIndex: 8
     roundTitle: "\u6444\u7075\u5C01\u7B26\u9B3C\uFF1A\u5E72\u6270\u590D\u4E60"
     enemy: {fileID: 11400000, guid: bbe84c44b2ad471187c6bb3f6c0e65f2, type: 2}
+    stageConfigVersion: 1
+    chapterId: 1
+    nextStageId: 1-9
+    stageType: 0
+    enemyGroup: {fileID: 11400000, guid: bf6523029ac560c4cbf1633ab4ffa859, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 0}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 1-8
     intendedRole: Disruption review
     teachingGoal: "\u590D\u4E60\u5077\u7075\u3001\u5C01\u7B26\u5E72\u6270\uFF0C\u80DC\u5229\u540E\u83B7\u5F97\u8FDE\u9501\u96F7\u7B26\u3002"
     preBattleHint: "\u5F02\u5E38\u5E72\u6270\u9891\u7387\u7565\u9AD8\uFF0C\u4F46\u4E0D\u4F1A\u5F62\u6210\u786C\u5361\u3002"
@@ -300,6 +428,22 @@ MonoBehaviour:
     roundIndex: 9
     roundTitle: "\u6E38\u706F\u5C0F\u795F + \u77F3\u7532\u7B26\u536B\uFF1ABoss\u524D\u7EFC\u5408\u5C0F\u6D4B"
     enemy: {fileID: 11400000, guid: 14f2f4f2f4414e8c8ffcf2be8d830617, type: 2}
+    stageConfigVersion: 1
+    chapterId: 1
+    nextStageId: 1-10
+    stageType: 0
+    enemyGroup: {fileID: 11400000, guid: 28ad6da70393f1645911ee6637e19847, type: 2}
+    rewardConfig: {fileID: 11400000, guid: 4254eb4b873130043847d6b578951bbc, type: 2}
+    dropTable: {fileID: 0}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: fixed_reward_1_9_chain_thunder_talisman
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 1-9
     intendedRole: Boss pre-check with reused enemies
     teachingGoal: "\u7528\u8FDE\u9501\u96F7\u7B26\u548C\u5DF2\u6709\u7B26\u7B93\u5904\u7406\u591A\u76EE\u6807\u538B\u529B\u4E0E\u4F4E\u5F3A\u5EA6\u62A4\u76FE\u3002"
     preBattleHint: "\u524D\u65B9\u5C06\u8FDB\u5165 Boss \u5173\uFF0C\u590D\u4E60\u591A\u76EE\u6807\u538B\u529B\u548C\u62A4\u76FE\u5904\u7406\u3002"
@@ -332,9 +476,531 @@ MonoBehaviour:
     roundIndex: 10
     roundTitle: "\u7834\u9635\u5996\u5C06\uFF1A\u7B2C\u4E00\u7AE0 Boss"
     enemy: {fileID: 11400000, guid: af00b4c24b8d448cba58b91f4833e62b, type: 2}
+    stageConfigVersion: 1
+    chapterId: 1
+    nextStageId: 2-1
+    stageType: 3
+    enemyGroup: {fileID: 11400000, guid: 43e029c781f01734b931cbfdf6417e8d, type: 2}
+    rewardConfig: {fileID: 11400000, guid: bf3742803daa95d438129bd2b48df1b7, type: 2}
+    dropTable: {fileID: 0}
+    bossConfig: {fileID: 11400000, guid: a107b055d04b4ec7a3c07ed59c8fd2f1, type: 2}
+    tutorialGuideId: chapter_1_10_clear
+    unlockCondition: 
+    onWinAction: 2
+    onLoseAction: 0
+    autoAdvance: 0
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 1-10
     intendedRole: Chapter one boss comprehensive check
     teachingGoal: "\u7B2C\u4E00\u7AE0\u7EFC\u5408 Boss\uFF0C\u68C0\u9A8C\u4F9B\u80FD\u3001\u7834\u76FE\u3001\u51C0\u5316\u3001\u9547\u9B42\u548C\u591A\u76EE\u6807\u5904\u7406\u3002"
     preBattleHint: "Boss \u4FE1\u606F\u63D0\u793A\u540E\u518D\u5F00\u6218\uFF0C\u786E\u4FDD\u6838\u5FC3\u7B26\u7B93\u90FD\u88AB\u4F9B\u80FD\u3002"
+    recommendedCounterTags: 
+    isBossRound: 1
+    targetDurationMin: 35
+    targetDurationMax: 50
+    targetHpLossMin: 0.65
+    targetHpLossMax: 0.75
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 50.4
+      weakDurationMax: 67.2
+      passHpLossMax: 0.85
+      weakHpLossMax: 0.95
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: BossReadyBuild
+      expectedGrade: Pass/Good
+      expectedDurationMin: 35
+      expectedDurationMax: 50
+      note: Curve freeze target
+  chapterTwoRounds:
+  - levelId: 2-1
+    roundIndex: 1
+    roundTitle: "2-1 \u5DE1\u884C"
+    enemy: {fileID: 11400000, guid: 0b6fe088fc1a49218a5200ef4f15d771, type: 2}
+    stageConfigVersion: 1
+    chapterId: 2
+    nextStageId: 2-2
+    stageType: 2
+    enemyGroup: {fileID: 11400000, guid: fcbcd95cecdc83b478e52cf1356109bd, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 11400000, guid: dc0b9636a5f89f247a241aac9b1f8ed9, type: 2}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 2-1
+    intendedRole: Energy stone and fire talisman tutorial
+    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
+    recommendedCounterTags: 
+    isBossRound: 0
+    targetDurationMin: 14
+    targetDurationMax: 18
+    targetHpLossMin: 0.2
+    targetHpLossMax: 0.3
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 18
+      weakDurationMax: 24
+      passHpLossMax: 0.45
+      weakHpLossMax: 0.65
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: FireBasicBuild
+      expectedGrade: Pass
+      expectedDurationMin: 14
+      expectedDurationMax: 18
+      note: Curve freeze target
+  - levelId: 2-2
+    roundIndex: 2
+    roundTitle: "2-2 \u5DE1\u884C"
+    enemy: {fileID: 11400000, guid: c73ab9457d1841e39a189727a2ec2687, type: 2}
+    stageConfigVersion: 1
+    chapterId: 2
+    nextStageId: 2-3
+    stageType: 2
+    enemyGroup: {fileID: 11400000, guid: dbd3d5bb1f842ac4f8b061012ca39797, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 11400000, guid: dc0b9636a5f89f247a241aac9b1f8ed9, type: 2}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 2-2
+    intendedRole: Basic output review
+    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
+    recommendedCounterTags: 
+    isBossRound: 0
+    targetDurationMin: 18
+    targetDurationMax: 28
+    targetHpLossMin: 0.3
+    targetHpLossMax: 0.4
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 26.4
+      weakDurationMax: 35.2
+      passHpLossMax: 0.55
+      weakHpLossMax: 0.75
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: ThunderShieldBreakBuild
+      expectedGrade: Good/Pass
+      expectedDurationMin: 18
+      expectedDurationMax: 28
+      note: Curve freeze target
+    - buildId: FireBasicBuild
+      expectedGrade: Fail
+      expectedDurationMin: 60
+      expectedDurationMax: 999
+      note: Curve freeze negative target
+  - levelId: 2-3
+    roundIndex: 3
+    roundTitle: "2-3 \u5DE1\u884C"
+    enemy: {fileID: 11400000, guid: 7e529c3694fd44d0a76d614cf3c06b36, type: 2}
+    stageConfigVersion: 1
+    chapterId: 2
+    nextStageId: 2-4
+    stageType: 2
+    enemyGroup: {fileID: 11400000, guid: e4c22c7b747d43043b86625d474123a8, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 11400000, guid: dc0b9636a5f89f247a241aac9b1f8ed9, type: 2}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 2-3
+    intendedRole: Shield break tutorial
+    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
+    recommendedCounterTags: 
+    isBossRound: 0
+    targetDurationMin: 18
+    targetDurationMax: 26
+    targetHpLossMin: 0.35
+    targetHpLossMax: 0.45
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 26.4
+      weakDurationMax: 35.2
+      passHpLossMax: 0.55
+      weakHpLossMax: 0.75
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: ChainGroupClearBuild
+      expectedGrade: Good/Pass
+      expectedDurationMin: 18
+      expectedDurationMax: 26
+      note: Curve freeze target
+    - buildId: ThunderShieldBreakBuild
+      expectedGrade: Weak
+      expectedDurationMin: 28
+      expectedDurationMax: 40
+      note: Curve freeze weak target
+  - levelId: 2-4
+    roundIndex: 4
+    roundTitle: "2-4 \u5DE1\u884C"
+    enemy: {fileID: 11400000, guid: 7c1e7e13122c4fb68ebc45e5465bb3b5, type: 2}
+    stageConfigVersion: 1
+    chapterId: 2
+    nextStageId: 2-5
+    stageType: 2
+    enemyGroup: {fileID: 11400000, guid: 4501f722bff36b3499bb9b19380b66ca, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 11400000, guid: dc0b9636a5f89f247a241aac9b1f8ed9, type: 2}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 2-4
+    intendedRole: Shield review
+    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
+    recommendedCounterTags: 
+    isBossRound: 0
+    targetDurationMin: 90
+    targetDurationMax: 120
+    targetHpLossMin: 0.4
+    targetHpLossMax: 0.5
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 38.4
+      weakDurationMax: 51.2
+      passHpLossMax: 0.7
+      weakHpLossMax: 0.9
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: FireBasicBuild
+      expectedGrade: Fail
+      expectedDurationMin: 50
+      expectedDurationMax: 999
+      note: Curve freeze negative target
+  - levelId: 2-5
+    roundIndex: 5
+    roundTitle: "2-5 \u5DE1\u884C"
+    enemy: {fileID: 11400000, guid: b201fc3b753c4adab4321c91239bf709, type: 2}
+    stageConfigVersion: 1
+    chapterId: 2
+    nextStageId: 2-6
+    stageType: 2
+    enemyGroup: {fileID: 11400000, guid: 1399ba169e0cc0d449f8a361a30bbc82, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 11400000, guid: dc0b9636a5f89f247a241aac9b1f8ed9, type: 2}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 2-5
+    intendedRole: Pressure survival tutorial
+    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
+    recommendedCounterTags: 
+    isBossRound: 0
+    targetDurationMin: 20
+    targetDurationMax: 30
+    targetHpLossMin: 0.45
+    targetHpLossMax: 0.55
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 31.2
+      weakDurationMax: 41.6
+      passHpLossMax: 0.6
+      weakHpLossMax: 0.8
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: SpreadAntiSealBuild
+      expectedGrade: Good/Pass
+      expectedDurationMin: 20
+      expectedDurationMax: 30
+      note: Curve freeze target
+  - levelId: 2-6
+    roundIndex: 6
+    roundTitle: "2-6 \u5DE1\u884C"
+    enemy: {fileID: 11400000, guid: 01aa1e0be8f5453c8c1d705f056a6e9a, type: 2}
+    stageConfigVersion: 1
+    chapterId: 2
+    nextStageId: 2-7
+    stageType: 2
+    enemyGroup: {fileID: 11400000, guid: f70182583396bd44aa24980c1daffd93, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 11400000, guid: dc0b9636a5f89f247a241aac9b1f8ed9, type: 2}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 2-6
+    intendedRole: Debuff cleanse tutorial
+    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
+    recommendedCounterTags: 
+    isBossRound: 0
+    targetDurationMin: 22
+    targetDurationMax: 32
+    targetHpLossMin: 0.42
+    targetHpLossMax: 0.52
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 33.6
+      weakDurationMax: 44.8
+      passHpLossMax: 0.65
+      weakHpLossMax: 0.85
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: SoulAntiStealBuild
+      expectedGrade: Good/Pass
+      expectedDurationMin: 22
+      expectedDurationMax: 32
+      note: Curve freeze target
+  - levelId: 2-7
+    roundIndex: 7
+    roundTitle: "2-7 \u5DE1\u884C"
+    enemy: {fileID: 11400000, guid: 6f3b1a7de8894e54a7b69007799ec801, type: 2}
+    stageConfigVersion: 1
+    chapterId: 2
+    nextStageId: 2-8
+    stageType: 2
+    enemyGroup: {fileID: 11400000, guid: 070e693aee775714295b0203803a3bce, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 11400000, guid: dc0b9636a5f89f247a241aac9b1f8ed9, type: 2}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 2-7
+    intendedRole: Disruption counter tutorial
+    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
+    recommendedCounterTags: 
+    isBossRound: 0
+    targetDurationMin: 26
+    targetDurationMax: 38
+    targetHpLossMin: 0.55
+    targetHpLossMax: 0.65
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 38.4
+      weakDurationMax: 51.2
+      passHpLossMax: 0.7
+      weakHpLossMax: 0.9
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: ThunderShieldBreakBuild
+      expectedGrade: Pass
+      expectedDurationMin: 26
+      expectedDurationMax: 38
+      note: Curve freeze target
+    - buildId: ChainGroupClearBuild
+      expectedGrade: Pass
+      expectedDurationMin: 26
+      expectedDurationMax: 38
+      note: Curve freeze target
+  - levelId: 2-8
+    roundIndex: 8
+    roundTitle: "2-8 \u5DE1\u884C"
+    enemy: {fileID: 11400000, guid: bbe84c44b2ad471187c6bb3f6c0e65f2, type: 2}
+    stageConfigVersion: 1
+    chapterId: 2
+    nextStageId: 2-9
+    stageType: 2
+    enemyGroup: {fileID: 11400000, guid: 3d9a8d077c513d640a1f3fb9ceec59b7, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 11400000, guid: dc0b9636a5f89f247a241aac9b1f8ed9, type: 2}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 0
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 2-8
+    intendedRole: Disruption review
+    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
+    recommendedCounterTags: 
+    isBossRound: 0
+    targetDurationMin: 30
+    targetDurationMax: 45
+    targetHpLossMin: 0.6
+    targetHpLossMax: 0.7
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 43.2
+      weakDurationMax: 57.6
+      passHpLossMax: 0.75
+      weakHpLossMax: 0.95
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: PurifyAntiPoisonBuild
+      expectedGrade: Pass
+      expectedDurationMin: 30
+      expectedDurationMax: 45
+      note: Curve freeze target
+    - buildId: SoulAntiStealBuild
+      expectedGrade: Pass
+      expectedDurationMin: 30
+      expectedDurationMax: 45
+      note: Curve freeze target
+    - buildId: SpreadAntiSealBuild
+      expectedGrade: Pass
+      expectedDurationMin: 30
+      expectedDurationMax: 45
+      note: Curve freeze target
+  - levelId: 2-9
+    roundIndex: 9
+    roundTitle: "2-9 \u5DE1\u884C"
+    enemy: {fileID: 11400000, guid: 14f2f4f2f4414e8c8ffcf2be8d830617, type: 2}
+    stageConfigVersion: 1
+    chapterId: 2
+    nextStageId: 2-10
+    stageType: 2
+    enemyGroup: {fileID: 11400000, guid: fa1f07b5123eb134e8dcc19daa221c86, type: 2}
+    rewardConfig: {fileID: 0}
+    dropTable: {fileID: 11400000, guid: dc0b9636a5f89f247a241aac9b1f8ed9, type: 2}
+    bossConfig: {fileID: 0}
+    tutorialGuideId: 
+    unlockCondition: 
+    onWinAction: 1
+    onLoseAction: 0
+    autoAdvance: 1
+    allowBackpackEdit: 1
+    stopBeforeBoss: 1
+    benchmarkTargetId: 2-9
+    intendedRole: Boss pre-check with reused enemies
+    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
+    recommendedCounterTags: 
+    isBossRound: 0
+    targetDurationMin: 28
+    targetDurationMax: 42
+    targetHpLossMin: 0.5
+    targetHpLossMax: 0.6
+    strongCounterExpectedDuration: 0
+    neutralExpectedDuration: 0
+    badBuildExpectedDuration: 0
+    expectedPlayerHpRemainStrongCounter: 0.8
+    expectedPlayerHpRemainNeutral: 0.5
+    expectedPlayerHpRemainBadBuild: 0.15
+    benchmarkRule:
+      passDurationMax: 40.8
+      weakDurationMax: 54.4
+      passHpLossMax: 0.8
+      weakHpLossMax: 0.95
+      expectedCounterTriggerMin: 0
+      expectedSkillCastMin: 0
+    benchmarkTargets:
+    - buildId: BossReadyBuild
+      expectedGrade: Pass/Good
+      expectedDurationMin: 28
+      expectedDurationMax: 42
+      note: Curve freeze target
+  - levelId: 2-10
+    roundIndex: 10
+    roundTitle: 2-10 Boss
+    enemy: {fileID: 11400000, guid: af00b4c24b8d448cba58b91f4833e62b, type: 2}
+    stageConfigVersion: 1
+    chapterId: 2
+    nextStageId: 
+    stageType: 3
+    enemyGroup: {fileID: 11400000, guid: 7b6f48cbd1679204ea80c60d57d62fd9, type: 2}
+    rewardConfig: {fileID: 11400000, guid: 00e0f2acf5277c64098873956232cc39, type: 2}
+    dropTable: {fileID: 0}
+    bossConfig: {fileID: 11400000, guid: b207c166e15c4fd8b4d18fe6ad90e3a2, type: 2}
+    tutorialGuideId: boss_2_10_clear
+    unlockCondition: 
+    onWinAction: 3
+    onLoseAction: 0
+    autoAdvance: 0
+    allowBackpackEdit: 1
+    stopBeforeBoss: 0
+    benchmarkTargetId: 2-10
+    intendedRole: Chapter one boss comprehensive check
+    teachingGoal: "\u7B2C\u4E00\u7AE0\u7EFC\u5408 Boss\uFF0C\u68C0\u9A8C\u4F9B\u80FD\u3001\u7834\u76FE\u3001\u51C0\u5316\u3001\u9547\u9B42\u548C\u591A\u76EE\u6807\u5904\u7406\u3002"
+    preBattleHint: "\u524D\u65B9\u715E\u6C14\u805A\u9635\uFF0C\u8BF7\u5148\u67E5\u770B\u654C\u60C5\u5E76\u6574\u5907\u80CC\u5305\u3002"
     recommendedCounterTags: 
     isBossRound: 1
     targetDurationMin: 35
