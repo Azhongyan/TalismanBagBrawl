@@ -18,11 +18,11 @@ MonoBehaviour:
   - enemy: {fileID: 11400000, guid: b201fc3b753c4adab4321c91239bf709, type: 2}
     enemyCount: 1
     spawnOrder: 0
-    hpMultiplier: 1
+    hpMultiplier: 1.15
     attackMultiplier: 1
     attackSpeedMultiplier: 1
     shieldMultiplier: 1
-    skillFrequencyMultiplier: 1
+    skillFrequencyMultiplier: 1.1
     mechanicTag: 
   isDebugOnly: 0
   isDeprecated: 0

@@ -21,7 +21,7 @@ MonoBehaviour:
   preBattlePrompt: "\u524D\u65B9\u662F\u7B2C\u4E00\u7AE0\u7EFC\u5408\u8BD5\u70BC\uFF0C\u8BF7\u68C0\u67E5\u9635\u5BB9\u540E\u5F00\u6218\u3002"
   shieldPhaseMinHpRatio: 0.7
   summonPhaseMinHpRatio: 0.35
-  firstActionDelay: 4
+  firstActionDelay: 2.5
   shieldInterval: 5
   summonInterval: 6
   sealEyeInterval: 7

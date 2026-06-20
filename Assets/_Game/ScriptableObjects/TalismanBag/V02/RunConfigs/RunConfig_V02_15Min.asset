@@ -157,7 +157,7 @@ MonoBehaviour:
       passHpLossMax: 0.55
       weakHpLossMax: 0.75
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 1
     benchmarkTargets:
     - buildId: ChainGroupClearBuild
       expectedGrade: Good/Pass
@@ -194,8 +194,8 @@ MonoBehaviour:
     preBattleHint: "\u62A4\u76FE\u7565\u539A\uFF0C\u7EE7\u7EED\u7528\u96F7\u7B26\u5904\u7406\u62A4\u76FE\u3002"
     recommendedCounterTags: 
     isBossRound: 0
-    targetDurationMin: 90
-    targetDurationMax: 120
+    targetDurationMin: 14
+    targetDurationMax: 22
     targetHpLossMin: 0.4
     targetHpLossMax: 0.5
     strongCounterExpectedDuration: 0
@@ -205,12 +205,12 @@ MonoBehaviour:
     expectedPlayerHpRemainNeutral: 0.5
     expectedPlayerHpRemainBadBuild: 0.15
     benchmarkRule:
-      passDurationMax: 38.4
-      weakDurationMax: 51.2
+      passDurationMax: 22
+      weakDurationMax: 30
       passHpLossMax: 0.7
       weakHpLossMax: 0.9
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 1
     benchmarkTargets:
     - buildId: FireBasicBuild
       expectedGrade: Fail
@@ -306,7 +306,7 @@ MonoBehaviour:
       passHpLossMax: 0.65
       weakHpLossMax: 0.85
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 1
     benchmarkTargets:
     - buildId: SoulAntiStealBuild
       expectedGrade: Good/Pass
@@ -354,7 +354,7 @@ MonoBehaviour:
       passHpLossMax: 0.7
       weakHpLossMax: 0.9
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 2
     benchmarkTargets:
     - buildId: ThunderShieldBreakBuild
       expectedGrade: Pass
@@ -407,7 +407,7 @@ MonoBehaviour:
       passHpLossMax: 0.75
       weakHpLossMax: 0.95
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 2
     benchmarkTargets:
     - buildId: PurifyAntiPoisonBuild
       expectedGrade: Pass
@@ -445,7 +445,7 @@ MonoBehaviour:
     stopBeforeBoss: 0
     benchmarkTargetId: 1-9
     intendedRole: Boss pre-check with reused enemies
-    teachingGoal: "\u7528\u8FDE\u9501\u96F7\u7B26\u548C\u5DF2\u6709\u7B26\u7B93\u5904\u7406\u591A\u76EE\u6807\u538B\u529B\u4E0E\u4F4E\u5F3A\u5EA6\u62A4\u76FE\u3002"
+    teachingGoal: "\u7528\u5DF2\u6709\u96F7\u7B26\u5904\u7406\u62A4\u76FE\u4E0E\u590D\u5408\u538B\u529B\uFF1B\u80DC\u5229\u540E\u83B7\u5F97\u8FDE\u9501\u96F7\u7B26\uFF0C\u4E3A Boss \u6E05\u7FA4\u505A\u51C6\u5907\u3002"
     preBattleHint: "\u524D\u65B9\u5C06\u8FDB\u5165 Boss \u5173\uFF0C\u590D\u4E60\u591A\u76EE\u6807\u538B\u529B\u548C\u62A4\u76FE\u5904\u7406\u3002"
     recommendedCounterTags: 
     isBossRound: 0
@@ -465,7 +465,7 @@ MonoBehaviour:
       passHpLossMax: 0.8
       weakHpLossMax: 0.95
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 1
     benchmarkTargets:
     - buildId: BossReadyBuild
       expectedGrade: Pass/Good
@@ -497,10 +497,10 @@ MonoBehaviour:
     preBattleHint: "Boss \u4FE1\u606F\u63D0\u793A\u540E\u518D\u5F00\u6218\uFF0C\u786E\u4FDD\u6838\u5FC3\u7B26\u7B93\u90FD\u88AB\u4F9B\u80FD\u3002"
     recommendedCounterTags: 
     isBossRound: 1
-    targetDurationMin: 35
-    targetDurationMax: 50
-    targetHpLossMin: 0.65
-    targetHpLossMax: 0.75
+    targetDurationMin: 18
+    targetDurationMax: 28
+    targetHpLossMin: 0.35
+    targetHpLossMax: 0.65
     strongCounterExpectedDuration: 0
     neutralExpectedDuration: 0
     badBuildExpectedDuration: 0
@@ -508,18 +508,18 @@ MonoBehaviour:
     expectedPlayerHpRemainNeutral: 0.5
     expectedPlayerHpRemainBadBuild: 0.15
     benchmarkRule:
-      passDurationMax: 50.4
-      weakDurationMax: 67.2
-      passHpLossMax: 0.85
-      weakHpLossMax: 0.95
-      expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      passDurationMax: 28
+      weakDurationMax: 36
+      passHpLossMax: 0.65
+      weakHpLossMax: 0.85
+      expectedCounterTriggerMin: 1
+      expectedSkillCastMin: 2
     benchmarkTargets:
     - buildId: BossReadyBuild
       expectedGrade: Pass/Good
-      expectedDurationMin: 35
-      expectedDurationMax: 50
-      note: Curve freeze target
+      expectedDurationMin: 18
+      expectedDurationMax: 28
+      note: Tune01 first-pass boss target
   chapterTwoRounds:
   - levelId: 2-1
     roundIndex: 1
@@ -541,13 +541,13 @@ MonoBehaviour:
     allowBackpackEdit: 1
     stopBeforeBoss: 0
     benchmarkTargetId: 2-1
-    intendedRole: Energy stone and fire talisman tutorial
-    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    intendedRole: First cultivation power check
+    teachingGoal: "\u5728\u4F4E\u538B\u5DE1\u884C\u4E2D\u9A8C\u8BC1\u9996\u6B21\u706B\u7B26\u57F9\u517B\u5E26\u6765\u7684\u8F93\u51FA\u63D0\u5347\u3002"
     preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
     recommendedCounterTags: 
     isBossRound: 0
-    targetDurationMin: 14
-    targetDurationMax: 18
+    targetDurationMin: 9
+    targetDurationMax: 13
     targetHpLossMin: 0.2
     targetHpLossMax: 0.3
     strongCounterExpectedDuration: 0
@@ -557,8 +557,8 @@ MonoBehaviour:
     expectedPlayerHpRemainNeutral: 0.5
     expectedPlayerHpRemainBadBuild: 0.15
     benchmarkRule:
-      passDurationMax: 18
-      weakDurationMax: 24
+      passDurationMax: 13
+      weakDurationMax: 18
       passHpLossMax: 0.45
       weakHpLossMax: 0.65
       expectedCounterTriggerMin: 0
@@ -566,9 +566,9 @@ MonoBehaviour:
     benchmarkTargets:
     - buildId: FireBasicBuild
       expectedGrade: Pass
-      expectedDurationMin: 14
-      expectedDurationMax: 18
-      note: Curve freeze target
+      expectedDurationMin: 9
+      expectedDurationMax: 13
+      note: Tune01 cultivation validation target
   - levelId: 2-2
     roundIndex: 2
     roundTitle: "2-2 \u5DE1\u884C"
@@ -589,8 +589,8 @@ MonoBehaviour:
     allowBackpackEdit: 1
     stopBeforeBoss: 0
     benchmarkTargetId: 2-2
-    intendedRole: Basic output review
-    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    intendedRole: Recurring shield break patrol
+    teachingGoal: "\u9A8C\u8BC1\u96F7\u7B26\u5BF9\u5468\u671F\u62A4\u76FE\u7684\u6301\u7EED\u7834\u76FE\u4EF7\u503C\u3002"
     preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
     recommendedCounterTags: 
     isBossRound: 0
@@ -610,7 +610,7 @@ MonoBehaviour:
       passHpLossMax: 0.55
       weakHpLossMax: 0.75
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 1
     benchmarkTargets:
     - buildId: ThunderShieldBreakBuild
       expectedGrade: Good/Pass
@@ -642,8 +642,8 @@ MonoBehaviour:
     allowBackpackEdit: 1
     stopBeforeBoss: 0
     benchmarkTargetId: 2-3
-    intendedRole: Shield break tutorial
-    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    intendedRole: Summon and group-clear patrol
+    teachingGoal: "\u9A8C\u8BC1\u8FDE\u9501\u96F7\u7B26\u5BF9\u53EC\u5524\u4E0E\u7FA4\u4F53\u538B\u529B\u7684\u6E05\u573A\u53CD\u9988\u3002"
     preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
     recommendedCounterTags: 
     isBossRound: 0
@@ -663,7 +663,7 @@ MonoBehaviour:
       passHpLossMax: 0.55
       weakHpLossMax: 0.75
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 1
     benchmarkTargets:
     - buildId: ChainGroupClearBuild
       expectedGrade: Good/Pass
@@ -695,13 +695,13 @@ MonoBehaviour:
     allowBackpackEdit: 1
     stopBeforeBoss: 0
     benchmarkTargetId: 2-4
-    intendedRole: Shield review
-    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    intendedRole: Poison cleanse patrol
+    teachingGoal: "\u9A8C\u8BC1\u51C0\u5316\u7B26\u5728\u6301\u7EED\u4E2D\u6BD2\u538B\u529B\u4E0B\u7684\u7A33\u5B9A\u6027\u3002"
     preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
     recommendedCounterTags: 
     isBossRound: 0
-    targetDurationMin: 90
-    targetDurationMax: 120
+    targetDurationMin: 14
+    targetDurationMax: 24
     targetHpLossMin: 0.4
     targetHpLossMax: 0.5
     strongCounterExpectedDuration: 0
@@ -711,18 +711,18 @@ MonoBehaviour:
     expectedPlayerHpRemainNeutral: 0.5
     expectedPlayerHpRemainBadBuild: 0.15
     benchmarkRule:
-      passDurationMax: 38.4
-      weakDurationMax: 51.2
+      passDurationMax: 24
+      weakDurationMax: 32
       passHpLossMax: 0.7
       weakHpLossMax: 0.9
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 1
     benchmarkTargets:
-    - buildId: FireBasicBuild
-      expectedGrade: Fail
-      expectedDurationMin: 50
-      expectedDurationMax: 999
-      note: Curve freeze negative target
+    - buildId: PurifyAntiPoisonBuild
+      expectedGrade: Good/Pass
+      expectedDurationMin: 14
+      expectedDurationMax: 24
+      note: Tune01 poison-cleanse target
   - levelId: 2-5
     roundIndex: 5
     roundTitle: "2-5 \u5DE1\u884C"
@@ -743,8 +743,8 @@ MonoBehaviour:
     allowBackpackEdit: 1
     stopBeforeBoss: 0
     benchmarkTargetId: 2-5
-    intendedRole: Pressure survival tutorial
-    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    intendedRole: Seal disruption patrol
+    teachingGoal: "\u9A8C\u8BC1\u53CD\u5C01\u5370\u624B\u6BB5\u4E0E\u80CC\u5305\u4F9B\u80FD\u5728\u884C\u5217\u5C01\u9501\u4E0B\u7684\u7A33\u5B9A\u6027\u3002"
     preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
     recommendedCounterTags: 
     isBossRound: 0
@@ -764,7 +764,7 @@ MonoBehaviour:
       passHpLossMax: 0.6
       weakHpLossMax: 0.8
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 1
     benchmarkTargets:
     - buildId: SpreadAntiSealBuild
       expectedGrade: Good/Pass
@@ -791,8 +791,8 @@ MonoBehaviour:
     allowBackpackEdit: 1
     stopBeforeBoss: 0
     benchmarkTargetId: 2-6
-    intendedRole: Debuff cleanse tutorial
-    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    intendedRole: Energy theft counter patrol
+    teachingGoal: "\u9A8C\u8BC1\u9547\u9B42\u7B26\u5BF9\u5077\u7075\u548C\u4F9B\u80FD\u5E72\u6270\u7684\u53CD\u5236\u4EF7\u503C\u3002"
     preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
     recommendedCounterTags: 
     isBossRound: 0
@@ -812,7 +812,7 @@ MonoBehaviour:
       passHpLossMax: 0.65
       weakHpLossMax: 0.85
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 1
     benchmarkTargets:
     - buildId: SoulAntiStealBuild
       expectedGrade: Good/Pass
@@ -839,8 +839,8 @@ MonoBehaviour:
     allowBackpackEdit: 1
     stopBeforeBoss: 0
     benchmarkTargetId: 2-7
-    intendedRole: Disruption counter tutorial
-    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    intendedRole: Shield and summon compound checkpoint
+    teachingGoal: "\u7B2C\u4E8C\u7AE0\u7B2C\u4E00\u4E2A\u590D\u5408\u68C0\u9A8C\uFF1A\u540C\u65F6\u5904\u7406\u5468\u671F\u62A4\u76FE\u4E0E\u53EC\u5524\u538B\u529B\u3002"
     preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
     recommendedCounterTags: 
     isBossRound: 0
@@ -860,7 +860,7 @@ MonoBehaviour:
       passHpLossMax: 0.7
       weakHpLossMax: 0.9
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 2
     benchmarkTargets:
     - buildId: ThunderShieldBreakBuild
       expectedGrade: Pass
@@ -892,8 +892,8 @@ MonoBehaviour:
     allowBackpackEdit: 1
     stopBeforeBoss: 0
     benchmarkTargetId: 2-8
-    intendedRole: Disruption review
-    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    intendedRole: Poison seal steal compound checkpoint
+    teachingGoal: "\u5728\u6BD2\u3001\u5C01\u5370\u4E0E\u5077\u7075\u7684\u590D\u5408\u5E72\u6270\u4E2D\u9A8C\u8BC1\u51C0\u5316\u3001\u9547\u9B42\u548C\u9635\u52BF\u7A33\u5B9A\u6027\u3002"
     preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
     recommendedCounterTags: 
     isBossRound: 0
@@ -913,7 +913,7 @@ MonoBehaviour:
       passHpLossMax: 0.75
       weakHpLossMax: 0.95
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 2
     benchmarkTargets:
     - buildId: PurifyAntiPoisonBuild
       expectedGrade: Pass
@@ -950,8 +950,8 @@ MonoBehaviour:
     allowBackpackEdit: 1
     stopBeforeBoss: 1
     benchmarkTargetId: 2-9
-    intendedRole: Boss pre-check with reused enemies
-    teachingGoal: "\u81EA\u52A8\u5DE1\u884C\u4E3B\u7EBF\uFF1A\u9A8C\u8BC1\u57F9\u517B\u540E\u7684\u9635\u5BB9\u5F3A\u5EA6\u3002"
+    intendedRole: Chapter two boss pre-check
+    teachingGoal: "\u5728 Boss \u524D\u7CBE\u82F1\u6218\u4E2D\u68C0\u9A8C\u62A4\u76FE\u3001\u53EC\u5524\u4E0E\u5C01\u5370\u7684\u7EFC\u5408\u5904\u7406\uFF0C\u5E76\u4E3A\u624B\u52A8\u6574\u5907\u505A\u51C6\u5907\u3002"
     preBattleHint: "\u5DE1\u884C\u4E2D\u4F1A\u81EA\u52A8\u5F00\u6218\uFF0C\u666E\u901A\u5173\u80DC\u5229\u540E\u7EE7\u7EED\u524D\u8FDB\u3002"
     recommendedCounterTags: 
     isBossRound: 0
@@ -971,7 +971,7 @@ MonoBehaviour:
       passHpLossMax: 0.8
       weakHpLossMax: 0.95
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 2
     benchmarkTargets:
     - buildId: BossReadyBuild
       expectedGrade: Pass/Good
@@ -998,8 +998,8 @@ MonoBehaviour:
     allowBackpackEdit: 1
     stopBeforeBoss: 0
     benchmarkTargetId: 2-10
-    intendedRole: Chapter one boss comprehensive check
-    teachingGoal: "\u7B2C\u4E00\u7AE0\u7EFC\u5408 Boss\uFF0C\u68C0\u9A8C\u4F9B\u80FD\u3001\u7834\u76FE\u3001\u51C0\u5316\u3001\u9547\u9B42\u548C\u591A\u76EE\u6807\u5904\u7406\u3002"
+    intendedRole: Chapter two boss comprehensive check
+    teachingGoal: "\u7B2C\u4E8C\u7AE0\u7EFC\u5408 Boss\uFF0C\u68C0\u9A8C\u57F9\u517B\u7ED3\u679C\u3001\u7834\u76FE\u3001\u6E05\u7FA4\u3001\u51C0\u5316\u3001\u9547\u9B42\u548C\u7A33\u5B9A\u4F9B\u80FD\u3002"
     preBattleHint: "\u524D\u65B9\u715E\u6C14\u805A\u9635\uFF0C\u8BF7\u5148\u67E5\u770B\u654C\u60C5\u5E76\u6574\u5907\u80CC\u5305\u3002"
     recommendedCounterTags: 
     isBossRound: 1
@@ -1019,7 +1019,7 @@ MonoBehaviour:
       passHpLossMax: 0.85
       weakHpLossMax: 0.95
       expectedCounterTriggerMin: 0
-      expectedSkillCastMin: 0
+      expectedSkillCastMin: 2
     benchmarkTargets:
     - buildId: BossReadyBuild
       expectedGrade: Pass/Good

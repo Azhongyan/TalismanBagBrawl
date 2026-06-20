@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\u7834\u9635\u5996\u5C06"
   enabled: 1
   enemyType: 4
-  maxHp: 240
+  maxHp: 420
   attackDamage: 12
   attackInterval: 2.8
   weaknessText: "\u7B2C\u4E00\u7AE0 Boss \u7EFC\u5408\u9898"

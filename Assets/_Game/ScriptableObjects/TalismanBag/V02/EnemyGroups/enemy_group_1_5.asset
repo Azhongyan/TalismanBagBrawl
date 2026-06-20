@@ -18,7 +18,7 @@ MonoBehaviour:
   - enemy: {fileID: 11400000, guid: 3f26689212dd6084eaea15e90a416f61, type: 2}
     enemyCount: 1
     spawnOrder: 0
-    hpMultiplier: 1
+    hpMultiplier: 1.2
     attackMultiplier: 1
     attackSpeedMultiplier: 1
     shieldMultiplier: 1
