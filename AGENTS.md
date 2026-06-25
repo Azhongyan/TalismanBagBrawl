@@ -33,6 +33,7 @@ Codex 接到任务后的第一件事是任务入场审查，不是写代码。
 11. `Docs/LOCKED/CODEX_VERSION_PIPELINE_LOCK.md`
 12. `Docs/LOCKED/CODEX_ROLE_WINDOW_REGISTRY.md`
 13. `Docs/LOCKED/DELIVERY_ACCEPTANCE_GATE.md`
+14. `Docs/LOCKED/CROSS_SYSTEM_EXECUTOR_PROTOCOL.md`
 
 不得只读取本文件的摘要后直接开发。任一锁定文档缺失、不可读、相互冲突或超过可用上下文时，必须停止并回报。
 
@@ -81,12 +82,15 @@ Codex 接到任务后的第一件事是任务入场审查，不是写代码。
 
 长期版本生产工作流见 `Docs/LOCKED/CODEX_VERSION_PIPELINE_LOCK.md`。
 角色窗口注册规则见 `Docs/LOCKED/CODEX_ROLE_WINDOW_REGISTRY.md`。
+跨系统执行体规则见 `Docs/LOCKED/CROSS_SYSTEM_EXECUTOR_PROTOCOL.md`。
 
 - 本长期置顶常驻窗口认领 `guard-agents` 职责。
 - `guard-agents` 只守边界和收口，不直接开发。
 - 新开发窗口只能执行用户指定的、已由 `codex task writer` 产出的任务档案。
+- 新任务开始必须走 `SINGLE_LANE_TASK_INTAKE` 单线回转：producer tech pm → tech architect → codex task writer → guard-agents → 用户审批 → 开发窗口；不得并发下发，不得把 `PASS_SYNC_BROADCAST` 当作任务启动方式。
+- `Cross-System Executor / 跨系统执行体` 当前为 `DISABLED`；ZCode 未重新获得用户审批启用前不得正式承接开发、外部 QA 或修复执行，只能作为外部参考 / 临时草案来源。即使未来启用，也不得获得治理权，不得承接 producer tech pm / tech architect / codex task writer / guard-agents / RepoOps 主责。
 - 任务档案必须先取得 `guard-agents` 的明确 `GUARD_PASS`，沉默或未返回不等于通过。
-- 用户回复“通过”后，才允许同步进入下一任务包。
+- 用户回复“通过 / QA 通过 / 手测通过”后，必须先调用已注册 `RepoOps - 版本管理` 做小版本记录并取得 `REPOOPS_RECORD_DONE`，再向 producer tech pm / tech architect / codex task writer / QA reviewer / guard-agents 发送 `PASS_SYNC_BROADCAST` 并取得 `PASS_SYNC_SENT`，才允许同步进入下一任务包。
 - 用户回复“不通过 + 原因”后，必须回流 `tech architect` 分析，再由 `codex task writer` 重写修复任务档案，不得由开发窗口自由修。
 - 修复任务必须再次取得 `GUARD_PASS` 并由用户审批，开发窗口才恢复修复权限。
 - 如果角色窗口未注册或当前窗口无法真实发送 / 读取目标窗口，只能生成报告交给用户手动转发，不得假装自动流转已完成。
