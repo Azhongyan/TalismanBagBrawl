@@ -5,6 +5,7 @@ using TalismanBag.Items;
 using TalismanBag.Shop;
 using TalismanBag.UI;
 using TalismanBag.V02.Rewards;
+using TalismanBag.V02.Run;
 using TalismanBag.V02.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -22,6 +23,7 @@ namespace TalismanBag.V03.BattlePrepare
 
         private readonly List<CategoryButtonBinding> categoryButtons = new();
         private AutoCombatController combatController;
+        private V02RunFlowController runFlowController;
         private Canvas rootCanvas;
         private RectTransform safeAreaRoot;
         private RectTransform motionRoot;
@@ -36,7 +38,9 @@ namespace TalismanBag.V03.BattlePrepare
         private Text emptyStateText;
         private Text stateButtonText;
         private Text prepareButtonText;
+        private Button stateButton;
         private Button prepareButton;
+        private Coroutine preparePopupRoutine;
         private bool setupComplete;
         private bool prepareStateActive;
         private bool continueStateActive;
@@ -88,6 +92,18 @@ namespace TalismanBag.V03.BattlePrepare
             combat.gameObject.AddComponent<V03BattlePrepareInteractionController>();
         }
 
+        public static bool TryOpenPrepareThen(System.Action onOpened)
+        {
+            V03BattlePrepareInteractionController controller = UnityEngine.Object.FindObjectOfType<V03BattlePrepareInteractionController>(true);
+            if (controller == null || !controller.isActiveAndEnabled)
+            {
+                return false;
+            }
+
+            controller.OpenPrepareThen(onOpened);
+            return true;
+        }
+
         private IEnumerator Start()
         {
             yield return null;
@@ -132,6 +148,7 @@ namespace TalismanBag.V03.BattlePrepare
             }
 
             combatController = GetComponent<AutoCombatController>();
+            runFlowController = UnityEngine.Object.FindObjectOfType<V02RunFlowController>(true);
             rootCanvas = UnityEngine.Object.FindObjectOfType<Canvas>();
             GameObject safeRootObject = GameObject.Find("MobileSafeAreaRoot");
             safeAreaRoot = safeRootObject != null ? safeRootObject.transform as RectTransform : rootCanvas != null ? rootCanvas.transform as RectTransform : null;
@@ -400,12 +417,12 @@ namespace TalismanBag.V03.BattlePrepare
             Button homeButton = CreateButton("V03BackHomeButton", bar.transform, "回首页", new Color(0.22f, 0.28f, 0.32f), 25);
             homeButton.onClick.AddListener(BackToMainHome);
 
-            Button stateButton = CreateButton("V03BattleStateButton", bar.transform, "挂机中", new Color(0.28f, 0.31f, 0.34f), 25);
-            stateButton.interactable = false;
+            stateButton = CreateButton("V03BattleStateButton", bar.transform, "继续战斗", new Color(0.28f, 0.31f, 0.34f), 25);
+            stateButton.onClick.AddListener(HandleBattleStateButtonClicked);
             stateButtonText = stateButton.GetComponentInChildren<Text>(true);
 
             prepareButton = CreateButton("V03PrepareToggleButton", bar.transform, "整备", new Color(0.5f, 0.32f, 0.16f), 27);
-            prepareButton.onClick.AddListener(TogglePrepareState);
+            prepareButton.onClick.AddListener(HandlePrepareButtonClicked);
             prepareButtonText = prepareButton.GetComponentInChildren<Text>(true);
         }
 
@@ -464,7 +481,7 @@ namespace TalismanBag.V03.BattlePrepare
             }
         }
 
-        private void TogglePrepareState()
+        private void HandleBattleStateButtonClicked()
         {
             if (continueStateActive)
             {
@@ -474,6 +491,35 @@ namespace TalismanBag.V03.BattlePrepare
             if (prepareStateActive)
             {
                 ExitPrepareState();
+                return;
+            }
+
+            if (combatController != null && combatController.CurrentCombatState == TalismanCombatState.Fighting)
+            {
+                return;
+            }
+
+            V02RunFlowController flowController = ResolveRunFlowController();
+            if (flowController != null && flowController.TriggerBottomBattleAction())
+            {
+                return;
+            }
+
+            if (combatController != null && combatController.CurrentCombatState != TalismanCombatState.Fighting)
+            {
+                combatController.StartBattle();
+            }
+        }
+
+        private void HandlePrepareButtonClicked()
+        {
+            if (continueStateActive)
+            {
+                return;
+            }
+
+            if (prepareStateActive)
+            {
                 return;
             }
 
@@ -512,7 +558,11 @@ namespace TalismanBag.V03.BattlePrepare
             }
             else if (combatController != null && combatController.CurrentCombatState != TalismanCombatState.Fighting)
             {
-                combatController.StartBattle();
+                V02RunFlowController flowController = ResolveRunFlowController();
+                if (flowController == null || !flowController.TriggerBottomBattleAction())
+                {
+                    combatController.StartBattle();
+                }
             }
 
             preparedFromFighting = false;
@@ -535,6 +585,50 @@ namespace TalismanBag.V03.BattlePrepare
             }
 
             SceneManager.LoadScene("Scene_TalismanBag_V03_MainHome");
+        }
+
+        private void OpenPrepareThen(System.Action onOpened)
+        {
+            if (preparePopupRoutine != null)
+            {
+                StopCoroutine(preparePopupRoutine);
+            }
+
+            preparePopupRoutine = StartCoroutine(OpenPrepareThenRoutine(onOpened));
+        }
+
+        private IEnumerator OpenPrepareThenRoutine(System.Action onOpened)
+        {
+            if (!setupComplete)
+            {
+                Setup();
+            }
+
+            if (!setupComplete || motionRoot == null)
+            {
+                preparePopupRoutine = null;
+                onOpened?.Invoke();
+                yield break;
+            }
+
+            while (continueStateActive)
+            {
+                yield return null;
+            }
+
+            if (!prepareStateActive)
+            {
+                EnterPrepareState();
+            }
+
+            while (motionRoot != null && Vector2.Distance(motionRoot.anchoredPosition, PreparePosition) > 1f)
+            {
+                yield return null;
+            }
+
+            preparePopupRoutine = null;
+            RefreshVisualState(false);
+            onOpened?.Invoke();
         }
 
         private void RefreshVisualState(bool snapMotion)
@@ -764,33 +858,60 @@ namespace TalismanBag.V03.BattlePrepare
         {
             if (stateButtonText != null)
             {
-                if (continueStateActive)
-                {
-                    stateButtonText.text = "继续中";
-                }
-                else if (prepareStateActive)
-                {
-                    stateButtonText.text = "整备中";
-                }
-                else if (combatController != null && combatController.CurrentCombatState == TalismanCombatState.Fighting)
-                {
-                    stateButtonText.text = "战斗中";
-                }
-                else
-                {
-                    stateButtonText.text = "挂机中";
-                }
+                stateButtonText.text = ResolveBattleStateButtonLabel();
             }
 
             if (prepareButtonText != null)
             {
-                prepareButtonText.text = continueStateActive ? "继续中" : prepareStateActive ? "继续战斗" : "整备";
+                prepareButtonText.text = prepareStateActive || continueStateActive ? "整备中" : "整备";
+            }
+
+            if (stateButton != null)
+            {
+                stateButton.interactable = !continueStateActive;
             }
 
             if (prepareButton != null)
             {
-                prepareButton.interactable = !continueStateActive;
+                prepareButton.interactable = !prepareStateActive && !continueStateActive;
             }
+        }
+
+        private string ResolveBattleStateButtonLabel()
+        {
+            if (prepareStateActive)
+            {
+                return "继续战斗";
+            }
+
+            if (continueStateActive)
+            {
+                return "继续战斗";
+            }
+
+            if (combatController != null && combatController.CurrentCombatState == TalismanCombatState.Fighting)
+            {
+                return "战斗中";
+            }
+
+            V02RunFlowController flowController = ResolveRunFlowController();
+            if (flowController != null && flowController.IsWaitingForBossChallenge())
+            {
+                return "挑战Boss";
+            }
+
+            return "继续战斗";
+        }
+
+        private V02RunFlowController ResolveRunFlowController()
+        {
+            if (runFlowController != null)
+            {
+                return runFlowController;
+            }
+
+            runFlowController = UnityEngine.Object.FindObjectOfType<V02RunFlowController>(true);
+            return runFlowController;
         }
 
         private GameObject CreatePanel(string name, Transform parent, Vector2 anchoredPosition, Vector2 size, Color color, TextAnchor anchor = TextAnchor.UpperCenter)

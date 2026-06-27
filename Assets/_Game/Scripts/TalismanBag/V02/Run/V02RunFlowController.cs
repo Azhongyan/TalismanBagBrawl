@@ -16,6 +16,7 @@ using TalismanBag.V02.Result;
 using TalismanBag.V02.Rewards;
 using TalismanBag.V02.Tags;
 using TalismanBag.V02.UI;
+using TalismanBag.V03.BattlePrepare;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -245,6 +246,41 @@ namespace TalismanBag.V02.Run
             HidePreBattlePopups();
             bossInfoPanel?.Hide();
             combatController?.StartBattle();
+        }
+
+        public bool TriggerBottomBattleAction()
+        {
+            V02RoundConfig round = CurrentRound;
+            if (round == null)
+            {
+                return false;
+            }
+
+            if (state == V02RunState.RunLose)
+            {
+                RetryCurrentRound();
+                return true;
+            }
+
+            if (EnsureMainTrialFlowService().IsChapterTwoBossRound(round))
+            {
+                StartChapterTwoBossCombat();
+                return true;
+            }
+
+            StartCombat();
+            return true;
+        }
+
+        public bool IsWaitingForBossChallenge()
+        {
+            V02RoundConfig round = CurrentRound;
+            if (round == null || !EnsureMainTrialFlowService().IsChapterTwoBossRound(round))
+            {
+                return false;
+            }
+
+            return combatController == null || combatController.CurrentCombatState != TalismanCombatState.Fighting;
         }
 
         public void OnCombatStarted()
@@ -1137,6 +1173,23 @@ namespace TalismanBag.V02.Run
                 return true;
             }
 
+            if (V03BattlePrepareInteractionController.TryOpenPrepareThen(() =>
+                ShowTutorialGuideRewardPanel(panel, guideRow, shouldGrantReward, onConfirmed)))
+            {
+                return true;
+            }
+
+            ShowTutorialGuideRewardPanel(panel, guideRow, shouldGrantReward, onConfirmed);
+            return true;
+        }
+
+        private void ShowTutorialGuideRewardPanel(V02FixedRewardPanel panel, TutorialGuideRow guideRow, bool shouldGrantReward, System.Action onConfirmed)
+        {
+            if (panel == null || guideRow == null)
+            {
+                return;
+            }
+
             panel.Show(
                 guideRow.panelTitle,
                 guideRow.panelSubject,
@@ -1161,7 +1214,6 @@ namespace TalismanBag.V02.Run
                     suppressedAutoStartLog = "已领取教学奖励，请将新道具放入阵盘后手动开始斗法。";
                     onConfirmed?.Invoke();
                 });
-            return true;
         }
 
         private bool TryOpenPreBattleTutorialGuidePanel(V02RoundConfig round)
