@@ -39,6 +39,7 @@ namespace TalismanBag.UI
         private bool placedDuringDrag;
         private bool dragBlocked;
         private bool draggingFromGrid;
+        private bool isDragging;
         private bool hasDragWorldPointerOffset;
         private Vector3 dragWorldPointerOffset;
         private float suppressClickUntilTime;
@@ -49,6 +50,8 @@ namespace TalismanBag.UI
         public TalismanItemDefinition Definition => definition;
         public TalismanGridSlotView CurrentSlot => currentSlot;
         public int Level => runtimeItem != null ? runtimeItem.level : 1;
+        public bool IsDragging => isDragging;
+        public Transform DragReturnParent => originalParent;
 
         private void Awake()
         {
@@ -134,10 +137,12 @@ namespace TalismanBag.UI
             if (combatController != null && !combatController.TryRequireLayoutEdit())
             {
                 dragBlocked = true;
+                isDragging = false;
                 return;
             }
 
             dragBlocked = false;
+            isDragging = true;
             if (rectTransform == null)
             {
                 rectTransform = GetComponent<RectTransform>();
@@ -188,6 +193,7 @@ namespace TalismanBag.UI
             if (dragBlocked)
             {
                 dragBlocked = false;
+                isDragging = false;
                 return;
             }
 
@@ -214,6 +220,7 @@ namespace TalismanBag.UI
             hasDragWorldPointerOffset = false;
             suppressClickUntilTime = Time.unscaledTime + 0.15f;
             draggingFromGrid = false;
+            isDragging = false;
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -418,6 +425,13 @@ namespace TalismanBag.UI
             transform.SetParent(homeParent != null ? homeParent : transform.parent, false);
             rectTransform.anchoredPosition = homeAnchoredPosition;
             rectTransform.localScale = homeScale;
+        }
+
+        public void AcceptInventoryDrop()
+        {
+            placedDuringDrag = true;
+            draggingFromGrid = false;
+            CaptureHome();
         }
 
         public void Flash()

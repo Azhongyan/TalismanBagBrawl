@@ -8,6 +8,7 @@ using TalismanBag.V02.Rewards;
 using TalismanBag.V02.Run;
 using TalismanBag.V02.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -18,10 +19,16 @@ namespace TalismanBag.V03.BattlePrepare
         private const float BoardSize = 800f;
         private const float ItemTraySize = 800f;
         private const float MoveSpeed = 9f;
+        private const int ItemTrayColumnCount = 5;
+        private const int ItemTrayRowCount = 8;
+        private const int ItemTraySlotCount = ItemTrayColumnCount * ItemTrayRowCount;
+        private static readonly Vector2 ItemTraySlotSize = new(104f, 104f);
+        private static readonly Vector2 ItemTraySlotSpacing = new(14f, 14f);
         private static readonly Vector2 NormalPosition = new(0f, -520f);
         private static readonly Vector2 PreparePosition = new(0f, -320f);
 
         private readonly List<CategoryButtonBinding> categoryButtons = new();
+        private readonly List<RectTransform> itemTraySlotRoots = new();
         private AutoCombatController combatController;
         private V02RunFlowController runFlowController;
         private Canvas rootCanvas;
@@ -340,7 +347,7 @@ namespace TalismanBag.V03.BattlePrepare
             GameObject scrollObject = new("ItemTrayScroll", typeof(RectTransform), typeof(Image), typeof(ScrollRect));
             scrollObject.transform.SetParent(parent, false);
             RectTransform scrollRect = scrollObject.GetComponent<RectTransform>();
-            SetRect(scrollRect, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -452f), new Vector2(760f, 606f));
+            SetRect(scrollRect, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -158f), new Vector2(760f, 620f));
 
             Image scrollImage = scrollObject.GetComponent<Image>();
             scrollImage.color = new Color(0.04f, 0.049f, 0.046f, 0.96f);
@@ -350,7 +357,7 @@ namespace TalismanBag.V03.BattlePrepare
             RectTransform viewportRect = viewport.GetComponent<RectTransform>();
             SetRect(viewportRect, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
             viewportRect.offsetMin = new Vector2(14f, 14f);
-            viewportRect.offsetMax = new Vector2(-14f, -14f);
+            viewportRect.offsetMax = new Vector2(-42f, -14f);
             Image viewportImage = viewport.GetComponent<Image>();
             viewportImage.color = new Color(0f, 0f, 0f, 0.01f);
             viewport.GetComponent<Mask>().showMaskGraphic = false;
@@ -361,11 +368,11 @@ namespace TalismanBag.V03.BattlePrepare
             SetRect(itemTrayContent, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -8f), new Vector2(0f, 0f));
 
             GridLayoutGroup grid = content.GetComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(104f, 104f);
-            grid.spacing = new Vector2(14f, 14f);
+            grid.cellSize = ItemTraySlotSize;
+            grid.spacing = ItemTraySlotSpacing;
             grid.padding = new RectOffset(8, 8, 8, 8);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 6;
+            grid.constraintCount = ItemTrayColumnCount;
             grid.childAlignment = TextAnchor.UpperCenter;
 
             ContentSizeFitter fitter = content.GetComponent<ContentSizeFitter>();
@@ -380,9 +387,71 @@ namespace TalismanBag.V03.BattlePrepare
             scroll.movementType = ScrollRect.MovementType.Clamped;
             scroll.scrollSensitivity = 32f;
 
+            Scrollbar scrollbar = CreateItemTrayScrollbar(scrollObject.transform);
+            scroll.verticalScrollbar = scrollbar;
+            scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
+
+            for (int i = 0; i < ItemTraySlotCount; i++)
+            {
+                CreateItemTraySlot(i);
+            }
+
             emptyStateText = CreateText("ItemTrayEmptyState", viewport.transform, "当前分类暂无道具", 24, FontStyle.Bold, new Color(0.7f, 0.78f, 0.82f));
             SetRect(emptyStateText.rectTransform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
             emptyStateText.gameObject.SetActive(false);
+        }
+
+        private Scrollbar CreateItemTrayScrollbar(Transform parent)
+        {
+            GameObject scrollbarObject = new("ItemTrayVerticalScrollbar", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+            scrollbarObject.transform.SetParent(parent, false);
+            RectTransform scrollbarRect = scrollbarObject.GetComponent<RectTransform>();
+            SetRect(scrollbarRect, new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0.5f), new Vector2(-13f, 0f), new Vector2(18f, -28f));
+
+            Image track = scrollbarObject.GetComponent<Image>();
+            track.color = new Color(0.12f, 0.15f, 0.15f, 0.95f);
+
+            GameObject slidingArea = new("Sliding Area", typeof(RectTransform));
+            slidingArea.transform.SetParent(scrollbarObject.transform, false);
+            RectTransform slidingRect = slidingArea.GetComponent<RectTransform>();
+            SetRect(slidingRect, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+            slidingRect.offsetMin = new Vector2(3f, 3f);
+            slidingRect.offsetMax = new Vector2(-3f, -3f);
+
+            GameObject handle = new("Handle", typeof(RectTransform), typeof(Image));
+            handle.transform.SetParent(slidingArea.transform, false);
+            RectTransform handleRect = handle.GetComponent<RectTransform>();
+            SetRect(handleRect, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+
+            Image handleImage = handle.GetComponent<Image>();
+            handleImage.color = new Color(0.42f, 0.76f, 1f, 0.92f);
+
+            Scrollbar scrollbar = scrollbarObject.GetComponent<Scrollbar>();
+            scrollbar.targetGraphic = handleImage;
+            scrollbar.handleRect = handleRect;
+            scrollbar.direction = Scrollbar.Direction.BottomToTop;
+            scrollbar.size = 0.62f;
+            scrollbar.value = 1f;
+            return scrollbar;
+        }
+
+        private void CreateItemTraySlot(int index)
+        {
+            GameObject slot = new($"ItemTrayGridSlot_{index + 1:00}", typeof(RectTransform), typeof(Image), typeof(Outline), typeof(V03ItemTraySlotDropTarget));
+            slot.transform.SetParent(itemTrayContent, false);
+            RectTransform rect = slot.GetComponent<RectTransform>();
+            rect.sizeDelta = ItemTraySlotSize;
+
+            Image image = slot.GetComponent<Image>();
+            image.color = new Color(0.09f, 0.11f, 0.105f, 0.96f);
+            image.raycastTarget = true;
+
+            Outline outline = slot.GetComponent<Outline>();
+            outline.effectColor = new Color(0.26f, 0.38f, 0.42f, 0.9f);
+            outline.effectDistance = new Vector2(2f, -2f);
+
+            slot.GetComponent<V03ItemTraySlotDropTarget>().Bind(this, rect);
+            itemTraySlotRoots.Add(rect);
         }
 
         private void CreateItemTrayLockedOverlay(Transform parent)
@@ -687,7 +756,7 @@ namespace TalismanBag.V03.BattlePrepare
                 return;
             }
 
-            int visibleCount = 0;
+            List<DraggableTalismanItemView> visibleTrayItems = new();
             DraggableTalismanItemView[] views = UnityEngine.Object.FindObjectsOfType<DraggableTalismanItemView>(true);
             knownItemViewCount = 0;
             foreach (DraggableTalismanItemView view in views)
@@ -706,24 +775,44 @@ namespace TalismanBag.V03.BattlePrepare
                 view.SetInventoryDropZone(itemTrayRoot);
                 combatController?.RegisterItemView(view);
 
+                if (view.IsDragging)
+                {
+                    continue;
+                }
+
                 if (IsPlacedOnBoard(view))
                 {
                     view.gameObject.SetActive(true);
                     continue;
                 }
 
-                MoveItemToTray(view);
                 bool show = MatchesCategory(view.Definition, currentCategory);
                 view.gameObject.SetActive(show);
                 if (show)
                 {
-                    visibleCount++;
+                    visibleTrayItems.Add(view);
                 }
+                else
+                {
+                    MoveItemToTrayStorage(view);
+                }
+            }
+
+            for (int i = 0; i < visibleTrayItems.Count && i < itemTraySlotRoots.Count; i++)
+            {
+                MoveItemToTray(visibleTrayItems[i], itemTraySlotRoots[i]);
+                visibleTrayItems[i].gameObject.SetActive(true);
+            }
+
+            for (int i = itemTraySlotRoots.Count; i < visibleTrayItems.Count; i++)
+            {
+                visibleTrayItems[i].gameObject.SetActive(false);
+                MoveItemToTrayStorage(visibleTrayItems[i]);
             }
 
             if (emptyStateText != null)
             {
-                emptyStateText.gameObject.SetActive(visibleCount == 0);
+                emptyStateText.gameObject.SetActive(visibleTrayItems.Count == 0);
             }
 
             RefreshCategoryButtonState();
@@ -775,6 +864,20 @@ namespace TalismanBag.V03.BattlePrepare
 
         private void MoveItemToTray(DraggableTalismanItemView view)
         {
+            RectTransform existingSlot = FindCurrentTraySlot(view);
+            if (existingSlot != null)
+            {
+                MoveItemToTray(view, existingSlot);
+                return;
+            }
+
+            RectTransform emptySlot = FindFirstEmptyTraySlot(null);
+            if (emptySlot != null)
+            {
+                MoveItemToTray(view, emptySlot);
+                return;
+            }
+
             RectTransform rect = view.transform as RectTransform;
             view.transform.SetParent(itemTrayContent, false);
             if (rect != null)
@@ -782,14 +885,127 @@ namespace TalismanBag.V03.BattlePrepare
                 rect.anchorMin = new Vector2(0.5f, 0.5f);
                 rect.anchorMax = new Vector2(0.5f, 0.5f);
                 rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.sizeDelta = new Vector2(104f, 104f);
+                rect.sizeDelta = ItemTraySlotSize;
                 rect.localScale = Vector3.one;
             }
 
             view.CaptureHome();
         }
 
-        private static bool IsPlacedOnBoard(DraggableTalismanItemView view)
+        private void MoveItemToTrayStorage(DraggableTalismanItemView view)
+        {
+            if (view == null || itemTrayTemplateRoot == null)
+            {
+                return;
+            }
+
+            view.transform.SetParent(itemTrayTemplateRoot, false);
+            view.CaptureHome();
+        }
+
+        private void MoveItemToTray(DraggableTalismanItemView view, RectTransform slot)
+        {
+            if (view == null || slot == null)
+            {
+                return;
+            }
+
+            RectTransform rect = view.transform as RectTransform;
+            view.transform.SetParent(slot, false);
+            if (rect != null)
+            {
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = Vector2.zero;
+                rect.sizeDelta = ItemTraySlotSize - new Vector2(10f, 10f);
+                rect.localScale = Vector3.one;
+            }
+
+            view.CaptureHome();
+        }
+
+        internal void MoveItemWithinTray(DraggableTalismanItemView dragged, RectTransform targetSlot)
+        {
+            if (dragged == null || targetSlot == null || itemTrayContent == null || !itemTraySlotRoots.Contains(targetSlot))
+            {
+                return;
+            }
+
+            RectTransform sourceSlot = dragged.DragReturnParent as RectTransform;
+            DraggableTalismanItemView occupied = FindTrayItemInSlot(targetSlot, dragged);
+            if (occupied != null && sourceSlot != null && sourceSlot != targetSlot && itemTraySlotRoots.Contains(sourceSlot))
+            {
+                MoveItemToTray(occupied, sourceSlot);
+            }
+            else if (occupied != null && sourceSlot != targetSlot)
+            {
+                MoveItemToFirstEmptyTraySlot(occupied, targetSlot);
+            }
+
+            MoveItemToTray(dragged, targetSlot);
+            dragged.AcceptInventoryDrop();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(itemTrayContent);
+        }
+
+        private void MoveItemToFirstEmptyTraySlot(DraggableTalismanItemView view, RectTransform excludedSlot)
+        {
+            RectTransform emptySlot = FindFirstEmptyTraySlot(excludedSlot);
+            if (emptySlot != null)
+            {
+                MoveItemToTray(view, emptySlot);
+                return;
+            }
+
+            MoveItemToTray(view);
+        }
+
+        private RectTransform FindFirstEmptyTraySlot(RectTransform excludedSlot)
+        {
+            foreach (RectTransform slot in itemTraySlotRoots)
+            {
+                if (slot == null || slot == excludedSlot || FindTrayItemInSlot(slot, null) != null)
+                {
+                    continue;
+                }
+
+                return slot;
+            }
+
+            return null;
+        }
+
+        private RectTransform FindCurrentTraySlot(DraggableTalismanItemView view)
+        {
+            if (view == null)
+            {
+                return null;
+            }
+
+            RectTransform parent = view.transform.parent as RectTransform;
+            return parent != null && itemTraySlotRoots.Contains(parent) ? parent : null;
+        }
+
+        private static DraggableTalismanItemView FindTrayItemInSlot(RectTransform slot, DraggableTalismanItemView except)
+        {
+            if (slot == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < slot.childCount; i++)
+            {
+                DraggableTalismanItemView view = slot.GetChild(i).GetComponent<DraggableTalismanItemView>();
+                if (view != null && view != except && view.gameObject.activeSelf)
+                {
+                    return view;
+                }
+            }
+
+            return null;
+        }
+
+        internal static bool IsPlacedOnBoard(DraggableTalismanItemView view)
         {
             return view.CurrentSlot != null || view.RuntimeItem != null && view.RuntimeItem.isPlaced;
         }
@@ -978,6 +1194,34 @@ namespace TalismanBag.V03.BattlePrepare
                 TextAnchor.LowerRight => new Vector2(1f, 0f),
                 _ => new Vector2(0.5f, 0.5f)
             };
+        }
+    }
+
+    public sealed class V03ItemTraySlotDropTarget : MonoBehaviour, IDropHandler
+    {
+        private V03BattlePrepareInteractionController owner;
+        private RectTransform slotRoot;
+
+        public void Bind(V03BattlePrepareInteractionController controller, RectTransform root)
+        {
+            owner = controller;
+            slotRoot = root;
+        }
+
+        public void OnDrop(PointerEventData eventData)
+        {
+            if (owner == null || slotRoot == null || eventData.pointerDrag == null)
+            {
+                return;
+            }
+
+            DraggableTalismanItemView dragged = eventData.pointerDrag.GetComponent<DraggableTalismanItemView>();
+            if (dragged == null || V03BattlePrepareInteractionController.IsPlacedOnBoard(dragged))
+            {
+                return;
+            }
+
+            owner.MoveItemWithinTray(dragged, slotRoot);
         }
     }
 }
