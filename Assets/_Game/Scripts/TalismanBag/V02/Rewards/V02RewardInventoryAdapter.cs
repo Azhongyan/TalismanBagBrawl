@@ -22,6 +22,18 @@ namespace TalismanBag.V02.Rewards
         private readonly Dictionary<string, TalismanItemDefinition> definitionCatalog = new();
         private DraggableTalismanItemView runtimeTemplate;
 
+        public void RedirectInventoryParent(Transform newInventoryParent, Transform templateParent = null)
+        {
+            if (newInventoryParent == null)
+            {
+                return;
+            }
+
+            CacheKnownDefinitions();
+            inventoryParent = newInventoryParent;
+            EnsureRuntimeTemplate(templateParent != null ? templateParent : newInventoryParent);
+        }
+
         public DraggableTalismanItemView AddTalisman(TalismanItemDefinition definition, int level = 1)
         {
             DraggableTalismanItemView template = GetTemplate();
@@ -178,6 +190,23 @@ namespace TalismanBag.V02.Rewards
             }
 
             Transform templateParent = inventoryParent != null ? inventoryParent : itemViewTemplate.transform.parent;
+            return EnsureRuntimeTemplate(templateParent);
+        }
+
+        private DraggableTalismanItemView EnsureRuntimeTemplate(Transform templateParent)
+        {
+            if (runtimeTemplate != null)
+            {
+                runtimeTemplate.transform.SetParent(templateParent != null ? templateParent : runtimeTemplate.transform.parent, false);
+                runtimeTemplate.gameObject.SetActive(false);
+                return runtimeTemplate;
+            }
+
+            if (itemViewTemplate == null)
+            {
+                return null;
+            }
+
             runtimeTemplate = Instantiate(itemViewTemplate, templateParent);
             runtimeTemplate.name = "RewardItemTemplate_Runtime";
             runtimeTemplate.gameObject.SetActive(false);

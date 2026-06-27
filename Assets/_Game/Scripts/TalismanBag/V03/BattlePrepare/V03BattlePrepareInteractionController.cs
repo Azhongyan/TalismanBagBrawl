@@ -2,7 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using TalismanBag.Combat;
 using TalismanBag.Items;
+using TalismanBag.Shop;
 using TalismanBag.UI;
+using TalismanBag.V02.Rewards;
+using TalismanBag.V02.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -25,7 +28,9 @@ namespace TalismanBag.V03.BattlePrepare
         private RectTransform boardFrame;
         private RectTransform itemTrayRoot;
         private RectTransform itemTrayContent;
+        private Transform itemTrayTemplateRoot;
         private RectTransform actionBar;
+        private GameObject legacyBottomOperationArea;
         private Image itemTrayLockedOverlay;
         private Image prepareDarkOverlay;
         private Text emptyStateText;
@@ -36,6 +41,8 @@ namespace TalismanBag.V03.BattlePrepare
         private bool prepareStateActive;
         private bool continueStateActive;
         private bool preparedFromFighting;
+        private int knownItemViewCount = -1;
+        private float nextItemViewScanTime;
         private ItemTrayCategory currentCategory = ItemTrayCategory.All;
 
         private enum ItemTrayCategory
@@ -105,6 +112,7 @@ namespace TalismanBag.V03.BattlePrepare
                 CompleteContinueState();
             }
 
+            RefreshTrayItemsIfInventoryChanged();
             RefreshActionButtonState();
         }
 
@@ -136,16 +144,28 @@ namespace TalismanBag.V03.BattlePrepare
                 return;
             }
 
+            CaptureLegacyBottomOperationArea();
             CreatePrepareDarkOverlay();
             CreateMotionRoot();
             ConfigureBoardFrame();
             CreateItemTray();
             CreateActionBar();
+            ReparentLegacyTooltipPanel();
+            RedirectInventoryWritersToItemTray();
             MoveExistingItemsIntoTray();
-            HideLegacyBottomControls();
+            DestroyLegacyBottomOperationArea();
             RefreshTrayItems();
             RefreshVisualState(true);
             setupComplete = true;
+        }
+
+        private void CaptureLegacyBottomOperationArea()
+        {
+            legacyBottomOperationArea = GameObject.Find("V02BottomOperationArea");
+            if (legacyBottomOperationArea != null)
+            {
+                legacyBottomOperationArea.name = "V02BottomOperationArea_Legacy";
+            }
         }
 
         private void CreatePrepareDarkOverlay()
@@ -233,7 +253,7 @@ namespace TalismanBag.V03.BattlePrepare
 
         private void CreateItemTray()
         {
-            GameObject tray = CreatePanel("V03ItemTray", motionRoot, new Vector2(0f, -BoardSize), new Vector2(ItemTraySize, ItemTraySize), new Color(0.065f, 0.076f, 0.07f, 0.98f));
+            GameObject tray = CreatePanel("V02BottomOperationArea", motionRoot, new Vector2(0f, -BoardSize), new Vector2(ItemTraySize, ItemTraySize), new Color(0.065f, 0.076f, 0.07f, 0.98f));
             itemTrayRoot = tray.GetComponent<RectTransform>();
             Outline outline = tray.AddComponent<Outline>();
             outline.effectColor = new Color(0.42f, 0.76f, 1f, 0.9f);
@@ -246,6 +266,15 @@ namespace TalismanBag.V03.BattlePrepare
             CreateCategoryTabs(tray.transform);
             CreateItemTrayScroll(tray.transform);
             CreateItemTrayLockedOverlay(tray.transform);
+            CreateItemTrayTemplateRoot();
+        }
+
+        private void CreateItemTrayTemplateRoot()
+        {
+            GameObject templateRoot = new("V03ItemTrayTemplates", typeof(RectTransform));
+            templateRoot.transform.SetParent(safeAreaRoot, false);
+            itemTrayTemplateRoot = templateRoot.transform;
+            templateRoot.SetActive(false);
         }
 
         private void CreateCategoryTabs(Transform parent)
@@ -385,7 +414,7 @@ namespace TalismanBag.V03.BattlePrepare
             DraggableTalismanItemView[] views = UnityEngine.Object.FindObjectsOfType<DraggableTalismanItemView>(true);
             foreach (DraggableTalismanItemView view in views)
             {
-                if (view == null || IsPlacedOnBoard(view))
+                if (view == null || IsInventoryTemplate(view) || IsPlacedOnBoard(view))
                 {
                     continue;
                 }
@@ -394,7 +423,33 @@ namespace TalismanBag.V03.BattlePrepare
             }
         }
 
-        private void HideLegacyBottomControls()
+        private void RedirectInventoryWritersToItemTray()
+        {
+            if (itemTrayContent == null)
+            {
+                return;
+            }
+
+            V02RewardInventoryAdapter[] rewardAdapters = UnityEngine.Object.FindObjectsOfType<V02RewardInventoryAdapter>(true);
+            foreach (V02RewardInventoryAdapter adapter in rewardAdapters)
+            {
+                adapter?.RedirectInventoryParent(itemTrayContent, itemTrayTemplateRoot);
+            }
+
+            ShopControllerV2[] shopControllersV2 = UnityEngine.Object.FindObjectsOfType<ShopControllerV2>(true);
+            foreach (ShopControllerV2 shopController in shopControllersV2)
+            {
+                shopController?.RedirectInventoryParent(itemTrayContent, itemTrayTemplateRoot);
+            }
+
+            ShopController[] shopControllers = UnityEngine.Object.FindObjectsOfType<ShopController>(true);
+            foreach (ShopController shopController in shopControllers)
+            {
+                shopController?.RedirectInventoryParent(itemTrayContent, itemTrayTemplateRoot);
+            }
+        }
+
+        private void DestroyLegacyBottomOperationArea()
         {
             GameObject legacyButtons = GameObject.Find("V02PrimaryActionButtons");
             if (legacyButtons != null)
@@ -402,10 +457,10 @@ namespace TalismanBag.V03.BattlePrepare
                 legacyButtons.SetActive(false);
             }
 
-            GameObject legacyBottom = GameObject.Find("V02BottomOperationArea");
-            if (legacyBottom != null)
+            if (legacyBottomOperationArea != null)
             {
-                legacyBottom.SetActive(false);
+                UnityEngine.Object.Destroy(legacyBottomOperationArea);
+                legacyBottomOperationArea = null;
             }
         }
 
@@ -513,6 +568,22 @@ namespace TalismanBag.V03.BattlePrepare
 
             RefreshCategoryButtonState();
             RefreshActionButtonState();
+            KeepPopupPanelsOnTop();
+        }
+
+        private void ReparentLegacyTooltipPanel()
+        {
+            V02TalismanTooltipUI tooltipUI = UnityEngine.Object.FindObjectOfType<V02TalismanTooltipUI>(true);
+            tooltipUI?.ReparentPanel(safeAreaRoot);
+        }
+
+        private static void KeepPopupPanelsOnTop()
+        {
+            V02TalismanTooltipUI tooltipUI = UnityEngine.Object.FindObjectOfType<V02TalismanTooltipUI>(true);
+            tooltipUI?.BringToFront();
+
+            V02DebugPopupController debugPopup = UnityEngine.Object.FindObjectOfType<V02DebugPopupController>(true);
+            debugPopup?.BringToFront();
         }
 
         private void RefreshTrayItems()
@@ -524,8 +595,15 @@ namespace TalismanBag.V03.BattlePrepare
 
             int visibleCount = 0;
             DraggableTalismanItemView[] views = UnityEngine.Object.FindObjectsOfType<DraggableTalismanItemView>(true);
+            knownItemViewCount = 0;
             foreach (DraggableTalismanItemView view in views)
             {
+                if (IsInventoryTemplate(view))
+                {
+                    continue;
+                }
+
+                knownItemViewCount++;
                 if (view == null || view.Definition == null)
                 {
                     continue;
@@ -556,6 +634,49 @@ namespace TalismanBag.V03.BattlePrepare
 
             RefreshCategoryButtonState();
             LayoutRebuilder.ForceRebuildLayoutImmediate(itemTrayContent);
+        }
+
+        private void RefreshTrayItemsIfInventoryChanged()
+        {
+            if (Time.unscaledTime < nextItemViewScanTime)
+            {
+                return;
+            }
+
+            nextItemViewScanTime = Time.unscaledTime + 0.2f;
+            int currentCount = CountInventoryItemViews();
+            if (currentCount == knownItemViewCount)
+            {
+                return;
+            }
+
+            RefreshTrayItems();
+        }
+
+        private static int CountInventoryItemViews()
+        {
+            int count = 0;
+            DraggableTalismanItemView[] views = UnityEngine.Object.FindObjectsOfType<DraggableTalismanItemView>(true);
+            foreach (DraggableTalismanItemView view in views)
+            {
+                if (!IsInventoryTemplate(view))
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static bool IsInventoryTemplate(DraggableTalismanItemView view)
+        {
+            if (view == null)
+            {
+                return true;
+            }
+
+            string objectName = view.gameObject.name;
+            return !string.IsNullOrWhiteSpace(objectName) && objectName.Contains("Template");
         }
 
         private void MoveItemToTray(DraggableTalismanItemView view)

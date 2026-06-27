@@ -25,7 +25,18 @@ namespace TalismanBag.Shop
         [SerializeField] private BattleLogUI battleLogUI;
 
         private readonly List<TalismanItemDefinition> currentOptions = new();
+        private DraggableTalismanItemView runtimeItemViewTemplate;
         private bool hasSelected;
+
+        public void RedirectInventoryParent(Transform newInventoryParent, Transform templateParent = null)
+        {
+            if (newInventoryParent != null)
+            {
+                inventoryParent = newInventoryParent;
+            }
+
+            PreserveItemViewTemplate(templateParent);
+        }
 
         private void Awake()
         {
@@ -157,6 +168,19 @@ namespace TalismanBag.Shop
             view.CaptureHome();
             combatController?.RegisterItemView(view);
             battleLogUI?.AddLog($"获得新道具：{item.displayName}");
+        }
+
+        private void PreserveItemViewTemplate(Transform templateParent)
+        {
+            if (itemViewPrefab == null || templateParent == null || runtimeItemViewTemplate != null)
+            {
+                return;
+            }
+
+            runtimeItemViewTemplate = Instantiate(itemViewPrefab, templateParent);
+            runtimeItemViewTemplate.name = "ShopItemTemplate_Runtime";
+            runtimeItemViewTemplate.gameObject.SetActive(false);
+            itemViewPrefab = runtimeItemViewTemplate;
         }
 
         private void ContinueAfterShop()

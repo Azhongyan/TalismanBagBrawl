@@ -1,5 +1,7 @@
 using TalismanBag.V02.UI;
+using TalismanBag.V03.Navigation;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace TalismanBag.V03.MainHome
 {
@@ -34,7 +36,14 @@ namespace TalismanBag.V03.MainHome
 
         private static void OnTrialRequested()
         {
-            Debug.Log("[V0.3-MainHome] 试炼入口保持当前版本占位，未接入受保护流程。");
+            if (SceneUtility.GetBuildIndexByScenePath(V03NavigationFlowController.TrialScenePath) < 0)
+            {
+                Debug.LogError(
+                    $"[V0.3-MainHome] Trial scene is missing from Build Settings: {V03NavigationFlowController.TrialScenePath}");
+                return;
+            }
+
+            SceneManager.LoadScene(V03NavigationFlowController.TrialSceneName, LoadSceneMode.Single);
         }
     }
 }

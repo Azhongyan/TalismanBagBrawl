@@ -14,7 +14,4 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity
     guid: 7c275722f6903c442b8450664e00c764
-  - enabled: 1
-    path: Assets/_Game/Scenes/Scene_TalismanBag_Run15Min.unity
-    guid: b0bd90b2561aa064fbb78ae10839aa98
   m_configObjects: {}

@@ -156,6 +156,7 @@ namespace TalismanBag.V02.UI
             if (panel != null)
             {
                 SetPanelVisible(true);
+                BringToFront();
             }
 
             SetText(titleText, $"{definition.displayName}  Lv{level}");
@@ -204,6 +205,22 @@ namespace TalismanBag.V02.UI
             panelCanvasGroup.alpha = visible ? 1f : 0f;
             panelCanvasGroup.interactable = visible;
             panelCanvasGroup.blocksRaycasts = visible;
+        }
+
+        public void ReparentPanel(Transform parent)
+        {
+            if (panel == null || parent == null || panel.transform.parent == parent)
+            {
+                return;
+            }
+
+            panel.transform.SetParent(parent, true);
+            BringToFront();
+        }
+
+        public void BringToFront()
+        {
+            panel?.transform.SetAsLastSibling();
         }
 
         private void SetSelectedItem(DraggableTalismanItemView itemView)

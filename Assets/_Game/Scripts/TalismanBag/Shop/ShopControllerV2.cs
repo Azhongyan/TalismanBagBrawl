@@ -37,11 +37,22 @@ namespace TalismanBag.Shop
         [SerializeField] private SpiritJadeWallet wallet;
 
         private readonly List<ShopOptionRuntime> currentOptions = new();
+        private DraggableTalismanItemView runtimeItemViewTemplate;
         private RoundConfig completedRound;
         private RoundConfig nextRound;
         private string statusMessage = "选择道具补强下一场";
 
         public IReadOnlyList<ShopOptionRuntime> CurrentOptions => currentOptions;
+
+        public void RedirectInventoryParent(Transform newInventoryParent, Transform templateParent = null)
+        {
+            if (newInventoryParent != null)
+            {
+                inventoryParent = newInventoryParent;
+            }
+
+            PreserveItemViewTemplate(templateParent);
+        }
 
         private void Awake()
         {
@@ -332,6 +343,19 @@ namespace TalismanBag.Shop
             }
 
             return view;
+        }
+
+        private void PreserveItemViewTemplate(Transform templateParent)
+        {
+            if (itemViewPrefab == null || templateParent == null || runtimeItemViewTemplate != null)
+            {
+                return;
+            }
+
+            runtimeItemViewTemplate = Instantiate(itemViewPrefab, templateParent);
+            runtimeItemViewTemplate.name = "ShopItemTemplate_Runtime";
+            runtimeItemViewTemplate.gameObject.SetActive(false);
+            itemViewPrefab = runtimeItemViewTemplate;
         }
 
         private void ClearInventoryParentChildren()

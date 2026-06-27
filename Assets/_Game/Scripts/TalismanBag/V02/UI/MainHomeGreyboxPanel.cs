@@ -314,6 +314,7 @@ namespace TalismanBag.V02.UI
             SetFeedback("选择店内区域查看。");
             RefreshHotspots();
             SetMainActionButtonsVisible(false);
+            SetCloseButtonVisible(closeCallback != null);
         }
 
         private void CreateHotspotViews()
@@ -561,6 +562,11 @@ namespace TalismanBag.V02.UI
         {
             cultivateButton?.gameObject.SetActive(visible);
             continueButton?.gameObject.SetActive(visible);
+        }
+
+        private void SetCloseButtonVisible(bool visible)
+        {
+            closeButton?.gameObject.SetActive(visible);
         }
 
         private void SetFeedback(string message)

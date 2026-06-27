@@ -19,11 +19,17 @@ namespace TalismanBag.V02.UI
         public void Show()
         {
             panel?.SetActive(true);
+            BringToFront();
         }
 
         public void Hide()
         {
             panel?.SetActive(false);
+        }
+
+        public void BringToFront()
+        {
+            panel?.transform.SetAsLastSibling();
         }
     }
 }
