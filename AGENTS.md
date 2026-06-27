@@ -35,6 +35,16 @@ Codex 接到任务后的第一件事是任务入场审查，不是写代码。
 13. `Docs/LOCKED/DELIVERY_ACCEPTANCE_GATE.md`
 14. `Docs/LOCKED/CROSS_SYSTEM_EXECUTOR_PROTOCOL.md`
 
+若当前版本存在 ROADMAP / CURRENT / Package Queue，还必须读取：
+
+```text
+Docs/ROADMAP/VERSION_ROADMAP.md
+Docs/CURRENT/V0.3_PRODUCT_FLOW01.md
+Docs/V0.3/V0.3_PACKAGE_QUEUE.md
+```
+
+ROADMAP / CURRENT 定义当前版本总蓝图；Package Queue 用于判断当前包、上一包验收状态和下一包。默认采用 Light Guard + RepoOps 模式：用户在 GPT / 外部策划流程拆包，Guard 收口边界和队列，任务窗口开发并自测，用户手测后只同步 Guard + RepoOps。producer tech pm、tech architect、codex task writer、QA reviewer 旧线程均停用自动流转。
+
 不得只读取本文件的摘要后直接开发。任一锁定文档缺失、不可读、相互冲突或超过可用上下文时，必须停止并回报。
 
 ## 3. 入场审查
@@ -55,10 +65,12 @@ Codex 接到任务后的第一件事是任务入场审查，不是写代码。
 ## 4. 稳定基线与当前收口
 
 - 当前安全基线：`V0.2 稳定版本`
-- 当前版本方向：`V0.3-MainHomeScene01-Retry`
+- 当前版本方向：`V0.3-ProductFlow01`
 - 任何新功能不得破坏 V0.2 已稳定的主流程、战斗表现、道具、阵盘、Boss 触发、奖励、数值与存档结构。
-- 当前 V0.3 只围绕照灯小铺首页、空间热点、入口、二级页底栏及 ComingSoon/锁定态收口。
-- 不得顺手修 Bug、扩大版本范围、进行无关重构、进入 RepoOps 或打 tag。
+- 当前 V0.3 是产品基础流转版，必须按 `Docs/V0.3/V0.3_PACKAGE_QUEUE.md` 小包推进；`V0.3-ProductFlow01` 是总蓝图，不是单个开发任务。
+- 当前存在全局阻断 `BUILD_SETTINGS_REGRESSION_BLOCKER`：BootEntry 加载 MainHome 报 `Scene is missing from Build Settings`。必须先按 `Docs/V0.3/V0.3_PACKAGE_QUEUE.md` 中 `GUARD_PASS_FIX_BUILD_SETTINGS01` 最小修复 Build Settings，再继续 `V0.3-BattlePrepareInteraction01`。
+- 当前正式主线包为 `V0.3-BattlePrepareInteraction01`，状态为 `QA_FAIL / GUARD_PASS_FIX01_CONTINUE`；用户手测不通过后，Guard 判断继续最小修复、不重做整包；只允许按 `Docs/V0.3/V0.3_PACKAGE_QUEUE.md` 中 Fix01 范围修复，不得扩展；`V0.3-BootEntryFlow01` 已用户手测 QA 通过并完成 RepoOps 记录；`V0.3-MainHomeScene01-Retry` 已完成 ProductFlow 复查层级修复并用户手测通过；`V0.3-BottomNavAndHomeHotspot01` 已用户手测 QA 通过并已请求 RepoOps 记录；旧 `TrialFlowUI` 队列不再是当前正式主线。
+- 不得顺手修 Bug、扩大版本范围、进行无关重构、commit、tag、push 或回滚。
 
 ## 5. 项目记忆文件的窗口权限
 
@@ -85,14 +97,14 @@ Codex 接到任务后的第一件事是任务入场审查，不是写代码。
 跨系统执行体规则见 `Docs/LOCKED/CROSS_SYSTEM_EXECUTOR_PROTOCOL.md`。
 
 - 本长期置顶常驻窗口认领 `guard-agents` 职责。
-- `guard-agents` 只守边界和收口，不直接开发。
-- 新开发窗口只能执行用户指定的、已由 `codex task writer` 产出的任务档案。
-- 新任务开始必须走 `SINGLE_LANE_TASK_INTAKE` 单线回转：producer tech pm → tech architect → codex task writer → guard-agents → 用户审批 → 开发窗口；不得并发下发，不得把 `PASS_SYNC_BROADCAST` 当作任务启动方式。
+- `guard-agents` 只守边界、红线、Package Queue 和记忆收口，不直接开发。
+- 新开发窗口只能执行 Package Queue 指向的当前包、用户指定的小版本 / 包体编号，或经 Guard 收口后的用户明确 assignment。
+- 新任务开始必须先读取当前版本 Package Queue，例如 `Docs/V0.3/V0.3_PACKAGE_QUEUE.md`。普通已排队包走 Light Path：Package Queue → Guard 收口 assignment → 开发窗口开发 / 自测 / 用户手测清单 → 用户手测 → 同步 Guard + RepoOps。不得自动发送 producer tech pm、tech architect、codex task writer、QA reviewer 旧线程。
 - `Cross-System Executor / 跨系统执行体` 当前为 `DISABLED`；ZCode 未重新获得用户审批启用前不得正式承接开发、外部 QA 或修复执行，只能作为外部参考 / 临时草案来源。即使未来启用，也不得获得治理权，不得承接 producer tech pm / tech architect / codex task writer / guard-agents / RepoOps 主责。
-- 任务档案必须先取得 `guard-agents` 的明确 `GUARD_PASS`，沉默或未返回不等于通过。
-- 用户回复“通过 / QA 通过 / 手测通过”后，必须先调用已注册 `RepoOps - 版本管理` 做小版本记录并取得 `REPOOPS_RECORD_DONE`，再向 producer tech pm / tech architect / codex task writer / QA reviewer / guard-agents 发送 `PASS_SYNC_BROADCAST` 并取得 `PASS_SYNC_SENT`，才允许同步进入下一任务包。
-- 用户回复“不通过 + 原因”后，必须回流 `tech architect` 分析，再由 `codex task writer` 重写修复任务档案，不得由开发窗口自由修。
-- 修复任务必须再次取得 `GUARD_PASS` 并由用户审批，开发窗口才恢复修复权限。
+- 普通已排队包由 Guard 轻量收口；触发越界、红线、改规则、外部协同污染或异常失败时，必须取得明确 `GUARD_PASS`，沉默或未返回不等于通过。
+- 用户回复“通过 / QA 通过 / 手测通过”后，任务窗口只向 Guard + RepoOps 同步 `TASK_STATUS_SYNC_TO_GUARD_REPOOPS`；Guard 更新记忆与 Package Queue，RepoOps 记录版本状态。默认不再发送 `PASS_SYNC_BROADCAST`。
+- 用户回复“不通过 + 原因”后，开发窗口停止自由修改并先同步 Guard。普通当前包实现 bug 可在用户授权后按原 assignment 范围修复；若涉及架构、红线、状态机、存档、Boss、奖励、数值或主流程，开发窗口必须等待用户提供 GPT / 外部技术归因或明确替代输入，并由 Guard 收口。
+- 触发 Guard 例外条件的修复任务必须取得 `GUARD_PASS` 并由用户审批，开发窗口才恢复修复权限。
 - 如果角色窗口未注册或当前窗口无法真实发送 / 读取目标窗口，只能生成报告交给用户手动转发，不得假装自动流转已完成。
 - 子代理或当前窗口代行产生的内容只能标记为临时草案，不等于已注册固定角色的正式产物。
 - 场景、页面和 UI 任务必须遵守 `DELIVERY_ACCEPTANCE_GATE.md`；自动测试不得替功能主动制造成功状态。

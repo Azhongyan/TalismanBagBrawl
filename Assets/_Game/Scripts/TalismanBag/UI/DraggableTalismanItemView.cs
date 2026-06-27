@@ -25,6 +25,7 @@ namespace TalismanBag.UI
         [SerializeField] private Vector2 dragScreenOffset = new(0f, 110f);
         [SerializeField] private float dragScale = 1.14f;
         [SerializeField] private float inventoryDropScreenRatio = 0.32f;
+        [SerializeField] private RectTransform inventoryDropZone;
 
         private RectTransform rectTransform;
         private TalismanItemRuntime runtimeItem;
@@ -121,6 +122,11 @@ namespace TalismanBag.UI
 
             homeParent = transform.parent;
             homeAnchoredPosition = rectTransform != null ? rectTransform.anchoredPosition : Vector2.zero;
+        }
+
+        public void SetInventoryDropZone(RectTransform dropZone)
+        {
+            inventoryDropZone = dropZone;
         }
 
         public void OnBeginDrag(PointerEventData eventData)
@@ -521,6 +527,20 @@ namespace TalismanBag.UI
 
         private bool IsPointerInInventoryZone(PointerEventData eventData)
         {
+            if (inventoryDropZone != null)
+            {
+                Camera eventCamera = rootCanvas != null && rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay
+                    ? null
+                    : rootCanvas != null
+                        ? rootCanvas.worldCamera
+                        : eventData.pressEventCamera;
+
+                if (RectTransformUtility.RectangleContainsScreenPoint(inventoryDropZone, eventData.position, eventCamera))
+                {
+                    return true;
+                }
+            }
+
             return eventData.position.y <= Screen.height * inventoryDropScreenRatio;
         }
 

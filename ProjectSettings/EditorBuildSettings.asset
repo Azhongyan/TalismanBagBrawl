@@ -6,6 +6,15 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/_Game/Scenes/Scene_TalismanBag_V03_BootEntry.unity
+    guid: fcbf37fc2d24ca64c9a834f298dd1150
+  - enabled: 1
+    path: Assets/_Game/Scenes/Scene_TalismanBag_V03_MainHome.unity
+    guid: 19919d81a95b3ac43a22dbf4a66537ad
+  - enabled: 1
+    path: Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity
+    guid: 7c275722f6903c442b8450664e00c764
+  - enabled: 1
     path: Assets/_Game/Scenes/Scene_TalismanBag_Run15Min.unity
     guid: b0bd90b2561aa064fbb78ae10839aa98
   m_configObjects: {}

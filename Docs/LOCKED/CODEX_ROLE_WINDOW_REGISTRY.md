@@ -19,16 +19,16 @@
 | 规范角色 | 注册状态 | 固定窗口标题 | 线程标识 | 当前规则 |
 | --- | --- | --- | --- | --- |
 | guard-agents | 已注册 | `Guard - AGENTS 记忆收口` | `019ef276-110c-7470-9342-72691805433d` | 负责边界、收口、记忆更新审批；不开发 |
-| producer tech pm | 已注册 | `1-Producer Tech PM / 技术进度与版本节奏` | `019ef2fe-da14-7741-a7be-106ddc25b6e3` | 负责版本计划、优先级与包体推进；不直接给开发窗口下发工单 |
-| tech architect | 已注册 | `2-Tech Architect / 长期技术架构负责人` | `019ef300-ef4c-7230-aadf-e170448a93ff` | 负责技术拆包、风险判断、失败归因与 `PACKAGE_ASSIGNMENT`；不直接授权开发 |
-| codex task writer | 已注册 | `3-Codex Task Writer / 开发任务拆解` | `019ef305-0706-79f0-be2f-6f91ef632437` | 负责正式开发任务档案与修复任务档案；是开发窗口唯一正式工单来源 |
-| QA reviewer | 已注册 | `4-QA Reviewer / 技术验收与回归测试` | `019ef309-65ea-7882-be83-8ac4f7d72eba` | 负责独立验收、手测清单与通过 / 不通过报告 |
-| RepoOps | 已注册 | `RepoOps - 版本管理` | `019eca25-228f-7923-8513-68d075d5ccd6` | 负责 QA / 手测通过后的版本记录、变更摘要、回滚点与大小版本归档规划；未获用户单独授权时不自动 commit / tag / push |
-| 当前版本开发窗口 | 按包体临时创建 | 由用户创建并命名 | 每包不同 | 只执行指定小版本 / 包体任务档案；新任务开始时进入 `WAITING_ASSIGNMENT` 并等待 `SINGLE_LANE_TASK_INTAKE` |
+| producer tech pm | 停用自动流转 | `1-Producer Tech PM / 技术进度与版本节奏` | `019ef2fe-da14-7741-a7be-106ddc25b6e3`（发送失败：线程归档文件缺失） | 不再作为自动发送 / 自动广播目标；版本方向与路线讨论回到用户的 GPT / 外部策划流程，Codex 只消费已落盘 ROADMAP / CURRENT / Package Queue |
+| tech architect | 停用自动流转 | `2-Tech Architect / 长期技术架构负责人` | `019ef300-ef4c-7230-aadf-e170448a93ff`（发送失败：线程归档文件缺失） | 不再作为自动发送 / 自动广播目标；技术拆包以已落盘 Package Queue 为准，异常 / 红线失败由用户在 GPT / 外部流程讨论后再回填给 Codex |
+| codex task writer | 停用自动流转 | `3-Codex Task Writer / 开发任务拆解` | `019ef305-0706-79f0-be2f-6f91ef632437` | 日常包不再自动调用、不再作为唯一工单硬门；任务窗口可按 GPT 拆包、Package Queue 与 Guard 收口直接开发；仅用户明确要求“难任务走 Task Writer”时临时启用 |
+| QA reviewer | 停用自动流转 | `4-QA Reviewer / 技术验收与回归测试` | `019ef309-65ea-7882-be83-8ac4f7d72eba` | 日常包不再自动调用；开发窗口自行给出自测 / QA 汇报和用户手测清单，最终以用户手测通过 / 不通过为准；仅用户明确要求独立 QA 时临时启用 |
+| RepoOps | 默认完工同步对象 | `RepoOps - 版本管理` | `019eca25-228f-7923-8513-68d075d5ccd6` | 每包用户手测通过后接收版本状态记录；与 Guard 一起作为默认同步对象；未获用户单独授权时不自动 commit / tag / push |
+| 当前版本开发窗口 | 按包体临时创建 | 由用户创建并命名 | 每包不同 | 只执行 Package Queue 指向的小版本、GPT 拆包后由 Guard 收口的 assignment，或用户明确指定的任务；负责实现、自测、QA 汇报和用户手测清单 |
 
 以上侧边栏标题与规范角色名属于同一角色映射，不是两套角色。标题中的编号、中文说明、大小写、连字符或空格差异不产生新角色；跨窗口流转以本表登记的线程标识为最终身份依据。
 
-新任务下发必须遵守 `SINGLE_LANE_TASK_INTAKE`：producer tech pm → tech architect → codex task writer → guard-agents → 用户审批 → 开发窗口。`PASS_SYNC_BROADCAST` 只用于用户验收通过后的状态同步，不得用于新任务下发。
+新任务下发必须先读取当前版本 Package Queue，例如 `Docs/V0.3/V0.3_PACKAGE_QUEUE.md`。当前默认模式为轻量 Guard + RepoOps 收口：用户在 GPT / 外部策划流程拆包 → Guard 收口边界 / 红线 / 当前包指针 → 当前任务窗口开发、自测、汇报用户手测项 → 用户手测通过 / 不通过 → 任务窗口只同步 Guard + RepoOps → Guard 更新记忆与队列状态 → RepoOps 记录版本状态。producer tech pm、tech architect、codex task writer、QA reviewer 旧线程均不再自动流转；`PASS_SYNC_BROADCAST` 默认停用，不再作为进入下一包的硬门。难开发任务、边界极不清任务或用户明确要求时，才临时恢复 Task Writer / QA / 其他角色流程。
 
 ## 2.1 跨系统执行体类别
 
@@ -91,7 +91,7 @@ ZCode 不可承接：
 5. 目标角色返回了对应产物，例如失败归因、任务档案或 QA 报告。
 6. 返回产物的来源与角色注册信息一致，不是未标注来源的临时草案。
 
-缺任一条件，均不允许声称“已调用 tech architect / codex task writer / QA reviewer”。
+缺任一条件，均不允许声称“已调用旧角色流程”。默认模式下不得调用 producer tech pm、tech architect、codex task writer 或 QA reviewer；只有用户明确要求重流程时才可临时启用。
 
 仅完成消息发送不代表该阶段完成；必须等待目标角色返回正式产物。
 
@@ -109,12 +109,9 @@ ZCode 不可承接：
 
 手动转发模式下，当前窗口只能输出以下内容之一：
 
-- 给 producer tech pm 的版本计划输入摘要。
-- 给 tech architect 的任务拆解请求、`PACKAGE_ASSIGNMENT` 请求或失败回流报告。
-- 给 codex task writer 的任务档案写作输入，必须以上游 `PACKAGE_ASSIGNMENT` 为依据。
-- 给 QA reviewer 的验收输入。
-- 给 guard-agents 的边界收口摘要。
-- 给 RepoOps 的版本记录输入摘要。
+- 给 guard-agents 的边界收口、记忆更新、Package Queue 更新或失败状态摘要。
+- 给 RepoOps 的版本状态记录输入摘要。
+- 当且仅当用户明确要求“难任务走重流程”时，才可生成给 codex task writer / QA reviewer / 其他旧角色的临时输入摘要。
 - 给 Cross-System Executor / ZCode 的已审批任务包执行输入或外部 QA 输入；仅当 `CROSS_SYSTEM_EXECUTOR_PROTOCOL.md` 为 `ENABLED` 时允许。当前为 `DISABLED` 时不得发送正式任务执行输入。
 
 输出后必须停止在等待状态，不能继续冒充下一个角色完成后续流程。
@@ -128,8 +125,9 @@ ZCode 不可承接：
 - 停止当前开发。
 - 汇总失败现象。
 - 整理自动 QA 与用户手测差异。
-- 生成给 tech architect 的失败回流报告。
-- 若 tech architect 已注册且工具可用，则真实发送报告。
+- 将失败状态同步给 Guard。
+- 普通当前包 bug 在用户授权后按原 assignment 范围修复。
+- 异常 / 红线失败等待用户提供 GPT / 外部技术归因或明确替代输入，并由 Guard 收口。
 
 开发窗口禁止：
 
@@ -137,14 +135,14 @@ ZCode 不可承接：
 - 自行重写修复任务档案。
 - 自行继续 patch 或重构。
 - 以“我先查一下”为理由进入代码修改。
-- 在没有真实发送 / 真实返回的情况下声称已完成跨窗口流转。
+- 在没有同步 Guard 的情况下声称已完成失败回流。
 
-开发窗口只有拿到以下五项后，才可重新获得修复开发权限：
+开发窗口只有拿到以下条件后，才可重新获得修复开发权限：
 
 1. 用户的不通过原因。
-2. 已注册 tech architect 的正式失败归因。
-3. 已注册 codex task writer 的正式修复任务档案。
-4. guard-agents 对修复任务档案的明确 `GUARD_PASS`。
+2. 普通当前包 bug：用户确认可在原 assignment 范围内修复。
+3. 若失败涉及架构 / 红线 / 状态机 / 存档 / Boss / 奖励 / 数值 / 主流程，必须有用户提供的 GPT / 外部技术归因或明确替代输入。
+4. 若触发 Guard 例外条件，必须有 guard-agents 对修复边界的明确 `GUARD_PASS`。
 5. 用户对修复任务包的明确审批。
 
-如五项不齐，开发窗口只能等待。
+如当前失败属于普通当前包实现 bug，则只需用户失败原因、Guard 已知晓失败状态和用户确认即可恢复修复；如触发异常条件，上述对应项不齐时开发窗口只能等待。

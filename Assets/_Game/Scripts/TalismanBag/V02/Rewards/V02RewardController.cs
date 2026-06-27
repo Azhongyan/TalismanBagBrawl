@@ -4,6 +4,7 @@ using TalismanBag.Enemies;
 using TalismanBag.Inventory;
 using TalismanBag.Items;
 using TalismanBag.V02.EnemySkills;
+using TalismanBag.V02.CoreLoop.Save;
 using TalismanBag.V02.Formation;
 using TalismanBag.V02.Tags;
 using TalismanBag.V02.UI;
@@ -60,18 +61,44 @@ namespace TalismanBag.V02.Rewards
         private int currentCompletedRoundNumber = 1;
         private readonly List<V02RewardDefinition> currentOptions = new();
         private readonly Dictionary<string, V02RewardDefinition> runtimeRewards = new();
+        private readonly List<string> appliedRunRewardIds = new();
+        private string lastRuntimeLoadoutSignature = string.Empty;
+        private float runtimeLoadoutSnapshotPollTimer;
+        private bool restoringRuntimeLoadoutSnapshot;
 
         public event Action<V02RewardDefinition> RewardChosen;
 
         public EnemyDefinition CurrentNextEnemy => currentNextEnemy;
 
+        private void LateUpdate()
+        {
+            if (restoringRuntimeLoadoutSnapshot)
+            {
+                return;
+            }
+
+            runtimeLoadoutSnapshotPollTimer += Time.unscaledDeltaTime;
+            if (runtimeLoadoutSnapshotPollTimer < 0.5f)
+            {
+                return;
+            }
+
+            runtimeLoadoutSnapshotPollTimer = 0f;
+            PersistRuntimeLoadoutSnapshotIfChanged();
+        }
+
         public void StartNewRewardRun()
         {
             EnsureRuntimeRewards();
-            inventoryAdapter?.ResetTalismansByIds(StarterItemIds);
+            appliedRunRewardIds.Clear();
             currentCompletedRoundNumber = 1;
             currentOptions.Clear();
             rewardPanel?.Hide();
+            if (!TryRestoreRuntimeLoadoutSnapshot())
+            {
+                inventoryAdapter?.ResetTalismansByIds(StarterItemIds);
+                PersistRuntimeLoadoutSnapshot(force: true);
+            }
         }
 
         public bool OpenRewardSelection(EnemyDefinition nextEnemy)
@@ -143,6 +170,7 @@ namespace TalismanBag.V02.Rewards
             }
 
             ApplyReward(reward);
+            PersistRuntimeLoadoutSnapshot(force: true);
             rewardPanel?.Hide();
             RewardChosen?.Invoke(reward);
         }
@@ -155,6 +183,7 @@ namespace TalismanBag.V02.Rewards
             }
 
             ApplyReward(reward);
+            PersistRuntimeLoadoutSnapshot(force: true);
         }
 
         public void GrantBossCompletionReward()
@@ -172,6 +201,7 @@ namespace TalismanBag.V02.Rewards
                 }
             }
 
+            PersistRuntimeLoadoutSnapshot(force: true);
             battleLogUI?.AddLog("Boss 奖励：重复火符、符纸、灵石、基础配方残页、少量修为");
         }
 
@@ -209,6 +239,11 @@ namespace TalismanBag.V02.Rewards
                     battleLogUI?.AddLog($"Reward inventory sync failed: no inventory target for {itemId}");
                     return addedAny;
                 }
+            }
+
+            if (addedAny)
+            {
+                PersistRuntimeLoadoutSnapshot(force: true);
             }
 
             return addedAny;
@@ -399,10 +434,239 @@ namespace TalismanBag.V02.Rewards
                 case V02RewardType.FormationModifier:
                 case V02RewardType.BuildModifier:
                     runModifierState?.ApplyReward(reward);
+                    RememberAppliedRunReward(reward);
                     formationPowerResolver?.RefreshPowerStates();
                     battleLogUI?.AddLog($"获得奖励：{reward.displayName}");
                     break;
             }
+        }
+
+        private bool TryRestoreRuntimeLoadoutSnapshot()
+        {
+            MainTrialRuntimeLoadoutSnapshotData snapshot = GetRuntimeLoadoutSnapshot(createIfMissing: false);
+            if (snapshot == null || !snapshot.hasSnapshot)
+            {
+                lastRuntimeLoadoutSignature = string.Empty;
+                return false;
+            }
+
+            restoringRuntimeLoadoutSnapshot = true;
+            try
+            {
+                runModifierState?.ResetState();
+                appliedRunRewardIds.Clear();
+                RestoreAppliedRunRewards(snapshot);
+                if (snapshot.talismans == null || snapshot.talismans.Count == 0)
+                {
+                    inventoryAdapter?.ResetTalismansByIds(null);
+                    formationPowerResolver?.RefreshPowerStates();
+                    lastRuntimeLoadoutSignature = BuildCurrentRuntimeLoadoutSignature();
+                    battleLogUI?.AddLog("已恢复上次巡行的空运行时背包快照。");
+                    return true;
+                }
+
+                bool restoredTalismans = inventoryAdapter != null &&
+                                         inventoryAdapter.RestoreTalismans(snapshot, ResolveGrantedTalismanDefinition);
+                if (!restoredTalismans)
+                {
+                    battleLogUI?.AddLog("运行时道具快照恢复失败，回退到初始背包。");
+                    lastRuntimeLoadoutSignature = string.Empty;
+                    return false;
+                }
+
+                lastRuntimeLoadoutSignature = BuildCurrentRuntimeLoadoutSignature();
+                formationPowerResolver?.RefreshPowerStates();
+                battleLogUI?.AddLog("已恢复上次巡行的运行时道具与棋盘摆放。");
+                return true;
+            }
+            finally
+            {
+                restoringRuntimeLoadoutSnapshot = false;
+            }
+        }
+
+        private void RestoreAppliedRunRewards(MainTrialRuntimeLoadoutSnapshotData snapshot)
+        {
+            if (snapshot?.appliedRewardIds == null)
+            {
+                return;
+            }
+
+            foreach (string rewardId in snapshot.appliedRewardIds)
+            {
+                V02RewardDefinition reward = FindReward(rewardId);
+                if (reward == null)
+                {
+                    continue;
+                }
+
+                switch (reward.rewardType)
+                {
+                    case V02RewardType.FormationModifier:
+                    case V02RewardType.BuildModifier:
+                        runModifierState?.ApplyReward(reward);
+                        RememberAppliedRunReward(reward);
+                        break;
+                }
+            }
+        }
+
+        private void RememberAppliedRunReward(V02RewardDefinition reward)
+        {
+            if (reward == null ||
+                string.IsNullOrWhiteSpace(reward.rewardId) ||
+                reward.rewardType != V02RewardType.FormationModifier && reward.rewardType != V02RewardType.BuildModifier)
+            {
+                return;
+            }
+
+            string safeRewardId = reward.rewardId.Trim();
+            if (!appliedRunRewardIds.Contains(safeRewardId))
+            {
+                appliedRunRewardIds.Add(safeRewardId);
+            }
+        }
+
+        private void PersistRuntimeLoadoutSnapshotIfChanged()
+        {
+            string currentSignature = BuildCurrentRuntimeLoadoutSignature();
+            if (string.Equals(currentSignature, lastRuntimeLoadoutSignature, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            PersistRuntimeLoadoutSnapshot(force: true);
+        }
+
+        private void PersistRuntimeLoadoutSnapshot(bool force)
+        {
+            if (restoringRuntimeLoadoutSnapshot || inventoryAdapter == null)
+            {
+                return;
+            }
+
+            SaveService saveService = SaveService.GetOrCreate();
+            SaveData saveData = saveService.EnsureLoaded();
+            saveData.mainTrialProgressData ??= new MainTrialProgressData();
+            MainTrialProgressData progress = saveData.mainTrialProgressData;
+            progress.Normalize();
+
+            MainTrialRuntimeLoadoutSnapshotData snapshot = progress.runtimeLoadoutSnapshot;
+            snapshot.hasSnapshot = true;
+            snapshot.roundId = ResolveCurrentRoundId(progress);
+            inventoryAdapter.CaptureTalismans(snapshot);
+            snapshot.appliedRewardIds.Clear();
+            foreach (string rewardId in appliedRunRewardIds)
+            {
+                if (!string.IsNullOrWhiteSpace(rewardId) && !snapshot.appliedRewardIds.Contains(rewardId.Trim()))
+                {
+                    snapshot.appliedRewardIds.Add(rewardId.Trim());
+                }
+            }
+
+            snapshot.Normalize();
+            string signature = BuildSnapshotSignature(snapshot);
+            if (!force && string.Equals(signature, lastRuntimeLoadoutSignature, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            saveService.Save();
+            lastRuntimeLoadoutSignature = signature;
+        }
+
+        private string BuildCurrentRuntimeLoadoutSignature()
+        {
+            MainTrialRuntimeLoadoutSnapshotData snapshot = new()
+            {
+                hasSnapshot = true
+            };
+            snapshot.roundId = ResolveCurrentRoundId(GetCurrentMainTrialProgressData());
+            inventoryAdapter?.CaptureTalismans(snapshot);
+            foreach (string rewardId in appliedRunRewardIds)
+            {
+                if (!string.IsNullOrWhiteSpace(rewardId) && !snapshot.appliedRewardIds.Contains(rewardId.Trim()))
+                {
+                    snapshot.appliedRewardIds.Add(rewardId.Trim());
+                }
+            }
+
+            snapshot.Normalize();
+            return BuildSnapshotSignature(snapshot);
+        }
+
+        private MainTrialRuntimeLoadoutSnapshotData GetRuntimeLoadoutSnapshot(bool createIfMissing)
+        {
+            MainTrialProgressData progress = GetCurrentMainTrialProgressData();
+            if (progress == null)
+            {
+                return null;
+            }
+
+            if (progress.runtimeLoadoutSnapshot == null && createIfMissing)
+            {
+                progress.runtimeLoadoutSnapshot = new MainTrialRuntimeLoadoutSnapshotData();
+            }
+
+            progress.runtimeLoadoutSnapshot?.Normalize();
+            return progress.runtimeLoadoutSnapshot;
+        }
+
+        private static MainTrialProgressData GetCurrentMainTrialProgressData()
+        {
+            SaveData saveData = SaveService.GetOrCreate().EnsureLoaded();
+            saveData.mainTrialProgressData ??= new MainTrialProgressData();
+            saveData.mainTrialProgressData.Normalize();
+            return saveData.mainTrialProgressData;
+        }
+
+        private static string ResolveCurrentRoundId(MainTrialProgressData progress)
+        {
+            if (progress == null)
+            {
+                return string.Empty;
+            }
+
+            if (!string.IsNullOrWhiteSpace(progress.currentRoundId))
+            {
+                return progress.currentRoundId.Trim();
+            }
+
+            return string.IsNullOrWhiteSpace(progress.currentMainTrialLevelId)
+                ? string.Empty
+                : progress.currentMainTrialLevelId.Trim();
+        }
+
+        private static string BuildSnapshotSignature(MainTrialRuntimeLoadoutSnapshotData snapshot)
+        {
+            if (snapshot == null)
+            {
+                return string.Empty;
+            }
+
+            snapshot.Normalize();
+            List<string> parts = new()
+            {
+                snapshot.roundId
+            };
+
+            foreach (MainTrialRuntimeTalismanSnapshotData talisman in snapshot.talismans)
+            {
+                if (talisman == null)
+                {
+                    continue;
+                }
+
+                parts.Add(
+                    $"{talisman.itemId}:{talisman.level}:{talisman.isPlaced}:{talisman.gridX}:{talisman.gridY}");
+            }
+
+            foreach (string rewardId in snapshot.appliedRewardIds)
+            {
+                parts.Add($"reward:{rewardId}");
+            }
+
+            return string.Join("|", parts);
         }
 
         private V02RewardDefinition FindReward(string rewardId)

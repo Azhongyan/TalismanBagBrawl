@@ -147,8 +147,12 @@ namespace TalismanBag.Combat
         private Text autoMergeButtonText;
         private float v02StatusTickTimer = 1f;
         private float v02EnemyBurnTickTimer = 1f;
+        private int battlePreparePauseDepth;
 
-        public bool CanEditLayout => state != TalismanCombatState.Fighting && (battleInteractionLock == null || !battleInteractionLock.IsLocked);
+        public bool IsBattlePreparePaused => battlePreparePauseDepth > 0;
+        public TalismanCombatState CurrentCombatState => state;
+        public bool CanEditLayout => (state != TalismanCombatState.Fighting || IsBattlePreparePaused) &&
+                                     (battleInteractionLock == null || !battleInteractionLock.IsLocked || IsBattlePreparePaused);
         public EnemyRuntime CurrentEnemy => currentEnemy;
         public int CurrentRoundNumber => currentRound;
         public float PlayerHpRemainPercent => playerStats.maxHP > 0 ? playerStats.hp / (float)playerStats.maxHP : 0f;
@@ -337,7 +341,7 @@ namespace TalismanBag.Combat
 
         private void Update()
         {
-            if (state != TalismanCombatState.Fighting || currentEnemy == null)
+            if (state != TalismanCombatState.Fighting || IsBattlePreparePaused || currentEnemy == null)
             {
                 return;
             }
@@ -468,6 +472,32 @@ namespace TalismanBag.Combat
             battleLogUI?.Clear();
             AddLog("战前整理：观察敌人后调整阵盘");
             PrepareItemCooldowns();
+            RefreshGridDependentUI();
+            RefreshUI();
+        }
+
+        public void BeginBattlePreparePause()
+        {
+            battlePreparePauseDepth++;
+            RefreshBattleInteractionLock();
+            RefreshUI();
+        }
+
+        public void EndBattlePreparePause()
+        {
+            if (battlePreparePauseDepth > 0)
+            {
+                battlePreparePauseDepth--;
+            }
+
+            RefreshBattleInteractionLock();
+            RefreshUI();
+        }
+
+        public void CommitBattlePrepareLayout()
+        {
+            RefreshFormationPowerStates();
+            BuildAndApplyBattleLoadoutSnapshot();
             RefreshGridDependentUI();
             RefreshUI();
         }
@@ -3607,6 +3637,11 @@ namespace TalismanBag.Combat
         private void SetCombatState(TalismanCombatState nextState)
         {
             state = nextState;
+            if (state != TalismanCombatState.Fighting)
+            {
+                battlePreparePauseDepth = 0;
+            }
+
             RefreshBattleInteractionLock();
         }
 
