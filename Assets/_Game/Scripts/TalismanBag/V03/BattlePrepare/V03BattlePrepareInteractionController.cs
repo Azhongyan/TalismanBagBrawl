@@ -24,8 +24,8 @@ namespace TalismanBag.V03.BattlePrepare
         private const int ItemTraySlotCount = ItemTrayColumnCount * ItemTrayRowCount;
         private static readonly Vector2 ItemTraySlotSize = new(104f, 104f);
         private static readonly Vector2 ItemTraySlotSpacing = new(14f, 14f);
-        private static readonly Vector2 NormalPosition = new(0f, -520f);
-        private static readonly Vector2 PreparePosition = new(0f, -320f);
+        private static readonly Vector2 NormalPosition = new(0f, -920f);
+        private static readonly Vector2 PreparePosition = new(0f, -220f);
 
         private readonly List<CategoryButtonBinding> categoryButtons = new();
         private readonly List<RectTransform> itemTraySlotRoots = new();
