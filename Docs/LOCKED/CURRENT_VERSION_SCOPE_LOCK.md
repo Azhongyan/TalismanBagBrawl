@@ -55,7 +55,46 @@ V0.3 产品流转总回归
 当前正式主线包：
 
 ```text
-V0.3-BattlePrepareInteraction01
+V0.3-BossGuideResult01
+```
+
+当前包 Guard assignment：
+
+```text
+GUARD_PASS_BOSSGUIDERESULT01_NO_HIGHLIGHT
+
+用户明确指定 V0.3-BossGuideResult01 开始任务，并排除“高亮引导”需求。
+V0.3-PrepareTutorial01 暂缓，不取消。
+
+允许：复用 BossInfoPanel / BossInfoViewModel / BossInfoConfig / V02BossRewardPanel，在 1-10 boss round 战前显示 BossInfoState，继续使用手动“开始攻打”按钮进入 BossBattleState，Boss 胜利后走现有 OpenBossRewardPanel / ConfirmBossReward 奖励到账与回首页路径。
+
+允许最小触碰：Assets/_Game/Scripts/TalismanBag/V02/Run/V02RunFlowController.cs，仅用于 1-10 BossInfoState 接入、手动开始 Boss、复用现有 Boss 奖励结算路径；允许最小修改 BossInfoPanel 文案 / view model / 按钮口径展示。
+
+禁止：高亮挑战 Boss 按钮 / 小地图 Boss 点；自动开 Boss；破坏 2-9 Boss 前停止或 2-10 Boss 手动挑战；改 Boss 奖励表、掉落表、数值、伤害、冷却、胜负规则；改 SaveData / PlayerPrefs / MainTrialProgressData；重写 RunFlow / PageState / FormationState；借本包开发 Forge / PrepareTutorial / ProductFlowRegression。
+```
+
+当前包 Fix 收口：
+
+```text
+GUARD_PASS_BOSSGUIDERESULT01_FIX_PREPARE_BUTTON
+
+用户反馈：2-10 BossInfo 点整备没有拉出整备页，依然停在战斗页。
+
+允许：只修改 Assets/_Game/Scripts/TalismanBag/V02/Run/V02RunFlowController.cs 中 HideBossInfoForPrepare()，将单纯日志改为调用现有 V03BattlePrepareInteractionController.TryOpenPrepareThen(...)；onOpened 只写提示日志；未找到整备控制器时 fallback 提示，不自动开 Boss。
+
+禁止：不改 Boss 触发规则；不自动开 Boss；不改 V03BattlePrepareInteractionController；不改奖励表、掉落表、数值、SaveData、MainTrialProgressData、FormationState、PageState；不做高亮挑战 Boss 按钮 / 小地图 Boss 点 / PrepareTutorial。
+```
+
+上一包收口：
+
+```text
+V0.3-BattlePrepareInteraction01 item tray tuning continuation 已用户手测 QA 通过。
+状态：USER_ACCEPTED / REPOOPS_UPLOAD_REQUESTED。
+用户明确要求 RepoOps 正式上传当前版本。
+正式上传必须包含 c921d4c 之后未提交的最终位置 delta：
+- Assets/_Game/Scripts/TalismanBag/V03/BattlePrepare/V03BattlePrepareInteractionController.cs
+- NormalPosition = new(0f, -920f)
+- PreparePosition = new(0f, -220f)
 ```
 
 当前全局阻断：
@@ -76,6 +115,7 @@ BootEntry 加载 MainHome 报 `Scene is missing from Build Settings`。只读确
 V0.3-BootEntryFlow01 已开发完成、Unity smoke 通过、用户手测 QA 通过，并取得 REPOOPS_RECORD_DONE。
 V0.3-MainHomeScene01-Retry 已完成 ProductFlow 复查层级修复：MainHomeRoot 恢复为 Canvas 直接子节点；用户手测通过；未触碰存档、奖励、数值、Boss、战斗整备、DataCatalog、首页热点逻辑或试炼 / 炼符 delegate。
 V0.3-BottomNavAndHomeHotspot01 已开发完成并用户手测 QA 通过：底栏口径为 首页 / 探索 / 试练 / 锻造 / 更多；梦签保留为首页中部热点；背包 / BattleBackpack 未进入底栏；未触碰 RunFlow / PageState / FormationState / SaveData / Boss / 奖励 / 数值 / DamageText / V02FormationGridFrame；RepoOps 记录请求已发送，等待回执。
+V0.3-BattlePrepareInteraction01 item tray tuning continuation 已用户手测 QA 通过：道具栏 5 columns × 8 rows = 40 slots；可视区域 5 rows，内部纵向滚动和右侧 scrollbar；道具可在 item tray slot 内移动 / 互换且不会消失；NormalPosition = new(0f, -920f)，PreparePosition = new(0f, -220f)；用户明确要求 RepoOps 正式上传当前版本，且必须包含 c921d4c 之后未提交的最终位置 delta。
 ```
 
 ## 交付形态硬边界

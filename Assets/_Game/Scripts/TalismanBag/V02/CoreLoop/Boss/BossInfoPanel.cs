@@ -53,7 +53,8 @@ namespace TalismanBag.V02.CoreLoop.Boss
             SetText(mechanismText, $"\u673a\u5236\u6807\u7b7e\n{viewModel?.mechanismTags ?? string.Empty}");
             SetText(threatText, $"\u4e3b\u8981\u5a01\u80c1\n{viewModel?.mainThreats ?? string.Empty}");
             SetText(recommendedText, $"\u63a8\u8350\u9053\u5177 / \u7b26\u7b93\n{viewModel?.recommendedTools ?? string.Empty}");
-            SetText(promptText, viewModel?.preBattlePrompt ?? string.Empty);
+            SetText(promptText, BuildPromptText(viewModel));
+            SetButtonText(startButton, "\u6311\u6218boss");
         }
 
         public void Hide()
@@ -94,8 +95,8 @@ namespace TalismanBag.V02.CoreLoop.Boss
             panelComponent.threatText = CreateText("BossInfoThreats", root.transform, string.Empty, 25, FontStyle.Normal, Color.white, new Vector2(0f, -330f), new Vector2(780f, 180f), TextAnchor.UpperLeft);
             panelComponent.recommendedText = CreateText("BossInfoRecommended", root.transform, string.Empty, 25, FontStyle.Normal, new Color(0.88f, 1f, 0.88f), new Vector2(0f, -540f), new Vector2(780f, 170f), TextAnchor.UpperLeft);
             panelComponent.promptText = CreateText("BossInfoPrompt", root.transform, string.Empty, 25, FontStyle.Bold, new Color(1f, 0.9f, 0.62f), new Vector2(0f, -720f), new Vector2(780f, 95f), TextAnchor.UpperLeft);
-            panelComponent.adjustButton = CreateButton("BossInfoAdjustButton", root.transform, "\u8c03\u6574\u80cc\u5305", new Vector2(-220f, 86f), new Vector2(340f, 86f), new Color(0.28f, 0.42f, 0.34f));
-            panelComponent.startButton = CreateButton("BossInfoStartButton", root.transform, "\u5f00\u59cb\u653b\u6253", new Vector2(220f, 86f), new Vector2(340f, 86f), new Color(0.62f, 0.32f, 0.18f));
+            panelComponent.adjustButton = CreateButton("BossInfoAdjustButton", root.transform, "\u6574\u5907", new Vector2(-220f, 86f), new Vector2(340f, 86f), new Color(0.28f, 0.42f, 0.34f));
+            panelComponent.startButton = CreateButton("BossInfoStartButton", root.transform, "\u6311\u6218boss", new Vector2(220f, 86f), new Vector2(340f, 86f), new Color(0.62f, 0.32f, 0.18f));
             panelComponent.BindButtons();
             panelComponent.Hide();
             return panelComponent;
@@ -181,6 +182,23 @@ namespace TalismanBag.V02.CoreLoop.Boss
             {
                 text.text = value;
             }
+        }
+
+        private static void SetButtonText(Button button, string value)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            SetText(button.GetComponentInChildren<Text>(true), value);
+        }
+
+        private static string BuildPromptText(BossInfoViewModel viewModel)
+        {
+            string prompt = viewModel?.preBattlePrompt ?? string.Empty;
+            string rewardPrompt = "\u80dc\u5229\u540e\u53ef\u9886\u53d6\u7ae0\u8282\u5173\u952e\u5956\u52b1\u3002";
+            return string.IsNullOrWhiteSpace(prompt) ? rewardPrompt : $"{prompt}\n{rewardPrompt}";
         }
     }
 }

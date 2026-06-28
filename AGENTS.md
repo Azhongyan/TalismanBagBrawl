@@ -68,8 +68,8 @@ ROADMAP / CURRENT 定义当前版本总蓝图；Package Queue 用于判断当前
 - 当前版本方向：`V0.3-ProductFlow01`
 - 任何新功能不得破坏 V0.2 已稳定的主流程、战斗表现、道具、阵盘、Boss 触发、奖励、数值与存档结构。
 - 当前 V0.3 是产品基础流转版，必须按 `Docs/V0.3/V0.3_PACKAGE_QUEUE.md` 小包推进；`V0.3-ProductFlow01` 是总蓝图，不是单个开发任务。
-- 当前存在全局阻断 `BUILD_SETTINGS_REGRESSION_BLOCKER`：BootEntry 加载 MainHome 报 `Scene is missing from Build Settings`。必须先按 `Docs/V0.3/V0.3_PACKAGE_QUEUE.md` 中 `GUARD_PASS_FIX_BUILD_SETTINGS01` 最小修复 Build Settings，再继续 `V0.3-BattlePrepareInteraction01`。
-- 当前正式主线包为 `V0.3-BattlePrepareInteraction01`，状态为 `QA_FAIL / GUARD_PASS_FIX01_CONTINUE`；用户手测不通过后，Guard 判断继续最小修复、不重做整包；只允许按 `Docs/V0.3/V0.3_PACKAGE_QUEUE.md` 中 Fix01 范围修复，不得扩展；`V0.3-BootEntryFlow01` 已用户手测 QA 通过并完成 RepoOps 记录；`V0.3-MainHomeScene01-Retry` 已完成 ProductFlow 复查层级修复并用户手测通过；`V0.3-BottomNavAndHomeHotspot01` 已用户手测 QA 通过并已请求 RepoOps 记录；旧 `TrialFlowUI` 队列不再是当前正式主线。
+- 历史阻断 / 待回归确认：`BUILD_SETTINGS_REGRESSION_BLOCKER` 曾导致 BootEntry 加载 MainHome 报 `Scene is missing from Build Settings`。后续 ProductFlow 回归必须确认 BootEntry → MainHome / Trial 均可加载；若再次失败，优先按 Build Settings 回归处理，不得重做功能包。
+- `V0.3-BattlePrepareInteraction01` item tray tuning continuation 已用户手测 QA 通过，状态为 `USER_ACCEPTED / REPOOPS_UPLOAD_REQUESTED`；用户明确要求 RepoOps 正式上传当前版本，且必须包含 `c921d4c` 之后未提交的最终位置 delta：`V03BattlePrepareInteractionController.cs` 中 `NormalPosition = new(0f, -920f)`、`PreparePosition = new(0f, -220f)`。当前正式包已按用户明确指令切到 `V0.3-BossGuideResult01`，状态为 `QA_FIX_PREPARE_BUTTON_GUARD_PASS / READY_FOR_FIX`；本包不做“高亮挑战 Boss 按钮 / 小地图 Boss 点”；当前允许仅按 `GUARD_PASS_BOSSGUIDERESULT01_FIX_PREPARE_BUTTON` 修复 BossInfo 整备按钮接入既有 V03 整备页；`V0.3-PrepareTutorial01` 暂缓，不取消；旧 `TrialFlowUI` 队列不再是当前正式主线。
 - 不得顺手修 Bug、扩大版本范围、进行无关重构、commit、tag、push 或回滚。
 
 ## 5. 项目记忆文件的窗口权限

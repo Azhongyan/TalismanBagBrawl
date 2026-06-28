@@ -225,7 +225,7 @@ namespace TalismanBag.V02.Run
                 battleLogUI?.AddLog(round.preBattleHint);
             }
 
-            if (TryOpenChapterTwoBossInfoPanel(round))
+            if (TryOpenBossInfoPanel(round))
             {
                 return;
             }
@@ -262,9 +262,9 @@ namespace TalismanBag.V02.Run
                 return true;
             }
 
-            if (EnsureMainTrialFlowService().IsChapterTwoBossRound(round))
+            if (IsBossInfoManualChallengeRound(round))
             {
-                StartChapterTwoBossCombat();
+                StartBossInfoCombat();
                 return true;
             }
 
@@ -275,7 +275,7 @@ namespace TalismanBag.V02.Run
         public bool IsWaitingForBossChallenge()
         {
             V02RoundConfig round = CurrentRound;
-            if (round == null || !EnsureMainTrialFlowService().IsChapterTwoBossRound(round))
+            if (round == null || !IsBossInfoManualChallengeRound(round))
             {
                 return false;
             }
@@ -511,14 +511,7 @@ namespace TalismanBag.V02.Run
             SetText(roundInfoText, !string.IsNullOrWhiteSpace(guideRow?.panelTitle) ? guideRow.panelTitle : "Boss 已击破");
             SetText(prepHintText, !string.IsNullOrWhiteSpace(guideRow?.panelDescription) ? guideRow.panelDescription : "领取章节结算奖励后继续。");
 
-            V02BossRewardPanel panel = EnsureBossRewardPanel();
-            if (panel == null)
-            {
-                ConfirmBossReward();
-                return;
-            }
-
-            panel.Show(
+            ShowBossRewardPanel(
                 !string.IsNullOrWhiteSpace(guideRow?.panelTitle) ? guideRow.panelTitle : "Boss 已击破",
                 !string.IsNullOrWhiteSpace(guideRow?.panelDescription) ? guideRow.panelDescription : "领取章节结算奖励后继续。",
                 BuildRewardLines(guideRow?.rewardConfig),
@@ -578,18 +571,24 @@ namespace TalismanBag.V02.Run
             SetText(roundInfoText, "2-10 Boss \u7ed3\u7b97");
             SetText(prepHintText, "\u9886\u53d6 2-10 Boss \u9996\u901a\u5956\u52b1\u540e\uff0c\u672c\u8f6e\u6838\u5fc3\u6210\u957f\u95ed\u73af\u5b8c\u6210\u3002");
 
-            V02BossRewardPanel panel = EnsureBossRewardPanel();
-            if (panel == null)
-            {
-                ConfirmChapterTwoBossReward();
-                return;
-            }
-
-            panel.Show(
+            ShowBossRewardPanel(
                 "2-10 Boss \u7ed3\u7b97",
                 "\u4f60\u51fb\u8d25\u4e86 2-10 Boss\u3002\u9752\u94dc\u6cd5\u5370\u5148\u4f5c\u4e3a\u5e93\u5b58\u9053\u5177\u5165\u5e93\uff0c\u540e\u7eed\u518d\u63a5\u6cd5\u5668\u6216\u5408\u6210\u7cfb\u7edf\u3002",
                 BuildRewardLines(GetChapterTwoBossRewardConfig()),
                 ConfirmChapterTwoBossReward);
+        }
+
+        private void ShowBossRewardPanel(string title, string description, IReadOnlyList<string> rewards, System.Action onConfirm)
+        {
+            V02BossRewardPanel panel = EnsureBossRewardPanel();
+            if (panel == null)
+            {
+                Debug.LogError($"[V02RunFlowController] Boss reward popup missing: {title}");
+                battleLogUI?.AddLog($"{title}：结算弹窗创建失败，未自动跳过奖励确认。");
+                return;
+            }
+
+            panel.Show(title, description, rewards, onConfirm);
         }
 
         private void ConfirmChapterTwoBossReward()
@@ -1411,44 +1410,78 @@ namespace TalismanBag.V02.Run
             battleLogUI?.AddLog("2-9 巡行完成，已停在 2-10 Boss 前。");
         }
 
-        private bool TryOpenChapterTwoBossInfoPanel(V02RoundConfig round)
+        private bool TryOpenBossInfoPanel(V02RoundConfig round)
         {
-            if (!EnsureMainTrialFlowService().IsChapterTwoBossRound(round))
+            if (!IsBossInfoManualChallengeRound(round))
             {
                 return false;
             }
 
             BossInfoPanel panel = EnsureBossInfoPanel();
+            string levelId = GetBossInfoLevelId(round);
             if (panel == null)
             {
-                battleLogUI?.AddLog("2-10 Boss 信息面板未创建，仍可通过开始斗法手动开战");
+                battleLogUI?.AddLog($"{levelId} Boss 信息面板未创建，仍可通过开始斗法手动开战");
                 return true;
             }
 
-            SetText(roundInfoText, "2-10 Boss 前停止");
-            SetText(prepHintText, "前方煞气聚阵，请先查看敌情并整备背包。");
+            SetText(roundInfoText, $"{levelId} Boss 前停止");
             BossInfoConfig infoConfig = round?.bossConfig != null ? round.bossConfig : GetChapterTwoBossInfoConfig();
+            string prompt = !string.IsNullOrWhiteSpace(infoConfig?.preBattlePrompt)
+                ? infoConfig.preBattlePrompt
+                : "前方煞气聚阵，请先查看敌情并整备背包。";
+            SetText(prepHintText, prompt);
             BossInfoViewModel viewModel = BossInfoViewModel.From(infoConfig, ResolveMainTrialEnemy(round));
-            panel.Show(viewModel, HideChapterTwoBossInfoForPrepare, StartChapterTwoBossCombat);
-            battleLogUI?.AddLog("2-10 Boss 信息已展开，请整备后手动开战。");
+            panel.Show(viewModel, HideBossInfoForPrepare, StartBossInfoCombat);
+            battleLogUI?.AddLog($"{levelId} Boss 信息已展开，请整备后手动开战。");
             return true;
         }
 
-        private void HideChapterTwoBossInfoForPrepare()
+        private void HideBossInfoForPrepare()
         {
-            battleLogUI?.AddLog("2-10 Boss 准备阶段：可调整背包后手动开战。");
-        }
-
-        private void StartChapterTwoBossCombat()
-        {
-            if (!EnsureMainTrialFlowService().IsChapterTwoBossRound(CurrentRound))
+            string levelId = GetBossInfoLevelId(CurrentRound);
+            if (V03BattlePrepareInteractionController.TryOpenPrepareThen(() =>
+                battleLogUI?.AddLog($"{levelId} Boss 准备阶段：已打开整备，请整备后手动开战。")))
             {
-                battleLogUI?.AddLog("当前不在 2-10 Boss 准备阶段");
                 return;
             }
 
-            battleLogUI?.AddLog("2-10 Boss 手动开战");
+            battleLogUI?.AddLog($"{levelId} Boss 准备阶段：整备页暂未就绪，可整备后手动开战。");
+        }
+
+        private void StartBossInfoCombat()
+        {
+            V02RoundConfig round = CurrentRound;
+            if (!IsBossInfoManualChallengeRound(round))
+            {
+                battleLogUI?.AddLog("当前不在 Boss 准备阶段");
+                return;
+            }
+
+            battleLogUI?.AddLog($"{GetBossInfoLevelId(round)} Boss 手动开战");
             StartCombat();
+        }
+
+        private bool IsBossInfoManualChallengeRound(V02RoundConfig round)
+        {
+            if (round == null || !round.isBossRound)
+            {
+                return false;
+            }
+
+            return IsChapterOneBossRound(round) || EnsureMainTrialFlowService().IsChapterTwoBossRound(round);
+        }
+
+        private static bool IsChapterOneBossRound(V02RoundConfig round)
+        {
+            return round != null &&
+                   round.isBossRound &&
+                   string.Equals(GetBossInfoLevelId(round), "1-10", System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string GetBossInfoLevelId(V02RoundConfig round)
+        {
+            return string.IsNullOrWhiteSpace(round?.levelId) ? "Boss" : round.levelId.Trim();
         }
 
         private void TryAutoStartMainTrialRound(V02RoundConfig round)

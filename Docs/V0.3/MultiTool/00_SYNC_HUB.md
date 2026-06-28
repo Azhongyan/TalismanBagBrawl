@@ -45,7 +45,7 @@ F:\Porject\TalismanBagBrawl\Docs\V0.3\V0.3_PACKAGE_QUEUE.md
 | --- | --- |
 | 当前大版本 | `V0.3` |
 | 当前总蓝图 | `V0.3-ProductFlow01` |
-| 当前正式主线包 | `V0.3-BattlePrepareInteraction01` |
+| 当前正式主线包 | `V0.3-BossGuideResult01` |
 | 当前稳定基线 | `V0.2-Tune01 后稳定版本` |
 | Package Queue | `Docs/V0.3/V0.3_PACKAGE_QUEUE.md` |
 | Roadmap | `Docs/ROADMAP/VERSION_ROADMAP.md` |
@@ -60,9 +60,9 @@ F:\Porject\TalismanBagBrawl\Docs\V0.3\V0.3_PACKAGE_QUEUE.md
 1. V0.3-BootEntryFlow01：USER_ACCEPTED / REPOOPS_RECORD_DONE
 2. V0.3-MainHomeScene01-Retry：USER_ACCEPTED / PRODUCTFLOW_RECHECK_LAYER_FIX_PASSED
 3. V0.3-BottomNavAndHomeHotspot01：USER_ACCEPTED / REPOOPS_REQUEST_SENT
-4. V0.3-BattlePrepareInteraction01：QA_FAIL / GUARD_PASS_FIX01_CONTINUE
-5. V0.3-PrepareTutorial01：QUEUED_HIGH_RISK
-6. V0.3-BossGuideResult01：QUEUED_HIGH_RISK
+4. V0.3-BattlePrepareInteraction01：USER_ACCEPTED / REPOOPS_UPLOAD_REQUESTED
+5. V0.3-PrepareTutorial01：DEFERRED_BY_USER
+6. V0.3-BossGuideResult01：QA_FIX_PREPARE_BUTTON_GUARD_PASS / READY_FOR_FIX
 7. V0.3-ForgeFirstUpgradeGuide01：QUEUED_HIGH_RISK
 8. V0.3-ProductFlowRegression01：QUEUED_FINAL_REGRESSION
 ```
@@ -87,7 +87,7 @@ V0.3-ArtKeyReserve01
 已完成内容可作为参考或被后续正式包复用。
 不得把旧队列 CURRENT 状态当作当前正式主线。
 若外部工具仍在旧 TrialFlowUI assignment 上工作，应暂停。
-当前正式主线下一包是 V0.3-BattlePrepareInteraction01；首轮手测不通过，Guard 放行 Fix01 最小修复，不重做整包。
+V0.3-BattlePrepareInteraction01 item tray tuning continuation 已用户手测 QA 通过；用户明确要求 RepoOps 正式上传当前版本，且必须包含 c921d4c 之后未提交的最终位置 delta。当前正式包按用户明确指令切到 V0.3-BossGuideResult01；PrepareTutorial01 暂缓，不取消；BossGuideResult01 不做高亮引导；当前允许按 GUARD_PASS_BOSSGUIDERESULT01_FIX_PREPARE_BUTTON 修复 BossInfo 整备按钮接入既有 V03 整备页。
 ```
 
 ## 5. 工具状态卡
@@ -96,8 +96,8 @@ V0.3-ArtKeyReserve01
 
 ```text
 当前职责：总控 / 记忆治理 / Package Queue 维护 / 最终收口
-当前包体：V0.3-BattlePrepareInteraction01
-正在做：维护 ProductFlow01 正式队列；BootEntryFlow01 已通过；MainHomeScene01-Retry ProductFlow 复查层级修复已手测通过；BottomNavAndHomeHotspot01 已手测通过并请求 RepoOps 记录；BattlePrepareInteraction01 首轮手测不通过，Guard 放行 Fix01 最小修复
+当前包体：V0.3-BossGuideResult01
+正在做：维护 ProductFlow01 正式队列；BootEntryFlow01 已通过；MainHomeScene01-Retry ProductFlow 复查层级修复已手测通过；BottomNavAndHomeHotspot01 已手测通过并请求 RepoOps 记录；BattlePrepareInteraction01 item tray tuning continuation 已手测通过并请求 RepoOps 正式上传；BossGuideResult01 已 Guard 放行，不做高亮引导；当前 Fix：BossInfo 整备按钮接入既有 V03 整备页
 不会做：把 ProductFlow01 当成单个大包开发
 ```
 
@@ -108,7 +108,7 @@ V0.3-ArtKeyReserve01
 当前包体：未分配
 当前 worktree：F:\Porject\TalismanBagBrawl_claude
 不会做：未授权写入 Unity 工程；未授权修改 LOCKED / AGENTS
-下一步：读取 ProductFlow01 路线与 Package Queue；当前无外部工具分配；BattlePrepareInteraction01 仅允许按 GUARD_PASS_FIX01_CONTINUE 修复
+下一步：读取 ProductFlow01 路线与 Package Queue；当前无外部工具分配；BossGuideResult01 可由 Codex 开发窗口按 Guard assignment 执行
 ```
 
 ### ZCode
