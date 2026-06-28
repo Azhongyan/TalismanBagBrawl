@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/_Game/Scenes/Scene_TalismanBag_V03_MainHome.unity
     guid: 19919d81a95b3ac43a22dbf4a66537ad
   - enabled: 1
+    path: Assets/_Game/Scenes/Scene_TalismanBag_V03_TalismanUpgrade.unity
+    guid: a418f3c5b3654b62b93d77e630b2d41a
+  - enabled: 1
     path: Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity
     guid: 7c275722f6903c442b8450664e00c764
   m_configObjects: {}

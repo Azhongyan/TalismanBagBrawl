@@ -14,6 +14,8 @@ namespace TalismanBag.V03.EditorTools
 {
     public static class V03NavigationFlow01SceneBuilder
     {
+        public const string BootEntryScenePath =
+            "Assets/_Game/Scenes/Scene_TalismanBag_V03_BootEntry.unity";
         public const string MainHomeScenePath =
             "Assets/_Game/Scenes/Scene_TalismanBag_V03_MainHome.unity";
         public const string Run15MinScenePath =
@@ -377,41 +379,51 @@ namespace TalismanBag.V03.EditorTools
             List<EditorBuildSettingsScene> scenes =
                 EditorBuildSettings.scenes.ToList();
             string[] currentPaths = scenes.Select(scene => scene.path).ToArray();
-            bool isOriginalState =
-                currentPaths.SequenceEqual(new[] { Run15MinScenePath });
-            bool isCompletedState =
+            string[] expected =
+            {
+                BootEntryScenePath,
+                MainHomeScenePath,
+                V03NavigationFlowController.UpgradeScenePath,
+                V03NavigationFlowController.TrialScenePath
+            };
+            bool hasUpgradeScene = currentPaths.SequenceEqual(expected);
+            bool needsUpgradeScene =
                 currentPaths.SequenceEqual(new[]
                 {
-                    Run15MinScenePath,
+                    BootEntryScenePath,
                     MainHomeScenePath,
                     V03NavigationFlowController.TrialScenePath
                 });
-            Require(isOriginalState || isCompletedState,
+            Require(hasUpgradeScene || needsUpgradeScene,
                 "Build Settings contains an unexpected scene list; refusing to reorder or overwrite it.");
 
-            if (isOriginalState)
+            if (hasUpgradeScene)
             {
-                scenes.Add(new EditorBuildSettingsScene(MainHomeScenePath, true));
-                scenes.Add(new EditorBuildSettingsScene(
-                    V03NavigationFlowController.TrialScenePath,
-                    true));
-                EditorBuildSettings.scenes = scenes.ToArray();
+                return;
             }
+
+            int trialIndex = scenes.FindIndex(scene => scene.path == V03NavigationFlowController.TrialScenePath);
+            Require(trialIndex >= 0, "Trial scene is missing from Build Settings.");
+            scenes.Insert(
+                trialIndex,
+                new EditorBuildSettingsScene(V03NavigationFlowController.UpgradeScenePath, true));
+            EditorBuildSettings.scenes = scenes.ToArray();
         }
 
         private static void VerifyBuildSettings()
         {
             string[] expected =
             {
-                Run15MinScenePath,
+                BootEntryScenePath,
                 MainHomeScenePath,
+                V03NavigationFlowController.UpgradeScenePath,
                 V03NavigationFlowController.TrialScenePath
             };
             EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
             Require(scenes.Select(scene => scene.path).SequenceEqual(expected),
                 "Build Settings order does not match the NavigationFlow01 contract.");
             Require(scenes.All(scene => scene.enabled),
-                "All three contracted Build Settings scenes must remain enabled.");
+                "All four contracted Build Settings scenes must remain enabled.");
         }
 
         private static void SetReference(

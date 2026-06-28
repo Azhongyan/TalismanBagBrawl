@@ -1,4 +1,5 @@
 using TalismanBag.V02.UI;
+using TalismanBag.V03.Forge;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -7,6 +8,9 @@ namespace TalismanBag.V03.Navigation
 {
     public sealed class V03NavigationFlowController : MonoBehaviour
     {
+        public const string UpgradeSceneName = "Scene_TalismanBag_V03_TalismanUpgrade";
+        public const string UpgradeScenePath =
+            "Assets/_Game/Scenes/Scene_TalismanBag_V03_TalismanUpgrade.unity";
         public const string TrialSceneName = "Scene_TalismanBag_V02_FormationCounter";
         public const string TrialScenePath =
             "Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity";
@@ -20,6 +24,7 @@ namespace TalismanBag.V03.Navigation
         [SerializeField] private Button refineButton;
         [SerializeField] private Button exploreButton;
         [SerializeField] private Button moreButton;
+        [SerializeField] private V03ForgeFirstUpgradeGuideController forgeGuide;
 
         private MainHomeGreyboxPanel homePanel;
         private string resourceSummary;
@@ -29,6 +34,7 @@ namespace TalismanBag.V03.Navigation
         private void Awake()
         {
             BindButtons();
+            EnsureForgeGuide();
             SetSecondaryRoots(false, false, false, false);
         }
 
@@ -55,6 +61,7 @@ namespace TalismanBag.V03.Navigation
             resourceSummary = resources;
             homeStatus = status;
             BindButtons();
+            EnsureForgeGuide()?.Initialize(this, homePanel, refinePageRoot);
             ShowHome();
         }
 
@@ -75,34 +82,44 @@ namespace TalismanBag.V03.Navigation
                 EnterTrial,
                 null);
             secondaryBottomNavRoot?.transform.SetAsLastSibling();
+            forgeGuide?.OnHomeShown();
         }
 
         public void ShowRefine()
         {
-            ShowSecondary(refinePageRoot);
+            forgeGuide?.OnRefineShown();
+            LoadScene(
+                UpgradeScenePath,
+                UpgradeSceneName,
+                $"[V0.3-NavigationFlow01] Upgrade scene is missing from Build Settings: {UpgradeScenePath}");
         }
 
         public void ShowExplore()
         {
             ShowSecondary(explorePageRoot);
+            forgeGuide?.HideGuideSlot();
         }
 
         public void ShowMore()
         {
             ShowSecondary(morePageRoot);
+            forgeGuide?.HideGuideSlot();
         }
 
         public void EnterTrial()
         {
-            if (SceneUtility.GetBuildIndexByScenePath(TrialScenePath) < 0)
+            if (forgeGuide != null && forgeGuide.ShouldBlockTrialUntilFirstUpgrade())
             {
-                Debug.LogError(
-                    $"[V0.3-NavigationFlow01] Trial scene is missing from Build Settings: {TrialScenePath}",
-                    this);
+                ShowHome();
+                forgeGuide.ShowFirstUpgradeHomeGuide();
                 return;
             }
 
-            SceneManager.LoadScene(TrialSceneName, LoadSceneMode.Single);
+            forgeGuide?.HideGuideSlot();
+            LoadScene(
+                TrialScenePath,
+                TrialSceneName,
+                $"[V0.3-NavigationFlow01] Trial scene is missing from Build Settings: {TrialScenePath}");
         }
 
         private void ShowSecondary(GameObject targetRoot)
@@ -119,6 +136,17 @@ namespace TalismanBag.V03.Navigation
                 targetRoot == explorePageRoot,
                 targetRoot == morePageRoot,
                 true);
+        }
+
+        private void LoadScene(string scenePath, string sceneName, string missingSceneMessage)
+        {
+            if (SceneUtility.GetBuildIndexByScenePath(scenePath) < 0)
+            {
+                Debug.LogError(missingSceneMessage, this);
+                return;
+            }
+
+            SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
         }
 
         private void SetSecondaryRoots(
@@ -146,6 +174,22 @@ namespace TalismanBag.V03.Navigation
             exploreButton?.onClick.AddListener(ShowExplore);
             moreButton?.onClick.AddListener(ShowMore);
             buttonsBound = true;
+        }
+
+        private V03ForgeFirstUpgradeGuideController EnsureForgeGuide()
+        {
+            if (forgeGuide != null)
+            {
+                return forgeGuide;
+            }
+
+            forgeGuide = GetComponent<V03ForgeFirstUpgradeGuideController>();
+            if (forgeGuide == null)
+            {
+                forgeGuide = gameObject.AddComponent<V03ForgeFirstUpgradeGuideController>();
+            }
+
+            return forgeGuide;
         }
 
         private static void SetActive(GameObject target, bool active)

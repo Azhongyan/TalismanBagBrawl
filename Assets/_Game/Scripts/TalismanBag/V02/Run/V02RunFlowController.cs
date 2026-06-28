@@ -70,6 +70,8 @@ namespace TalismanBag.V02.Run
         private bool bossRewardClaimed;
         private bool suppressNextMainTrialAutoStart;
         private string suppressedAutoStartLog = string.Empty;
+        private GameObject chapterOneReturnHomeGuideRoot;
+        private Text chapterOneReturnHomeGuideText;
         private readonly PostBattlePrepareRequest postBattlePrepareRequest = new();
         private readonly HashSet<int> shownFormationInfoRoundIndexes = new();
         private readonly Dictionary<string, EnemyDefinition> mainTrialRuntimeEnemies = new();
@@ -532,7 +534,7 @@ namespace TalismanBag.V02.Run
                 {
                     LogTutorialGuideRewardResult(guideRow, rewardResult);
                     EnsureMainTrialFlowService().OnChapter1RewardClaimed();
-                    OpenChapterOneHomeGreybox();
+                    OpenChapterOneReturnHomeGuide();
                     return;
                 }
 
@@ -562,7 +564,7 @@ namespace TalismanBag.V02.Run
                 EnsureMainTrialFlowService().OnChapter1RewardClaimed();
             }
 
-            OpenChapterOneHomeGreybox();
+            OpenChapterOneReturnHomeGuide();
         }
 
         private void OpenChapterTwoBossRewardPanel()
@@ -616,6 +618,143 @@ namespace TalismanBag.V02.Run
                 "1-10 章节奖励已到账。这里暂时只承接培养入口、继续主线入口和战后回流。",
                 OpenChapterOneCultivationFromHome,
                 ContinueChapterOneFromHome);
+        }
+
+        private void OpenChapterOneReturnHomeGuide()
+        {
+            state = V02RunState.Reward;
+            HidePreBattlePopups();
+            bossRewardPanel?.Hide();
+            fixedRewardPanel?.Hide();
+            bossInfoPanel?.Hide();
+            runResultPanel?.Hide();
+            homeGreyboxPanel?.Hide();
+            talismanUpgradePanel?.Hide();
+
+            SetText(roundInfoText, "返回首页");
+            SetText(prepHintText, "1-10 奖励已到账，请点击回首页进入升级符箓。");
+            ShowChapterOneReturnHomeGuide();
+            battleLogUI?.AddLog("1-10 奖励已到账：请点击回首页，再进入升级符箓。");
+        }
+
+        private void ShowChapterOneReturnHomeGuide()
+        {
+            GameObject root = EnsureChapterOneReturnHomeGuideRoot();
+            if (root == null)
+            {
+                return;
+            }
+
+            root.SetActive(true);
+            root.transform.SetAsLastSibling();
+            if (chapterOneReturnHomeGuideText != null)
+            {
+                chapterOneReturnHomeGuideText.text = "图片插槽占位\n引导点击回首页";
+            }
+        }
+
+        private GameObject EnsureChapterOneReturnHomeGuideRoot()
+        {
+            if (chapterOneReturnHomeGuideRoot != null)
+            {
+                return chapterOneReturnHomeGuideRoot;
+            }
+
+            Canvas canvas = GetComponentInParent<Canvas>(true);
+            if (canvas == null)
+            {
+                canvas = FindObjectOfType<Canvas>(true);
+            }
+
+            if (canvas == null)
+            {
+                battleLogUI?.AddLog("回首页引导创建失败：Canvas 缺失。");
+                return null;
+            }
+
+            chapterOneReturnHomeGuideRoot = new GameObject(
+                "V03_GuideImageSlot_ReturnHome",
+                typeof(RectTransform),
+                typeof(CanvasGroup));
+            chapterOneReturnHomeGuideRoot.transform.SetParent(canvas.transform, false);
+            RectTransform rootRect = chapterOneReturnHomeGuideRoot.GetComponent<RectTransform>();
+            rootRect.anchorMin = Vector2.zero;
+            rootRect.anchorMax = Vector2.one;
+            rootRect.pivot = new Vector2(0.5f, 0.5f);
+            rootRect.anchoredPosition = Vector2.zero;
+            rootRect.sizeDelta = Vector2.zero;
+
+            CanvasGroup canvasGroup = chapterOneReturnHomeGuideRoot.GetComponent<CanvasGroup>();
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+
+            GameObject maskObject = new("V03_GuideBlackMask", typeof(RectTransform), typeof(Image));
+            maskObject.transform.SetParent(chapterOneReturnHomeGuideRoot.transform, false);
+            RectTransform maskRect = maskObject.GetComponent<RectTransform>();
+            maskRect.anchorMin = Vector2.zero;
+            maskRect.anchorMax = Vector2.one;
+            maskRect.pivot = new Vector2(0.5f, 0.5f);
+            maskRect.anchoredPosition = Vector2.zero;
+            maskRect.sizeDelta = Vector2.zero;
+            Image maskImage = maskObject.GetComponent<Image>();
+            maskImage.color = new Color(0f, 0f, 0f, 0.5f);
+            maskImage.raycastTarget = false;
+
+            GameObject slotObject = new("V03_GuideImageSlot", typeof(RectTransform), typeof(Image), typeof(Outline));
+            slotObject.transform.SetParent(chapterOneReturnHomeGuideRoot.transform, false);
+            RectTransform slotRect = slotObject.GetComponent<RectTransform>();
+            slotRect.anchorMin = new Vector2(0.5f, 1f);
+            slotRect.anchorMax = new Vector2(0.5f, 1f);
+            slotRect.pivot = new Vector2(0.5f, 1f);
+            slotRect.anchoredPosition = new Vector2(0f, -160f);
+            slotRect.sizeDelta = new Vector2(760f, 360f);
+            Image slotImage = slotObject.GetComponent<Image>();
+            slotImage.color = new Color(0.06f, 0.065f, 0.06f, 0.88f);
+            slotImage.raycastTarget = false;
+
+            Outline outline = slotObject.GetComponent<Outline>();
+            outline.effectColor = new Color(0.88f, 0.78f, 0.48f, 0.95f);
+            outline.effectDistance = new Vector2(3f, -3f);
+
+            chapterOneReturnHomeGuideText = CreateChapterOneGuideText(
+                "V03_GuideImageSlotText",
+                slotObject.transform,
+                "图片插槽占位\n引导点击回首页",
+                34,
+                FontStyle.Bold,
+                new Color(0.92f, 0.86f, 0.66f));
+            chapterOneReturnHomeGuideRoot.SetActive(false);
+            return chapterOneReturnHomeGuideRoot;
+        }
+
+        private static Text CreateChapterOneGuideText(
+            string objectName,
+            Transform parent,
+            string value,
+            int fontSize,
+            FontStyle style,
+            Color color)
+        {
+            GameObject textObject = new(objectName, typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(parent, false);
+            RectTransform rect = textObject.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = Vector2.zero;
+
+            Text text = textObject.GetComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = fontSize;
+            text.fontStyle = style;
+            text.color = color;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            text.raycastTarget = false;
+            text.text = value;
+            return text;
         }
 
         private void OpenPostBattleHomeGreybox()
@@ -2292,8 +2431,10 @@ namespace TalismanBag.V02.Run
                     OpenBossRewardPanel();
                     return;
                 case MainTrialStartupRouteType.UpgradeRequired:
+                    OpenChapterOneReturnHomeGuide();
+                    return;
                 case MainTrialStartupRouteType.Home:
-                    OpenChapterOneHomeGreybox();
+                    EnterChapterTwoAutoRun();
                     return;
                 case MainTrialStartupRouteType.BossInfo:
                 case MainTrialStartupRouteType.Battle:

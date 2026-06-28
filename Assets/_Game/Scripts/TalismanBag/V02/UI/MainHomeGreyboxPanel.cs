@@ -279,6 +279,12 @@ namespace TalismanBag.V02.UI
                 new Vector2(300f, 72f),
                 new Color(0.28f, 0.32f, 0.31f));
 
+            if (panelComponent.closeButton != null)
+            {
+                panelComponent.closeButton.gameObject.SetActive(false);
+                panelComponent.closeButton = null;
+            }
+
             panelComponent.CreateHotspotViews();
             panelComponent.BindButtons();
             panelComponent.Hide();
@@ -314,7 +320,7 @@ namespace TalismanBag.V02.UI
             SetFeedback("选择店内区域查看。");
             RefreshHotspots();
             SetMainActionButtonsVisible(false);
-            SetCloseButtonVisible(closeCallback != null);
+            SetCloseButtonVisible(false);
         }
 
         private void CreateHotspotViews()

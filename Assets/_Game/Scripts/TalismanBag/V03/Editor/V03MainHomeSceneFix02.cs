@@ -69,6 +69,8 @@ namespace TalismanBag.V03.EditorTools
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.5f;
 
+            CreateFullBackgroundSlot(canvasObject.transform);
+
             MainHomeGreyboxPanel panel = MainHomeGreyboxPanel.CreateRuntime(canvasObject.transform);
             Require(panel != null, "Could not create MainHomeRoot.");
             panel.gameObject.name = "MainHomeRoot";
@@ -126,23 +128,30 @@ namespace TalismanBag.V03.EditorTools
 
             GameObject sceneRoot = FindSceneObject(scene, "MainHomeSceneRoot");
             GameObject canvasObject = FindSceneObject(scene, "Canvas");
+            GameObject backgroundSlot = FindSceneObject(scene, "FullBackgroundImageSlot");
             GameObject homeRoot = FindSceneObject(scene, "MainHomeRoot");
             GameObject eventSystemObject = FindSceneObject(scene, "EventSystem");
 
             Require(sceneRoot != null, "MainHomeSceneRoot is missing.");
             Require(canvasObject != null, "Canvas is missing.");
+            Require(backgroundSlot != null, "FullBackgroundImageSlot is missing.");
             Require(homeRoot != null, "MainHomeRoot is missing.");
             Require(eventSystemObject != null, "EventSystem is missing.");
             Require(sceneRoot.activeSelf, "MainHomeSceneRoot must be active on disk.");
             Require(canvasObject.activeSelf, "Canvas must be active on disk.");
+            Require(backgroundSlot.activeSelf, "FullBackgroundImageSlot must be active on disk.");
             Require(homeRoot.activeSelf, "MainHomeRoot must be active on disk.");
             Require(eventSystemObject.activeSelf, "EventSystem must be active on disk.");
+            Require(backgroundSlot.transform.parent == canvasObject.transform,
+                "FullBackgroundImageSlot must be a direct child of Canvas.");
             Require(homeRoot.transform.parent == canvasObject.transform,
                 "MainHomeRoot must be a direct child of Canvas.");
             Require(canvasObject.transform.parent == sceneRoot.transform,
                 "Canvas must be a direct child of MainHomeSceneRoot.");
             Require(eventSystemObject.transform.parent == sceneRoot.transform,
                 "EventSystem must be a direct child of MainHomeSceneRoot.");
+            Require(backgroundSlot.transform.GetSiblingIndex() == 0,
+                "FullBackgroundImageSlot must be the first Canvas child.");
 
             Require(scene.GetRootGameObjects().Count(root => root.name == "MainHomeSceneRoot") == 1,
                 "Scene must contain exactly one MainHomeSceneRoot.");
@@ -150,14 +159,29 @@ namespace TalismanBag.V03.EditorTools
                 "Scene must contain exactly one Canvas.");
             Require(FindAllSceneObjects(scene, "EventSystem").Length == 1,
                 "Scene must contain exactly one EventSystem.");
+            Require(FindAllSceneObjects(scene, "FullBackgroundImageSlot").Length == 1,
+                "Scene must contain exactly one FullBackgroundImageSlot.");
             Require(FindAllSceneObjects(scene, "MainHomeRoot").Length == 1,
                 "Scene must contain exactly one MainHomeRoot.");
 
             Canvas canvas = canvasObject.GetComponent<Canvas>();
+            RectTransform backgroundRect = backgroundSlot.GetComponent<RectTransform>();
+            Image backgroundImage = backgroundSlot.GetComponent<Image>();
             MainHomeGreyboxPanel panel = homeRoot.GetComponent<MainHomeGreyboxPanel>();
             V03MainHomeSceneBootstrap bootstrap =
                 sceneRoot.GetComponent<V03MainHomeSceneBootstrap>();
             Require(canvas != null && canvas.enabled, "Canvas must exist and be enabled.");
+            Require(backgroundRect != null, "FullBackgroundImageSlot must have a RectTransform.");
+            Require(backgroundRect.anchorMin == Vector2.zero && backgroundRect.anchorMax == Vector2.one,
+                "FullBackgroundImageSlot must stretch full screen.");
+            Require(backgroundRect.sizeDelta == Vector2.zero,
+                "FullBackgroundImageSlot must not leave screen gutters.");
+            Require(backgroundImage != null && backgroundImage.enabled,
+                "FullBackgroundImageSlot must have an enabled Image.");
+            Require(backgroundImage.color == Color.black,
+                "FullBackgroundImageSlot must be black.");
+            Require(!backgroundImage.raycastTarget,
+                "FullBackgroundImageSlot must not block input.");
             Require(panel != null && panel.enabled, "MainHomeRoot must contain an enabled home panel.");
             Require(bootstrap != null && bootstrap.enabled,
                 "MainHomeSceneRoot must contain an enabled lifecycle bootstrap.");
@@ -338,6 +362,28 @@ namespace TalismanBag.V03.EditorTools
                 "[V0.3-MainHomeScene01-Retry-Fix02] FIX02_SMOKE_SUCCESS " +
                 "scene=Scene_TalismanBag_V03_MainHome, " +
                 "firstFrameVisible=true, reflection=false");
+        }
+
+        private static GameObject CreateFullBackgroundSlot(Transform parent)
+        {
+            GameObject slotObject = new(
+                "FullBackgroundImageSlot",
+                typeof(RectTransform),
+                typeof(Image));
+            slotObject.transform.SetParent(parent, false);
+            slotObject.transform.SetAsFirstSibling();
+
+            RectTransform rect = slotObject.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = Vector2.zero;
+
+            Image image = slotObject.GetComponent<Image>();
+            image.color = Color.black;
+            image.raycastTarget = false;
+            return slotObject;
         }
 
         private static void CaptureGameViewEvidence()
