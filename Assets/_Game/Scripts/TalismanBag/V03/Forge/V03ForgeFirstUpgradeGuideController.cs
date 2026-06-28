@@ -35,7 +35,7 @@ namespace TalismanBag.V03.Forge
             {
                 ShowGuideImageSlot(
                     "V03_GuideImageSlot_HomeUpgrade",
-                    "图片插槽占位\n引导点击升级符箓");
+                    "图片插槽占位");
                 return;
             }
 
@@ -43,7 +43,7 @@ namespace TalismanBag.V03.Forge
             {
                 ShowGuideImageSlot(
                     "V03_GuideImageSlot_HomeTrial",
-                    "图片插槽占位\n引导点击试练");
+                    "图片插槽占位");
                 return;
             }
 
@@ -66,7 +66,7 @@ namespace TalismanBag.V03.Forge
         {
             ShowGuideImageSlot(
                 "V03_GuideImageSlot_HomeUpgrade",
-                "图片插槽占位\n引导点击升级符箓");
+                "图片插槽占位");
         }
 
         public void HideGuideSlot()

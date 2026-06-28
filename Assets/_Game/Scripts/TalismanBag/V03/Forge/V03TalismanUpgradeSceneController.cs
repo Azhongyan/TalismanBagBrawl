@@ -438,7 +438,7 @@ namespace TalismanBag.V03.Forge
             guideSlotText = CreateText(
                 "Text",
                 slot.transform,
-                "图片插槽占位\n引导升级符箓",
+                "图片插槽占位",
                 34,
                 FontStyle.Bold,
                 new Color(0.92f, 0.86f, 0.66f),
@@ -531,7 +531,7 @@ namespace TalismanBag.V03.Forge
                     : "无可用升级配置";
                 costText.text = "消耗\n无";
                 statusText.text = currentLevel >= 2
-                    ? "首次升级已完成，返回首页后可点击试练进入 2-1。"
+                    ? "首次升级已完成，返回首页后可点击试炼进入 2-1。"
                     : "当前符箓没有可用升级配置。";
                 upgradeButton.interactable = currentLevel >= 2;
                 upgradeButtonText.text = currentLevel >= 2 ? "返回首页" : "升级符箓";
@@ -557,7 +557,7 @@ namespace TalismanBag.V03.Forge
             if (shouldGuide)
             {
                 guideRoot.transform.SetAsLastSibling();
-                guideSlotText.text = "图片插槽占位\n引导升级符箓";
+                guideSlotText.text = "图片插槽占位";
             }
         }
 

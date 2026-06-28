@@ -31,6 +31,7 @@ namespace TalismanBag.V02.UI
         private bool buttonsBound;
         private bool mainActionsEnabled;
         private string currentObjective = string.Empty;
+        private bool v03LayoutApplied;
 
         private void Awake()
         {
@@ -264,24 +265,161 @@ namespace TalismanBag.V02.UI
                 new Vector2(870f, 76f),
                 TextAnchor.MiddleCenter);
 
-            panelComponent.closeButton = CreateButton(
-                "HomeCloseButton",
-                root.transform,
-                "暂时收起",
-                new Vector2(0f, 58f),
-                new Vector2(300f, 72f),
-                new Color(0.28f, 0.32f, 0.31f));
-
-            if (panelComponent.closeButton != null)
-            {
-                panelComponent.closeButton.gameObject.SetActive(false);
-                panelComponent.closeButton = null;
-            }
-
             panelComponent.CreateHotspotViews();
             panelComponent.BindButtons();
             panelComponent.Hide();
             return panelComponent;
+        }
+
+        public void ApplyV03MainHomeUiueLayout()
+        {
+            if (v03LayoutApplied)
+            {
+                return;
+            }
+
+            panel ??= gameObject;
+            SetStretchFull(GetComponent<RectTransform>());
+
+            Transform existingRoot = transform.Find("V03MainHomeUiueRoot");
+            if (existingRoot != null)
+            {
+                existingRoot.gameObject.SetActive(true);
+                DisableV03LayoutGroupGraphics(existingRoot);
+                AssignV03MainHomeReferences(existingRoot);
+                v03LayoutApplied = true;
+                return;
+            }
+
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                GameObject child = transform.GetChild(i).gameObject;
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    UnityEngine.Object.DestroyImmediate(child);
+                    continue;
+                }
+#endif
+                child.SetActive(false);
+            }
+
+            RectTransform uiueRoot = CreateFullStretchLayer("V03MainHomeUiueRoot", transform);
+            uiueRoot.SetAsLastSibling();
+
+            RectTransform topBar = CreateLayoutGroup(
+                "TopBar_Root",
+                uiueRoot,
+                new Vector2(0f, -18f),
+                new Vector2(1012f, 154f));
+            titleText = CreateText(
+                "HomeTitle_Text",
+                topBar,
+                HomeTitle,
+                34,
+                FontStyle.Bold,
+                new Color(0.95f, 0.9f, 0.72f),
+                new Vector2(-305f, -18f),
+                new Vector2(360f, 50f),
+                TextAnchor.MiddleLeft);
+            CreateText(
+                "PlayerIdentity_Text",
+                topBar,
+                "小满  Lv.12",
+                22,
+                FontStyle.Normal,
+                new Color(0.78f, 0.83f, 0.78f),
+                new Vector2(-295f, -72f),
+                new Vector2(360f, 40f),
+                TextAnchor.MiddleLeft);
+            resourceText = CreateText(
+                "TopBarResource_Text",
+                topBar,
+                string.Empty,
+                19,
+                FontStyle.Normal,
+                new Color(0.9f, 0.93f, 0.86f),
+                new Vector2(230f, -26f),
+                new Vector2(500f, 92f),
+                TextAnchor.UpperRight);
+
+            RectTransform sceneRoot = CreateLayoutGroup(
+                "SceneHotspot_Root",
+                uiueRoot,
+                new Vector2(0f, -194f),
+                new Vector2(900f, 1110f));
+            CreateText(
+                "SceneHeader_Text",
+                sceneRoot,
+                "照灯小铺",
+                26,
+                FontStyle.Bold,
+                new Color(0.85f, 0.9f, 0.76f),
+                new Vector2(0f, -16f),
+                new Vector2(820f, 38f),
+                TextAnchor.MiddleLeft);
+            objectiveText = CreateText(
+                "LedgerObjective_Text",
+                sceneRoot,
+                string.Empty,
+                21,
+                FontStyle.Bold,
+                new Color(0.96f, 0.91f, 0.75f),
+                new Vector2(-210f, -72f),
+                new Vector2(440f, 76f),
+                TextAnchor.UpperLeft);
+            progressText = CreateText(
+                "LedgerProgress_Text",
+                sceneRoot,
+                string.Empty,
+                18,
+                FontStyle.Normal,
+                new Color(0.78f, 0.84f, 0.92f),
+                new Vector2(260f, -72f),
+                new Vector2(330f, 76f),
+                TextAnchor.UpperRight);
+            statusText = CreateText(
+                "HomeStatus_Text",
+                sceneRoot,
+                string.Empty,
+                16,
+                FontStyle.Normal,
+                new Color(0.7f, 0.72f, 0.68f),
+                new Vector2(0f, -148f),
+                new Vector2(820f, 34f),
+                TextAnchor.MiddleCenter);
+
+            hotspotRoot = CreateLayoutGroup(
+                "HomeSpatialHotspots_Root",
+                sceneRoot,
+                new Vector2(0f, -200f),
+                new Vector2(840f, 780f));
+            feedbackText = CreateText(
+                "HomeFeedback_Text",
+                sceneRoot,
+                "选择店内区域查看。",
+                18,
+                FontStyle.Normal,
+                new Color(0.9f, 0.87f, 0.72f),
+                new Vector2(0f, -1002f),
+                new Vector2(820f, 64f),
+                TextAnchor.MiddleCenter);
+
+            shortcutRoot = CreateLayoutGroup(
+                "RightQuickBar_Root",
+                uiueRoot,
+                new Vector2(474f, -282f),
+                new Vector2(116f, 622f));
+
+            CreateFullStretchLayer("PopupLayer_Root", uiueRoot);
+            CreateFullStretchLayer("ToastLayer_Root", uiueRoot);
+            CreateFullStretchLayer("GuideLayer_Root", uiueRoot);
+
+            hotspotViews.Clear();
+            shortcutViews.Clear();
+            v03LayoutApplied = true;
+            CreateHotspotViews();
+            RefreshHotspots();
         }
 
         private void ShowInternal(
@@ -323,22 +461,38 @@ namespace TalismanBag.V02.UI
                 return;
             }
 
-            CreateHotspot(HomeHotspotId.Counter, new Vector2(0f, -54f), new Vector2(230f, 126f));
-            CreateHotspot(HomeHotspotId.Codex, new Vector2(-290f, -135f), new Vector2(205f, 120f));
-            CreateHotspot(HomeHotspotId.Trial, new Vector2(290f, -148f), new Vector2(220f, 132f));
-            CreateHotspot(HomeHotspotId.Refine, new Vector2(0f, -218f), new Vector2(230f, 138f));
-            CreateHotspot(HomeHotspotId.BackRoom, new Vector2(-292f, -300f), new Vector2(205f, 116f));
-            CreateHotspot(HomeHotspotId.DreamSign, new Vector2(292f, -322f), new Vector2(205f, 116f));
-            CreateHotspot(HomeHotspotId.Explore, new Vector2(-175f, -446f), new Vector2(205f, 116f));
-            CreateHotspot(HomeHotspotId.TianjiFurnace, new Vector2(175f, -455f), new Vector2(205f, 116f));
-            CreateHotspot(HomeHotspotId.MasterRelic, new Vector2(-292f, -576f), new Vector2(205f, 104f));
-            CreateHotspot(HomeHotspotId.PvpPlaceholder, new Vector2(292f, -576f), new Vector2(205f, 104f));
+            CreateHotspot(HomeHotspotId.Ledger, new Vector2(0f, -54f), new Vector2(430f, 136f));
+            CreateHotspot(HomeHotspotId.CodexBook, new Vector2(-266f, -230f), new Vector2(222f, 128f));
+            CreateHotspot(HomeHotspotId.ClueBook, new Vector2(266f, -230f), new Vector2(222f, 128f));
+            CreateHotspot(HomeHotspotId.DreamSign, new Vector2(-266f, -398f), new Vector2(222f, 128f));
+            CreateHotspot(HomeHotspotId.Xiaoman, new Vector2(0f, -390f), new Vector2(222f, 156f));
+            CreateHotspot(HomeHotspotId.BackRoom, new Vector2(266f, -398f), new Vector2(222f, 128f));
+            CreateHotspot(HomeHotspotId.StreetEntrance, new Vector2(0f, -604f), new Vector2(430f, 118f));
 
-            CreateShortcut(HomeHotspotId.Activity, -344f);
-            CreateShortcut(HomeHotspotId.Mail, -172f);
-            CreateShortcut(HomeHotspotId.Store, 0f);
-            CreateShortcut(HomeHotspotId.Notice, 172f);
-            CreateShortcut(HomeHotspotId.Settings, 344f);
+            if (v03LayoutApplied)
+            {
+                CreateShortcut(HomeHotspotId.Activity, new Vector2(0f, -34f), new Vector2(92f, 92f));
+                CreateShortcut(HomeHotspotId.Mail, new Vector2(0f, -148f), new Vector2(92f, 92f));
+                CreateShortcut(HomeHotspotId.Store, new Vector2(0f, -262f), new Vector2(92f, 92f));
+                CreateShortcut(HomeHotspotId.Notice, new Vector2(0f, -376f), new Vector2(92f, 92f));
+                CreateShortcut(HomeHotspotId.Settings, new Vector2(0f, -490f), new Vector2(92f, 92f));
+            }
+            else
+            {
+                CreateShortcut(HomeHotspotId.Activity, -344f);
+                CreateShortcut(HomeHotspotId.Mail, -172f);
+                CreateShortcut(HomeHotspotId.Store, 0f);
+                CreateShortcut(HomeHotspotId.Notice, 172f);
+                CreateShortcut(HomeHotspotId.Settings, 344f);
+            }
+
+            foreach (Transform child in transform.GetComponentsInChildren<Transform>(true))
+            {
+                if (child != null && child.name == "HomeImageSlotHint_Text")
+                {
+                    child.gameObject.SetActive(false);
+                }
+            }
         }
 
         private void CreateHotspot(HomeHotspotId hotspotId, Vector2 position, Vector2 size)
@@ -350,6 +504,11 @@ namespace TalismanBag.V02.UI
 
         private void CreateShortcut(HomeHotspotId hotspotId, float x)
         {
+            CreateShortcut(hotspotId, new Vector2(x, -8f), new Vector2(156f, 84f));
+        }
+
+        private void CreateShortcut(HomeHotspotId hotspotId, Vector2 position, Vector2 size)
+        {
             if (shortcutRoot == null)
             {
                 return;
@@ -357,8 +516,8 @@ namespace TalismanBag.V02.UI
 
             HomeHotspotView view = HomeHotspotView.CreateRuntime(
                 shortcutRoot,
-                new Vector2(x, -8f),
-                new Vector2(156f, 84f),
+                position,
+                size,
                 true);
             view.name = $"HomeShortcut_{hotspotId}";
             shortcutViews.Add(view);
@@ -495,10 +654,18 @@ namespace TalismanBag.V02.UI
                     InvokeCultivate();
                     break;
                 case HomeHotspotTargetType.Collection:
-                    SetFeedback("道藏仍在整理，当前先保留查看入口。");
+                    SetFeedback("道藏典册已摆好，后续会承接图鉴与已解锁记录。");
                     break;
                 case HomeHotspotTargetType.StoryAnchor:
-                    SetFeedback("师父旧物上的禁制尚未松动。");
+                    SetFeedback("旧物线索簿暂未展开，后续记录师父留下的线索。");
+                    break;
+                case HomeHotspotTargetType.CharacterPrompt:
+                    SetFeedback("小满在柜台旁守着账本，等你把今晚的事理顺。");
+                    break;
+                case HomeHotspotTargetType.SystemShortcut:
+                    SetFeedback(string.IsNullOrWhiteSpace(config.comingSoonText)
+                        ? $"{config.displayName}快捷入口尚未开放。"
+                        : config.comingSoonText);
                     break;
                 default:
                     SetFeedback($"{config.displayName}即将开放。");
@@ -515,7 +682,7 @@ namespace TalismanBag.V02.UI
             }
 
             Action callback = cultivateCallback;
-            SetFeedback("正在前往炼符桌……");
+            SetFeedback("正在前往养成页……");
             callback.Invoke();
         }
 
@@ -585,7 +752,7 @@ namespace TalismanBag.V02.UI
                 MainTrialPhase.Chapter1BossCleared or
                 MainTrialPhase.Chapter1RewardClaimed or
                 MainTrialPhase.FirstUpgradeRequired =>
-                    "符箓已可培养，去炼符桌看看。",
+                    "符箓已可培养，去底栏【养成】打开符桌。",
                 MainTrialPhase.FirstUpgradeDone =>
                     "阵势稳了些，可以继续前往下一段试炼。",
                 MainTrialPhase.Chapter2InProgress =>
@@ -630,7 +797,7 @@ namespace TalismanBag.V02.UI
                 MainTrialPhase.Chapter1InProgress => "第一段试炼",
                 MainTrialPhase.Chapter1BossCleared => "首领结算",
                 MainTrialPhase.Chapter1RewardClaimed => "等待培养",
-                MainTrialPhase.FirstUpgradeRequired => "需要炼符",
+                MainTrialPhase.FirstUpgradeRequired => "需要养成",
                 MainTrialPhase.FirstUpgradeDone => "准备继续",
                 MainTrialPhase.Chapter2InProgress => "青石坡巡行",
                 MainTrialPhase.Chapter2BossReady => "首领前整备",
@@ -653,6 +820,130 @@ namespace TalismanBag.V02.UI
                 .Replace("- ", string.Empty)
                 .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             return string.Join("　", lines);
+        }
+
+        private void AssignV03MainHomeReferences(Transform root)
+        {
+            titleText = FindChildText(root, "HomeTitle_Text") ?? titleText;
+            resourceText = FindChildText(root, "TopBarResource_Text") ?? resourceText;
+            progressText = FindChildText(root, "LedgerProgress_Text") ?? progressText;
+            objectiveText = FindChildText(root, "LedgerObjective_Text") ?? objectiveText;
+            statusText = FindChildText(root, "HomeStatus_Text") ?? statusText;
+            feedbackText = FindChildText(root, "HomeFeedback_Text") ?? feedbackText;
+            hotspotRoot = FindChildRect(root, "HomeSpatialHotspots_Root") ?? hotspotRoot;
+            shortcutRoot = FindChildRect(root, "RightQuickBar_Root") ?? shortcutRoot;
+            hotspotViews.Clear();
+            shortcutViews.Clear();
+            CollectExistingHotspotViews();
+        }
+
+        private static Text FindChildText(Transform root, string objectName)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            foreach (Text text in root.GetComponentsInChildren<Text>(true))
+            {
+                if (text != null && text.name == objectName)
+                {
+                    return text;
+                }
+            }
+
+            return null;
+        }
+
+        private static RectTransform FindChildRect(Transform root, string objectName)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            foreach (RectTransform rect in root.GetComponentsInChildren<RectTransform>(true))
+            {
+                if (rect != null && rect.name == objectName)
+                {
+                    return rect;
+                }
+            }
+
+            return null;
+        }
+
+        private static RectTransform CreateFullStretchLayer(string objectName, Transform parent)
+        {
+            GameObject layerObject = new(objectName, typeof(RectTransform));
+            layerObject.transform.SetParent(parent, false);
+            RectTransform rect = layerObject.GetComponent<RectTransform>();
+            SetStretchFull(rect);
+            return rect;
+        }
+
+        private static RectTransform CreateLayoutGroup(
+            string objectName,
+            Transform parent,
+            Vector2 position,
+            Vector2 size)
+        {
+            GameObject groupObject = new(objectName, typeof(RectTransform));
+            groupObject.transform.SetParent(parent, false);
+            RectTransform rect = groupObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 1f);
+            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            return rect;
+        }
+
+        private static void DisableV03LayoutGroupGraphics(Transform root)
+        {
+            string[] groupNames =
+            {
+                "TopBar_Root",
+                "SceneHotspot_Root",
+                "HomeSpatialHotspots_Root",
+                "RightQuickBar_Root"
+            };
+
+            foreach (string groupName in groupNames)
+            {
+                RectTransform rect = FindChildRect(root, groupName);
+                if (rect == null)
+                {
+                    continue;
+                }
+
+                Image image = rect.GetComponent<Image>();
+                if (image != null)
+                {
+                    image.enabled = false;
+                    image.raycastTarget = false;
+                }
+
+                Outline outline = rect.GetComponent<Outline>();
+                if (outline != null)
+                {
+                    outline.enabled = false;
+                }
+            }
+        }
+
+        private static void SetStretchFull(RectTransform rect)
+        {
+            if (rect == null)
+            {
+                return;
+            }
+
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = Vector2.zero;
         }
 
         private static RectTransform CreatePanel(

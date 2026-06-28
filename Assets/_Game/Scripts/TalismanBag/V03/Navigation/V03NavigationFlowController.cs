@@ -14,6 +14,13 @@ namespace TalismanBag.V03.Navigation
         public const string TrialSceneName = "Scene_TalismanBag_V02_FormationCounter";
         public const string TrialScenePath =
             "Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity";
+        private const float BottomNavWidth = 860f;
+        private const float BottomNavHeight = 124f;
+        private const float BottomNavMinBottomInset = 56f;
+        private const float BottomNavMaxBottomInset = 104f;
+        private const float BottomNavButtonStep = 168f;
+        private const float BottomNavButtonWidth = 148f;
+        private const float BottomNavButtonHeight = 82f;
 
         [SerializeField] private GameObject refinePageRoot;
         [SerializeField] private GameObject explorePageRoot;
@@ -35,6 +42,7 @@ namespace TalismanBag.V03.Navigation
         {
             BindButtons();
             EnsureForgeGuide();
+            ApplyBottomNavSafeLayout();
             SetSecondaryRoots(false, false, false, false);
         }
 
@@ -62,6 +70,7 @@ namespace TalismanBag.V03.Navigation
             homeStatus = status;
             BindButtons();
             EnsureForgeGuide()?.Initialize(this, homePanel, refinePageRoot);
+            ApplyBottomNavSafeLayout();
             ShowHome();
         }
 
@@ -81,6 +90,7 @@ namespace TalismanBag.V03.Navigation
                 ShowRefine,
                 EnterTrial,
                 null);
+            ApplyBottomNavSafeLayout();
             secondaryBottomNavRoot?.transform.SetAsLastSibling();
             forgeGuide?.OnHomeShown();
         }
@@ -159,6 +169,7 @@ namespace TalismanBag.V03.Navigation
             SetActive(explorePageRoot, showExplore);
             SetActive(morePageRoot, showMore);
             SetActive(secondaryBottomNavRoot, showBottomNav);
+            ApplyBottomNavSafeLayout();
         }
 
         private void BindButtons()
@@ -190,6 +201,68 @@ namespace TalismanBag.V03.Navigation
             }
 
             return forgeGuide;
+        }
+
+        private void ApplyBottomNavSafeLayout()
+        {
+            RectTransform rect = secondaryBottomNavRoot != null
+                ? secondaryBottomNavRoot.transform as RectTransform
+                : null;
+            if (rect == null)
+            {
+                return;
+            }
+
+            Canvas canvas = secondaryBottomNavRoot.GetComponentInParent<Canvas>(true);
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, ResolveBottomNavInset(canvas));
+            rect.sizeDelta = new Vector2(BottomNavWidth, BottomNavHeight);
+
+            Image background = secondaryBottomNavRoot.GetComponent<Image>();
+            if (background != null)
+            {
+                background.color = Color.clear;
+                background.raycastTarget = false;
+            }
+
+            Outline outline = secondaryBottomNavRoot.GetComponent<Outline>();
+            if (outline != null)
+            {
+                outline.enabled = false;
+            }
+
+            ApplyBottomNavButtonRect(homeButton, -BottomNavButtonStep * 2f);
+            ApplyBottomNavButtonRect(refineButton, -BottomNavButtonStep);
+            ApplyBottomNavButtonRect(trialButton, 0f);
+            ApplyBottomNavButtonRect(exploreButton, BottomNavButtonStep);
+            ApplyBottomNavButtonRect(moreButton, BottomNavButtonStep * 2f);
+        }
+
+        private static void ApplyBottomNavButtonRect(Button button, float x)
+        {
+            RectTransform rect = button != null ? button.transform as RectTransform : null;
+            if (rect == null)
+            {
+                return;
+            }
+
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(x, 0f);
+            rect.sizeDelta = new Vector2(BottomNavButtonWidth, BottomNavButtonHeight);
+        }
+
+        private static float ResolveBottomNavInset(Canvas canvas)
+        {
+            float scaleFactor = canvas != null && canvas.scaleFactor > 0f ? canvas.scaleFactor : 1f;
+            float safeBottom = Screen.safeArea.yMin / scaleFactor;
+            return Mathf.Clamp(
+                safeBottom + 18f,
+                BottomNavMinBottomInset,
+                BottomNavMaxBottomInset);
         }
 
         private static void SetActive(GameObject target, bool active)

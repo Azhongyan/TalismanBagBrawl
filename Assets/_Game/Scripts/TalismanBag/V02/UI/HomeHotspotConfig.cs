@@ -52,23 +52,24 @@ namespace TalismanBag.V02.UI
         {
             return new List<HomeHotspotConfig>
             {
-                new(HomeHotspotId.Counter, "柜台", HomeHotspotState.Available, HomeHotspotTargetType.CurrentObjective),
-                new(HomeHotspotId.Trial, "试炼", HomeHotspotState.Available, HomeHotspotTargetType.MainTrial),
-                new(HomeHotspotId.Refine, "炼符", HomeHotspotState.Available, HomeHotspotTargetType.TalismanRefine),
-                new(HomeHotspotId.Codex, "道藏", HomeHotspotState.Locked, HomeHotspotTargetType.Collection,
-                    lockedReason: "道藏仍在整理，当前可先查看试炼与炼符。"),
+                new(HomeHotspotId.Ledger, "照灯账本", HomeHotspotState.Available, HomeHotspotTargetType.CurrentObjective,
+                    visualKey: "home_ledger_slot", iconKey: "icon_ledger"),
+                new(HomeHotspotId.CodexBook, "道藏典册", HomeHotspotState.Available, HomeHotspotTargetType.Collection,
+                    visualKey: "home_codex_book_slot", iconKey: "icon_codex"),
+                new(HomeHotspotId.ClueBook, "旧物线索簿", HomeHotspotState.Locked, HomeHotspotTargetType.StoryAnchor,
+                    visualKey: "home_clue_book_slot", iconKey: "icon_clue",
+                    lockedReason: "线索簿暂未展开，后续记录师父旧物。"),
                 new(HomeHotspotId.BackRoom, "后屋", HomeHotspotState.ComingSoon, HomeHotspotTargetType.ComingSoon,
+                    visualKey: "home_back_room_slot", iconKey: "icon_back_room",
                     comingSoonText: "后屋尚未开放，后续用于生产养成。"),
                 new(HomeHotspotId.DreamSign, "梦签", HomeHotspotState.ComingSoon, HomeHotspotTargetType.ComingSoon,
+                    visualKey: "home_dream_sign_slot", iconKey: "icon_dream_sign",
                     comingSoonText: "梦签尚未开放，后续承接每日签。"),
-                new(HomeHotspotId.Explore, "罗盘台", HomeHotspotState.ComingSoon, HomeHotspotTargetType.ComingSoon,
-                    comingSoonText: "罗盘台尚未开放，后续承接探索。"),
-                new(HomeHotspotId.TianjiFurnace, "旧炉子", HomeHotspotState.ComingSoon, HomeHotspotTargetType.ComingSoon,
-                    comingSoonText: "旧炉子暂未启用，天机炉玩法将在后续开放。"),
-                new(HomeHotspotId.MasterRelic, "师父旧物", HomeHotspotState.Locked, HomeHotspotTargetType.StoryAnchor,
-                    lockedReason: "旧物上的禁制尚未松动。"),
-                new(HomeHotspotId.PvpPlaceholder, "切磋占位", HomeHotspotState.ComingSoon, HomeHotspotTargetType.ComingSoon,
-                    comingSoonText: "切磋功能尚未开放。"),
+                new(HomeHotspotId.Xiaoman, "小满", HomeHotspotState.Available, HomeHotspotTargetType.CharacterPrompt,
+                    visualKey: "home_xiaoman_slot", iconKey: "icon_xiaoman"),
+                new(HomeHotspotId.StreetEntrance, "青石坊街口", HomeHotspotState.ComingSoon, HomeHotspotTargetType.ComingSoon,
+                    visualKey: "home_street_entrance_slot", iconKey: "icon_street",
+                    comingSoonText: "街口暂未开放，后续承接探索与外出。"),
                 new(HomeHotspotId.Store, "商店", HomeHotspotState.ComingSoon, HomeHotspotTargetType.SystemShortcut,
                     comingSoonText: "商店快捷入口尚未开放。"),
                 new(HomeHotspotId.Mail, "邮件", HomeHotspotState.ComingSoon, HomeHotspotTargetType.SystemShortcut,
@@ -86,12 +87,17 @@ namespace TalismanBag.V02.UI
         {
             return hotspotId is
                 HomeHotspotId.Counter or
+                HomeHotspotId.Ledger or
+                HomeHotspotId.CodexBook or
+                HomeHotspotId.ClueBook or
                 HomeHotspotId.Trial or
                 HomeHotspotId.Refine or
                 HomeHotspotId.Codex or
                 HomeHotspotId.BackRoom or
                 HomeHotspotId.DreamSign or
                 HomeHotspotId.Explore or
+                HomeHotspotId.Xiaoman or
+                HomeHotspotId.StreetEntrance or
                 HomeHotspotId.TianjiFurnace or
                 HomeHotspotId.MasterRelic or
                 HomeHotspotId.PvpPlaceholder or

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TalismanBag.V02.UI;
 using TalismanBag.V03.MainHome;
 using TalismanBag.V03.Navigation;
 using UnityEditor;
@@ -20,12 +21,23 @@ namespace TalismanBag.V03.EditorTools
             "Assets/_Game/Scenes/Scene_TalismanBag_V03_MainHome.unity";
         public const string Run15MinScenePath =
             "Assets/_Game/Scenes/Scene_TalismanBag_Run15Min.unity";
+        private const float BottomNavWidth = 860f;
+        private const float BottomNavHeight = 124f;
+        private const float BottomNavBottomInset = 56f;
+        private const float BottomNavButtonStep = 168f;
+        private const float BottomNavButtonWidth = 148f;
+        private const float BottomNavButtonHeight = 82f;
 
         private static readonly string[] SecondaryRootNames =
         {
             "RefinePageRoot",
             "ExplorePageRoot",
             "MorePageRoot",
+            "BottomNavBar_Root"
+        };
+
+        private static readonly string[] ObsoleteRootNames =
+        {
             "SecondaryBottomNavRoot"
         };
 
@@ -46,6 +58,11 @@ namespace TalismanBag.V03.EditorTools
                 DestroyNamedObject(scene, rootName);
             }
 
+            foreach (string rootName in ObsoleteRootNames)
+            {
+                DestroyNamedObject(scene, rootName);
+            }
+
             V03NavigationFlowController existingController =
                 sceneRoot.GetComponent<V03NavigationFlowController>();
             if (existingController != null)
@@ -56,9 +73,9 @@ namespace TalismanBag.V03.EditorTools
             GameObject refineRoot = CreatePageRoot(
                 "RefinePageRoot",
                 canvasObject.transform,
-                "锻造",
-                "本地页壳",
-                "锻造台已备好。\n本包只交付导航页壳，后续仅包装既有首次符箓培养，不重做完整锻造系统。",
+                "养成",
+                "符箓升级",
+                "符桌已备好。\n当前先承接首次符箓升级，后续再扩展完整养成页。",
                 new Color(0.12f, 0.16f, 0.13f, 0.99f));
             GameObject exploreRoot = CreatePageRoot(
                 "ExplorePageRoot",
@@ -100,6 +117,11 @@ namespace TalismanBag.V03.EditorTools
             V03MainHomeSceneBootstrap bootstrap =
                 sceneRoot.GetComponent<V03MainHomeSceneBootstrap>();
             Require(bootstrap != null, "V03MainHomeSceneBootstrap is missing.");
+
+            MainHomeGreyboxPanel homePanel = homeRoot.GetComponent<MainHomeGreyboxPanel>();
+            Require(homePanel != null, "MainHomeRoot is missing MainHomeGreyboxPanel.");
+            homePanel.ApplyV03MainHomeUiueLayout();
+
             SerializedObject serializedBootstrap = new(bootstrap);
             SetReference(serializedBootstrap, "navigation", controller);
             serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
@@ -120,7 +142,7 @@ namespace TalismanBag.V03.EditorTools
 
             Debug.Log(
                 "[V0.3-NavigationFlow01] NF01_SCENE_BUILD_SUCCESS " +
-                "roots=RefinePageRoot,ExplorePageRoot,MorePageRoot,SecondaryBottomNavRoot " +
+                "roots=RefinePageRoot,ExplorePageRoot,MorePageRoot,BottomNavBar_Root " +
                 "trialMode=LoadSceneMode.Single");
         }
 
@@ -174,12 +196,12 @@ namespace TalismanBag.V03.EditorTools
                 .ToArray();
             string[] requiredLabels =
             {
-                "锻造",
+                "养成",
                 "探索",
                 "更多",
                 "Coming Soon",
                 "首页",
-                "试练"
+                "试炼"
             };
             foreach (string label in requiredLabels)
             {
@@ -189,13 +211,13 @@ namespace TalismanBag.V03.EditorTools
 
             Require(texts.Any(text => text.text == "梦签"),
                 "Main home scene is missing the DreamSign home hotspot label.");
-            GameObject bottomNavRoot = FindSceneObject(scene, "SecondaryBottomNavRoot");
-            Require(bottomNavRoot != null, "SecondaryBottomNavRoot is missing.");
+            GameObject bottomNavRoot = FindSceneObject(scene, "BottomNavBar_Root");
+            Require(bottomNavRoot != null, "BottomNavBar_Root is missing.");
             Text[] bottomNavTexts = bottomNavRoot.GetComponentsInChildren<Text>(true);
-            string[] expectedBottomNavLabels = { "首页", "探索", "试练", "锻造", "更多" };
+            string[] expectedBottomNavLabels = { "首页", "养成", "试炼", "探索", "更多" };
             Require(
                 GetBottomNavLabelsByX(bottomNavTexts).SequenceEqual(expectedBottomNavLabels),
-                "Bottom nav order must be 首页 / 探索 / 试练 / 锻造 / 更多.");
+                "Bottom nav order must be 首页 / 养成 / 试炼 / 探索 / 更多.");
             Require(!bottomNavTexts.Any(text =>
                     text.text.Contains("BattleBackpack") ||
                     text.text.Contains("背包") ||
@@ -275,27 +297,25 @@ namespace TalismanBag.V03.EditorTools
             out Button moreButton)
         {
             GameObject root = new(
-                "SecondaryBottomNavRoot",
+                "BottomNavBar_Root",
                 typeof(RectTransform),
-                typeof(Image),
-                typeof(Outline));
+                typeof(Image));
             root.transform.SetParent(parent, false);
             RectTransform rect = root.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0.5f, 0f);
             rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, 34f);
-            rect.sizeDelta = new Vector2(1000f, 132f);
-            root.GetComponent<Image>().color = new Color(0.045f, 0.052f, 0.05f, 0.995f);
-            Outline outline = root.GetComponent<Outline>();
-            outline.effectColor = new Color(0.58f, 0.62f, 0.56f, 0.85f);
-            outline.effectDistance = new Vector2(2f, -2f);
+            rect.anchoredPosition = new Vector2(0f, BottomNavBottomInset);
+            rect.sizeDelta = new Vector2(BottomNavWidth, BottomNavHeight);
+            Image background = root.GetComponent<Image>();
+            background.color = Color.clear;
+            background.raycastTarget = false;
 
-            homeButton = CreateButton("BottomNavHomeButton", root.transform, "首页", -400f);
-            exploreButton = CreateButton("BottomNavExploreButton", root.transform, "探索", -200f);
-            trialButton = CreateButton("BottomNavTrialButton", root.transform, "试练", 0f);
-            refineButton = CreateButton("BottomNavRefineButton", root.transform, "锻造", 200f);
-            moreButton = CreateButton("BottomNavMoreButton", root.transform, "更多", 400f);
+            homeButton = CreateButton("BottomNavHomeButton", root.transform, "首页", -BottomNavButtonStep * 2f);
+            refineButton = CreateButton("BottomNavRefineButton", root.transform, "养成", -BottomNavButtonStep);
+            trialButton = CreateButton("BottomNavTrialButton", root.transform, "试炼", 0f);
+            exploreButton = CreateButton("BottomNavExploreButton", root.transform, "探索", BottomNavButtonStep);
+            moreButton = CreateButton("BottomNavMoreButton", root.transform, "更多", BottomNavButtonStep * 2f);
             return root;
         }
 
@@ -317,7 +337,7 @@ namespace TalismanBag.V03.EditorTools
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = new Vector2(x, 0f);
-            rect.sizeDelta = new Vector2(178f, 92f);
+            rect.sizeDelta = new Vector2(BottomNavButtonWidth, BottomNavButtonHeight);
             buttonObject.GetComponent<Image>().color =
                 new Color(0.18f, 0.26f, 0.22f, 0.98f);
             Outline outline = buttonObject.GetComponent<Outline>();
@@ -332,7 +352,7 @@ namespace TalismanBag.V03.EditorTools
                 FontStyle.Bold,
                 Color.white,
                 Vector2.zero,
-                new Vector2(178f, 92f));
+                new Vector2(BottomNavButtonWidth, BottomNavButtonHeight));
             RectTransform labelRect = labelText.rectTransform;
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;

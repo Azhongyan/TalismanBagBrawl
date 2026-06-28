@@ -20,6 +20,7 @@ namespace TalismanBag.V03.EditorTools
         private static int frameCount;
         private static int stage;
         private static int trialSceneFrames;
+        private static int upgradeSceneFrames;
 
         static V03NavigationFlow01PlayModeVerifier()
         {
@@ -51,6 +52,7 @@ namespace TalismanBag.V03.EditorTools
             frameCount = 0;
             stage = 0;
             trialSceneFrames = 0;
+            upgradeSceneFrames = 0;
             SessionState.SetBool(VerificationKey, true);
             SessionState.SetBool(ExitKey, false);
             EditorApplication.isPlaying = true;
@@ -64,6 +66,7 @@ namespace TalismanBag.V03.EditorTools
                 frameCount = 0;
                 stage = 0;
                 trialSceneFrames = 0;
+                upgradeSceneFrames = 0;
                 return;
             }
 
@@ -89,6 +92,19 @@ namespace TalismanBag.V03.EditorTools
             try
             {
                 Scene activeScene = SceneManager.GetActiveScene();
+                if (activeScene.path ==
+                    TalismanBag.V03.Navigation.V03NavigationFlowController.UpgradeScenePath)
+                {
+                    upgradeSceneFrames++;
+                    if (upgradeSceneFrames >= 3)
+                    {
+                        VerifyUpgradeScene(activeScene);
+                        CompleteVerification();
+                    }
+
+                    return;
+                }
+
                 if (activeScene.path ==
                     TalismanBag.V03.Navigation.V03NavigationFlowController.TrialScenePath)
                 {
@@ -134,33 +150,23 @@ namespace TalismanBag.V03.EditorTools
                 case 0:
                     VerifyPageState(scene, "MainHomeRoot", null, true);
                     VerifyHomeHotspotBoundary(scene);
-                    ClickButton(scene, "HomeHotspot_Refine");
-                    stage++;
-                    break;
-                case 1:
-                    VerifyPageState(scene, "RefinePageRoot", "RefinePageRoot", true);
                     ClickButton(scene, "BottomNavExploreButton");
                     stage++;
                     break;
-                case 2:
+                case 1:
                     VerifyPageState(scene, "ExplorePageRoot", "ExplorePageRoot", true);
                     ClickButton(scene, "BottomNavMoreButton");
                     stage++;
                     break;
-                case 3:
+                case 2:
                     VerifyPageState(scene, "MorePageRoot", "MorePageRoot", true);
                     ClickButton(scene, "BottomNavHomeButton");
                     stage++;
                     break;
-                case 4:
+                case 3:
                     VerifyPageState(scene, "MainHomeRoot", null, true);
                     VerifyHomeHotspotBoundary(scene);
-                    ClickButton(scene, "HomeHotspot_Refine");
-                    stage++;
-                    break;
-                case 5:
-                    VerifyPageState(scene, "RefinePageRoot", "RefinePageRoot", true);
-                    ClickButton(scene, "BottomNavTrialButton");
+                    ClickButton(scene, "BottomNavRefineButton");
                     stage++;
                     break;
             }
@@ -171,8 +177,8 @@ namespace TalismanBag.V03.EditorTools
             Require(FindSceneObject(scene, "HomeHotspot_DreamSign") != null,
                 "DreamSign must remain a main home hotspot.");
 
-            GameObject bottomNav = FindSceneObject(scene, "SecondaryBottomNavRoot");
-            Require(bottomNav != null, "SecondaryBottomNavRoot is missing.");
+            GameObject bottomNav = FindSceneObject(scene, "BottomNavBar_Root");
+            Require(bottomNav != null, "BottomNavBar_Root is missing.");
             string[] navLabels = bottomNav
                 .GetComponentsInChildren<Text>(true)
                 .OrderBy(text =>
@@ -182,9 +188,9 @@ namespace TalismanBag.V03.EditorTools
                 })
                 .Select(text => text.text)
                 .ToArray();
-            string[] expectedLabels = { "首页", "探索", "试练", "锻造", "更多" };
+            string[] expectedLabels = { "首页", "养成", "试炼", "探索", "更多" };
             Require(navLabels.SequenceEqual(expectedLabels),
-                "Bottom nav order must be 首页 / 探索 / 试练 / 锻造 / 更多.");
+                "Bottom nav order must be 首页 / 养成 / 试炼 / 探索 / 更多.");
             Require(!navLabels.Any(label =>
                     label.Contains("梦签") ||
                     label.Contains("背包") ||
@@ -206,13 +212,13 @@ namespace TalismanBag.V03.EditorTools
             };
 
             GameObject homeRoot = FindSceneObject(scene, "MainHomeRoot");
-            GameObject bottomNav = FindSceneObject(scene, "SecondaryBottomNavRoot");
+            GameObject bottomNav = FindSceneObject(scene, "BottomNavBar_Root");
             Require(homeRoot != null && bottomNav != null, "Navigation roots are missing.");
             Require(
                 homeRoot.activeInHierarchy == (expectedVisibleRoot == "MainHomeRoot"),
                 "MainHomeRoot visibility does not match the expected navigation state.");
             Require(bottomNav.activeInHierarchy == expectBottomNav,
-                "SecondaryBottomNavRoot visibility does not match the expected state.");
+                "BottomNavBar_Root visibility does not match the expected state.");
 
             foreach (string rootName in secondaryRoots)
             {
@@ -245,6 +251,18 @@ namespace TalismanBag.V03.EditorTools
                 "[V0.3-NavigationFlow01] NF01_PLAYMODE_SUCCESS " +
                 "homeFirstFrame=true refine=true explore=true more=true homeReturn=true " +
                 "bottomTrial=true loadMode=Single duplicateCanvas=false duplicateEventSystem=false");
+        }
+
+        private static void VerifyUpgradeScene(Scene scene)
+        {
+            Require(
+                scene.name == TalismanBag.V03.Navigation.V03NavigationFlowController.UpgradeSceneName,
+                "Refine navigation did not enter the contracted V03 upgrade scene.");
+
+            Debug.Log(
+                "[V0.3-NavigationFlow01] NF01_PLAYMODE_SUCCESS " +
+                "homeFirstFrame=true explore=true more=true homeReturn=true " +
+                "bottomCultivate=true upgradeScene=true loadMode=Single");
         }
 
         private static void CompleteVerification()

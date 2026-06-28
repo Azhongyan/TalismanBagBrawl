@@ -29,7 +29,7 @@ namespace TalismanBag.V02.Config.EditorTools
 
             Debug.Log(
                 "[V0.3-MainHomeScene01-Retry] SMOKE_SUCCESS " +
-                "home=照灯小铺, hotspots=15, trial=delegate, refine=delegate, " +
+                "home=照灯小铺, hotspots=12, bottomNavOwnsTrialAndCultivate=true, " +
                 "comingSoon=ok, fallback=ok, " +
                 "sceneVerification=delegatedToFix02, reflectionActivation=false, " +
                 "v02GoldenPathConfig=ok, DataCatalogErrors=0");
@@ -38,7 +38,7 @@ namespace TalismanBag.V02.Config.EditorTools
         private static void VerifyHotspotConfiguration()
         {
             List<HomeHotspotConfig> configs = HomeHotspotConfig.CreateDefaultSet();
-            Require(configs.Count == 15, "Home hotspot default set must contain 15 entries.");
+            Require(configs.Count == 12, "Home hotspot default set must contain 12 entries.");
             Require(configs.All(config => config != null), "Home hotspot config must not contain null rows.");
             Require(configs.All(config => HomeHotspotConfig.IsAllowed(config.hotspotId)),
                 "Home hotspot config contains an id outside the whitelist.");
@@ -46,26 +46,32 @@ namespace TalismanBag.V02.Config.EditorTools
                 "Home hotspot ids must be unique.");
 
             Require(configs.Any(config =>
-                    config.hotspotId == HomeHotspotId.Counter &&
+                    config.hotspotId == HomeHotspotId.Ledger &&
                     config.state == HomeHotspotState.Available),
-                "Counter hotspot must be available.");
+                "Ledger hotspot must be available.");
             Require(configs.Any(config =>
-                    config.hotspotId == HomeHotspotId.Trial &&
-                    config.targetType == HomeHotspotTargetType.MainTrial),
-                "Trial hotspot must use the main-trial target.");
+                    config.hotspotId == HomeHotspotId.CodexBook &&
+                    config.targetType == HomeHotspotTargetType.Collection),
+                "CodexBook hotspot must use the collection target.");
             Require(configs.Any(config =>
-                    config.hotspotId == HomeHotspotId.Refine &&
-                    config.targetType == HomeHotspotTargetType.TalismanRefine),
-                "Refine hotspot must use the talisman-refine target.");
+                    config.hotspotId == HomeHotspotId.ClueBook &&
+                    config.state == HomeHotspotState.Locked),
+                "ClueBook hotspot must be locked.");
             Require(configs.Any(config =>
                     config.hotspotId == HomeHotspotId.BackRoom &&
                     config.state == HomeHotspotState.ComingSoon),
                 "BackRoom must remain ComingSoon.");
             Require(configs.Any(config =>
-                    config.hotspotId == HomeHotspotId.PvpPlaceholder &&
-                    config.state == HomeHotspotState.ComingSoon &&
-                    config.displayName != "论道"),
-                "PVP placeholder must remain ComingSoon and must not be named 论道.");
+                    config.hotspotId == HomeHotspotId.Xiaoman &&
+                    config.targetType == HomeHotspotTargetType.CharacterPrompt),
+                "Xiaoman hotspot must use the character prompt target.");
+            Require(configs.Any(config =>
+                    config.hotspotId == HomeHotspotId.StreetEntrance &&
+                    config.state == HomeHotspotState.ComingSoon),
+                "StreetEntrance must remain ComingSoon.");
+            Require(!configs.Any(config =>
+                    config.hotspotId is HomeHotspotId.Trial or HomeHotspotId.Refine or HomeHotspotId.Explore),
+                "Trial, Refine, and Explore must be owned by the bottom navigation, not home hotspots.");
 
             string[] requiredFields =
             {
@@ -106,6 +112,8 @@ namespace TalismanBag.V02.Config.EditorTools
             Require(showMethod != null, "MainHomeGreyboxPanel must preserve the existing Show delegate contract.");
             Require(typeof(MainHomeGreyboxPanel).GetMethod("ShowComplete", BindingFlags.Instance | BindingFlags.Public) != null,
                 "MainHomeGreyboxPanel must preserve ShowComplete.");
+            Require(typeof(MainHomeGreyboxPanel).GetMethod("ApplyV03MainHomeUiueLayout", BindingFlags.Instance | BindingFlags.Public) != null,
+                "MainHomeGreyboxPanel must expose the V03 UIUE layout hook.");
         }
 
         private static void VerifyRuntimeGreybox()
@@ -118,33 +126,35 @@ namespace TalismanBag.V02.Config.EditorTools
                 Canvas canvas = canvasObject.GetComponent<Canvas>();
                 MainHomeGreyboxPanel panel = MainHomeGreyboxPanel.CreateRuntime(canvas.transform);
                 Require(panel != null, "Runtime home panel could not be created.");
+                panel.ApplyV03MainHomeUiueLayout();
 
-                bool refineInvoked = false;
-                bool trialInvoked = false;
                 panel.Show(
                     "Legacy title must not win",
                     "当前资源\n- 灵石 10\n- 符纸 5\n- 朱砂 2\n- 初阶符胚 1\n- 修为 3",
                     "Smoke status",
-                    () => refineInvoked = true,
-                    () => trialInvoked = true,
+                    () => { },
+                    () => { },
                     null);
 
                 Text[] texts = panel.GetComponentsInChildren<Text>(true);
                 Require(texts.Any(text => text.text == "照灯小铺"), "Runtime home panel does not display 照灯小铺.");
-                Require(texts.Any(text => text.text == "当前目标"), "Runtime home panel does not display current objective.");
-                Require(texts.Any(text => text.text == "资源摘要"), "Runtime home panel does not display resource summary.");
-                Require(texts.Any(text => text.text == "主线进度"), "Runtime home panel does not display main-trial progress.");
+                Require(texts.Any(text => text.text == "照灯账本"), "Runtime home panel does not display 照灯账本.");
+                Require(texts.Any(text => text.text == "道藏典册"), "Runtime home panel does not display 道藏典册.");
+                Require(texts.Any(text => text.text == "旧物线索簿"), "Runtime home panel does not display 旧物线索簿.");
+                Require(texts.Any(text => text.text == "青石坊街口"), "Runtime home panel does not display 青石坊街口.");
                 Require(!texts.Any(text => text.text.Contains("BattleBackpack")), "Home panel exposes a forbidden battle-backpack label.");
                 Require(!texts.Any(text => text.text == "论道"), "Home panel exposes a forbidden PVP label.");
 
                 HomeHotspotView[] views = panel.GetComponentsInChildren<HomeHotspotView>(true);
-                Require(views.Any(view => view.Config?.hotspotId == HomeHotspotId.Trial), "Runtime Trial hotspot is missing.");
-                Require(views.Any(view => view.Config?.hotspotId == HomeHotspotId.Refine), "Runtime Refine hotspot is missing.");
+                Require(views.Any(view => view.Config?.hotspotId == HomeHotspotId.Ledger), "Runtime Ledger hotspot is missing.");
+                Require(views.Any(view => view.Config?.hotspotId == HomeHotspotId.Xiaoman), "Runtime Xiaoman hotspot is missing.");
+                Require(!views.Any(view => view.Config?.hotspotId == HomeHotspotId.Trial),
+                    "Runtime Trial must not be a home hotspot.");
+                Require(!views.Any(view => view.Config?.hotspotId == HomeHotspotId.Refine),
+                    "Runtime Refine must not be a home hotspot.");
 
-                Click(views, HomeHotspotId.Trial);
-                Require(trialInvoked, "Trial hotspot did not use the injected safe delegate.");
-                Click(views, HomeHotspotId.Refine);
-                Require(refineInvoked, "Refine hotspot did not use the injected safe delegate.");
+                Click(views, HomeHotspotId.Ledger);
+                Click(views, HomeHotspotId.Xiaoman);
                 Click(views, HomeHotspotId.BackRoom);
 
                 HomeHotspotView fallbackView = HomeHotspotView.CreateRuntime(
