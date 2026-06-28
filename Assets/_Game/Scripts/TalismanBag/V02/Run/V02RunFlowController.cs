@@ -53,6 +53,7 @@ namespace TalismanBag.V02.Run
         [SerializeField] private Text roundInfoText;
         [SerializeField] private Text prepHintText;
         [SerializeField] private Text currentLevelText;
+        [SerializeField] private V02StageProgressBar stageProgressBar;
         [SerializeField] private GameObject formationInfoPanel;
         [SerializeField] private Button formationInfoCloseButton;
         [SerializeField] private GameObject tagTooltipPanel;
@@ -211,6 +212,7 @@ namespace TalismanBag.V02.Run
                 : EnsureMainTrialFlowService().IsChapterTwoBossRound(round) ? GetChapterTwoBossInfoConfig() : null;
             combatController?.ConfigureBoss(bossConfig);
             RefreshRoundTexts(round, resolvedEnemy);
+            RefreshStageProgressBar(round);
             ShowPreBattlePopups();
             EnsureMainTrialFlowService().MarkEnteredRound(round);
             battleLogUI?.AddLog($"\u6218\u524d\u51c6\u5907\uff1a{round.roundTitle}");
@@ -2276,6 +2278,7 @@ namespace TalismanBag.V02.Run
 
             LogStartupRoute(route);
             SetCurrentRoundFromRoute(route);
+            RefreshStageProgressBar(CurrentRound);
 
             switch (route.routeType)
             {
@@ -2370,6 +2373,110 @@ namespace TalismanBag.V02.Run
             }
 
             return -1;
+        }
+
+        private void RefreshStageProgressBar(V02RoundConfig round)
+        {
+            V02StageProgressBar progressBar = EnsureStageProgressBar();
+            if (progressBar == null || round == null)
+            {
+                return;
+            }
+
+            string chapterId = GetStageProgressChapterId(round);
+            int currentStageIndex = GetStageProgressIndex(round);
+            int bossStageIndex = GetStageProgressBossIndex(chapterId);
+            int normalStageCount = Mathf.Max(0, bossStageIndex - 1);
+            progressBar.SetProgress(chapterId, currentStageIndex, normalStageCount, bossStageIndex);
+        }
+
+        private V02StageProgressBar EnsureStageProgressBar()
+        {
+            if (stageProgressBar != null)
+            {
+                return stageProgressBar;
+            }
+
+            stageProgressBar = FindObjectOfType<V02StageProgressBar>(true);
+            if (stageProgressBar != null)
+            {
+                return stageProgressBar;
+            }
+
+            Transform progressParent = FindStageProgressRuntimeParent();
+            if (progressParent != null)
+            {
+                stageProgressBar = V02StageProgressBar.CreateRuntime(
+                    progressParent,
+                    new Vector2(0f, -188f),
+                    new Vector2(820f, 72f),
+                    true);
+            }
+
+            return stageProgressBar;
+        }
+
+        private Transform FindStageProgressRuntimeParent()
+        {
+            GameObject safeArea = GameObject.Find("MobileSafeAreaRoot");
+            if (safeArea != null)
+            {
+                return safeArea.transform;
+            }
+
+            GameObject canvasObject = GameObject.Find("Canvas");
+            if (canvasObject != null)
+            {
+                return canvasObject.transform;
+            }
+
+            Canvas canvas = FindObjectOfType<Canvas>();
+            return canvas != null ? canvas.transform : null;
+        }
+
+        private int GetStageProgressBossIndex(string chapterId)
+        {
+            V02RunConfig currentConfig = GetActiveRunConfig();
+            if (currentConfig?.rounds != null)
+            {
+                for (int i = 0; i < currentConfig.rounds.Count; i++)
+                {
+                    V02RoundConfig round = currentConfig.rounds[i];
+                    if (round == null || !round.isBossRound || !string.Equals(GetStageProgressChapterId(round), chapterId, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    return Mathf.Max(1, GetStageProgressIndex(round));
+                }
+            }
+
+            return Mathf.Max(1, GetRoundCount());
+        }
+
+        private static string GetStageProgressChapterId(V02RoundConfig round)
+        {
+            string levelId = NormalizeLevelId(round?.levelId);
+            if (string.IsNullOrEmpty(levelId))
+            {
+                return "1";
+            }
+
+            int dashIndex = levelId.IndexOf('-');
+            return dashIndex > 0 ? levelId.Substring(0, dashIndex) : "1";
+        }
+
+        private static int GetStageProgressIndex(V02RoundConfig round)
+        {
+            string levelId = NormalizeLevelId(round?.levelId);
+            int dashIndex = levelId.IndexOf('-');
+            if (dashIndex >= 0 && dashIndex < levelId.Length - 1 &&
+                int.TryParse(levelId.Substring(dashIndex + 1), out int parsedStageIndex))
+            {
+                return Mathf.Max(1, parsedStageIndex);
+            }
+
+            return Mathf.Max(1, round?.roundIndex ?? 1);
         }
 
         private static string GetRoundLabel(V02RoundConfig round)

@@ -78,6 +78,154 @@ namespace TalismanBag.EditorTools
             Debug.Log("Talisman Bag V0.2 formation counter scene generated.");
         }
 
+        [MenuItem("Tools/Talisman Bag/Ensure V02 Stage Progress Bar")]
+        public static void EnsureV02StageProgressBarInScene()
+        {
+            Scene scene = FindLoadedScene(V02ScenePath);
+            if (!scene.IsValid())
+            {
+                scene = EditorSceneManager.OpenScene(V02ScenePath, OpenSceneMode.Additive);
+            }
+
+            if (!scene.IsValid())
+            {
+                Debug.LogError($"Unable to open V02 scene: {V02ScenePath}");
+                return;
+            }
+
+            Transform progressParent = FindStageProgressParentInScene(scene);
+            if (progressParent == null)
+            {
+                Debug.LogError("MobileSafeAreaRoot or Canvas not found. Build the V02 formation scene before adding stage progress.");
+                return;
+            }
+
+            V02StageProgressBar progressBar = FindComponentInScene<V02StageProgressBar>(scene);
+            if (progressBar == null)
+            {
+                progressBar = CreateV02StageProgressBar(progressParent);
+            }
+
+            if (progressBar == null)
+            {
+                Debug.LogError("Failed to create V02StageProgressBar_Runtime.");
+                return;
+            }
+
+            progressBar.gameObject.name = "V02StageProgressBar_Runtime";
+            progressBar.SetProgress("1", 4, 9, 10);
+
+            V02RunFlowController runFlow = FindComponentInScene<V02RunFlowController>(scene);
+            if (runFlow != null)
+            {
+                SetField(runFlow, "stageProgressBar", progressBar);
+            }
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene, V02ScenePath);
+            AssetDatabase.ImportAsset(V02ScenePath);
+            Debug.Log("Ensured V02StageProgressBar_Runtime in V02 formation scene.");
+        }
+
+        private static Scene FindLoadedScene(string scenePath)
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene scene = SceneManager.GetSceneAt(i);
+                if (scene.IsValid() && string.Equals(scene.path, scenePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return scene;
+                }
+            }
+
+            return default;
+        }
+
+        private static GameObject FindGameObjectInScene(Scene scene, string objectName)
+        {
+            if (!scene.IsValid())
+            {
+                return null;
+            }
+
+            GameObject[] rootObjects = scene.GetRootGameObjects();
+            for (int i = 0; i < rootObjects.Length; i++)
+            {
+                Transform found = FindChildRecursive(rootObjects[i].transform, objectName);
+                if (found != null)
+                {
+                    return found.gameObject;
+                }
+            }
+
+            return null;
+        }
+
+        private static Transform FindStageProgressParentInScene(Scene scene)
+        {
+            GameObject safeArea = FindGameObjectInScene(scene, "MobileSafeAreaRoot");
+            if (safeArea != null)
+            {
+                return safeArea.transform;
+            }
+
+            Canvas canvas = FindComponentInScene<Canvas>(scene);
+            return canvas != null ? canvas.transform : null;
+        }
+
+        private static V02StageProgressBar CreateV02StageProgressBar(Transform parent)
+        {
+            return V02StageProgressBar.CreateRuntime(
+                parent,
+                new Vector2(0f, -188f),
+                new Vector2(820f, 72f),
+                true);
+        }
+
+        private static T FindComponentInScene<T>(Scene scene) where T : Component
+        {
+            if (!scene.IsValid())
+            {
+                return null;
+            }
+
+            GameObject[] rootObjects = scene.GetRootGameObjects();
+            for (int i = 0; i < rootObjects.Length; i++)
+            {
+                T component = rootObjects[i].GetComponentInChildren<T>(true);
+                if (component != null)
+                {
+                    return component;
+                }
+            }
+
+            return null;
+        }
+
+        private static Transform FindChildRecursive(Transform root, string objectName)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            if (string.Equals(root.name, objectName, StringComparison.Ordinal))
+            {
+                return root;
+            }
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform found = FindChildRecursive(root.GetChild(i), objectName);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
+        }
+
         private static void EnsureFolders()
         {
             string[] folders =
@@ -1128,6 +1276,7 @@ namespace TalismanBag.EditorTools
             CreateV02CombatStage(uiRoot, combatUI, previewPanel, intentUI, out StatusAnchorUI playerBuffAnchor, out StatusAnchorUI playerDebuffAnchor);
             TalismanGridSlotView[] slots = CreateV02Grid(uiRoot, grid);
             CreateV02InfoArea(uiRoot, powerUI, tooltipUI, battleLogUI, out Text hoverHintText, out Text roundInfoText, out Text prepHintText);
+            V02StageProgressBar stageProgressBar = CreateV02StageProgressBar(uiRoot);
             CreateV02BottomControls(uiRoot, definitions, grid, canvas, combat, debugController, out List<DraggableTalismanItemView> initialItems, out Transform inventoryContent, out DraggableTalismanItemView itemTemplate);
             RectTransform feedbackRoot = CreateFeedbackRoot(uiRoot);
             StatusTooltipPanel statusTooltipPanel = CreateStatusTooltipPanel(feedbackRoot);
@@ -1225,6 +1374,7 @@ namespace TalismanBag.EditorTools
             SetField(v02RunFlow, "roundInfoText", roundInfoText);
             SetField(v02RunFlow, "prepHintText", prepHintText);
             SetField(v02RunFlow, "currentLevelText", currentLevelText);
+            SetField(v02RunFlow, "stageProgressBar", stageProgressBar);
             SetField(v02RunFlow, "testEnemies", CreateV02EnemyList(testEnemies));
 
             SetField(combat, "grid", grid);
