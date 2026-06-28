@@ -20,7 +20,7 @@ namespace TalismanBag.V03.EditorTools
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             GameObject root = new(RootName);
             V03TalismanUpgradeSceneController controller = root.AddComponent<V03TalismanUpgradeSceneController>();
-            controller.BuildEditablePreview();
+            controller.RebuildEditablePreview();
 
             Require(
                 EditorSceneManager.SaveScene(scene, V03NavigationFlowController.UpgradeScenePath),
@@ -48,7 +48,7 @@ namespace TalismanBag.V03.EditorTools
                 UnityEngine.Object.FindObjectOfType<V03TalismanUpgradeSceneController>(true);
             Require(controller != null, "Upgrade scene controller is missing.");
 
-            controller.BuildEditablePreview();
+            controller.RebuildEditablePreview();
             Scene scene = controller.gameObject.scene;
             Require(scene.IsValid(), "Upgrade scene is invalid.");
             EditorSceneManager.MarkSceneDirty(scene);
