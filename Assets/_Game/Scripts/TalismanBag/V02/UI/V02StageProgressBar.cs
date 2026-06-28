@@ -40,16 +40,23 @@ namespace TalismanBag.V02.UI
         }
     }
 
+    [ExecuteAlways]
     public sealed class V02StageProgressBar : MonoBehaviour
     {
-        private static readonly Vector2 NormalNodeSize = new(28f, 28f);
-        private static readonly Vector2 BossNodeSize = new(46f, 62f);
-
         [SerializeField] private RectTransform root;
         [SerializeField] private RectTransform nodeRoot;
         [SerializeField] private Image baseLineImage;
         [SerializeField] private Image progressLineImage;
         [SerializeField] private bool showLabels = true;
+        [SerializeField] private bool preserveManualNodeLayout = true;
+        [SerializeField] private Vector2 normalDotSize = new(28f, 28f);
+        [SerializeField] private Vector2 bossDotSize = new(56f, 76f);
+        [SerializeField] private Vector2 dotOffsetWithLabels = new(0f, 9f);
+        [SerializeField] private Vector2 dotOffsetWithoutLabels = Vector2.zero;
+        [SerializeField] private float edgePadding = 8f;
+        [SerializeField] private float lineHeight = 7f;
+        [SerializeField] private float normalRingWidth = 6f;
+        [SerializeField] private float bossRingWidth = 7f;
         [SerializeField] private Color clearedColor = new(0.78f, 0.92f, 0.74f, 1f);
         [SerializeField] private Color currentColor = new(0.42f, 0.96f, 0.82f, 1f);
         [SerializeField] private Color lockedColor = new(0.07f, 0.08f, 0.07f, 1f);
@@ -59,6 +66,8 @@ namespace TalismanBag.V02.UI
 
         private readonly List<GameObject> runtimeNodes = new();
         private readonly List<V02StageProgressNodeData> lastNodes = new();
+        private int lastCurrentStageIndex = 1;
+        private int lastBossStageIndex = 10;
 
         private void Awake()
         {
@@ -69,8 +78,24 @@ namespace TalismanBag.V02.UI
             }
         }
 
+        private void OnEnable()
+        {
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
+            ResolveReferences();
+            if (lastNodes.Count == 0)
+            {
+                SetProgress("1", 1, 9, 10);
+            }
+        }
+
         public void SetProgress(string chapterId, int currentStageIndex, int normalStageCount, int bossStageIndex)
         {
+            lastBossStageIndex = Mathf.Max(1, bossStageIndex);
+            lastCurrentStageIndex = Mathf.Clamp(currentStageIndex, 1, lastBossStageIndex);
             SetNodes(BuildNodes(chapterId, currentStageIndex, normalStageCount, bossStageIndex));
         }
 
@@ -106,6 +131,13 @@ namespace TalismanBag.V02.UI
             RenderNodes();
         }
 
+        [ContextMenu("Refresh Preview Nodes")]
+        private void RefreshPreviewNodes()
+        {
+            int safeBossStageIndex = Mathf.Max(1, lastBossStageIndex);
+            SetProgress("1", Mathf.Clamp(lastCurrentStageIndex, 1, safeBossStageIndex), safeBossStageIndex - 1, safeBossStageIndex);
+        }
+
         public static List<V02StageProgressNodeData> BuildNodes(
             string chapterId,
             int currentStageIndex,
@@ -114,25 +146,36 @@ namespace TalismanBag.V02.UI
         {
             string safeChapterId = string.IsNullOrWhiteSpace(chapterId) ? "1" : chapterId.Trim();
             int safeBossIndex = Mathf.Max(1, bossStageIndex);
-            int safeNormalCount = Mathf.Clamp(normalStageCount, 0, safeBossIndex - 1);
-            int totalNodeCount = Mathf.Max(safeBossIndex, safeNormalCount + 1);
+            List<int> keyStageIndexes = BuildKeyStageIndexes(safeBossIndex);
 
-            List<V02StageProgressNodeData> nodes = new(totalNodeCount);
-            for (int stageIndex = 1; stageIndex <= totalNodeCount; stageIndex++)
+            List<V02StageProgressNodeData> nodes = new(keyStageIndexes.Count);
+            for (int i = 0; i < keyStageIndexes.Count; i++)
             {
+                int stageIndex = keyStageIndexes[i];
                 bool isBoss = stageIndex == safeBossIndex;
                 V02StageProgressNodeState state = ResolveState(stageIndex, currentStageIndex, safeBossIndex);
                 string stageId = $"{safeChapterId}-{stageIndex}";
-                string label = ShouldShowStageLabel(stageIndex, safeBossIndex) ? stageId : string.Empty;
-                nodes.Add(new V02StageProgressNodeData(stageId, stageIndex, isBoss, state, label));
+                nodes.Add(new V02StageProgressNodeData(stageId, stageIndex, isBoss, state, stageId));
             }
 
             return nodes;
         }
 
-        private static bool ShouldShowStageLabel(int stageIndex, int bossStageIndex)
+        private static List<int> BuildKeyStageIndexes(int bossStageIndex)
         {
-            return stageIndex == 1 || stageIndex == 5 || stageIndex == bossStageIndex;
+            List<int> stageIndexes = new() { 1 };
+            AddKeyStageIndex(stageIndexes, 5, bossStageIndex);
+            AddKeyStageIndex(stageIndexes, bossStageIndex, bossStageIndex);
+            return stageIndexes;
+        }
+
+        private static void AddKeyStageIndex(List<int> stageIndexes, int stageIndex, int bossStageIndex)
+        {
+            int clampedStageIndex = Mathf.Clamp(stageIndex, 1, Mathf.Max(1, bossStageIndex));
+            if (!stageIndexes.Contains(clampedStageIndex))
+            {
+                stageIndexes.Add(clampedStageIndex);
+            }
         }
 
         public static V02StageProgressBar CreateRuntime(
@@ -146,7 +189,7 @@ namespace TalismanBag.V02.UI
                 return null;
             }
 
-            GameObject rootObject = new("V02StageProgressBar_Runtime", typeof(RectTransform));
+            GameObject rootObject = new("V02StageProgressBar_Runtime", typeof(RectTransform), typeof(LayoutElement));
             rootObject.transform.SetParent(parent, false);
             RectTransform rootRect = rootObject.GetComponent<RectTransform>();
             rootRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -154,6 +197,7 @@ namespace TalismanBag.V02.UI
             rootRect.pivot = new Vector2(0.5f, 0.5f);
             rootRect.anchoredPosition = anchoredPosition;
             rootRect.sizeDelta = size;
+            rootObject.GetComponent<LayoutElement>().ignoreLayout = true;
 
             GameObject baseLineObject = new("BaseLine", typeof(RectTransform), typeof(Image));
             baseLineObject.transform.SetParent(rootObject.transform, false);
@@ -199,6 +243,7 @@ namespace TalismanBag.V02.UI
         {
             root ??= transform as RectTransform;
             nodeRoot ??= root;
+            EnsureIgnoredByParentLayout();
 
             if (baseLineImage == null)
             {
@@ -213,6 +258,16 @@ namespace TalismanBag.V02.UI
             }
         }
 
+        private void EnsureIgnoredByParentLayout()
+        {
+            if (!TryGetComponent(out LayoutElement layoutElement))
+            {
+                layoutElement = gameObject.AddComponent<LayoutElement>();
+            }
+
+            layoutElement.ignoreLayout = true;
+        }
+
         private void RenderNodes()
         {
             if (root == null || nodeRoot == null)
@@ -220,83 +275,195 @@ namespace TalismanBag.V02.UI
                 return;
             }
 
-            ClearRuntimeNodes();
             if (lastNodes.Count == 0)
             {
-                SetLine(baseLineImage, 0f, 0f, 0f);
-                SetLine(progressLineImage, 0f, 0f, 0f);
+                ClearRuntimeNodes();
+                SetProgressLine(0f, 0f, 0f);
                 return;
             }
 
-            float width = GetWidth(root);
-            float nodeCenterY = showLabels ? 10f : 0f;
-            float leftPadding = NormalNodeSize.x * 0.5f + 8f;
-            float rightPadding = BossNodeSize.x * 0.5f + 8f;
-            float startX = -width * 0.5f + leftPadding;
-            float endX = width * 0.5f - rightPadding;
-            float progressEndX = startX;
+            RemoveExtraRuntimeNodes();
+            runtimeNodes.Clear();
 
-            SetLine(baseLineImage, startX, endX, nodeCenterY);
+            GetBaseLineMetrics(out float startX, out float endX, out float lineY);
+            int axisEndStageIndex = Mathf.Max(1, lastBossStageIndex);
+            for (int i = 0; i < lastNodes.Count; i++)
+            {
+                axisEndStageIndex = Mathf.Max(axisEndStageIndex, lastNodes[i].stageIndex);
+            }
+
+            float progressT = GetStageProgressT(lastCurrentStageIndex, axisEndStageIndex);
+            float progressEndX = Mathf.Lerp(startX, endX, progressT);
 
             for (int i = 0; i < lastNodes.Count; i++)
             {
                 V02StageProgressNodeData node = lastNodes[i];
-                float t = lastNodes.Count <= 1 ? 0.5f : i / (float)(lastNodes.Count - 1);
+                float t = GetStageProgressT(node.stageIndex, axisEndStageIndex);
                 float x = Mathf.Lerp(startX, endX, t);
-                CreateNode(node, new Vector2(x, nodeCenterY));
-
-                if (node.state is V02StageProgressNodeState.Cleared or V02StageProgressNodeState.Current)
-                {
-                    progressEndX = x;
-                }
+                CreateNode(node, new Vector2(x, lineY));
             }
 
-            SetLine(progressLineImage, startX, progressEndX, nodeCenterY);
+            SetProgressLine(startX, progressEndX, lineY);
+        }
+
+        private static float GetStageProgressT(int stageIndex, int axisEndStageIndex)
+        {
+            int safeAxisEnd = Mathf.Max(1, axisEndStageIndex);
+            int safeStageIndex = Mathf.Clamp(stageIndex, 1, safeAxisEnd);
+            return safeStageIndex / (float)safeAxisEnd;
+        }
+
+        private void GetBaseLineMetrics(out float startX, out float endX, out float y)
+        {
+            RectTransform baseLineRect = baseLineImage != null ? baseLineImage.GetComponent<RectTransform>() : null;
+            if (baseLineRect != null)
+            {
+                float width = GetWidth(baseLineRect);
+                y = baseLineRect.anchoredPosition.y;
+                startX = baseLineRect.anchoredPosition.x - width * baseLineRect.pivot.x;
+                endX = startX + width;
+                return;
+            }
+
+            float rootWidth = GetWidth(root);
+            Vector2 safeNormalDotSize = GetNormalDotSize();
+            Vector2 safeBossDotSize = GetBossDotSize();
+            float safeEdgePadding = Mathf.Max(0f, edgePadding);
+            startX = -rootWidth * 0.5f + safeNormalDotSize.x * 0.5f + safeEdgePadding;
+            endX = rootWidth * 0.5f - safeBossDotSize.x * 0.5f - safeEdgePadding;
+            y = showLabels ? 10f : 0f;
         }
 
         private void CreateNode(V02StageProgressNodeData node, Vector2 anchoredPosition)
         {
-            Vector2 shapeSize = node.isBoss ? BossNodeSize : NormalNodeSize;
-            Vector2 containerSize = new(Mathf.Max(56f, shapeSize.x + 14f), showLabels ? 66f : Mathf.Max(46f, shapeSize.y));
+            Vector2 shapeSize = node.isBoss ? GetBossDotSize() : GetNormalDotSize();
+            Vector2 dotOffset = showLabels ? dotOffsetWithLabels : dotOffsetWithoutLabels;
+            Vector2 containerSize = new(
+                Mathf.Max(56f, shapeSize.x + Mathf.Abs(dotOffset.x) + 14f),
+                showLabels
+                    ? Mathf.Max(66f, shapeSize.y + Mathf.Abs(dotOffset.y) + 22f)
+                    : Mathf.Max(46f, shapeSize.y + Mathf.Abs(dotOffset.y)));
 
-            GameObject nodeObject = new($"Node_{node.stageId}", typeof(RectTransform));
-            nodeObject.transform.SetParent(nodeRoot, false);
+            string nodeName = $"Node_{node.stageId}";
+            Transform existingNode = nodeRoot.Find(nodeName);
+            bool nodeCreated = existingNode == null;
+            GameObject nodeObject;
+            if (existingNode != null)
+            {
+                nodeObject = existingNode.gameObject;
+            }
+            else
+            {
+                nodeObject = new GameObject(nodeName, typeof(RectTransform));
+                nodeObject.transform.SetParent(nodeRoot, false);
+            }
+
             RectTransform nodeRect = nodeObject.GetComponent<RectTransform>();
-            nodeRect.anchorMin = new Vector2(0.5f, 0.5f);
-            nodeRect.anchorMax = new Vector2(0.5f, 0.5f);
-            nodeRect.pivot = new Vector2(0.5f, 0.5f);
-            nodeRect.anchoredPosition = anchoredPosition;
-            nodeRect.sizeDelta = containerSize;
+            bool resetNodeLayout = nodeCreated || !preserveManualNodeLayout;
+            if (resetNodeLayout)
+            {
+                nodeRect.anchorMin = new Vector2(0.5f, 0.5f);
+                nodeRect.anchorMax = new Vector2(0.5f, 0.5f);
+                nodeRect.pivot = new Vector2(0.5f, 0.5f);
+                nodeRect.anchoredPosition = anchoredPosition;
+                nodeRect.sizeDelta = containerSize;
+            }
 
-            GameObject shapeObject = new("Shape", typeof(RectTransform), typeof(V02StageProgressNodeGraphic));
-            shapeObject.transform.SetParent(nodeObject.transform, false);
-            RectTransform shapeRect = shapeObject.GetComponent<RectTransform>();
-            shapeRect.anchorMin = new Vector2(0.5f, 0.5f);
-            shapeRect.anchorMax = new Vector2(0.5f, 0.5f);
-            shapeRect.pivot = new Vector2(0.5f, 0.5f);
-            shapeRect.anchoredPosition = showLabels ? new Vector2(0f, 9f) : Vector2.zero;
-            shapeRect.sizeDelta = shapeSize;
+            string shapeName = node.isBoss ? $"BossDot_{node.stageId}" : $"Dot_{node.stageId}";
+            V02StageProgressNodeGraphic graphic = GetOrCreateNodeGraphic(nodeObject.transform, shapeName, out RectTransform shapeRect, out bool shapeCreated);
+            bool resetShapeLayout = shapeCreated || !preserveManualNodeLayout;
+            if (resetShapeLayout)
+            {
+                shapeRect.anchorMin = new Vector2(0.5f, 0.5f);
+                shapeRect.anchorMax = new Vector2(0.5f, 0.5f);
+                shapeRect.pivot = new Vector2(0.5f, 0.5f);
+                shapeRect.anchoredPosition = dotOffset;
+                shapeRect.sizeDelta = shapeSize;
+            }
 
-            V02StageProgressNodeGraphic graphic = shapeObject.GetComponent<V02StageProgressNodeGraphic>();
             graphic.raycastTarget = false;
             graphic.SetVisual(
                 node.isBoss,
                 GetNodeFillColor(node.state),
                 lineColor,
-                node.isBoss ? 7f : 6f);
+                node.isBoss ? Mathf.Max(1f, bossRingWidth) : Mathf.Max(1f, normalRingWidth),
+                preserveManualNodeLayout && !shapeCreated);
 
+            Transform labelTransform = nodeObject.transform.Find("Label");
             if (showLabels && !string.IsNullOrWhiteSpace(node.label))
             {
-                Text label = CreateText("Label", nodeObject.transform, node.label, 12, FontStyle.Bold, labelColor);
+                bool labelCreated = false;
+                Text label = labelTransform != null ? labelTransform.GetComponent<Text>() : null;
+                if (label == null)
+                {
+                    label = CreateText("Label", nodeObject.transform, node.label, 12, FontStyle.Bold, labelColor);
+                    labelCreated = true;
+                }
+
                 RectTransform labelRect = label.GetComponent<RectTransform>();
-                labelRect.anchorMin = new Vector2(0.5f, 0f);
-                labelRect.anchorMax = new Vector2(0.5f, 0f);
-                labelRect.pivot = new Vector2(0.5f, 0f);
-                labelRect.anchoredPosition = new Vector2(0f, 0f);
-                labelRect.sizeDelta = new Vector2(containerSize.x, 18f);
+                if (labelCreated || !preserveManualNodeLayout)
+                {
+                    labelRect.anchorMin = new Vector2(0.5f, 0f);
+                    labelRect.anchorMax = new Vector2(0.5f, 0f);
+                    labelRect.pivot = new Vector2(0.5f, 0f);
+                    labelRect.anchoredPosition = new Vector2(0f, 0f);
+                    labelRect.sizeDelta = new Vector2(containerSize.x, 18f);
+                }
+
+                label.text = node.label;
+                label.color = labelColor;
+            }
+            else if (labelTransform != null)
+            {
+                DestroyNodeObject(labelTransform.gameObject);
             }
 
             runtimeNodes.Add(nodeObject);
+        }
+
+        private V02StageProgressNodeGraphic GetOrCreateNodeGraphic(
+            Transform parent,
+            string shapeName,
+            out RectTransform shapeRect,
+            out bool created)
+        {
+            created = false;
+            Transform shapeTransform = parent.Find(shapeName);
+            if (shapeTransform == null)
+            {
+                shapeTransform = parent.Find("Shape");
+            }
+
+            V02StageProgressNodeGraphic graphic = shapeTransform != null
+                ? shapeTransform.GetComponent<V02StageProgressNodeGraphic>()
+                : null;
+
+            if (graphic == null && shapeTransform != null)
+            {
+                graphic = shapeTransform.gameObject.AddComponent<V02StageProgressNodeGraphic>();
+            }
+
+            if (graphic == null)
+            {
+                GameObject shapeObject = new GameObject(shapeName, typeof(RectTransform), typeof(CanvasRenderer), typeof(V02StageProgressNodeGraphic));
+                shapeObject.transform.SetParent(parent, false);
+                graphic = shapeObject.GetComponent<V02StageProgressNodeGraphic>();
+                shapeTransform = shapeObject.transform;
+                created = true;
+            }
+
+            if (shapeTransform.name == "Shape")
+            {
+                shapeTransform.name = shapeName;
+            }
+
+            if (shapeTransform.GetComponent<CanvasRenderer>() == null)
+            {
+                shapeTransform.gameObject.AddComponent<CanvasRenderer>();
+            }
+
+            shapeRect = shapeTransform.GetComponent<RectTransform>();
+            return graphic;
         }
 
         private Color GetNodeFillColor(V02StageProgressNodeState state)
@@ -309,21 +476,63 @@ namespace TalismanBag.V02.UI
             };
         }
 
-        private void SetLine(Image image, float startX, float endX, float y)
+        private void SetProgressLine(float startX, float endX, float y)
         {
-            if (image == null)
+            if (progressLineImage == null)
             {
                 return;
             }
 
-            image.color = image == progressLineImage ? progressLineColor : lineColor;
-            image.raycastTarget = false;
-            RectTransform rect = image.GetComponent<RectTransform>();
+            progressLineImage.color = progressLineColor;
+            progressLineImage.raycastTarget = false;
+            RectTransform rect = progressLineImage.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0.5f, 0.5f);
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = new Vector2((startX + endX) * 0.5f, y);
-            rect.sizeDelta = new Vector2(Mathf.Max(0f, endX - startX), 7f);
+            rect.sizeDelta = new Vector2(Mathf.Max(0f, endX - startX), Mathf.Max(1f, lineHeight));
+        }
+
+        private Vector2 GetNormalDotSize()
+        {
+            return EnsurePositiveSize(normalDotSize, new Vector2(28f, 28f));
+        }
+
+        private Vector2 GetBossDotSize()
+        {
+            return EnsurePositiveSize(bossDotSize, new Vector2(56f, 76f));
+        }
+
+        private static Vector2 EnsurePositiveSize(Vector2 value, Vector2 fallback)
+        {
+            float width = value.x > 0f ? value.x : fallback.x;
+            float height = value.y > 0f ? value.y : fallback.y;
+            return new Vector2(Mathf.Max(1f, width), Mathf.Max(1f, height));
+        }
+
+        private void RemoveExtraRuntimeNodes()
+        {
+            if (nodeRoot == null)
+            {
+                return;
+            }
+
+            HashSet<string> desiredNodeNames = new();
+            for (int i = 0; i < lastNodes.Count; i++)
+            {
+                desiredNodeNames.Add($"Node_{lastNodes[i].stageId}");
+            }
+
+            for (int i = nodeRoot.childCount - 1; i >= 0; i--)
+            {
+                Transform child = nodeRoot.GetChild(i);
+                if (child != null &&
+                    child.name.StartsWith("Node_", StringComparison.Ordinal) &&
+                    !desiredNodeNames.Contains(child.name))
+                {
+                    DestroyNodeObject(child.gameObject);
+                }
+            }
         }
 
         private void ClearRuntimeNodes()

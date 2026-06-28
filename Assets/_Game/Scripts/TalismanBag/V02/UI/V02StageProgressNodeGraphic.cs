@@ -3,17 +3,29 @@ using UnityEngine.UI;
 
 namespace TalismanBag.V02.UI
 {
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class V02StageProgressNodeGraphic : MaskableGraphic
     {
         [SerializeField] private Color fillColor = new(0.07f, 0.08f, 0.07f, 1f);
         [SerializeField] private Color ringColor = new(0.02f, 0.025f, 0.02f, 1f);
         [SerializeField] private float ringWidth = 6f;
 
-        public void SetVisual(bool isBoss, Color fill, Color ring, float ringThickness)
+        protected override void OnEnable()
+        {
+            EnsureCanvasRenderer();
+            base.OnEnable();
+            SetAllDirty();
+        }
+
+        public void SetVisual(bool isBoss, Color fill, Color ring, float ringThickness, bool preserveStroke = false)
         {
             fillColor = fill;
-            ringColor = ring;
-            ringWidth = Mathf.Max(1f, ringThickness);
+            if (!preserveStroke)
+            {
+                ringColor = ring;
+                ringWidth = Mathf.Max(1f, ringThickness);
+            }
+
             SetVerticesDirty();
         }
 
@@ -57,6 +69,14 @@ namespace TalismanBag.V02.UI
                 int current = firstOuterIndex + i;
                 int next = firstOuterIndex + ((i + 1) % segmentCount);
                 vh.AddTriangle(centerIndex, current, next);
+            }
+        }
+
+        private void EnsureCanvasRenderer()
+        {
+            if (GetComponent<CanvasRenderer>() == null)
+            {
+                gameObject.AddComponent<CanvasRenderer>();
             }
         }
     }
