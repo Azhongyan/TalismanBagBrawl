@@ -84,6 +84,41 @@ GUARD_PASS_FORGEFIRSTUPGRADEGUIDE01_NEW_UPGRADE_SCENE
 升级页功能边界：允许道具栏式符箓列表、道具信息弹窗、物资数量、升级前 / 后数据对比、背景图插槽；当前必须保障首次升级目标 fire_talisman_basic / chapterOneUpgradeItemId 完整可用，可展示当前拥有 / 可升级符箓列表但不得扩成完整锻造系统。
 ```
 
+首页 UIUE 同步收口：
+
+```text
+GUARD_SYNC_MAINHOME_UIUE01_ACCEPTED
+
+来源文档：Docs/V0.3/MultiTool/Handoffs/V03_MainHome_UIUE_SYNC_TO_GUARD.md
+性质：首页产品 / UIUE 文档同步，不授权开发，不要求 RepoOps 上传，不代表 QA 通过。
+
+Scene_TalismanBag_V03_MainHome 后续应朝“照灯小铺空间化首页”演进，不得继续做成灰盒功能大厅或战斗 / 养成入口堆叠页。
+
+推荐结构：
+- BG_Root / FullBackgroundImageSlot
+- SceneHotspot_Root
+- TopBar_Root
+- RightQuickBar_Root
+- BottomNavBar_Root
+- PopupLayer_Root
+- ToastLayer_Root
+- GuideHighlight_Root
+
+FullBackgroundImageSlot / BG_Root 是正式背景图片插槽临时占位：当前黑色满屏，不得露背后内容，不拦截输入，不依赖 Home 根节点 Image 兜底。
+
+Home 根节点 Image / Outline 暂不使用，不得被 Runtime / Builder / Verifier 自动重开。“暂时收起”按钮不得回归。
+
+BottomBar 固定为：首页 / 养成 / 试炼 / 探索 / 更多。禁止 BattleBackpack / 背包 / PVP / Store / Activity / Mail / Settings 成为底栏入口。
+
+首页热点口径：照灯账本、道藏典册、旧物线索簿、梦签、小满、后屋、青石坊街口。柜台必须是照灯账本，不是单纯试炼入口。
+
+三本册认知：照灯账本=我现在该干嘛；道藏典册=我已经获得/解锁过什么；旧物线索簿=我追查到哪里了。
+
+TopBar 只显示玩家身份组 + 资源组 + 设置；不得显示当前关卡，不得显示当前任务。当前阶段 / 当前目标交给照灯账本承载。
+
+DevelopUpgradePage01 属于后续养成 / 符箓升级页口径，不应把完整符箓升级 UI、符箓列表、升级前后属性对比、材料消耗等养成页主体混进 MainHome 首页。后续若启动必须先 Code Survey。
+```
+
 历史完成包 Guard assignment（BossGuideResult01）：
 
 ```text

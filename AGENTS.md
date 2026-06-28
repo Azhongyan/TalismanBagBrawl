@@ -70,6 +70,7 @@ ROADMAP / CURRENT 定义当前版本总蓝图；Package Queue 用于判断当前
 - 当前 V0.3 是产品基础流转版，必须按 `Docs/V0.3/V0.3_PACKAGE_QUEUE.md` 小包推进；`V0.3-ProductFlow01` 是总蓝图，不是单个开发任务。
 - 历史阻断 / 待回归确认：`BUILD_SETTINGS_REGRESSION_BLOCKER` 曾导致 BootEntry 加载 MainHome 报 `Scene is missing from Build Settings`。后续 ProductFlow 回归必须确认 BootEntry → MainHome / Trial 均可加载；若再次失败，优先按 Build Settings 回归处理，不得重做功能包。
 - `V0.3-BossGuideResult01` 已用户手测通过，状态为 `USER_ACCEPTED / REPOOPS_UPLOAD_REQUESTED`；本轮通过点包含 BossInfo 手动挑战、整备入口、BossRewardPanel 结算、RunResultPanel 重复结算清理，以及最终的 V02StageProgressBar / V02RunResultPanel 调整。RepoOps 上传必须包含当前 HEAD `a5444cb` 之后两个 dirty 脚本 final delta：`Assets/_Game/Scripts/TalismanBag/V02/UI/V02StageProgressBar.cs`、`Assets/_Game/Scripts/TalismanBag/V02/Result/V02RunResultPanel.cs`，不得只上传 `a5444cb checkpoint: v0.3 stage progress bar tuning wip not qa passed`。当前正式包为 `V0.3-ForgeFirstUpgradeGuide01`，状态为 `GUARD_PASS_FORGEFIRSTUPGRADEGUIDE01_NEW_UPGRADE_SCENE / READY_FOR_DEV`；最新用户需求已覆盖 `IMAGE_SLOT_ONLY`，允许新建 V03 符箓升级独立场景并最小修正旧 V02 领奖后出口；`V0.3-PrepareTutorial01` 暂缓，不取消；旧 `TrialFlowUI` 队列不再是当前正式主线。
+- 首页 UIUE 已完成 Guard 同步收口：`GUARD_SYNC_MAINHOME_UIUE01_ACCEPTED`。`Scene_TalismanBag_V03_MainHome` 后续口径是“照灯小铺空间化首页”，不是功能大厅；底部 Bar 固定为 `首页 / 养成 / 试炼 / 探索 / 更多`，禁止“背包”底栏入口；`FullBackgroundImageSlot / BG_Root` 是正式背景图片插槽临时占位，当前黑色满屏、不露背后内容、不拦截输入；Home 根节点 `Image / Outline` 暂不使用，不得被 Runtime / Builder 自动重开；“暂时收起”按钮不得回归；DevelopUpgradePage01 属于后续养成 / 符箓升级页，不得把升级主体功能混进 MainHome 首页。
 - 不得顺手修 Bug、扩大版本范围、进行无关重构、commit、tag、push 或回滚。
 
 ## 5. 项目记忆文件的窗口权限

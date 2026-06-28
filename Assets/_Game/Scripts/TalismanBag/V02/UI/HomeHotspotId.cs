@@ -3,12 +3,17 @@ namespace TalismanBag.V02.UI
     public enum HomeHotspotId
     {
         Counter,
+        Ledger,
+        CodexBook,
+        ClueBook,
         Trial,
         Refine,
         Codex,
         BackRoom,
         DreamSign,
         Explore,
+        Xiaoman,
+        StreetEntrance,
         TianjiFurnace,
         MasterRelic,
         PvpPlaceholder,
@@ -34,6 +39,7 @@ namespace TalismanBag.V02.UI
         TalismanRefine,
         Collection,
         StoryAnchor,
+        CharacterPrompt,
         ComingSoon,
         SystemShortcut
     }

@@ -168,6 +168,8 @@ namespace TalismanBag.V03.EditorTools
             RectTransform backgroundRect = backgroundSlot.GetComponent<RectTransform>();
             Image backgroundImage = backgroundSlot.GetComponent<Image>();
             MainHomeGreyboxPanel panel = homeRoot.GetComponent<MainHomeGreyboxPanel>();
+            Image homeRootImage = homeRoot.GetComponent<Image>();
+            Outline homeRootOutline = homeRoot.GetComponent<Outline>();
             V03MainHomeSceneBootstrap bootstrap =
                 sceneRoot.GetComponent<V03MainHomeSceneBootstrap>();
             Require(canvas != null && canvas.enabled, "Canvas must exist and be enabled.");
@@ -183,6 +185,10 @@ namespace TalismanBag.V03.EditorTools
             Require(!backgroundImage.raycastTarget,
                 "FullBackgroundImageSlot must not block input.");
             Require(panel != null && panel.enabled, "MainHomeRoot must contain an enabled home panel.");
+            Require(homeRootImage == null || !homeRootImage.enabled,
+                "MainHomeRoot Image must stay disabled.");
+            Require(homeRootOutline == null || !homeRootOutline.enabled,
+                "MainHomeRoot Outline must stay disabled.");
             Require(bootstrap != null && bootstrap.enabled,
                 "MainHomeSceneRoot must contain an enabled lifecycle bootstrap.");
 

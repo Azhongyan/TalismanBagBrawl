@@ -26,6 +26,7 @@ namespace TalismanBag.V03.MainHome
             }
 
             EnsureFullBackgroundSlot();
+            DisableHomeRootGraphics();
 
             if (navigation == null)
             {
@@ -131,6 +132,22 @@ namespace TalismanBag.V03.MainHome
 
             image.color = Color.black;
             image.raycastTarget = false;
+        }
+
+        private void DisableHomeRootGraphics()
+        {
+            Image rootImage = homePanel.GetComponent<Image>();
+            if (rootImage != null)
+            {
+                rootImage.enabled = false;
+                rootImage.raycastTarget = false;
+            }
+
+            Outline rootOutline = homePanel.GetComponent<Outline>();
+            if (rootOutline != null)
+            {
+                rootOutline.enabled = false;
+            }
         }
 
         private void LoadScene(string scenePath, string sceneName, string missingSceneMessage)

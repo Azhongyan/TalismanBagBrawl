@@ -81,7 +81,7 @@ namespace TalismanBag.V02.UI
                 return null;
             }
 
-            GameObject root = new("MainHomeGreyboxPanel_Runtime", typeof(RectTransform), typeof(Image), typeof(Outline));
+            GameObject root = new("MainHomeGreyboxPanel_Runtime", typeof(RectTransform));
             root.transform.SetParent(parent, false);
             RectTransform rootRect = root.GetComponent<RectTransform>();
             rootRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -89,13 +89,6 @@ namespace TalismanBag.V02.UI
             rootRect.pivot = new Vector2(0.5f, 0.5f);
             rootRect.anchoredPosition = Vector2.zero;
             rootRect.sizeDelta = new Vector2(1000f, 1720f);
-
-            Image image = root.GetComponent<Image>();
-            image.color = new Color(0.045f, 0.052f, 0.05f, 0.985f);
-
-            Outline outline = root.GetComponent<Outline>();
-            outline.effectColor = new Color(0.66f, 0.7f, 0.57f, 0.94f);
-            outline.effectDistance = new Vector2(4f, -4f);
 
             MainHomeGreyboxPanel panelComponent = root.AddComponent<MainHomeGreyboxPanel>();
             panelComponent.panel = root;
