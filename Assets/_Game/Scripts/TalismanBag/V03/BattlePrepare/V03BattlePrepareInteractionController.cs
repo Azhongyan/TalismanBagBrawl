@@ -557,6 +557,11 @@ namespace TalismanBag.V03.BattlePrepare
                 return;
             }
 
+            if (IsCoreLoopComplete())
+            {
+                return;
+            }
+
             if (prepareStateActive)
             {
                 ExitPrepareState();
@@ -628,6 +633,14 @@ namespace TalismanBag.V03.BattlePrepare
             else if (combatController != null && combatController.CurrentCombatState != TalismanCombatState.Fighting)
             {
                 V02RunFlowController flowController = ResolveRunFlowController();
+                if (flowController != null && flowController.IsCoreLoopComplete())
+                {
+                    preparedFromFighting = false;
+                    RefreshTrayItems();
+                    RefreshVisualState(true);
+                    return;
+                }
+
                 if (flowController == null || !flowController.TriggerBottomBattleAction())
                 {
                     combatController.StartBattle();
@@ -1072,6 +1085,8 @@ namespace TalismanBag.V03.BattlePrepare
 
         private void RefreshActionButtonState()
         {
+            bool coreLoopComplete = IsCoreLoopComplete();
+
             if (stateButtonText != null)
             {
                 stateButtonText.text = ResolveBattleStateButtonLabel();
@@ -1084,7 +1099,7 @@ namespace TalismanBag.V03.BattlePrepare
 
             if (stateButton != null)
             {
-                stateButton.interactable = !continueStateActive;
+                stateButton.interactable = !continueStateActive && !coreLoopComplete;
             }
 
             if (prepareButton != null)
@@ -1095,6 +1110,12 @@ namespace TalismanBag.V03.BattlePrepare
 
         private string ResolveBattleStateButtonLabel()
         {
+            V02RunFlowController flowController = ResolveRunFlowController();
+            if (flowController != null && flowController.IsCoreLoopComplete())
+            {
+                return "已完成";
+            }
+
             if (prepareStateActive)
             {
                 return "继续战斗";
@@ -1110,13 +1131,18 @@ namespace TalismanBag.V03.BattlePrepare
                 return "战斗中";
             }
 
-            V02RunFlowController flowController = ResolveRunFlowController();
             if (flowController != null && flowController.IsWaitingForBossChallenge())
             {
                 return "挑战Boss";
             }
 
             return "继续战斗";
+        }
+
+        private bool IsCoreLoopComplete()
+        {
+            V02RunFlowController flowController = ResolveRunFlowController();
+            return flowController != null && flowController.IsCoreLoopComplete();
         }
 
         private V02RunFlowController ResolveRunFlowController()

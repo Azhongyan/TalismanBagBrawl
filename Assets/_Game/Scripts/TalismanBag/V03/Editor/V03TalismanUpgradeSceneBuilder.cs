@@ -19,7 +19,8 @@ namespace TalismanBag.V03.EditorTools
         {
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             GameObject root = new(RootName);
-            root.AddComponent<V03TalismanUpgradeSceneController>();
+            V03TalismanUpgradeSceneController controller = root.AddComponent<V03TalismanUpgradeSceneController>();
+            controller.BuildEditablePreview();
 
             Require(
                 EditorSceneManager.SaveScene(scene, V03NavigationFlowController.UpgradeScenePath),
@@ -38,6 +39,21 @@ namespace TalismanBag.V03.EditorTools
         {
             EditorSceneManager.OpenScene(V03NavigationFlowController.UpgradeScenePath, OpenSceneMode.Single);
             VerifyStaticScene();
+        }
+
+        [MenuItem("Tools/Talisman Bag/V0.3/ForgeFirstUpgradeGuide01/Rebuild Editable Upgrade Preview")]
+        public static void RebuildEditablePreviewInOpenScene()
+        {
+            V03TalismanUpgradeSceneController controller =
+                UnityEngine.Object.FindObjectOfType<V03TalismanUpgradeSceneController>(true);
+            Require(controller != null, "Upgrade scene controller is missing.");
+
+            controller.BuildEditablePreview();
+            Scene scene = controller.gameObject.scene;
+            Require(scene.IsValid(), "Upgrade scene is invalid.");
+            EditorSceneManager.MarkSceneDirty(scene);
+            Require(EditorSceneManager.SaveScene(scene), "Could not save editable upgrade scene preview.");
+            Debug.Log("[V0.3-ForgeFirstUpgradeGuide01] UPGRADE_EDITABLE_PREVIEW_REBUILD_SUCCESS");
         }
 
         public static void VerifyStaticScene()

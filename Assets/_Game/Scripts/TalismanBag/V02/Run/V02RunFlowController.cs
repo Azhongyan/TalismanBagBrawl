@@ -81,6 +81,13 @@ namespace TalismanBag.V02.Run
         public V02RoundConfig CurrentRound => GetRound(currentRoundIndex);
         public bool CanRequestPostBattlePrepare => state == V02RunState.Combat &&
                                                    EnsureMainTrialFlowService().IsChapterTwoNormalRound(CurrentRound);
+        public bool IsCoreLoopComplete()
+        {
+            MainTrialFlowService flowService = mainTrialFlowService != null
+                ? mainTrialFlowService
+                : EnsureMainTrialFlowService();
+            return flowService.GetCurrentPhase() == MainTrialPhase.CoreLoopComplete;
+        }
 
         private void OnEnable()
         {
@@ -258,6 +265,12 @@ namespace TalismanBag.V02.Run
             if (round == null)
             {
                 return false;
+            }
+
+            if (IsCoreLoopComplete())
+            {
+                battleLogUI?.AddLog("核心闭环已完成：当前停在备战页，不再重复开战。");
+                return true;
             }
 
             if (state == V02RunState.RunLose)
@@ -600,7 +613,7 @@ namespace TalismanBag.V02.Run
             MainTrialFlowService flowService = EnsureMainTrialFlowService();
             if (flowService.GetCurrentPhase() == MainTrialPhase.CoreLoopComplete)
             {
-                OpenCoreLoopCompleteHome();
+                OpenCoreLoopCompletePrepare();
                 return;
             }
 
@@ -608,7 +621,7 @@ namespace TalismanBag.V02.Run
             LogChapterTwoBossRewardResult(rewardResult);
             flowService.OnChapter2RewardClaimed();
             combatController?.SetRunComplete();
-            OpenCoreLoopCompleteHome();
+            OpenCoreLoopCompletePrepare();
         }
 
         private void OpenChapterOneHomeGreybox()
@@ -766,7 +779,7 @@ namespace TalismanBag.V02.Run
                 ContinuePostBattleFromHome);
         }
 
-        private void OpenCoreLoopCompleteHome()
+        private void OpenCoreLoopCompletePrepare()
         {
             state = V02RunState.Reward;
             HidePreBattlePopups();
@@ -774,24 +787,22 @@ namespace TalismanBag.V02.Run
             fixedRewardPanel?.Hide();
             bossInfoPanel?.Hide();
             runResultPanel?.Hide();
+            homeGreyboxPanel?.Hide();
+            talismanUpgradePanel?.Hide();
+            combatController?.SetRunComplete();
 
             const string title = "核心闭环已完成";
             const string status = "下一阶段暂未开放。\n当前进度：2-10 已完成。";
             SetText(roundInfoText, title);
             SetText(prepHintText, status);
 
-            MainHomeGreyboxPanel panel = EnsureHomeGreyboxPanel();
-            if (panel == null)
+            if (V03BattlePrepareInteractionController.TryOpenPrepareThen(() =>
+                battleLogUI?.AddLog("核心闭环已完成：停在备战页。")))
             {
-                battleLogUI?.AddLog("核心闭环已完成：2-10 已完成，下一阶段暂未开放。");
                 return;
             }
 
-            panel.ShowComplete(
-                title,
-                BuildHomeResourceText(),
-                status,
-                () => battleLogUI?.AddLog("核心闭环完成页已关闭"));
+            battleLogUI?.AddLog("核心闭环已完成：备战页暂未就绪，停留在当前试炼页。");
         }
 
         private void OpenHomeGreybox(string title, string status, System.Action onCultivate, System.Action onContinue)
@@ -2422,7 +2433,7 @@ namespace TalismanBag.V02.Run
             switch (route.routeType)
             {
                 case MainTrialStartupRouteType.CompleteHome:
-                    OpenCoreLoopCompleteHome();
+                    OpenCoreLoopCompletePrepare();
                     return;
                 case MainTrialStartupRouteType.BossReward:
                     OpenChapterTwoBossRewardPanel();
@@ -2535,12 +2546,14 @@ namespace TalismanBag.V02.Run
         {
             if (stageProgressBar != null)
             {
+                EnsureStageProgressVisibleParent(stageProgressBar);
                 return stageProgressBar;
             }
 
             stageProgressBar = FindObjectOfType<V02StageProgressBar>(true);
             if (stageProgressBar != null)
             {
+                EnsureStageProgressVisibleParent(stageProgressBar);
                 return stageProgressBar;
             }
 
@@ -2554,7 +2567,54 @@ namespace TalismanBag.V02.Run
                     true);
             }
 
+            EnsureStageProgressVisibleParent(stageProgressBar);
             return stageProgressBar;
+        }
+
+        private void EnsureStageProgressVisibleParent(V02StageProgressBar progressBar)
+        {
+            if (progressBar == null || !IsStageProgressInsideFormationInfo(progressBar.transform))
+            {
+                return;
+            }
+
+            Transform progressParent = FindStageProgressRuntimeParent();
+            if (progressParent == null || progressBar.transform.parent == progressParent)
+            {
+                return;
+            }
+
+            progressBar.transform.SetParent(progressParent, true);
+            progressBar.transform.SetAsLastSibling();
+        }
+
+        private bool IsStageProgressInsideFormationInfo(Transform progressTransform)
+        {
+            if (progressTransform == null)
+            {
+                return false;
+            }
+
+            Transform formationInfoTransform = formationInfoPanel != null
+                ? formationInfoPanel.transform
+                : GameObject.Find("V02FormationInfoArea")?.transform;
+            if (formationInfoTransform != null && progressTransform.IsChildOf(formationInfoTransform))
+            {
+                return true;
+            }
+
+            Transform parent = progressTransform.parent;
+            while (parent != null)
+            {
+                if (parent.name == "V02FormationInfoArea")
+                {
+                    return true;
+                }
+
+                parent = parent.parent;
+            }
+
+            return false;
         }
 
         private Transform FindStageProgressRuntimeParent()

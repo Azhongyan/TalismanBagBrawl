@@ -11,11 +11,15 @@ using UnityEngine.UI;
 
 namespace TalismanBag.V03.Forge
 {
+    [ExecuteAlways]
     public sealed class V03TalismanUpgradeSceneController : MonoBehaviour
     {
         private const string DefaultFirstUpgradeItemId = "fire_talisman_basic";
         private const string HomeSceneName = "Scene_TalismanBag_V03_MainHome";
         private const string HomeScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V03_MainHome.unity";
+        private const string TrialSceneName = "Scene_TalismanBag_V02_FormationCounter";
+        private const string TrialScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity";
+        private const string PageRootName = "V03TalismanUpgradePageRoot";
 
         private static readonly ResourceType[] ResourceOrder =
         {
@@ -49,15 +53,37 @@ namespace TalismanBag.V03.Forge
         private Text popupBodyText;
         private GameObject guideRoot;
         private Text guideSlotText;
+        private bool usingEditorPreviewData;
 
         private void Awake()
         {
+            if (!Application.isPlaying)
+            {
+                BuildEditablePreview();
+                return;
+            }
+
             EnsureServices();
             EnsureCanvas();
             EnsureEventSystem();
             BuildPage();
             SelectInitialItem();
             RefreshAll();
+        }
+
+        public void BuildEditablePreview()
+        {
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
+            usingEditorPreviewData = true;
+            EnsureCanvas();
+            BuildPage();
+            SelectInitialItem();
+            RefreshEditorPreview();
+            usingEditorPreviewData = false;
         }
 
         private void BuildPage()
@@ -67,7 +93,13 @@ namespace TalismanBag.V03.Forge
                 return;
             }
 
-            GameObject root = new("V03TalismanUpgradePageRoot", typeof(RectTransform), typeof(Image));
+            pageRoot = FindPageRoot();
+            if (pageRoot != null && TryBindExistingPage())
+            {
+                return;
+            }
+
+            GameObject root = new(PageRootName, typeof(RectTransform), typeof(Image));
             root.transform.SetParent(canvas.transform, false);
             pageRoot = root.GetComponent<RectTransform>();
             Stretch(pageRoot);
@@ -75,11 +107,128 @@ namespace TalismanBag.V03.Forge
 
             CreateBackgroundSlot(pageRoot);
             CreateTopBar(pageRoot);
+            CreatePageHeader(pageRoot);
+            CreateDevelopTabBar(pageRoot);
             CreateResourceStrip(pageRoot);
             CreateItemList(pageRoot);
             CreateDetailPanel(pageRoot);
+            CreateBottomBar(pageRoot);
             CreateInfoPopup(pageRoot);
             CreateGuideOverlay(pageRoot);
+        }
+
+        private RectTransform FindPageRoot()
+        {
+            if (canvas == null)
+            {
+                return null;
+            }
+
+            Transform found = FindDeepChild(canvas.transform, PageRootName);
+            return found != null ? found as RectTransform : null;
+        }
+
+        private bool TryBindExistingPage()
+        {
+            if (pageRoot == null)
+            {
+                return false;
+            }
+
+            resourceText = FindText(pageRoot, "ResourceText");
+            itemNameText = FindText(pageRoot, "ItemName");
+            levelText = FindText(pageRoot, "ItemLevel");
+            beforeText = FindText(FindDeepChild(pageRoot, "BeforeBlock"), "Body");
+            afterText = FindText(FindDeepChild(pageRoot, "AfterBlock"), "Body");
+            costText = FindText(pageRoot, "CostText");
+            statusText = FindText(pageRoot, "StatusText");
+            upgradeButton = FindButton(pageRoot, "UpgradeButton");
+            upgradeButtonText = upgradeButton != null ? upgradeButton.GetComponentInChildren<Text>(true) : null;
+            infoPopupRoot = FindGameObject(pageRoot, "V03Upgrade_ItemInfoPopup");
+            popupTitleText = FindText(pageRoot, "PopupTitle");
+            popupBodyText = FindText(pageRoot, "PopupBody");
+            guideRoot = FindGameObject(pageRoot, "V03Upgrade_GuideOverlay");
+            guideSlotText = FindText(FindDeepChild(pageRoot, "V03Upgrade_GuideImageSlot"), "Text");
+
+            BindExistingItemCards();
+            BindExistingButtons();
+
+            return resourceText != null &&
+                   itemNameText != null &&
+                   levelText != null &&
+                   beforeText != null &&
+                   afterText != null &&
+                   costText != null &&
+                   statusText != null &&
+                   upgradeButton != null &&
+                   infoPopupRoot != null &&
+                   guideRoot != null &&
+                   itemCards.Count > 0;
+        }
+
+        private void BindExistingItemCards()
+        {
+            itemCards.Clear();
+            GameObject listPanel = FindGameObject(pageRoot, "V03Upgrade_TalismanListPanel");
+            if (listPanel == null)
+            {
+                return;
+            }
+
+            foreach (Transform child in listPanel.transform)
+            {
+                if (!child.name.StartsWith("TalismanCard_", System.StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                Text idText = FindText(child, "ItemId");
+                string itemId = idText != null ? idText.text : string.Empty;
+                if (string.IsNullOrWhiteSpace(itemId))
+                {
+                    continue;
+                }
+
+                ItemCardView card = new()
+                {
+                    root = child.gameObject,
+                    image = child.GetComponent<Image>(),
+                    itemId = itemId.Trim(),
+                    titleText = FindText(child, "Name"),
+                    levelText = FindText(child, "Level"),
+                    idText = idText
+                };
+                itemCards.Add(card);
+
+                Button button = child.GetComponent<Button>();
+                if (Application.isPlaying && button != null)
+                {
+                    string capturedItemId = card.itemId;
+                    button.onClick.AddListener(() => SelectItem(capturedItemId));
+                }
+            }
+        }
+
+        private void BindExistingButtons()
+        {
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+
+            FindButton(pageRoot, "V03Upgrade_BackHomeButton")?.onClick.AddListener(LoadHome);
+            FindButton(pageRoot, "InfoButton")?.onClick.AddListener(ShowInfoPopup);
+            FindButton(pageRoot, "PopupCloseButton")?.onClick.AddListener(() => infoPopupRoot.SetActive(false));
+            upgradeButton?.onClick.AddListener(UpgradeSelected);
+
+            FindButton(pageRoot, "Tab_Reroll_Locked")?.onClick.AddListener(ShowLockedModuleHint);
+            FindButton(pageRoot, "Tab_Synthesis_Locked")?.onClick.AddListener(ShowLockedModuleHint);
+            FindButton(pageRoot, "Tab_Forge_Locked")?.onClick.AddListener(ShowLockedModuleHint);
+            FindButton(pageRoot, "BottomNav_Home")?.onClick.AddListener(LoadHome);
+            FindButton(pageRoot, "BottomNav_Develop")?.onClick.AddListener(() => SetStatus("当前已在养成页。"));
+            FindButton(pageRoot, "BottomNav_Trial")?.onClick.AddListener(EnterTrialFromBottomBar);
+            FindButton(pageRoot, "BottomNav_Explore")?.onClick.AddListener(ShowLockedModuleHint);
+            FindButton(pageRoot, "BottomNav_More")?.onClick.AddListener(ShowLockedModuleHint);
         }
 
         private void CreateBackgroundSlot(Transform parent)
@@ -104,31 +253,127 @@ namespace TalismanBag.V03.Forge
         private void CreateTopBar(Transform parent)
         {
             GameObject titleBar = CreatePanel(
-                "V03Upgrade_TitleBar",
+                "TopBar_Global",
                 parent,
                 new Color(0.02f, 0.025f, 0.024f, 0.82f));
             RectTransform rect = titleBar.GetComponent<RectTransform>();
             AnchorTop(rect, new Vector2(0f, 0f), new Vector2(1080f, 170f));
 
             CreateText(
-                "Title",
+                "PlayerIdentity",
                 titleBar.transform,
-                "升级符箓",
-                54,
+                "小满  Lv.12",
+                32,
                 FontStyle.Bold,
                 new Color(0.92f, 0.9f, 0.78f),
-                TextAnchor.MiddleCenter,
-                new Vector2(0f, -88f),
-                new Vector2(620f, 88f));
+                TextAnchor.MiddleLeft,
+                new Vector2(-305f, -86f),
+                new Vector2(320f, 72f));
+
+            CreateText(
+                "TopResourceHint",
+                titleBar.transform,
+                "灵石  符纸  朱砂",
+                25,
+                FontStyle.Bold,
+                new Color(0.78f, 0.86f, 0.74f),
+                TextAnchor.MiddleRight,
+                new Vector2(220f, -106f),
+                new Vector2(360f, 54f));
 
             CreateButton(
                 "V03Upgrade_BackHomeButton",
                 titleBar.transform,
                 "返回首页",
-                new Vector2(-410f, -88f),
+                new Vector2(-430f, -86f),
                 new Vector2(220f, 76f),
                 new Color(0.17f, 0.21f, 0.2f, 0.98f),
                 LoadHome);
+
+            CreateButton(
+                "V03Upgrade_SettingsButton",
+                titleBar.transform,
+                "设置",
+                new Vector2(430f, -68f),
+                new Vector2(140f, 58f),
+                new Color(0.13f, 0.16f, 0.15f, 0.9f),
+                ShowLockedModuleHint);
+        }
+
+        private void CreatePageHeader(Transform parent)
+        {
+            GameObject header = CreatePanel(
+                "PageHeader",
+                parent,
+                new Color(0.055f, 0.066f, 0.056f, 0.82f));
+            RectTransform rect = header.GetComponent<RectTransform>();
+            AnchorTop(rect, new Vector2(0f, -188f), new Vector2(960f, 96f));
+            AddOutline(header, new Color(0.28f, 0.34f, 0.25f, 0.7f), new Vector2(1.5f, -1.5f));
+
+            CreateText(
+                "Title",
+                header.transform,
+                "符桌",
+                38,
+                FontStyle.Bold,
+                new Color(0.94f, 0.88f, 0.64f),
+                TextAnchor.MiddleLeft,
+                new Vector2(-210f, -50f),
+                new Vector2(240f, 62f));
+
+            CreateText(
+                "Subtitle",
+                header.transform,
+                "符箓升级",
+                28,
+                FontStyle.Bold,
+                new Color(0.78f, 0.86f, 0.74f),
+                TextAnchor.MiddleLeft,
+                new Vector2(70f, -50f),
+                new Vector2(260f, 62f));
+        }
+
+        private void CreateDevelopTabBar(Transform parent)
+        {
+            GameObject tabBar = CreatePanel(
+                "DevelopTabBar",
+                parent,
+                new Color(0.075f, 0.088f, 0.078f, 0.92f));
+            RectTransform rect = tabBar.GetComponent<RectTransform>();
+            AnchorTop(rect, new Vector2(0f, -294f), new Vector2(960f, 86f));
+
+            CreateButton(
+                "Tab_Upgrade_Selected",
+                tabBar.transform,
+                "升级",
+                new Vector2(-330f, -43f),
+                new Vector2(180f, 62f),
+                new Color(0.32f, 0.25f, 0.12f, 0.98f),
+                () => SetStatus("当前已在符箓升级。"));
+            CreateButton(
+                "Tab_Reroll_Locked",
+                tabBar.transform,
+                "洗练",
+                new Vector2(-110f, -43f),
+                new Vector2(180f, 62f),
+                new Color(0.12f, 0.14f, 0.13f, 0.9f),
+                ShowLockedModuleHint);
+            CreateButton(
+                "Tab_Synthesis_Locked",
+                tabBar.transform,
+                "合成",
+                new Vector2(110f, -43f),
+                new Vector2(180f, 62f),
+                new Color(0.12f, 0.14f, 0.13f, 0.9f),
+                ShowLockedModuleHint);
+            CreateButton(
+                "Tab_Forge_Locked",
+                tabBar.transform,
+                "锻造",
+                new Vector2(330f, -43f),
+                new Vector2(180f, 62f),
+                new Color(0.12f, 0.14f, 0.13f, 0.9f),
+                ShowLockedModuleHint);
         }
 
         private void CreateResourceStrip(Transform parent)
@@ -138,7 +383,7 @@ namespace TalismanBag.V03.Forge
                 parent,
                 new Color(0.11f, 0.13f, 0.12f, 0.96f));
             RectTransform rect = strip.GetComponent<RectTransform>();
-            AnchorTop(rect, new Vector2(0f, -190f), new Vector2(960f, 88f));
+            AnchorTop(rect, new Vector2(0f, -396f), new Vector2(960f, 72f));
             AddOutline(strip, new Color(0.35f, 0.4f, 0.33f, 0.85f), new Vector2(2f, -2f));
 
             resourceText = CreateText(
@@ -159,7 +404,7 @@ namespace TalismanBag.V03.Forge
                 parent,
                 new Color(0.085f, 0.105f, 0.098f, 0.98f));
             RectTransform rect = panel.GetComponent<RectTransform>();
-            AnchorTop(rect, new Vector2(-280f, -315f), new Vector2(420f, 1230f));
+            AnchorTop(rect, new Vector2(-280f, -490f), new Vector2(420f, 1030f));
             AddOutline(panel, new Color(0.45f, 0.52f, 0.42f, 0.85f), new Vector2(2f, -2f));
 
             CreateText(
@@ -189,7 +434,7 @@ namespace TalismanBag.V03.Forge
                 parent,
                 new Color(0.09f, 0.095f, 0.088f, 0.985f));
             RectTransform rect = panel.GetComponent<RectTransform>();
-            AnchorTop(rect, new Vector2(245f, -315f), new Vector2(530f, 1230f));
+            AnchorTop(rect, new Vector2(245f, -490f), new Vector2(530f, 1030f));
             AddOutline(panel, new Color(0.58f, 0.52f, 0.34f, 0.85f), new Vector2(2f, -2f));
 
             itemNameText = CreateText(
@@ -313,7 +558,10 @@ namespace TalismanBag.V03.Forge
             Button button = cardObject.AddComponent<Button>();
             button.targetGraphic = cardObject.GetComponent<Image>();
             string itemId = row.itemId;
-            button.onClick.AddListener(() => SelectItem(itemId));
+            if (Application.isPlaying)
+            {
+                button.onClick.AddListener(() => SelectItem(itemId));
+            }
 
             Text title = CreateText(
                 "Name",
@@ -447,6 +695,61 @@ namespace TalismanBag.V03.Forge
             guideRoot.SetActive(false);
         }
 
+        private void CreateBottomBar(Transform parent)
+        {
+            GameObject bottomBar = CreatePanel(
+                "BottomBar_Global",
+                parent,
+                new Color(0.018f, 0.022f, 0.022f, 0.92f));
+            RectTransform rect = bottomBar.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, 42f);
+            rect.sizeDelta = new Vector2(900f, 124f);
+
+            CreateButton(
+                "BottomNav_Home",
+                bottomBar.transform,
+                "首页",
+                new Vector2(-336f, -22f),
+                new Vector2(146f, 76f),
+                new Color(0.12f, 0.15f, 0.14f, 0.95f),
+                LoadHome);
+            CreateButton(
+                "BottomNav_Develop",
+                bottomBar.transform,
+                "养成",
+                new Vector2(-168f, -22f),
+                new Vector2(146f, 76f),
+                new Color(0.33f, 0.25f, 0.12f, 0.98f),
+                () => SetStatus("当前已在养成页。"));
+            CreateButton(
+                "BottomNav_Trial",
+                bottomBar.transform,
+                "试炼",
+                new Vector2(0f, -22f),
+                new Vector2(146f, 76f),
+                new Color(0.12f, 0.15f, 0.14f, 0.95f),
+                EnterTrialFromBottomBar);
+            CreateButton(
+                "BottomNav_Explore",
+                bottomBar.transform,
+                "探索",
+                new Vector2(168f, -22f),
+                new Vector2(146f, 76f),
+                new Color(0.12f, 0.15f, 0.14f, 0.95f),
+                ShowLockedModuleHint);
+            CreateButton(
+                "BottomNav_More",
+                bottomBar.transform,
+                "更多",
+                new Vector2(336f, -22f),
+                new Vector2(146f, 76f),
+                new Color(0.12f, 0.15f, 0.14f, 0.95f),
+                ShowLockedModuleHint);
+        }
+
         private void SelectInitialItem()
         {
             string preferredItemId = ResolveFirstUpgradeItemId();
@@ -475,10 +778,55 @@ namespace TalismanBag.V03.Forge
 
         private void RefreshAll()
         {
+            if (!Application.isPlaying)
+            {
+                RefreshEditorPreview();
+                return;
+            }
+
             RefreshResources();
             RefreshItemCards();
             RefreshDetail();
             RefreshGuide();
+        }
+
+        private void RefreshEditorPreview()
+        {
+            List<TalismanLevelConfig> rows = BuildPreviewTalismanRows();
+            TalismanLevelConfig row = FindPreviewRow(selectedItemId);
+            row ??= rows.Count > 0 ? rows[0] : null;
+            selectedItemId = row != null ? row.itemId : ResolveFirstUpgradeItemId();
+
+            SetText(resourceText, "灵石 120    符纸 60    朱砂 10    初阶符胚 1    修为 0");
+
+            foreach (ItemCardView card in itemCards)
+            {
+                bool selected = string.Equals(card.itemId, selectedItemId, System.StringComparison.Ordinal);
+                if (card.image != null)
+                {
+                    card.image.color = selected
+                        ? new Color(0.34f, 0.28f, 0.13f, 0.98f)
+                        : new Color(0.13f, 0.16f, 0.14f, 0.98f);
+                }
+
+                SetText(card.levelText, "Lv.1");
+            }
+
+            SetText(itemNameText, GetDisplayName(row, selectedItemId));
+            SetText(levelText, "当前等级 Lv.1");
+            SetText(beforeText, "Lv.1\n基础倍率 x1.00");
+            SetText(afterText, BuildAfterText(row));
+            SetText(costText, BuildCostTextForPreview(row));
+            SetText(statusText, "编辑预览：物资满足，可升级。");
+            SetText(upgradeButtonText, "升级符箓");
+
+            if (guideRoot != null)
+            {
+                guideRoot.SetActive(true);
+                guideRoot.transform.SetAsLastSibling();
+            }
+
+            SetText(guideSlotText, "图片插槽占位");
         }
 
         private void RefreshResources()
@@ -611,6 +959,30 @@ namespace TalismanBag.V03.Forge
             infoPopupRoot.transform.SetAsLastSibling();
         }
 
+        private void ShowLockedModuleHint()
+        {
+            SetStatus("后续开放");
+        }
+
+        private void EnterTrialFromBottomBar()
+        {
+            MainTrialPhase phase = EnsureMainTrialFlowService().GetCurrentPhase();
+            if (phase == MainTrialPhase.FirstUpgradeRequired ||
+                phase == MainTrialPhase.Chapter1RewardClaimed)
+            {
+                SetStatus("先完成升级符箓，再从首页进入试炼。");
+                RefreshGuide();
+                return;
+            }
+
+            LoadTrial();
+        }
+
+        private void SetStatus(string message)
+        {
+            SetText(statusText, message);
+        }
+
         private void CompleteFirstUpgradeAndReturn(string itemId)
         {
             EnsureMainTrialFlowService().OnFirstUpgradeCompleted(itemId);
@@ -628,8 +1000,24 @@ namespace TalismanBag.V03.Forge
             SceneManager.LoadScene(HomeSceneName, LoadSceneMode.Single);
         }
 
+        private void LoadTrial()
+        {
+            if (UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath(TrialScenePath) < 0)
+            {
+                Debug.LogError($"[V0.3-TalismanUpgrade] Trial scene is missing from Build Settings: {TrialScenePath}", this);
+                return;
+            }
+
+            SceneManager.LoadScene(TrialSceneName, LoadSceneMode.Single);
+        }
+
         private List<TalismanLevelConfig> BuildTalismanRows()
         {
+            if (usingEditorPreviewData || !Application.isPlaying)
+            {
+                return BuildPreviewTalismanRows();
+            }
+
             List<TalismanLevelConfig> rows = new();
             HashSet<string> seen = new();
             IReadOnlyList<TalismanLevelConfig> configuredLevels = EnsureUpgradeService().GetConfiguredLevels();
@@ -661,6 +1049,37 @@ namespace TalismanBag.V03.Forge
             }
 
             return rows;
+        }
+
+        private List<TalismanLevelConfig> BuildPreviewTalismanRows()
+        {
+            TalismanUpgradeConfig config = Resources.Load<TalismanUpgradeConfig>(TalismanUpgradeConfig.DefaultResourcePath);
+            if (config != null && config.levels != null && config.levels.Count > 0)
+            {
+                return new List<TalismanLevelConfig>(config.levels);
+            }
+
+            return TalismanUpgradeConfig.BuildDefaultLevels();
+        }
+
+        private TalismanLevelConfig FindPreviewRow(string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                return null;
+            }
+
+            List<TalismanLevelConfig> rows = BuildPreviewTalismanRows();
+            foreach (TalismanLevelConfig row in rows)
+            {
+                if (row != null &&
+                    string.Equals(row.itemId, itemId, System.StringComparison.Ordinal))
+                {
+                    return row;
+                }
+            }
+
+            return null;
         }
 
         private TalismanLevelConfig FindConfiguredRow(string itemId)
@@ -756,6 +1175,42 @@ namespace TalismanBag.V03.Forge
             }
 
             return builder.ToString().TrimEnd();
+        }
+
+        private static string BuildCostTextForPreview(TalismanLevelConfig levelConfig)
+        {
+            StringBuilder builder = new();
+            builder.AppendLine("消耗");
+            if (levelConfig?.costs == null || levelConfig.costs.Count == 0)
+            {
+                builder.Append("无");
+                return builder.ToString();
+            }
+
+            foreach (ResourceCost cost in levelConfig.costs)
+            {
+                if (!cost.IsValid)
+                {
+                    continue;
+                }
+
+                builder.AppendLine($"{GetResourceDisplayName(cost.resourceType)} {GetPreviewResourceAmount(cost.resourceType)}/{cost.amount}");
+            }
+
+            return builder.ToString().TrimEnd();
+        }
+
+        private static int GetPreviewResourceAmount(ResourceType resourceType)
+        {
+            return resourceType switch
+            {
+                ResourceType.SpiritStone => 120,
+                ResourceType.TalismanPaper => 60,
+                ResourceType.Cinnabar => 10,
+                ResourceType.BasicTalismanEmbryo => 1,
+                ResourceType.Cultivation => 0,
+                _ => 0
+            };
         }
 
         private string ResolveFirstUpgradeItemId()
@@ -907,7 +1362,10 @@ namespace TalismanBag.V03.Forge
 
             Button button = buttonObject.GetComponent<Button>();
             button.targetGraphic = image;
-            button.onClick.AddListener(onClick);
+            if (Application.isPlaying)
+            {
+                button.onClick.AddListener(onClick);
+            }
 
             Text labelText = CreateText(
                 "Text",
@@ -919,6 +1377,56 @@ namespace TalismanBag.V03.Forge
                 TextAnchor.MiddleCenter);
             Stretch(labelText.rectTransform);
             return button;
+        }
+
+        private static void SetText(Text text, string value)
+        {
+            if (text != null)
+            {
+                text.text = value;
+            }
+        }
+
+        private static GameObject FindGameObject(Transform parent, string objectName)
+        {
+            Transform found = FindDeepChild(parent, objectName);
+            return found != null ? found.gameObject : null;
+        }
+
+        private static Button FindButton(Transform parent, string objectName)
+        {
+            Transform found = FindDeepChild(parent, objectName);
+            return found != null ? found.GetComponent<Button>() : null;
+        }
+
+        private static Text FindText(Transform parent, string objectName)
+        {
+            Transform found = FindDeepChild(parent, objectName);
+            return found != null ? found.GetComponent<Text>() : null;
+        }
+
+        private static Transform FindDeepChild(Transform parent, string objectName)
+        {
+            if (parent == null || string.IsNullOrWhiteSpace(objectName))
+            {
+                return null;
+            }
+
+            foreach (Transform child in parent)
+            {
+                if (child.name == objectName)
+                {
+                    return child;
+                }
+
+                Transform found = FindDeepChild(child, objectName);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
         }
 
         private static Text CreateText(
