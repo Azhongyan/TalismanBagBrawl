@@ -603,7 +603,8 @@ namespace TalismanBag.V02.Run
             RewardResult rewardResult = EnsureCoreLoopRewardService().GrantBossClearRewards(GetChapterTwoBossRewardConfig());
             LogChapterTwoBossRewardResult(rewardResult);
             flowService.OnChapter2RewardClaimed();
-            FinishRunWin();
+            combatController?.SetRunComplete();
+            OpenCoreLoopCompleteHome();
         }
 
         private void OpenChapterOneHomeGreybox()
