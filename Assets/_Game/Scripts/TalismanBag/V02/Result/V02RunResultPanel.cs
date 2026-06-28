@@ -55,6 +55,7 @@ namespace TalismanBag.V02.Result
             if (panel != null)
             {
                 panel.SetActive(true);
+                panel.transform.SetAsLastSibling();
             }
         }
 

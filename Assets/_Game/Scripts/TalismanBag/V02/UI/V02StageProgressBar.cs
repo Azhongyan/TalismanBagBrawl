@@ -282,7 +282,6 @@ namespace TalismanBag.V02.UI
                 return;
             }
 
-            RemoveExtraRuntimeNodes();
             runtimeNodes.Clear();
 
             GetBaseLineMetrics(out float startX, out float endX, out float lineY);
@@ -303,6 +302,7 @@ namespace TalismanBag.V02.UI
                 CreateNode(node, new Vector2(x, lineY));
             }
 
+            RemoveExtraRuntimeNodes();
             SetProgressLine(startX, progressEndX, lineY);
         }
 
@@ -344,12 +344,13 @@ namespace TalismanBag.V02.UI
                     ? Mathf.Max(66f, shapeSize.y + Mathf.Abs(dotOffset.y) + 22f)
                     : Mathf.Max(46f, shapeSize.y + Mathf.Abs(dotOffset.y)));
 
-            string nodeName = $"Node_{node.stageId}";
-            Transform existingNode = nodeRoot.Find(nodeName);
+            string nodeName = GetNodeObjectName(node);
+            Transform existingNode = FindNodeTransform(node, nodeName);
             bool nodeCreated = existingNode == null;
             GameObject nodeObject;
             if (existingNode != null)
             {
+                existingNode.name = nodeName;
                 nodeObject = existingNode.gameObject;
             }
             else
@@ -369,8 +370,8 @@ namespace TalismanBag.V02.UI
                 nodeRect.sizeDelta = containerSize;
             }
 
-            string shapeName = node.isBoss ? $"BossDot_{node.stageId}" : $"Dot_{node.stageId}";
-            V02StageProgressNodeGraphic graphic = GetOrCreateNodeGraphic(nodeObject.transform, shapeName, out RectTransform shapeRect, out bool shapeCreated);
+            string shapeName = GetShapeObjectName(node);
+            V02StageProgressNodeGraphic graphic = GetOrCreateNodeGraphic(nodeObject.transform, shapeName, node.isBoss, out RectTransform shapeRect, out bool shapeCreated);
             bool resetShapeLayout = shapeCreated || !preserveManualNodeLayout;
             if (resetShapeLayout)
             {
@@ -424,6 +425,7 @@ namespace TalismanBag.V02.UI
         private V02StageProgressNodeGraphic GetOrCreateNodeGraphic(
             Transform parent,
             string shapeName,
+            bool isBoss,
             out RectTransform shapeRect,
             out bool created)
         {
@@ -432,6 +434,11 @@ namespace TalismanBag.V02.UI
             if (shapeTransform == null)
             {
                 shapeTransform = parent.Find("Shape");
+            }
+
+            if (shapeTransform == null)
+            {
+                shapeTransform = FindLegacyShapeTransform(parent, isBoss);
             }
 
             V02StageProgressNodeGraphic graphic = shapeTransform != null
@@ -452,7 +459,9 @@ namespace TalismanBag.V02.UI
                 created = true;
             }
 
-            if (shapeTransform.name == "Shape")
+            if (shapeTransform.name == "Shape" ||
+                shapeTransform.name.StartsWith("Dot_", StringComparison.Ordinal) ||
+                shapeTransform.name.StartsWith("BossDot_", StringComparison.Ordinal))
             {
                 shapeTransform.name = shapeName;
             }
@@ -464,6 +473,109 @@ namespace TalismanBag.V02.UI
 
             shapeRect = shapeTransform.GetComponent<RectTransform>();
             return graphic;
+        }
+
+        private Transform FindNodeTransform(V02StageProgressNodeData node, string nodeName)
+        {
+            Transform existingNode = nodeRoot.Find(nodeName);
+            if (existingNode != null)
+            {
+                return existingNode;
+            }
+
+            string legacyNodeName = $"Node_{node.stageId}";
+            existingNode = nodeRoot.Find(legacyNodeName);
+            if (existingNode != null)
+            {
+                return existingNode;
+            }
+
+            for (int i = 0; i < nodeRoot.childCount; i++)
+            {
+                Transform child = nodeRoot.GetChild(i);
+                if (child == null ||
+                    !child.name.StartsWith("Node_", StringComparison.Ordinal) ||
+                    !TryGetStageIndexFromNodeName(child.name, out int stageIndex))
+                {
+                    continue;
+                }
+
+                bool isBossSlot = node.isBoss && stageIndex == lastBossStageIndex;
+                bool isNormalSlot = !node.isBoss && stageIndex == node.stageIndex;
+                if (isBossSlot || isNormalSlot)
+                {
+                    return child;
+                }
+            }
+
+            return null;
+        }
+
+        private static Transform FindLegacyShapeTransform(Transform parent, bool isBoss)
+        {
+            if (parent == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform child = parent.GetChild(i);
+                if (child == null)
+                {
+                    continue;
+                }
+
+                bool nameMatches = isBoss
+                    ? child.name.StartsWith("BossDot_", StringComparison.Ordinal)
+                    : child.name.StartsWith("Dot_", StringComparison.Ordinal);
+                if (nameMatches || child.GetComponent<V02StageProgressNodeGraphic>() != null)
+                {
+                    return child;
+                }
+            }
+
+            return null;
+        }
+
+        private static string GetNodeObjectName(V02StageProgressNodeData node)
+        {
+            if (node == null)
+            {
+                return "Node_Unknown";
+            }
+
+            if (node.isBoss)
+            {
+                return "Node_Boss";
+            }
+
+            return node.stageIndex switch
+            {
+                1 => "Node_Start",
+                5 => "Node_Mid",
+                _ => $"Node_Stage{Mathf.Max(1, node.stageIndex)}"
+            };
+        }
+
+        private static string GetShapeObjectName(V02StageProgressNodeData node)
+        {
+            if (node == null)
+            {
+                return "Dot_Unknown";
+            }
+
+            if (node.isBoss)
+            {
+                return "BossDot_Boss";
+            }
+
+            return node.stageIndex switch
+            {
+                1 => "Dot_Start",
+                5 => "Dot_Mid",
+                _ => $"Dot_Stage{Mathf.Max(1, node.stageIndex)}"
+            };
         }
 
         private Color GetNodeFillColor(V02StageProgressNodeState state)
@@ -520,7 +632,7 @@ namespace TalismanBag.V02.UI
             HashSet<string> desiredNodeNames = new();
             for (int i = 0; i < lastNodes.Count; i++)
             {
-                desiredNodeNames.Add($"Node_{lastNodes[i].stageId}");
+                desiredNodeNames.Add(GetNodeObjectName(lastNodes[i]));
             }
 
             for (int i = nodeRoot.childCount - 1; i >= 0; i--)
@@ -533,6 +645,43 @@ namespace TalismanBag.V02.UI
                     DestroyNodeObject(child.gameObject);
                 }
             }
+        }
+
+        private static bool TryGetStageIndexFromNodeName(string nodeName, out int stageIndex)
+        {
+            stageIndex = 0;
+            if (string.IsNullOrWhiteSpace(nodeName))
+            {
+                return false;
+            }
+
+            int dashIndex = nodeName.LastIndexOf('-');
+            if (dashIndex >= 0 && dashIndex < nodeName.Length - 1 &&
+                int.TryParse(nodeName.Substring(dashIndex + 1), out stageIndex))
+            {
+                return true;
+            }
+
+            const string stagePrefix = "Node_Stage";
+            if (nodeName.StartsWith(stagePrefix, StringComparison.Ordinal) &&
+                int.TryParse(nodeName.Substring(stagePrefix.Length), out stageIndex))
+            {
+                return true;
+            }
+
+            if (string.Equals(nodeName, "Node_Start", StringComparison.Ordinal))
+            {
+                stageIndex = 1;
+                return true;
+            }
+
+            if (string.Equals(nodeName, "Node_Mid", StringComparison.Ordinal))
+            {
+                stageIndex = 5;
+                return true;
+            }
+
+            return false;
         }
 
         private void ClearRuntimeNodes()
