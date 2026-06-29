@@ -25,6 +25,7 @@ namespace TalismanBag.V03.MainHome
             "FullBackgroundBlackUnderlay";
         private const string HomeFullBackgroundImageName =
             "FullBackgroundArtworkImage";
+        private const string BottomNavRootName = "BottomNavBar_Root";
         private const float HomeFullBackgroundSize = 2200f;
 
         [SerializeField] private MainHomeGreyboxPanel homePanel;
@@ -37,38 +38,12 @@ namespace TalismanBag.V03.MainHome
         private GameObject fallbackBottomNavRoot;
         private static Sprite homeFullBackgroundSprite;
 #if UNITY_EDITOR
-        private bool editorPreviewQueued;
-
         private void OnEnable()
         {
-            QueueEditorPreview();
         }
 
         private void OnValidate()
         {
-            QueueEditorPreview();
-        }
-
-        private void QueueEditorPreview()
-        {
-            if (Application.isPlaying || Application.isBatchMode || editorPreviewQueued)
-            {
-                return;
-            }
-
-            editorPreviewQueued = true;
-            UnityEditor.EditorApplication.delayCall += ApplyEditorPreviewDelayed;
-        }
-
-        private void ApplyEditorPreviewDelayed()
-        {
-            editorPreviewQueued = false;
-            if (this == null || Application.isPlaying)
-            {
-                return;
-            }
-
-            EnsureEditorPreview();
         }
 
         private void EnsureEditorPreview()
@@ -80,7 +55,6 @@ namespace TalismanBag.V03.MainHome
             }
 
             EnsureFullBackgroundSlot();
-            DisableHomeRootGraphics();
             homePanel.ApplyV03MainHomeUiueLayout();
             EnsureFallbackBottomNav(false);
         }
@@ -117,11 +91,6 @@ namespace TalismanBag.V03.MainHome
 #if UNITY_EDITOR
             if (!Application.isPlaying)
             {
-                if (!Application.isBatchMode)
-                {
-                    EnsureEditorPreview();
-                }
-
                 return;
             }
 #endif
@@ -132,7 +101,6 @@ namespace TalismanBag.V03.MainHome
             }
 
             EnsureFullBackgroundSlot();
-            DisableHomeRootGraphics();
             homePanel.ApplyV03MainHomeUiueLayout();
 
             if (navigation == null)
@@ -214,15 +182,18 @@ namespace TalismanBag.V03.MainHome
 
             if (fallbackBottomNavRoot == null)
             {
-                Transform existing = canvas.transform.Find("BottomNavBar_Root");
+                Transform existing = FindReusableBottomNavRoot(canvas.transform);
                 fallbackBottomNavRoot = existing != null
                     ? existing.gameObject
-                    : new GameObject("BottomNavBar_Root", typeof(RectTransform), typeof(Image));
+                    : new GameObject(BottomNavRootName, typeof(RectTransform), typeof(Image));
             }
 
-            fallbackBottomNavRoot.transform.SetParent(canvas.transform, false);
-            fallbackBottomNavRoot.transform.SetAsLastSibling();
-            fallbackBottomNavRoot.SetActive(true);
+            bool createdBottomNav = fallbackBottomNavRoot.transform.parent == null;
+            if (createdBottomNav)
+            {
+                fallbackBottomNavRoot.transform.SetParent(canvas.transform, false);
+                fallbackBottomNavRoot.SetActive(true);
+            }
 
             RectTransform rect = fallbackBottomNavRoot.GetComponent<RectTransform>();
             if (rect == null)
@@ -230,29 +201,31 @@ namespace TalismanBag.V03.MainHome
                 rect = fallbackBottomNavRoot.AddComponent<RectTransform>();
             }
 
-            rect.anchorMin = new Vector2(0.5f, 0f);
-            rect.anchorMax = new Vector2(0.5f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, ResolveBottomNavInset(canvas));
-            rect.sizeDelta = new Vector2(BottomNavWidth, BottomNavHeight);
+            if (createdBottomNav)
+            {
+                rect.anchorMin = new Vector2(0.5f, 0f);
+                rect.anchorMax = new Vector2(0.5f, 0f);
+                rect.pivot = new Vector2(0.5f, 0f);
+                rect.anchoredPosition = new Vector2(0f, ResolveBottomNavInset(canvas));
+                rect.sizeDelta = new Vector2(BottomNavWidth, BottomNavHeight);
+            }
 
             Image background = fallbackBottomNavRoot.GetComponent<Image>();
+            bool addedBackground = false;
             if (background == null)
             {
                 background = fallbackBottomNavRoot.AddComponent<Image>();
+                addedBackground = true;
             }
 
-            background.color = Color.clear;
-            background.raycastTarget = false;
+            if (createdBottomNav || addedBackground)
+            {
+                background.color = Color.clear;
+                background.raycastTarget = false;
+            }
 
             if (fallbackBottomNavRoot.transform.childCount > 0)
             {
-                ApplyFallbackNavButtonRect("BottomNavHomeButton", -BottomNavButtonStep * 2f);
-                ApplyFallbackNavButtonRect("BottomNavRefineButton", -BottomNavButtonStep);
-                ApplyFallbackNavButtonRect("BottomNavTrialButton", 0f);
-                ApplyFallbackNavButtonRect("BottomNavExploreButton", BottomNavButtonStep);
-                ApplyFallbackNavButtonRect("BottomNavMoreButton", BottomNavButtonStep * 2f);
-
                 if (!bindButtons)
                 {
                     ClearFallbackButtonListeners(fallbackBottomNavRoot.transform);
@@ -268,7 +241,6 @@ namespace TalismanBag.V03.MainHome
                         OnRefineRequested,
                         OnTrialRequested,
                         null);
-                    fallbackBottomNavRoot?.transform.SetAsLastSibling();
                     EnsureFallbackForgeGuide()?.OnHomeShown();
                 });
                 BindFallbackNavButton(fallbackBottomNavRoot.transform, "BottomNavRefineButton", OnRefineRequested);
@@ -289,7 +261,6 @@ namespace TalismanBag.V03.MainHome
                     OnRefineRequested,
                     OnTrialRequested,
                     null);
-                fallbackBottomNavRoot?.transform.SetAsLastSibling();
                 EnsureFallbackForgeGuide()?.OnHomeShown();
             });
             CreateFallbackNavButton(rect, "BottomNavRefineButton", "养成", -BottomNavButtonStep, OnRefineRequested);
@@ -303,6 +274,63 @@ namespace TalismanBag.V03.MainHome
             {
                 ClearFallbackButtonListeners(rect);
             }
+        }
+
+        private static Transform FindReusableBottomNavRoot(Transform canvasTransform)
+        {
+            if (canvasTransform == null)
+            {
+                return null;
+            }
+
+            Transform keep = null;
+            Transform[] candidates = canvasTransform.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                Transform candidate = candidates[i];
+                if (candidate == null || candidate.name != BottomNavRootName)
+                {
+                    continue;
+                }
+
+                if (keep == null || ShouldPreferBottomNavRoot(candidate, keep, canvasTransform))
+                {
+                    keep = candidate;
+                }
+            }
+
+            if (!Application.isPlaying || keep == null)
+            {
+                return keep;
+            }
+
+            for (int i = candidates.Length - 1; i >= 0; i--)
+            {
+                Transform candidate = candidates[i];
+                if (candidate == null || candidate == keep || candidate.name != BottomNavRootName)
+                {
+                    continue;
+                }
+
+                UnityEngine.Object.Destroy(candidate.gameObject);
+            }
+
+            return keep;
+        }
+
+        private static bool ShouldPreferBottomNavRoot(
+            Transform candidate,
+            Transform current,
+            Transform canvasTransform)
+        {
+            bool candidateNested = candidate.parent != canvasTransform;
+            bool currentNested = current.parent != canvasTransform;
+            if (candidateNested != currentNested)
+            {
+                return candidateNested;
+            }
+
+            return candidate.gameObject.activeInHierarchy && !current.gameObject.activeInHierarchy;
         }
 
         private void ApplyFallbackNavButtonRect(string objectName, float x)
@@ -407,12 +435,15 @@ namespace TalismanBag.V03.MainHome
                 return;
             }
 
-            GameObject underlayObject = EnsureFullBackgroundUnderlay(canvas.transform);
+            GameObject underlayObject = EnsureFullBackgroundUnderlay(canvas.transform, out _);
             GameObject slotObject = EnsureSingleFullBackgroundSlot(canvas.transform, out bool createdSlot);
-            slotObject.transform.SetParent(canvas.transform, false);
-            slotObject.transform.SetSiblingIndex(
-                Mathf.Min(underlayObject.transform.GetSiblingIndex() + 1, canvas.transform.childCount - 1));
-            slotObject.SetActive(true);
+            if (createdSlot)
+            {
+                slotObject.transform.SetParent(canvas.transform, false);
+                slotObject.transform.SetSiblingIndex(
+                    Mathf.Min(underlayObject.transform.GetSiblingIndex() + 1, canvas.transform.childCount - 1));
+                slotObject.SetActive(true);
+            }
 
             RectTransform rect = slotObject.GetComponent<RectTransform>();
             if (rect == null)
@@ -420,7 +451,7 @@ namespace TalismanBag.V03.MainHome
                 rect = slotObject.AddComponent<RectTransform>();
             }
 
-            if (createdSlot || IsLegacyFullStretchRect(rect))
+            if (createdSlot)
             {
                 rect.anchorMin = new Vector2(0.5f, 0.5f);
                 rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -430,29 +461,51 @@ namespace TalismanBag.V03.MainHome
             }
 
             Image image = slotObject.GetComponent<Image>();
-            if (image == null)
+            if (image == null && createdSlot)
             {
                 image = slotObject.AddComponent<Image>();
             }
 
-            Sprite sprite = GetHomeFullBackgroundSprite();
-            image.sprite = sprite;
-            image.type = Image.Type.Simple;
-            image.preserveAspect = false;
-            image.color = sprite != null ? Color.white : Color.clear;
-            image.raycastTarget = false;
-            RemoveLegacyArtworkChildren(slotObject.transform);
+            if (createdSlot && image != null)
+            {
+                Sprite sprite = GetHomeFullBackgroundSprite();
+                image.sprite = sprite;
+                image.type = Image.Type.Simple;
+                image.preserveAspect = false;
+                image.color = sprite != null ? Color.white : Color.clear;
+                image.raycastTarget = false;
+            }
         }
 
-        private static GameObject EnsureFullBackgroundUnderlay(Transform canvasTransform)
+        private static GameObject EnsureFullBackgroundUnderlay(Transform canvasTransform, out bool createdUnderlay)
         {
+            createdUnderlay = false;
             Transform existing = canvasTransform.Find(HomeFullBackgroundUnderlayName);
-            GameObject underlayObject = existing != null
-                ? existing.gameObject
-                : new GameObject(HomeFullBackgroundUnderlayName, typeof(RectTransform), typeof(Image));
-            underlayObject.transform.SetParent(canvasTransform, false);
-            underlayObject.transform.SetAsFirstSibling();
-            underlayObject.SetActive(true);
+            if (existing == null)
+            {
+                foreach (Transform candidate in canvasTransform.GetComponentsInChildren<Transform>(true))
+                {
+                    if (candidate.name == HomeFullBackgroundUnderlayName)
+                    {
+                        existing = candidate;
+                        break;
+                    }
+                }
+            }
+
+            GameObject underlayObject;
+            if (existing != null)
+            {
+                underlayObject = existing.gameObject;
+            }
+            else
+            {
+                createdUnderlay = true;
+                underlayObject = new GameObject(HomeFullBackgroundUnderlayName, typeof(RectTransform), typeof(Image));
+                underlayObject.transform.SetParent(canvasTransform, false);
+                underlayObject.transform.SetAsFirstSibling();
+                underlayObject.SetActive(true);
+            }
 
             RectTransform rect = underlayObject.GetComponent<RectTransform>();
             if (rect == null)
@@ -460,22 +513,29 @@ namespace TalismanBag.V03.MainHome
                 rect = underlayObject.AddComponent<RectTransform>();
             }
 
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = Vector2.zero;
+            if (createdUnderlay)
+            {
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = Vector2.zero;
+                rect.sizeDelta = Vector2.zero;
+            }
 
             Image image = underlayObject.GetComponent<Image>();
+            bool addedImage = false;
             if (image == null)
             {
                 image = underlayObject.AddComponent<Image>();
+                addedImage = true;
             }
 
-            image.sprite = null;
-            image.color = Color.black;
-            image.raycastTarget = false;
-            DestroyDuplicateNamedChildren(canvasTransform, HomeFullBackgroundUnderlayName, underlayObject.transform);
+            if (createdUnderlay || addedImage)
+            {
+                image.sprite = null;
+                image.color = Color.black;
+                image.raycastTarget = false;
+            }
             return underlayObject;
         }
 
@@ -502,7 +562,6 @@ namespace TalismanBag.V03.MainHome
                 return new GameObject(HomeFullBackgroundSlotName, typeof(RectTransform), typeof(Image));
             }
 
-            DestroyDuplicateNamedChildren(canvasTransform, HomeFullBackgroundSlotName, keep);
             return keep.gameObject;
         }
 

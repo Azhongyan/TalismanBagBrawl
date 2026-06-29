@@ -91,7 +91,6 @@ namespace TalismanBag.V03.Navigation
                 EnterTrial,
                 null);
             ApplyBottomNavSafeLayout();
-            secondaryBottomNavRoot?.transform.SetAsLastSibling();
             forgeGuide?.OnHomeShown();
         }
 
@@ -205,39 +204,6 @@ namespace TalismanBag.V03.Navigation
 
         private void ApplyBottomNavSafeLayout()
         {
-            RectTransform rect = secondaryBottomNavRoot != null
-                ? secondaryBottomNavRoot.transform as RectTransform
-                : null;
-            if (rect == null)
-            {
-                return;
-            }
-
-            Canvas canvas = secondaryBottomNavRoot.GetComponentInParent<Canvas>(true);
-            rect.anchorMin = new Vector2(0.5f, 0f);
-            rect.anchorMax = new Vector2(0.5f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, ResolveBottomNavInset(canvas));
-            rect.sizeDelta = new Vector2(BottomNavWidth, BottomNavHeight);
-
-            Image background = secondaryBottomNavRoot.GetComponent<Image>();
-            if (background != null)
-            {
-                background.color = Color.clear;
-                background.raycastTarget = false;
-            }
-
-            Outline outline = secondaryBottomNavRoot.GetComponent<Outline>();
-            if (outline != null)
-            {
-                outline.enabled = false;
-            }
-
-            ApplyBottomNavButtonRect(homeButton, -BottomNavButtonStep * 2f);
-            ApplyBottomNavButtonRect(refineButton, -BottomNavButtonStep);
-            ApplyBottomNavButtonRect(trialButton, 0f);
-            ApplyBottomNavButtonRect(exploreButton, BottomNavButtonStep);
-            ApplyBottomNavButtonRect(moreButton, BottomNavButtonStep * 2f);
         }
 
         private static void ApplyBottomNavButtonRect(Button button, float x)

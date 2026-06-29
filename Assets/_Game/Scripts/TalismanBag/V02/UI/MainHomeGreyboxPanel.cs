@@ -279,17 +279,17 @@ namespace TalismanBag.V02.UI
             }
 
             panel ??= gameObject;
-            SetStretchFull(GetComponent<RectTransform>());
 
             Transform existingRoot = transform.Find("V03MainHomeUiueRoot");
             if (existingRoot != null)
             {
                 existingRoot.gameObject.SetActive(true);
-                DisableV03LayoutGroupGraphics(existingRoot);
                 AssignV03MainHomeReferences(existingRoot);
                 v03LayoutApplied = true;
                 return;
             }
+
+            SetStretchFull(GetComponent<RectTransform>());
 
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
@@ -440,7 +440,6 @@ namespace TalismanBag.V02.UI
             if (panel != null)
             {
                 panel.SetActive(true);
-                panel.transform.SetAsLastSibling();
             }
 
             SetText(titleText, HomeTitle);

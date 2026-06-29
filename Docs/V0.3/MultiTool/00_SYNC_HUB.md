@@ -90,6 +90,12 @@ V0.3-ArtKeyReserve01
 V0.3-BossGuideResult01 已用户手测通过；用户要求发公告并同步 RepoOps 上传。上传必须包含 a5444cb 之后两个 dirty 脚本 final delta：V02StageProgressBar.cs、V02RunResultPanel.cs，不得只上传当前 HEAD checkpoint。当前正式包为 V0.3-ForgeFirstUpgradeGuide01，Guard 已按新场景方案放行；PrepareTutorial01 暂缓，不取消。
 
 MainHome UIUE：GUARD_SYNC_MAINHOME_UIUE01_ACCEPTED。来源 `Docs/V0.3/MultiTool/Handoffs/V03_MainHome_UIUE_SYNC_TO_GUARD.md`；该同步只做首页产品 / UIUE 记忆收口，不授权开发、不要求 RepoOps 上传、不代表 QA 通过。MainHome 后续按“照灯小铺空间化首页”演进；BottomBar 固定：首页 / 养成 / 试炼 / 探索 / 更多；禁止背包底栏；FullBackgroundImageSlot / BG_Root 为黑色满屏背景图片插槽占位；Home 根节点 Image / Outline 不得自动重开；“暂时收起”按钮不得回归；DevelopUpgradePage01 不得混入 MainHome 首页主体功能。
+
+UI Builder / Hand Tune / Runtime Lock：GUARD_SYNC_UI_BUILDER_HAND_TUNE_RUNTIME_LOCK_ACCEPTED。代码负责搭骨架，用户负责定版面；用户在 Unity 非 Play 状态手调后的 Scene Hierarchy / RectTransform / sibling order / active 状态是正式版面真源。进入手调锁定后，Runtime / Bootstrap / Ensure / Builder 只能绑定和驱动已有对象，不得重建 Canvas / Root / SafeArea，不得移动手调对象，不得覆盖 RectTransform / sibling order，不得每次 Play 生成另一套 UI。
+
+Play UI Snapshot：GUARD_SYNC_GLOBAL_UI_HAND_TUNE_RUNTIME_LOCK_ACCEPTED。默认所有 Unity 场景 / UI 场景都是非 Play 场景文件为最终基准，Play 状态跟随；只有用户显式点击对应场景的 Editor Snapshot / Apply 工具时，才允许把 Play UI 回写为新的场景基准。Snapshot 不是 MainHome 专用概念；每个具体场景必须单独建立场景级白名单和菜单项，禁止跨场景、全项目扫写、触碰 BuildSettings、存档、主流程、Button onClick、delegate、脚本字段、Prefab 连接。
+
+UI Runtime Lock / 沉余 fallback：GUARD_SYNC_UI_RUNTIME_LOCK_REMEDIATION_PLAN_ACCEPTED。原因是早期 Runtime fallback / Builder / Ensure / CreateRuntime 长期存在，导致缺节点重建、同名 Root 多份、Play 对象与 Edit 场景真源不唯一。处理必须分包：A 审计包 V0.3-UIRuntimeLockAudit01（只列清单不开发，已放行）；B MainHome+BottomNav 唯一真源；C BattlePrepare UI Lock；D Boot/Guide/Upgrade fallback；E 历史对象隔离。每包必须有干净输出点，RepoOps 负责仓库快照。
 ```
 
 ## 5. 工具状态卡

@@ -47,8 +47,8 @@ namespace TalismanBag.V02.UI
             SetText(titleText, config.displayName);
             SetText(stateText, GetStateLabel(config.state));
             ApplyStateStyle(config.state);
-            ApplySpriteOrFallback(visualImage, config.visualKey, new Color(0.18f, 0.2f, 0.2f, 1f));
-            ApplySpriteOrFallback(iconImage, config.iconKey, new Color(0.44f, 0.47f, 0.45f, 1f));
+            ApplySpriteIfAvailable(visualImage, config.visualKey);
+            ApplySpriteIfAvailable(iconImage, config.iconKey);
         }
 
         public static HomeHotspotView CreateRuntime(
@@ -142,26 +142,13 @@ namespace TalismanBag.V02.UI
 
         private void ApplyStateStyle(HomeHotspotState state)
         {
-            Color color = state switch
-            {
-                HomeHotspotState.Available => new Color(0.23f, 0.42f, 0.34f, 0.98f),
-                HomeHotspotState.Locked => new Color(0.28f, 0.29f, 0.3f, 0.98f),
-                HomeHotspotState.ComingSoon => new Color(0.25f, 0.26f, 0.29f, 0.98f),
-                _ => new Color(0.2f, 0.2f, 0.2f, 0.9f)
-            };
-
-            if (background != null)
-            {
-                background.color = color;
-            }
-
             if (button != null)
             {
                 button.interactable = true;
             }
         }
 
-        private static void ApplySpriteOrFallback(Image image, string key, Color fallbackColor)
+        private static void ApplySpriteIfAvailable(Image image, string key)
         {
             if (image == null)
             {
@@ -179,9 +166,10 @@ namespace TalismanBag.V02.UI
                 }
             }
 
-            image.sprite = sprite;
-            image.color = sprite != null ? Color.white : fallbackColor;
-            image.preserveAspect = true;
+            if (sprite != null)
+            {
+                image.sprite = sprite;
+            }
         }
 
         private static string GetStateLabel(HomeHotspotState state)
