@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TalismanBag.V02.UI;
 using TalismanBag.V03.Forge;
 using TalismanBag.V03.Navigation;
@@ -23,8 +24,6 @@ namespace TalismanBag.V03.MainHome
             "FullBackgroundImageSlot";
         private const string HomeFullBackgroundUnderlayName =
             "FullBackgroundBlackUnderlay";
-        private const string HomeFullBackgroundImageName =
-            "FullBackgroundArtworkImage";
         private const string BottomNavRootName = "BottomNavBar_Root";
         private const float HomeFullBackgroundSize = 2200f;
 
@@ -100,7 +99,7 @@ namespace TalismanBag.V03.MainHome
                 return;
             }
 
-            EnsureFullBackgroundSlot();
+            ValidateLockedMainHomeScene();
             homePanel.ApplyV03MainHomeUiueLayout();
 
             if (navigation == null)
@@ -127,12 +126,12 @@ namespace TalismanBag.V03.MainHome
                 OnTrialRequested,
                 null);
             EnsureFallbackBottomNav(true);
-            EnsureFallbackForgeGuide()?.OnHomeShown();
+            ResolveExistingForgeGuide()?.OnHomeShown();
         }
 
         private void OnRefineRequested()
         {
-            EnsureFallbackForgeGuide()?.HideGuideSlot();
+            ResolveExistingForgeGuide()?.HideGuideSlot();
             LoadScene(
                 V03NavigationFlowController.UpgradeScenePath,
                 V03NavigationFlowController.UpgradeSceneName,
@@ -141,7 +140,7 @@ namespace TalismanBag.V03.MainHome
 
         private void OnTrialRequested()
         {
-            V03ForgeFirstUpgradeGuideController guide = EnsureFallbackForgeGuide();
+            V03ForgeFirstUpgradeGuideController guide = ResolveExistingForgeGuide();
             if (guide != null && guide.ShouldBlockTrialUntilFirstUpgrade())
             {
                 guide.ShowFirstUpgradeHomeGuide();
@@ -155,7 +154,7 @@ namespace TalismanBag.V03.MainHome
                 $"[V0.3-MainHome] Trial scene is missing from Build Settings: {V03NavigationFlowController.TrialScenePath}");
         }
 
-        private V03ForgeFirstUpgradeGuideController EnsureFallbackForgeGuide()
+        private V03ForgeFirstUpgradeGuideController ResolveExistingForgeGuide()
         {
             if (fallbackForgeGuide != null)
             {
@@ -165,7 +164,11 @@ namespace TalismanBag.V03.MainHome
             fallbackForgeGuide = GetComponent<V03ForgeFirstUpgradeGuideController>();
             if (fallbackForgeGuide == null)
             {
-                fallbackForgeGuide = gameObject.AddComponent<V03ForgeFirstUpgradeGuideController>();
+                Debug.LogWarning(
+                    "[V0.3-MainHomeRuntimeLock] Forge guide component is missing; " +
+                    "runtime component creation is disabled.",
+                    this);
+                return null;
             }
 
             fallbackForgeGuide.Initialize(null, homePanel, null);
@@ -177,6 +180,28 @@ namespace TalismanBag.V03.MainHome
             Canvas canvas = homePanel.GetComponentInParent<Canvas>(true);
             if (canvas == null)
             {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Transform existing = FindReusableBottomNavRoot(canvas.transform);
+                if (existing == null)
+                {
+                    Debug.LogError(
+                        "[V0.3-MainHomeRuntimeLock] BottomNavBar_Root is missing; " +
+                        "runtime fallback bottom nav creation is disabled.",
+                        this);
+                    fallbackBottomNavRoot = null;
+                    return;
+                }
+
+                fallbackBottomNavRoot = existing.gameObject;
+                if (bindButtons)
+                {
+                    BindExistingFallbackBottomNav(existing);
+                }
+
                 return;
             }
 
@@ -228,27 +253,10 @@ namespace TalismanBag.V03.MainHome
             {
                 if (!bindButtons)
                 {
-                    ClearFallbackButtonListeners(fallbackBottomNavRoot.transform);
                     return;
                 }
 
-                BindFallbackNavButton(fallbackBottomNavRoot.transform, "BottomNavHomeButton", () =>
-                {
-                    homePanel.Show(
-                        MainHomeGreyboxPanel.HomeTitle,
-                        resourceSummary,
-                        status,
-                        OnRefineRequested,
-                        OnTrialRequested,
-                        null);
-                    EnsureFallbackForgeGuide()?.OnHomeShown();
-                });
-                BindFallbackNavButton(fallbackBottomNavRoot.transform, "BottomNavRefineButton", OnRefineRequested);
-                BindFallbackNavButton(fallbackBottomNavRoot.transform, "BottomNavTrialButton", OnTrialRequested);
-                BindFallbackNavButton(fallbackBottomNavRoot.transform, "BottomNavExploreButton", () =>
-                    Debug.Log("[V0.3-MainHome] Explore entry is reserved for a later package.", this));
-                BindFallbackNavButton(fallbackBottomNavRoot.transform, "BottomNavMoreButton", () =>
-                    Debug.Log("[V0.3-MainHome] More entry is reserved for a later package.", this));
+                BindExistingFallbackBottomNav(fallbackBottomNavRoot.transform);
                 return;
             }
 
@@ -261,7 +269,7 @@ namespace TalismanBag.V03.MainHome
                     OnRefineRequested,
                     OnTrialRequested,
                     null);
-                EnsureFallbackForgeGuide()?.OnHomeShown();
+                ResolveExistingForgeGuide()?.OnHomeShown();
             });
             CreateFallbackNavButton(rect, "BottomNavRefineButton", "养成", -BottomNavButtonStep, OnRefineRequested);
             CreateFallbackNavButton(rect, "BottomNavTrialButton", "试炼", 0f, OnTrialRequested);
@@ -270,10 +278,6 @@ namespace TalismanBag.V03.MainHome
             CreateFallbackNavButton(rect, "BottomNavMoreButton", "更多", BottomNavButtonStep * 2f, () =>
                 Debug.Log("[V0.3-MainHome] More entry is reserved for a later package.", this));
 
-            if (!bindButtons)
-            {
-                ClearFallbackButtonListeners(rect);
-            }
         }
 
         private static Transform FindReusableBottomNavRoot(Transform canvasTransform)
@@ -299,22 +303,7 @@ namespace TalismanBag.V03.MainHome
                 }
             }
 
-            if (!Application.isPlaying || keep == null)
-            {
-                return keep;
-            }
-
-            for (int i = candidates.Length - 1; i >= 0; i--)
-            {
-                Transform candidate = candidates[i];
-                if (candidate == null || candidate == keep || candidate.name != BottomNavRootName)
-                {
-                    continue;
-                }
-
-                UnityEngine.Object.Destroy(candidate.gameObject);
-            }
-
+            ReportDuplicateBottomNavRoots(candidates, keep);
             return keep;
         }
 
@@ -333,30 +322,25 @@ namespace TalismanBag.V03.MainHome
             return candidate.gameObject.activeInHierarchy && !current.gameObject.activeInHierarchy;
         }
 
-        private void ApplyFallbackNavButtonRect(string objectName, float x)
+        private void BindExistingFallbackBottomNav(Transform parent)
         {
-            Transform target = fallbackBottomNavRoot != null
-                ? fallbackBottomNavRoot.transform.Find(objectName)
-                : null;
-            RectTransform rect = target as RectTransform;
-            if (rect == null)
+            BindFallbackNavButton(parent, "BottomNavHomeButton", () =>
             {
-                return;
-            }
-
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(x, 0f);
-            rect.sizeDelta = new Vector2(BottomNavButtonWidth, BottomNavButtonHeight);
-        }
-
-        private static void ClearFallbackButtonListeners(Transform parent)
-        {
-            foreach (Button button in parent.GetComponentsInChildren<Button>(true))
-            {
-                button.onClick.RemoveAllListeners();
-            }
+                homePanel.Show(
+                    MainHomeGreyboxPanel.HomeTitle,
+                    resourceSummary,
+                    status,
+                    OnRefineRequested,
+                    OnTrialRequested,
+                    null);
+                ResolveExistingForgeGuide()?.OnHomeShown();
+            });
+            BindFallbackNavButton(parent, "BottomNavRefineButton", OnRefineRequested);
+            BindFallbackNavButton(parent, "BottomNavTrialButton", OnTrialRequested);
+            BindFallbackNavButton(parent, "BottomNavExploreButton", () =>
+                Debug.Log("[V0.3-MainHome] Explore entry is reserved for a later package.", this));
+            BindFallbackNavButton(parent, "BottomNavMoreButton", () =>
+                Debug.Log("[V0.3-MainHome] More entry is reserved for a later package.", this));
         }
 
         private static void BindFallbackNavButton(
@@ -393,7 +377,7 @@ namespace TalismanBag.V03.MainHome
             image.color = new Color(0.12f, 0.15f, 0.14f, 0.98f);
 
             Button button = buttonObject.GetComponent<Button>();
-            if (onClick != null)
+            if (onClick != null && Application.isPlaying)
             {
                 button.onClick.AddListener(onClick);
             }
@@ -429,6 +413,12 @@ namespace TalismanBag.V03.MainHome
 
         private void EnsureFullBackgroundSlot()
         {
+            if (Application.isPlaying)
+            {
+                ValidateLockedMainHomeScene();
+                return;
+            }
+
             Canvas canvas = homePanel.GetComponentInParent<Canvas>(true);
             if (canvas == null)
             {
@@ -565,52 +555,155 @@ namespace TalismanBag.V03.MainHome
             return keep.gameObject;
         }
 
-        private static bool IsLegacyFullStretchRect(RectTransform rect)
+        private void ValidateLockedMainHomeScene()
         {
-            return rect.anchorMin == Vector2.zero &&
-                rect.anchorMax == Vector2.one &&
-                rect.sizeDelta == Vector2.zero &&
-                rect.anchoredPosition == Vector2.zero;
-        }
-
-        private static void RemoveLegacyArtworkChildren(Transform slotTransform)
-        {
-            DestroyDuplicateNamedChildren(slotTransform, HomeFullBackgroundImageName, null);
-        }
-
-        private static void DestroyDuplicateNamedChildren(
-            Transform root,
-            string objectName,
-            Transform keep)
-        {
-            Transform[] children = root.GetComponentsInChildren<Transform>(true);
-            for (int i = children.Length - 1; i >= 0; i--)
+            Canvas canvas = homePanel != null ? homePanel.GetComponentInParent<Canvas>(true) : null;
+            if (canvas == null)
             {
-                Transform child = children[i];
-                if (child == null || child == root || child == keep || child.name != objectName)
+                Debug.LogError(
+                    "[V0.3-MainHomeRuntimeLock] Canvas is missing; locked scene validation cannot run.",
+                    this);
+                return;
+            }
+
+            Transform underlay = ValidateUniqueSceneObject(canvas.transform, HomeFullBackgroundUnderlayName);
+            Transform slot = ValidateUniqueSceneObject(canvas.transform, HomeFullBackgroundSlotName);
+            ValidateUniqueSceneObject(canvas.transform, BottomNavRootName);
+
+            if (underlay != null)
+            {
+                Image image = underlay.GetComponent<Image>();
+                if (image == null || !image.enabled)
+                {
+                    Debug.LogError(
+                        "[V0.3-MainHomeRuntimeLock] FullBackgroundBlackUnderlay must keep an enabled Image.",
+                        this);
+                }
+                else if (image.raycastTarget)
+                {
+                    Debug.LogError(
+                        "[V0.3-MainHomeRuntimeLock] FullBackgroundBlackUnderlay must not block input.",
+                        this);
+                }
+            }
+
+            if (slot != null)
+            {
+                Image image = slot.GetComponent<Image>();
+                if (image == null || !image.enabled)
+                {
+                    Debug.LogError(
+                        "[V0.3-MainHomeRuntimeLock] FullBackgroundImageSlot must keep an enabled Image.",
+                        this);
+                }
+                else if (image.raycastTarget)
+                {
+                    Debug.LogError(
+                        "[V0.3-MainHomeRuntimeLock] FullBackgroundImageSlot must not block input.",
+                        this);
+                }
+            }
+
+            Image rootImage = homePanel.GetComponent<Image>();
+            if (rootImage != null && rootImage.enabled)
+            {
+                Debug.LogError(
+                    "[V0.3-MainHomeRuntimeLock] MainHomeRoot Image must stay disabled.",
+                    this);
+            }
+
+            Outline rootOutline = homePanel.GetComponent<Outline>();
+            if (rootOutline != null && rootOutline.enabled)
+            {
+                Debug.LogError(
+                    "[V0.3-MainHomeRuntimeLock] MainHomeRoot Outline must stay disabled.",
+                    this);
+            }
+        }
+
+        private Transform ValidateUniqueSceneObject(Transform root, string objectName)
+        {
+            List<Transform> matches = FindNamedChildren(root, objectName);
+            if (matches.Count == 0)
+            {
+                Debug.LogError(
+                    $"[V0.3-MainHomeRuntimeLock] {objectName} is missing; runtime creation is disabled.",
+                    this);
+                return null;
+            }
+
+            if (matches.Count > 1)
+            {
+                Debug.LogError(
+                    $"[V0.3-MainHomeRuntimeLock] Scene contains {matches.Count} {objectName} objects: " +
+                    string.Join(", ", matches.ConvertAll(BuildTransformPath)),
+                    this);
+            }
+
+            return matches[0];
+        }
+
+        private static List<Transform> FindNamedChildren(Transform root, string objectName)
+        {
+            List<Transform> matches = new();
+            if (root == null)
+            {
+                return matches;
+            }
+
+            foreach (Transform candidate in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (candidate != null && candidate.name == objectName)
+                {
+                    matches.Add(candidate);
+                }
+            }
+
+            return matches;
+        }
+
+        private static void ReportDuplicateBottomNavRoots(Transform[] candidates, Transform keep)
+        {
+            if (!Application.isPlaying || keep == null)
+            {
+                return;
+            }
+
+            List<string> duplicates = new();
+            foreach (Transform candidate in candidates)
+            {
+                if (candidate == null || candidate == keep || candidate.name != BottomNavRootName)
                 {
                     continue;
                 }
 
-                DestroySceneObject(child.gameObject);
+                duplicates.Add(BuildTransformPath(candidate));
+            }
+
+            if (duplicates.Count > 0)
+            {
+                Debug.LogError(
+                    "[V0.3-MainHomeRuntimeLock] Duplicate BottomNavBar_Root objects detected; " +
+                    "runtime deletion is disabled: " + string.Join(", ", duplicates));
             }
         }
 
-        private static void DestroySceneObject(GameObject target)
+        private static string BuildTransformPath(Transform target)
         {
             if (target == null)
             {
-                return;
+                return string.Empty;
             }
 
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
+            string path = target.name;
+            Transform parent = target.parent;
+            while (parent != null)
             {
-                UnityEngine.Object.DestroyImmediate(target);
-                return;
+                path = parent.name + "/" + path;
+                parent = parent.parent;
             }
-#endif
-            UnityEngine.Object.Destroy(target);
+
+            return path;
         }
 
         private static Sprite GetHomeFullBackgroundSprite()
@@ -635,22 +728,6 @@ namespace TalismanBag.V03.MainHome
                 100f);
             homeFullBackgroundSprite.name = "HomeFullBackground_RuntimeSprite";
             return homeFullBackgroundSprite;
-        }
-
-        private void DisableHomeRootGraphics()
-        {
-            Image rootImage = homePanel.GetComponent<Image>();
-            if (rootImage != null)
-            {
-                rootImage.enabled = false;
-                rootImage.raycastTarget = false;
-            }
-
-            Outline rootOutline = homePanel.GetComponent<Outline>();
-            if (rootOutline != null)
-            {
-                rootOutline.enabled = false;
-            }
         }
 
         private void LoadScene(string scenePath, string sceneName, string missingSceneMessage)

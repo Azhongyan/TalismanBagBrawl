@@ -11,9 +11,22 @@ namespace TalismanBag.V03.EditorTools
 {
     public static class V03MainHomeEditPreviewTools
     {
-        [MenuItem("Tools/Talisman Bag/V0.3/MainHome/Refresh Edit Preview (No Play)")]
+        [MenuItem("Tools/Talisman Bag/V0.3/MainHome/[Writes Scene][Manual Only] Refresh Edit Preview (No Play)")]
         public static void RefreshEditPreview()
         {
+            if (!EditorUtility.DisplayDialog(
+                    "[Writes Scene][Manual Only] Refresh MainHome Edit Preview",
+                    "This tool opens or uses the MainHome scene and refreshes the edit-time preview.\n\n" +
+                    "Target scene:\n" + V03NavigationFlow01SceneBuilder.MainHomeScenePath + "\n\n" +
+                    "It may add/bind V03MainHomeSceneBootstrap, updates preview UI data, and marks the scene dirty.\n" +
+                    "It does not save automatically; press Ctrl+S only after reviewing the result.\n" +
+                    "Use in Edit Mode after saving or backing up open work, with user confirmation.",
+                    "Proceed",
+                    "Cancel"))
+            {
+                return;
+            }
+
             Scene scene = SceneManager.GetActiveScene();
             if (scene.path != V03NavigationFlow01SceneBuilder.MainHomeScenePath)
             {

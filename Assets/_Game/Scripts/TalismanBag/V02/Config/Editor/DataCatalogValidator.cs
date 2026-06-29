@@ -16,7 +16,7 @@ namespace TalismanBag.V02.Config.EditorTools
 {
     public static class DataCatalogValidator
     {
-        [MenuItem("Tools/Talisman Bag/Validate Data Catalog")]
+        [MenuItem("Tools/Talisman Bag/V0.2/Data/[QA Only] Validate Data Catalog")]
         public static void ValidateAndLog()
         {
             IReadOnlyList<DataCatalogValidationResult> results = Validate(DataCatalog.Collect());

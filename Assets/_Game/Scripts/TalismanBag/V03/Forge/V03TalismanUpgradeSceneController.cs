@@ -83,14 +83,19 @@ namespace TalismanBag.V03.Forge
         {
             if (!Application.isPlaying)
             {
-                BuildEditablePreview();
                 return;
             }
 
-            EnsureServices();
-            EnsureCanvas();
-            EnsureEventSystem();
-            BuildPage();
+            if (!BindRuntimeServices())
+            {
+                return;
+            }
+
+            if (!BindRuntimeScene())
+            {
+                return;
+            }
+
             SelectInitialItem();
             RefreshAll();
         }
@@ -153,6 +158,15 @@ namespace TalismanBag.V03.Forge
                 return;
             }
 
+            if (Application.isPlaying)
+            {
+                Debug.LogError(
+                    "[V0.3-BootGuideUpgradeRuntimeLock01] Runtime BuildPage is disabled; " +
+                    "V03TalismanUpgradePageRoot must exist in the scene.",
+                    this);
+                return;
+            }
+
             pageRoot = FindPageRoot();
             if (pageRoot != null && TryBindExistingPage())
             {
@@ -175,6 +189,46 @@ namespace TalismanBag.V03.Forge
             CreateBottomBar(pageRoot);
             CreateInfoPopup(pageRoot);
             CreateGuideOverlay(pageRoot);
+        }
+
+        private bool BindRuntimeScene()
+        {
+            canvas = FindObjectOfType<Canvas>(true);
+            if (canvas == null)
+            {
+                Debug.LogError(
+                    "[V0.3-BootGuideUpgradeRuntimeLock01] Upgrade scene Canvas is missing; " +
+                    "runtime Canvas creation is disabled.",
+                    this);
+                return false;
+            }
+
+            pageRoot = FindPageRoot();
+            if (pageRoot == null)
+            {
+                Debug.LogError(
+                    "[V0.3-BootGuideUpgradeRuntimeLock01] V03TalismanUpgradePageRoot is missing; " +
+                    "runtime upgrade page creation is disabled.",
+                    this);
+                return false;
+            }
+
+            if (!TryBindExistingPage())
+            {
+                LogMissingRuntimeBindings();
+                return false;
+            }
+
+            if (FindObjectOfType<EventSystem>(true) == null)
+            {
+                Debug.LogError(
+                    "[V0.3-BootGuideUpgradeRuntimeLock01] Upgrade scene EventSystem is missing; " +
+                    "runtime EventSystem creation is disabled.",
+                    this);
+                return false;
+            }
+
+            return true;
         }
 
         private RectTransform FindPageRoot()
@@ -221,9 +275,55 @@ namespace TalismanBag.V03.Forge
                    costText != null &&
                    statusText != null &&
                    upgradeButton != null &&
+                   upgradeButtonText != null &&
                    infoPopupRoot != null &&
+                   popupTitleText != null &&
+                   popupBodyText != null &&
                    guideRoot != null &&
-                   itemCards.Count > 0;
+                   guideSlotText != null &&
+                   itemCards.Count > 0 &&
+                   itemTraySlotRoots.Count > 0;
+        }
+
+        private void LogMissingRuntimeBindings()
+        {
+            List<string> missing = new();
+            AddMissing(missing, resourceText, "ResourceText");
+            AddMissing(missing, itemNameText, "ItemName");
+            AddMissing(missing, levelText, "ItemLevel");
+            AddMissing(missing, beforeText, "BeforeBlock/Body");
+            AddMissing(missing, afterText, "AfterBlock/Body");
+            AddMissing(missing, costText, "CostText");
+            AddMissing(missing, statusText, "StatusText");
+            AddMissing(missing, upgradeButton, "UpgradeButton");
+            AddMissing(missing, upgradeButtonText, "UpgradeButton/Text");
+            AddMissing(missing, infoPopupRoot, "V03Upgrade_ItemInfoPopup");
+            AddMissing(missing, popupTitleText, "PopupTitle");
+            AddMissing(missing, popupBodyText, "PopupBody");
+            AddMissing(missing, guideRoot, "V03Upgrade_GuideOverlay");
+            AddMissing(missing, guideSlotText, "V03Upgrade_GuideImageSlot/Text");
+            if (itemCards.Count == 0)
+            {
+                missing.Add("TalismanCard_* under V02BottomOperationArea or V03Upgrade_TalismanListPanel");
+            }
+
+            if (itemTraySlotRoots.Count == 0)
+            {
+                missing.Add("ItemTrayGridSlot_* under V02BottomOperationArea or V03Upgrade_TalismanListPanel");
+            }
+
+            Debug.LogError(
+                "[V0.3-BootGuideUpgradeRuntimeLock01] Upgrade scene authored bindings are incomplete; " +
+                "runtime fallback page creation is disabled. Missing: " + string.Join(", ", missing),
+                this);
+        }
+
+        private static void AddMissing(List<string> missing, UnityEngine.Object target, string label)
+        {
+            if (target == null)
+            {
+                missing.Add(label);
+            }
         }
 
         private void BindExistingItemCards()
@@ -1146,7 +1246,6 @@ namespace TalismanBag.V03.Forge
             if (guideRoot != null)
             {
                 guideRoot.SetActive(true);
-                guideRoot.transform.SetAsLastSibling();
             }
 
             SetText(guideSlotText, "图片插槽占位");
@@ -1337,7 +1436,6 @@ namespace TalismanBag.V03.Forge
             guideRoot.SetActive(shouldGuide);
             if (shouldGuide)
             {
-                guideRoot.transform.SetAsLastSibling();
                 guideSlotText.text = "图片插槽占位";
             }
         }
@@ -1389,7 +1487,6 @@ namespace TalismanBag.V03.Forge
                         : "消耗：无"
                 });
             infoPopupRoot.SetActive(true);
-            infoPopupRoot.transform.SetAsLastSibling();
         }
 
         private void ShowLockedModuleHint()
@@ -1825,11 +1922,36 @@ namespace TalismanBag.V03.Forge
             };
         }
 
-        private void EnsureServices()
+        private bool BindRuntimeServices()
         {
             saveService = SaveService.GetOrCreate();
-            EnsureUpgradeService();
-            EnsureMainTrialFlowService();
+            upgradeService = FindObjectOfType<UpgradeService>(true);
+            mainTrialFlowService = FindObjectOfType<MainTrialFlowService>(true);
+
+            if (upgradeService == null)
+            {
+                Debug.LogError(
+                    "[V0.3-BootGuideUpgradeRuntimeLock01] UpgradeService is missing; " +
+                    "runtime service creation is disabled.",
+                    this);
+            }
+
+            if (mainTrialFlowService == null)
+            {
+                Debug.LogError(
+                    "[V0.3-BootGuideUpgradeRuntimeLock01] MainTrialFlowService is missing; " +
+                    "runtime service creation is disabled.",
+                    this);
+            }
+
+            if (upgradeService == null || mainTrialFlowService == null)
+            {
+                return false;
+            }
+
+            upgradeService.Bind(saveService, null);
+            mainTrialFlowService.Bind(saveService);
+            return true;
         }
 
         private UpgradeService EnsureUpgradeService()
@@ -1842,8 +1964,11 @@ namespace TalismanBag.V03.Forge
             upgradeService = FindObjectOfType<UpgradeService>(true);
             if (upgradeService == null)
             {
-                GameObject serviceObject = new("V03TalismanUpgradeService_Runtime");
-                upgradeService = serviceObject.AddComponent<UpgradeService>();
+                Debug.LogError(
+                    "[V0.3-BootGuideUpgradeRuntimeLock01] UpgradeService is missing; " +
+                    "runtime service creation is disabled.",
+                    this);
+                return null;
             }
 
             upgradeService.Bind(saveService ?? SaveService.GetOrCreate(), null);
@@ -1860,8 +1985,11 @@ namespace TalismanBag.V03.Forge
             mainTrialFlowService = FindObjectOfType<MainTrialFlowService>(true);
             if (mainTrialFlowService == null)
             {
-                GameObject serviceObject = new("V03MainTrialFlowService_Runtime");
-                mainTrialFlowService = serviceObject.AddComponent<MainTrialFlowService>();
+                Debug.LogError(
+                    "[V0.3-BootGuideUpgradeRuntimeLock01] MainTrialFlowService is missing; " +
+                    "runtime service creation is disabled.",
+                    this);
+                return null;
             }
 
             mainTrialFlowService.Bind(saveService ?? SaveService.GetOrCreate());

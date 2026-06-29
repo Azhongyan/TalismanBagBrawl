@@ -47,7 +47,7 @@ namespace TalismanBag.V02.Config.EditorTools
         private Vector2 scroll;
         private bool showInfo;
 
-        [MenuItem("Tools/Talisman Bag/Stage Config Panel 01")]
+        [MenuItem("Tools/Talisman Bag/V0.2/Data/[Manual Only] Stage Config Panel 01")]
         public static void Open()
         {
             OpenTab(StageConfigPanelTab.Stage);

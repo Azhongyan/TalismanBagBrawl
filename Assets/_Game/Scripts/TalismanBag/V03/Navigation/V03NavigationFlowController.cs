@@ -14,13 +14,6 @@ namespace TalismanBag.V03.Navigation
         public const string TrialSceneName = "Scene_TalismanBag_V02_FormationCounter";
         public const string TrialScenePath =
             "Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity";
-        private const float BottomNavWidth = 860f;
-        private const float BottomNavHeight = 124f;
-        private const float BottomNavMinBottomInset = 56f;
-        private const float BottomNavMaxBottomInset = 104f;
-        private const float BottomNavButtonStep = 168f;
-        private const float BottomNavButtonWidth = 148f;
-        private const float BottomNavButtonHeight = 82f;
 
         [SerializeField] private GameObject refinePageRoot;
         [SerializeField] private GameObject explorePageRoot;
@@ -43,7 +36,7 @@ namespace TalismanBag.V03.Navigation
             BindButtons();
             EnsureForgeGuide();
             ApplyBottomNavSafeLayout();
-            SetSecondaryRoots(false, false, false, false);
+            SetSecondaryRoots(false, false, false, true);
         }
 
         private void OnDestroy()
@@ -196,7 +189,10 @@ namespace TalismanBag.V03.Navigation
             forgeGuide = GetComponent<V03ForgeFirstUpgradeGuideController>();
             if (forgeGuide == null)
             {
-                forgeGuide = gameObject.AddComponent<V03ForgeFirstUpgradeGuideController>();
+                Debug.LogWarning(
+                    "[V0.3-MainHomeRuntimeLock] Forge guide component is missing; " +
+                    "runtime component creation is disabled.",
+                    this);
             }
 
             return forgeGuide;
@@ -204,31 +200,6 @@ namespace TalismanBag.V03.Navigation
 
         private void ApplyBottomNavSafeLayout()
         {
-        }
-
-        private static void ApplyBottomNavButtonRect(Button button, float x)
-        {
-            RectTransform rect = button != null ? button.transform as RectTransform : null;
-            if (rect == null)
-            {
-                return;
-            }
-
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(x, 0f);
-            rect.sizeDelta = new Vector2(BottomNavButtonWidth, BottomNavButtonHeight);
-        }
-
-        private static float ResolveBottomNavInset(Canvas canvas)
-        {
-            float scaleFactor = canvas != null && canvas.scaleFactor > 0f ? canvas.scaleFactor : 1f;
-            float safeBottom = Screen.safeArea.yMin / scaleFactor;
-            return Mathf.Clamp(
-                safeBottom + 18f,
-                BottomNavMinBottomInset,
-                BottomNavMaxBottomInset);
         }
 
         private static void SetActive(GameObject target, bool active)

@@ -188,6 +188,103 @@ Play UI Snapshot / Apply 不是 MainHome 专用概念，可用于所有场景 / 
 - 自动删除或重建用户手调对象
 ```
 
+## 4.3 UI Slot Authoring Lock / 插槽创作权威规则
+
+当前不是禁止 Codex 创建 UI。长期规则是：
+
+```text
+Codex 搭骨架，用户调布局，Lock 后只读校验。
+```
+
+UI 权威拆成两层：
+
+```text
+Slot Contract：Codex 可以管结构。
+Layout Authoring：用户手调后说了算。
+```
+
+Codex / Builder / Editor 工具允许负责 Slot Contract：
+
+```text
+创建 UI Root。
+创建 Slot。
+创建默认灰盒尺寸。
+创建默认层级。
+挂脚本。
+绑定引用。
+补缺失组件。
+生成默认 iconKey / visualKey。
+检查 Slot 是否存在。
+检查组件是否缺失。
+检查引用是否丢失。
+```
+
+初次创建 UI 时，Codex 可以写默认 RectTransform / Layout 参数。默认尺寸和 UI 文档尺寸只代表“初始推荐值”，不是永久覆盖值。
+
+用户手调并 Lock 后，以下字段属于 Layout Authoring 权威，Runtime / Bootstrap / Ensure / CreateRuntime / Builder 不得自动覆盖：
+
+```text
+RectTransform.anchoredPosition
+RectTransform.sizeDelta
+RectTransform.anchorMin
+RectTransform.anchorMax
+RectTransform.pivot
+RectTransform.localScale
+RectTransform.localRotation
+transform.SetParent / 父节点
+transform.SetSiblingIndex / siblingIndex
+LayoutGroup spacing
+LayoutGroup padding
+GridLayoutGroup cellSize
+GridLayoutGroup constraint
+ContentSizeFitter 配置
+LayoutElement 布局字段
+RectMask2D / Mask 关键裁剪配置
+ScrollRect viewport / content / movement / scrollbar 关键布局参数
+Image / Outline / Text / TMP_Text 的手调视觉字段
+```
+
+Ensure / Builder 退场规则：
+
+```text
+旧逻辑：EnsureXXX() -> 没有就创建 -> 尺寸不对就改 -> 父节点不对就挪。
+新逻辑：CheckXXX() -> 没有则输出缺口报告 -> 尺寸不同则输出差异报告 -> 父节点不同则输出差异报告 -> 不自动修。
+```
+
+只有用户显式执行以下动作时，才允许修改场景布局：
+
+```text
+ApplyXXXFix()
+RebuildXXX()
+Build Default Layout
+Snapshot / Apply / Save Play UI To Scene
+```
+
+后续 Codex 修改已有 UI 时，只能默认处理：
+
+```text
+逻辑
+绑定
+显示数据
+事件接线
+资源 key / visual key 检查
+缺口报告
+```
+
+不得默认处理：
+
+```text
+覆盖已锁定布局字段。
+移动已手调 Slot。
+重新 SetParent。
+重新排序 siblingIndex。
+重建同名 Slot。
+在 Play 时创建另一套默认 UI。
+Smoke / Verify 顺手修布局。
+```
+
+若某包确需迁移已锁定 UI 布局，必须先输出迁移清单并取得 Guard / 用户明确批准。
+
 ## 5. Guard 例外回执硬门
 
 普通已进入 Package Queue 的日常小包，不再默认要求 guard-agents 每包审查或 `GUARD_PASS`。

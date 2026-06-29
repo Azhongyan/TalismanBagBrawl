@@ -25,7 +25,7 @@ namespace TalismanBag.EditorTools
         private bool showDeprecatedEnemies;
         private bool showLegacyEnemies;
 
-        [MenuItem("Tools/Talisman Bag/Enemy Identity Panel")]
+        [MenuItem("Tools/Talisman Bag/V0.2/Data/[Manual Only] Enemy Identity Panel")]
         public static void Open()
         {
             DataCatalogEditorWindow.OpenTab(StageConfigPanelTab.Enemy);

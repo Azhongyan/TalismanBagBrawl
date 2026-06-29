@@ -10,7 +10,7 @@ namespace TalismanBag.V03.Editor
 {
     public static class V03BootEntryFlow01Smoke
     {
-        [MenuItem("Tools/Talisman Bag/V0.3/Run Boot Entry Flow 01 Smoke")]
+        [MenuItem("Tools/Talisman Bag/V0.3/BootEntryFlow01/[QA Only] Run Boot Entry Flow 01 Smoke")]
         public static void Run()
         {
             Require(EditorBuildSettings.scenes.Length > 0, "Build Settings must contain at least one scene.");

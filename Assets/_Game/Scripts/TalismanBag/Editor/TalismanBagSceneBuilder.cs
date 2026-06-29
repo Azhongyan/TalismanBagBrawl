@@ -78,9 +78,21 @@ namespace TalismanBag.EditorTools
             Debug.Log("Talisman Bag V0.2 formation counter scene generated.");
         }
 
-        [MenuItem("Tools/Talisman Bag/Ensure V02 Stage Progress Bar")]
+        [MenuItem("Tools/Talisman Bag/V0.2/[Writes Scene][Deprecated][Guard Only] Ensure V02 Stage Progress Bar")]
         public static void EnsureV02StageProgressBarInScene()
         {
+            if (!EditorUtility.DisplayDialog(
+                    "[Writes Scene][Deprecated][Guard Only] Ensure V02 Stage Progress Bar",
+                    "This deprecated Guard Only tool opens or uses the V02 formation scene and saves it.\n\n" +
+                    "Target scene:\n" + V02ScenePath + "\n\n" +
+                    "It creates or updates V02StageProgressBar_Runtime and binds V02RunFlowController.stageProgressBar.\n" +
+                    "Use in Edit Mode only after saving or backing up open work, with Guard or user confirmation.",
+                    "Proceed",
+                    "Cancel"))
+            {
+                return;
+            }
+
             Scene scene = FindLoadedScene(V02ScenePath);
             if (!scene.IsValid())
             {

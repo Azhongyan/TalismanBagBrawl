@@ -32,6 +32,7 @@ namespace TalismanBag.V02.UI
         private bool mainActionsEnabled;
         private string currentObjective = string.Empty;
         private bool v03LayoutApplied;
+        private bool v03RuntimeLayoutMissing;
 
         private void Awake()
         {
@@ -283,9 +284,20 @@ namespace TalismanBag.V02.UI
             Transform existingRoot = transform.Find("V03MainHomeUiueRoot");
             if (existingRoot != null)
             {
+                v03RuntimeLayoutMissing = false;
                 existingRoot.gameObject.SetActive(true);
                 AssignV03MainHomeReferences(existingRoot);
                 v03LayoutApplied = true;
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Debug.LogError(
+                    "[V0.3-MainHomeRuntimeLock] V03MainHomeUiueRoot is missing; " +
+                    "runtime UIUE creation is disabled.",
+                    this);
+                v03RuntimeLayoutMissing = true;
                 return;
             }
 
@@ -418,6 +430,7 @@ namespace TalismanBag.V02.UI
             hotspotViews.Clear();
             shortcutViews.Clear();
             v03LayoutApplied = true;
+            v03RuntimeLayoutMissing = false;
             CreateHotspotViews();
             RefreshHotspots();
         }
@@ -457,6 +470,20 @@ namespace TalismanBag.V02.UI
         {
             if (hotspotRoot == null || hotspotViews.Count > 0)
             {
+                return;
+            }
+
+            if (Application.isPlaying && (v03LayoutApplied || v03RuntimeLayoutMissing))
+            {
+                CollectExistingHotspotViews();
+                if (hotspotViews.Count == 0 && shortcutViews.Count == 0)
+                {
+                    Debug.LogError(
+                        "[V0.3-MainHomeRuntimeLock] V03 hotspot objects are missing; " +
+                        "runtime hotspot creation is disabled.",
+                        this);
+                }
+
                 return;
             }
 
@@ -531,7 +558,17 @@ namespace TalismanBag.V02.UI
 
             if (hotspotViews.Count == 0 && shortcutViews.Count == 0)
             {
-                CreateHotspotViews();
+                if (Application.isPlaying && (v03LayoutApplied || v03RuntimeLayoutMissing))
+                {
+                    Debug.LogError(
+                        "[V0.3-MainHomeRuntimeLock] V03 hotspot scene objects are missing; " +
+                        "runtime hotspot creation is disabled.",
+                        this);
+                }
+                else
+                {
+                    CreateHotspotViews();
+                }
             }
 
             Dictionary<HomeHotspotId, HomeHotspotConfig> configs = new();

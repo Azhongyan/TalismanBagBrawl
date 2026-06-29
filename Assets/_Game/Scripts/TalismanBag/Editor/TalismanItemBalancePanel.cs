@@ -23,7 +23,7 @@ namespace TalismanBag.EditorTools
         private bool showDeprecatedItems;
         private bool showLegacyItems;
 
-        [MenuItem("Tools/Talisman Bag/Item Balance Panel")]
+        [MenuItem("Tools/Talisman Bag/V0.2/Data/[Manual Only] Item Balance Panel")]
         public static void Open()
         {
             DataCatalogEditorWindow.OpenTab(StageConfigPanelTab.Item);

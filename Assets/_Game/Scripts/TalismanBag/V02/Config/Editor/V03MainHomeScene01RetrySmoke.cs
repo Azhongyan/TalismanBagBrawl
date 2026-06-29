@@ -18,7 +18,7 @@ namespace TalismanBag.V02.Config.EditorTools
             "Assets/_Game/Scripts/TalismanBag/V02/UI/MainHomeGreyboxPanel.cs";
         private const string HotspotConfigSourcePath =
             "Assets/_Game/Scripts/TalismanBag/V02/UI/HomeHotspotConfig.cs";
-        [MenuItem("Tools/Talisman Bag/V0.3/Run Main Home Retry Smoke")]
+        [MenuItem("Tools/Talisman Bag/V0.3/MainHome/[QA Only] Run Main Home Retry Smoke")]
         public static void VerifyBatch()
         {
             VerifyHotspotConfiguration();

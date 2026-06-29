@@ -42,7 +42,7 @@ namespace TalismanBag.V02.Balance.EditorTools
         private string qaLastResult = "QA actions have not run yet. / 尚未执行 QA 操作。";
         private string reportText = "[Build Benchmark / 构筑对标] Press a button to generate a report. / 点击按钮生成报告。";
 
-        [MenuItem("Tools/Talisman Bag/V0.2 Balance Debug Panel")]
+        [MenuItem("Tools/Talisman Bag/V0.2/Data/[Manual Only] Balance Debug Panel")]
         public static void Open()
         {
             V02BalanceDebugWindow window = GetWindow<V02BalanceDebugWindow>("V0.2 Balance / 平衡");

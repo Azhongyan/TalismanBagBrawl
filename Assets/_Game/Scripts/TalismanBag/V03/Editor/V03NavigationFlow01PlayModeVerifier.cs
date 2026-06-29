@@ -30,7 +30,7 @@ namespace TalismanBag.V03.EditorTools
             EditorApplication.update += OnEditorUpdate;
         }
 
-        [MenuItem("Tools/Talisman Bag/V0.3/NavigationFlow01/Verify PlayMode")]
+        [MenuItem("Tools/Talisman Bag/V0.3/NavigationFlow01/[QA Only] Verify PlayMode")]
         public static void VerifyPlayModeBatch()
         {
             BeginVerification();

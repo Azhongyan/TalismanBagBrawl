@@ -31,7 +31,7 @@ namespace TalismanBag.EditorTools
             }
         }
 
-        [MenuItem(MenuRoot + "Save Selected Play UI To Scene", false, 100)]
+        [MenuItem(MenuRoot + "[Writes Scene][Manual Only] Save Selected Play UI To Scene", false, 100)]
         public static void SaveSelectedPlayUiToScene()
         {
             if (!EditorApplication.isPlaying)
@@ -75,12 +75,13 @@ namespace TalismanBag.EditorTools
 
             string rootSummary = string.Join("\n", selectedRoots.Select(root => "- " + GetSceneHierarchyPath(root.transform)));
             bool confirmed = EditorUtility.DisplayDialog(
-                "Save Play UI To Scene",
+                "[Writes Scene][Manual Only] Save Play UI To Scene",
                 "This will exit Play Mode and save whitelisted UI fields back to the active scene file.\n\n" +
                 "Scene:\n" + scene.path + "\n\n" +
                 "Selected root whitelist:\n" + rootSummary + "\n\n" +
                 "Included: activeSelf, RectTransform, sibling order, Image, Outline, Text, TMP_Text.\n" +
-                "Excluded: Button onClick, delegates, script fields, prefab links, save data, Build Settings, and objects outside the selected roots.",
+                "Excluded: Button onClick, delegates, script fields, prefab links, save data, Build Settings, and objects outside the selected roots.\n\n" +
+                "Use only after saving or backing up open work, with explicit user confirmation.",
                 "Save And Exit Play",
                 "Cancel");
 
@@ -100,7 +101,7 @@ namespace TalismanBag.EditorTools
             EditorApplication.ExitPlaymode();
         }
 
-        [MenuItem(MenuRoot + "Clear Pending Play UI Snapshot", false, 101)]
+        [MenuItem(MenuRoot + "[Manual Only] Clear Pending Play UI Snapshot", false, 101)]
         public static void ClearPendingSnapshot()
         {
             ClearPendingSession();

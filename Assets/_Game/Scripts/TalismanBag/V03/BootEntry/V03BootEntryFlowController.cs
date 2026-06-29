@@ -15,24 +15,54 @@ namespace TalismanBag.V03.BootEntry
         [SerializeField] private float loadingSeconds = 0.75f;
         [SerializeField] private string serverLabel = "青石坡一区";
         [SerializeField] private string serverStatus = "区服占位 · 当前仅作本地流程演示";
+        [SerializeField] private Canvas bootCanvas;
+        [SerializeField] private GameObject loadingPage;
+        [SerializeField] private GameObject startGamePage;
+        [SerializeField] private GameObject openingStoryPanel;
+        [SerializeField] private Button startGameButton;
+        [SerializeField] private Button skipOpeningStoryButton;
+        [SerializeField] private Text serverLabelText;
+        [SerializeField] private Text serverStatusText;
 
-        private Canvas canvas;
-        private GameObject loadingPage;
-        private GameObject startGamePage;
-        private GameObject openingStoryPanel;
         private bool isKnownPlayer;
+        private bool sceneBindingsReady;
+        private bool buttonsBound;
 
         private void Awake()
         {
-            EnsureCanvas();
-            BuildPages();
+            sceneBindingsReady = BindSceneObjects();
+            if (sceneBindingsReady)
+            {
+                BindButtons();
+                UpdateServerTexts();
+            }
         }
 
         private void Start()
         {
+            if (!sceneBindingsReady)
+            {
+                Debug.LogError(
+                    "[V0.3-BootGuideUpgradeRuntimeLock01] BootEntry scene nodes are incomplete; " +
+                    "runtime page creation is disabled.",
+                    this);
+                return;
+            }
+
             isKnownPlayer = SaveService.GetOrCreate().HasSave();
             ShowOnly(loadingPage);
             StartCoroutine(EnterStartPageAfterLoading());
+        }
+
+        private void OnDestroy()
+        {
+            if (!buttonsBound)
+            {
+                return;
+            }
+
+            startGameButton?.onClick.RemoveListener(StartGame);
+            skipOpeningStoryButton?.onClick.RemoveListener(SkipOpeningStory);
         }
 
         private IEnumerator EnterStartPageAfterLoading()
@@ -83,133 +113,101 @@ namespace TalismanBag.V03.BootEntry
             SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
         }
 
-        private void EnsureCanvas()
+        private bool BindSceneObjects()
         {
-            canvas = GetComponentInChildren<Canvas>(true);
-            if (canvas != null)
+            bootCanvas ??= GetComponentInChildren<Canvas>(true);
+            Transform root = bootCanvas != null ? bootCanvas.transform : transform;
+
+            loadingPage ??= FindGameObject(root, "LoadingPage");
+            startGamePage ??= FindGameObject(root, "StartGamePage");
+            openingStoryPanel ??= FindGameObject(root, "OpeningStoryPanel");
+            startGameButton ??= FindButton(startGamePage != null ? startGamePage.transform : root, "开始游戏Button");
+            startGameButton ??= FindButton(startGamePage != null ? startGamePage.transform : root, "StartGameButton");
+            skipOpeningStoryButton ??= FindButton(
+                openingStoryPanel != null ? openingStoryPanel.transform : root,
+                "跳过Button");
+            skipOpeningStoryButton ??= FindButton(
+                openingStoryPanel != null ? openingStoryPanel.transform : root,
+                "SkipOpeningStoryButton");
+
+            bool ok = bootCanvas != null &&
+                      loadingPage != null &&
+                      startGamePage != null &&
+                      openingStoryPanel != null &&
+                      startGameButton != null &&
+                      skipOpeningStoryButton != null;
+
+            if (!ok)
+            {
+                Debug.LogError(
+                    "[V0.3-BootGuideUpgradeRuntimeLock01] BootEntry requires scene-authored " +
+                    "BootEntryCanvas, LoadingPage, StartGamePage, OpeningStoryPanel, " +
+                    "start button, and skip button. Runtime creation is disabled.",
+                    this);
+            }
+
+            return ok;
+        }
+
+        private void BindButtons()
+        {
+            if (buttonsBound)
             {
                 return;
             }
 
-            GameObject canvasObject = new("BootEntryCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            canvasObject.transform.SetParent(transform, false);
-            canvas = canvasObject.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 100;
-
-            CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080f, 1920f);
-            scaler.matchWidthOrHeight = 1f;
+            startGameButton.onClick.AddListener(StartGame);
+            skipOpeningStoryButton.onClick.AddListener(SkipOpeningStory);
+            buttonsBound = true;
         }
 
-        private void BuildPages()
+        private void UpdateServerTexts()
         {
-            loadingPage = CreatePage("LoadingPage", new Color(0.035f, 0.047f, 0.043f, 1f));
-            CreateLabel(loadingPage.transform, "符箓背包", 58, FontStyle.Bold, new Vector2(0f, 170f), new Vector2(900f, 90f));
-            CreateLabel(loadingPage.transform, "照灯小铺正在点灯", 30, FontStyle.Normal, new Vector2(0f, 74f), new Vector2(840f, 56f));
-            CreateLabel(loadingPage.transform, "Loading...", 24, FontStyle.Normal, new Vector2(0f, -30f), new Vector2(520f, 48f));
+            if (serverLabelText != null)
+            {
+                serverLabelText.text = serverLabel;
+            }
 
-            startGamePage = CreatePage("StartGamePage", new Color(0.052f, 0.066f, 0.058f, 1f));
-            CreateLabel(startGamePage.transform, "符箓背包", 60, FontStyle.Bold, new Vector2(0f, 310f), new Vector2(900f, 94f));
-            CreateLabel(startGamePage.transform, "明箓山下 · 青石坊", 28, FontStyle.Normal, new Vector2(0f, 230f), new Vector2(760f, 54f));
-            CreateInfoBox(startGamePage.transform, "区服", $"{serverLabel}\n{serverStatus}", new Vector2(0f, 76f));
-            CreateButton(startGamePage.transform, "开始游戏", new Vector2(0f, -178f), StartGame);
-
-            openingStoryPanel = CreatePage("OpeningStoryPanel", new Color(0.045f, 0.04f, 0.034f, 1f));
-            CreateLabel(openingStoryPanel.transform, "开场剧情", 46, FontStyle.Bold, new Vector2(0f, 270f), new Vector2(820f, 82f));
-            CreateLabel(
-                openingStoryPanel.transform,
-                "夜里，照灯小铺门前的铜铃自己响了一声。\n林照灯把旧符匣推到你面前：先去青石坡试一场，回来再说。",
-                28,
-                FontStyle.Normal,
-                new Vector2(0f, 64f),
-                new Vector2(840f, 240f));
-            CreateButton(openingStoryPanel.transform, "跳过", new Vector2(0f, -214f), SkipOpeningStory);
-
-            ShowOnly(loadingPage);
+            if (serverStatusText != null)
+            {
+                serverStatusText.text = serverStatus;
+            }
         }
 
-        private GameObject CreatePage(string pageName, Color backgroundColor)
+        private static GameObject FindGameObject(Transform parent, string objectName)
         {
-            GameObject page = new(pageName, typeof(RectTransform), typeof(Image));
-            page.transform.SetParent(canvas.transform, false);
-            RectTransform rect = page.GetComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-            page.GetComponent<Image>().color = backgroundColor;
-            return page;
+            Transform found = FindDeepChild(parent, objectName);
+            return found != null ? found.gameObject : null;
         }
 
-        private void CreateInfoBox(Transform parent, string title, string body, Vector2 position)
+        private static Button FindButton(Transform parent, string objectName)
         {
-            GameObject box = new("ServerSlot", typeof(RectTransform), typeof(Image), typeof(Outline));
-            box.transform.SetParent(parent, false);
-            RectTransform rect = box.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = position;
-            rect.sizeDelta = new Vector2(760f, 190f);
-            box.GetComponent<Image>().color = new Color(0.105f, 0.13f, 0.11f, 0.95f);
-            box.GetComponent<Outline>().effectColor = new Color(0.52f, 0.58f, 0.44f, 0.85f);
-
-            CreateLabel(box.transform, title, 24, FontStyle.Bold, new Vector2(0f, 42f), new Vector2(680f, 44f));
-            CreateLabel(box.transform, body, 24, FontStyle.Normal, new Vector2(0f, -34f), new Vector2(680f, 86f));
+            Transform found = FindDeepChild(parent, objectName);
+            return found != null ? found.GetComponent<Button>() : null;
         }
 
-        private Text CreateLabel(
-            Transform parent,
-            string value,
-            int fontSize,
-            FontStyle fontStyle,
-            Vector2 position,
-            Vector2 size)
+        private static Transform FindDeepChild(Transform parent, string objectName)
         {
-            GameObject label = new("Text", typeof(RectTransform), typeof(Text));
-            label.transform.SetParent(parent, false);
-            RectTransform rect = label.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
+            if (parent == null || string.IsNullOrWhiteSpace(objectName))
+            {
+                return null;
+            }
 
-            Text text = label.GetComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = fontSize;
-            text.fontStyle = fontStyle;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Truncate;
-            text.color = new Color(0.92f, 0.94f, 0.84f, 1f);
-            text.text = value;
-            return text;
-        }
+            foreach (Transform child in parent)
+            {
+                if (child.name == objectName)
+                {
+                    return child;
+                }
 
-        private Button CreateButton(Transform parent, string label, Vector2 position, UnityEngine.Events.UnityAction action)
-        {
-            GameObject buttonObject = new($"{label}Button", typeof(RectTransform), typeof(Image), typeof(Button));
-            buttonObject.transform.SetParent(parent, false);
-            RectTransform rect = buttonObject.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = position;
-            rect.sizeDelta = new Vector2(420f, 88f);
-            buttonObject.GetComponent<Image>().color = new Color(0.58f, 0.43f, 0.22f, 1f);
-            Button button = buttonObject.GetComponent<Button>();
-            button.onClick.AddListener(action);
+                Transform found = FindDeepChild(child, objectName);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
 
-            Text text = CreateLabel(buttonObject.transform, label, 30, FontStyle.Bold, Vector2.zero, rect.sizeDelta);
-            RectTransform textRect = text.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-            return button;
+            return null;
         }
 
         private void ShowOnly(GameObject activePage)

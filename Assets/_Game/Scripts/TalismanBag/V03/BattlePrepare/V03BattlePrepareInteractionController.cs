@@ -19,6 +19,7 @@ namespace TalismanBag.V03.BattlePrepare
         private const float BoardSize = 800f;
         private const float ItemTraySize = 800f;
         private const float MoveSpeed = 9f;
+        private const string RuntimeItemTrayRootName = "V03BattlePrepareItemTrayRoot";
         private const int ItemTrayColumnCount = 5;
         private const int ItemTrayRowCount = 8;
         private const int ItemTraySlotCount = ItemTrayColumnCount * ItemTrayRowCount;
@@ -52,6 +53,7 @@ namespace TalismanBag.V03.BattlePrepare
         private bool prepareStateActive;
         private bool continueStateActive;
         private bool preparedFromFighting;
+        private bool runtimeFallbackReported;
         private int knownItemViewCount = -1;
         private float nextItemViewScanTime;
         private ItemTrayCategory currentCategory = ItemTrayCategory.All;
@@ -96,6 +98,7 @@ namespace TalismanBag.V03.BattlePrepare
                 return;
             }
 
+            Debug.LogWarning("[BattlePrepareRuntimeLock] V03BattlePrepareInteractionController is being added at runtime. This is a temporary fallback until locked BattlePrepare scene nodes are authored.");
             combat.gameObject.AddComponent<V03BattlePrepareInteractionController>();
         }
 
@@ -164,10 +167,12 @@ namespace TalismanBag.V03.BattlePrepare
 
             if (combatController == null || rootCanvas == null || safeAreaRoot == null || boardFrame == null)
             {
+                Debug.LogError("[BattlePrepareRuntimeLock] Missing required BattlePrepare scene objects. Required: AutoCombatController, Canvas, MobileSafeAreaRoot or Canvas, V02FormationGridFrame.");
                 enabled = false;
                 return;
             }
 
+            ReportRuntimeFallbackIfNeeded();
             CaptureLegacyBottomOperationArea();
             CreatePrepareDarkOverlay();
             CreateMotionRoot();
@@ -177,23 +182,36 @@ namespace TalismanBag.V03.BattlePrepare
             ReparentLegacyTooltipPanel();
             RedirectInventoryWritersToItemTray();
             MoveExistingItemsIntoTray();
-            DestroyLegacyBottomOperationArea();
+            HideLegacyBottomOperationArea();
             RefreshTrayItems();
             RefreshVisualState(true);
             setupComplete = true;
         }
 
+        private void ReportRuntimeFallbackIfNeeded()
+        {
+            if (runtimeFallbackReported)
+            {
+                return;
+            }
+
+            runtimeFallbackReported = true;
+            Debug.LogWarning("[BattlePrepareRuntimeLock] Locked BattlePrepare scene nodes are not fully authored yet. Runtime will use the existing transitional shell without destroying legacy objects. Author V03BattlePrepareDarkOverlay, V03BattlePrepareMotionRoot, V03BattlePrepareItemTrayRoot, V03BattleBottomActions, and V03ItemTrayTemplates in scene to remove this fallback.");
+        }
+
         private void CaptureLegacyBottomOperationArea()
         {
             legacyBottomOperationArea = GameObject.Find("V02BottomOperationArea");
-            if (legacyBottomOperationArea != null)
-            {
-                legacyBottomOperationArea.name = "V02BottomOperationArea_Legacy";
-            }
         }
 
         private void CreatePrepareDarkOverlay()
         {
+            if (TryBindImage("V03BattlePrepareDarkOverlay", out prepareDarkOverlay))
+            {
+                prepareDarkOverlay.raycastTarget = false;
+                return;
+            }
+
             GameObject overlay = new("V03BattlePrepareDarkOverlay", typeof(RectTransform), typeof(Image));
             overlay.transform.SetParent(safeAreaRoot, false);
             RectTransform rect = overlay.GetComponent<RectTransform>();
@@ -203,12 +221,17 @@ namespace TalismanBag.V03.BattlePrepare
 
             prepareDarkOverlay = overlay.GetComponent<Image>();
             prepareDarkOverlay.color = new Color(0f, 0f, 0f, 0.58f);
-            prepareDarkOverlay.raycastTarget = true;
+            prepareDarkOverlay.raycastTarget = false;
             overlay.SetActive(false);
         }
 
         private void CreateMotionRoot()
         {
+            if (TryBindRect("V03BattlePrepareMotionRoot", out motionRoot))
+            {
+                return;
+            }
+
             GameObject root = new("V03BattlePrepareMotionRoot", typeof(RectTransform));
             root.transform.SetParent(safeAreaRoot, false);
             motionRoot = root.GetComponent<RectTransform>();
@@ -223,61 +246,21 @@ namespace TalismanBag.V03.BattlePrepare
 
         private void ConfigureBoardFrame()
         {
-            boardFrame.SetParent(motionRoot, false);
-            boardFrame.SetAsFirstSibling();
-            SetRect(
-                boardFrame,
-                new Vector2(0.5f, 1f),
-                new Vector2(0.5f, 1f),
-                new Vector2(0.5f, 1f),
-                Vector2.zero,
-                new Vector2(BoardSize, BoardSize));
-
-            Image boardImage = boardFrame.GetComponent<Image>();
-            if (boardImage != null)
+            if (boardFrame.parent != motionRoot)
             {
-                boardImage.color = new Color(0.075f, 0.09f, 0.078f, 0.98f);
-            }
-
-            RectTransform gridSlots = GameObject.Find("GridSlots_5x5")?.transform as RectTransform;
-            if (gridSlots != null)
-            {
-                SetRect(
-                    gridSlots,
-                    new Vector2(0.5f, 0.5f),
-                    new Vector2(0.5f, 0.5f),
-                    new Vector2(0.5f, 0.5f),
-                    new Vector2(0f, -34f),
-                    new Vector2(700f, 700f));
-
-                GridLayoutGroup layout = gridSlots.GetComponent<GridLayoutGroup>();
-                if (layout != null)
-                {
-                    layout.cellSize = new Vector2(132f, 132f);
-                    layout.spacing = new Vector2(10f, 10f);
-                    layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-                    layout.constraintCount = 5;
-                    layout.childAlignment = TextAnchor.MiddleCenter;
-                }
-            }
-
-            Text caption = boardFrame.Find("GridCaption")?.GetComponent<Text>();
-            if (caption != null)
-            {
-                caption.text = "阵盘";
-                SetRect(
-                    caption.rectTransform,
-                    new Vector2(0.5f, 0f),
-                    new Vector2(0.5f, 0f),
-                    new Vector2(0.5f, 0f),
-                    new Vector2(0f, 26f),
-                    new Vector2(560f, 42f));
+                Debug.LogWarning("[BattlePrepareRuntimeLock] V02FormationGridFrame is still reparented at runtime because no locked V03BattlePrepareMotionRoot scene binding exists. This fallback must be removed after scene authoring.");
+                boardFrame.SetParent(motionRoot, true);
             }
         }
 
         private void CreateItemTray()
         {
-            GameObject tray = CreatePanel("V02BottomOperationArea", motionRoot, new Vector2(0f, -BoardSize), new Vector2(ItemTraySize, ItemTraySize), new Color(0.065f, 0.076f, 0.07f, 0.98f));
+            if (TryBindExistingItemTray())
+            {
+                return;
+            }
+
+            GameObject tray = CreatePanel(RuntimeItemTrayRootName, motionRoot, new Vector2(0f, -BoardSize), new Vector2(ItemTraySize, ItemTraySize), new Color(0.065f, 0.076f, 0.07f, 0.98f));
             itemTrayRoot = tray.GetComponent<RectTransform>();
             Outline outline = tray.AddComponent<Outline>();
             outline.effectColor = new Color(0.42f, 0.76f, 1f, 0.9f);
@@ -473,6 +456,11 @@ namespace TalismanBag.V03.BattlePrepare
 
         private void CreateActionBar()
         {
+            if (TryBindExistingActionBar())
+            {
+                return;
+            }
+
             GameObject bar = CreatePanel("V03BattleBottomActions", safeAreaRoot, new Vector2(0f, 34f), new Vector2(800f, 92f), new Color(0.045f, 0.052f, 0.055f, 0.94f), TextAnchor.LowerCenter);
             actionBar = bar.GetComponent<RectTransform>();
 
@@ -495,8 +483,114 @@ namespace TalismanBag.V03.BattlePrepare
             prepareButtonText = prepareButton.GetComponentInChildren<Text>(true);
         }
 
+        private bool TryBindExistingItemTray()
+        {
+            if (!TryBindRect(RuntimeItemTrayRootName, out itemTrayRoot))
+            {
+                return false;
+            }
+
+            itemTrayContent = FindChildRecursive(itemTrayRoot, "Content") as RectTransform;
+            itemTrayTemplateRoot = FindChildRecursive(safeAreaRoot, "V03ItemTrayTemplates");
+            itemTrayLockedOverlay = FindChildRecursive(itemTrayRoot, "ItemTrayBattleLockedOverlay")?.GetComponent<Image>();
+            emptyStateText = FindChildRecursive(itemTrayRoot, "ItemTrayEmptyState")?.GetComponent<Text>();
+
+            if (itemTrayContent == null)
+            {
+                Debug.LogError("[BattlePrepareRuntimeLock] Existing V03BattlePrepareItemTrayRoot is missing ItemTrayScroll/Viewport/Content. Runtime will not rewrite the locked tray layout.");
+                return true;
+            }
+
+            itemTraySlotRoots.Clear();
+            RectTransform[] childRects = itemTrayContent.GetComponentsInChildren<RectTransform>(true);
+            foreach (RectTransform child in childRects)
+            {
+                if (child == itemTrayContent || !child.name.StartsWith("ItemTrayGridSlot_"))
+                {
+                    continue;
+                }
+
+                V03ItemTraySlotDropTarget dropTarget = child.GetComponent<V03ItemTraySlotDropTarget>();
+                if (dropTarget == null)
+                {
+                    dropTarget = child.gameObject.AddComponent<V03ItemTraySlotDropTarget>();
+                }
+
+                dropTarget.Bind(this, child);
+                itemTraySlotRoots.Add(child);
+            }
+
+            BindExistingCategoryButton(ItemTrayCategory.All, "ItemTrayTab_All");
+            BindExistingCategoryButton(ItemTrayCategory.Talisman, "ItemTrayTab_Talisman");
+            BindExistingCategoryButton(ItemTrayCategory.Tool, "ItemTrayTab_Tool");
+            BindExistingCategoryButton(ItemTrayCategory.Material, "ItemTrayTab_Material");
+            BindExistingCategoryButton(ItemTrayCategory.Consumable, "ItemTrayTab_Consumable");
+            BindExistingCategoryButton(ItemTrayCategory.Special, "ItemTrayTab_Special");
+            return true;
+        }
+
+        private bool TryBindExistingActionBar()
+        {
+            if (!TryBindRect("V03BattleBottomActions", out actionBar))
+            {
+                return false;
+            }
+
+            Button homeButton = FindChildRecursive(actionBar, "V03BackHomeButton")?.GetComponent<Button>();
+            if (homeButton != null)
+            {
+                homeButton.onClick.AddListener(BackToMainHome);
+            }
+
+            stateButton = FindChildRecursive(actionBar, "V03BattleStateButton")?.GetComponent<Button>();
+            if (stateButton != null)
+            {
+                stateButton.onClick.AddListener(HandleBattleStateButtonClicked);
+                stateButtonText = stateButton.GetComponentInChildren<Text>(true);
+            }
+
+            prepareButton = FindChildRecursive(actionBar, "V03PrepareToggleButton")?.GetComponent<Button>();
+            if (prepareButton != null)
+            {
+                prepareButton.onClick.AddListener(HandlePrepareButtonClicked);
+                prepareButtonText = prepareButton.GetComponentInChildren<Text>(true);
+            }
+
+            return true;
+        }
+
+        private void BindExistingCategoryButton(ItemTrayCategory category, string objectName)
+        {
+            Button button = FindChildRecursive(itemTrayRoot, objectName)?.GetComponent<Button>();
+            if (button == null)
+            {
+                Debug.LogWarning($"[BattlePrepareRuntimeLock] Missing category button: {objectName}.");
+                return;
+            }
+
+            Text text = button.GetComponentInChildren<Text>(true);
+            ItemTrayCategory capturedCategory = category;
+            button.onClick.AddListener(() =>
+            {
+                currentCategory = capturedCategory;
+                RefreshTrayItems();
+            });
+
+            categoryButtons.Add(new CategoryButtonBinding
+            {
+                Category = category,
+                Button = button,
+                Text = text
+            });
+        }
+
         private void MoveExistingItemsIntoTray()
         {
+            if (itemTrayContent == null)
+            {
+                return;
+            }
+
             DraggableTalismanItemView[] views = UnityEngine.Object.FindObjectsOfType<DraggableTalismanItemView>(true);
             foreach (DraggableTalismanItemView view in views)
             {
@@ -535,7 +629,7 @@ namespace TalismanBag.V03.BattlePrepare
             }
         }
 
-        private void DestroyLegacyBottomOperationArea()
+        private void HideLegacyBottomOperationArea()
         {
             GameObject legacyButtons = GameObject.Find("V02PrimaryActionButtons");
             if (legacyButtons != null)
@@ -545,7 +639,7 @@ namespace TalismanBag.V03.BattlePrepare
 
             if (legacyBottomOperationArea != null)
             {
-                UnityEngine.Object.Destroy(legacyBottomOperationArea);
+                legacyBottomOperationArea.SetActive(false);
                 legacyBottomOperationArea = null;
             }
         }
@@ -723,23 +817,11 @@ namespace TalismanBag.V03.BattlePrepare
             if (prepareDarkOverlay != null)
             {
                 prepareDarkOverlay.gameObject.SetActive(prepareStateActive || continueStateActive);
-                prepareDarkOverlay.transform.SetAsLastSibling();
-            }
-
-            if (motionRoot != null)
-            {
-                motionRoot.SetAsLastSibling();
-            }
-
-            if (actionBar != null)
-            {
-                actionBar.SetAsLastSibling();
             }
 
             if (itemTrayLockedOverlay != null)
             {
                 itemTrayLockedOverlay.gameObject.SetActive(!prepareStateActive);
-                itemTrayLockedOverlay.transform.SetAsLastSibling();
             }
 
             RefreshCategoryButtonState();
@@ -760,6 +842,42 @@ namespace TalismanBag.V03.BattlePrepare
 
             V02DebugPopupController debugPopup = UnityEngine.Object.FindObjectOfType<V02DebugPopupController>(true);
             debugPopup?.BringToFront();
+        }
+
+        private static bool TryBindRect(string objectName, out RectTransform rect)
+        {
+            rect = GameObject.Find(objectName)?.transform as RectTransform;
+            return rect != null;
+        }
+
+        private static bool TryBindImage(string objectName, out Image image)
+        {
+            image = GameObject.Find(objectName)?.GetComponent<Image>();
+            return image != null;
+        }
+
+        private static Transform FindChildRecursive(Transform parent, string objectName)
+        {
+            if (parent == null || string.IsNullOrWhiteSpace(objectName))
+            {
+                return null;
+            }
+
+            if (parent.name == objectName)
+            {
+                return parent;
+            }
+
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform found = FindChildRecursive(parent.GetChild(i), objectName);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
         }
 
         private void RefreshTrayItems()
@@ -877,6 +995,11 @@ namespace TalismanBag.V03.BattlePrepare
 
         private void MoveItemToTray(DraggableTalismanItemView view)
         {
+            if (itemTrayContent == null)
+            {
+                return;
+            }
+
             RectTransform existingSlot = FindCurrentTraySlot(view);
             if (existingSlot != null)
             {

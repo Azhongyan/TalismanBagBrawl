@@ -27,13 +27,13 @@ namespace TalismanBag.V03.EditorTools
         private const float BottomNavButtonStep = 168f;
         private const float BottomNavButtonWidth = 148f;
         private const float BottomNavButtonHeight = 82f;
+        private const string BottomNavRootName = "BottomNavBar_Root";
 
         private static readonly string[] SecondaryRootNames =
         {
             "RefinePageRoot",
             "ExplorePageRoot",
-            "MorePageRoot",
-            "BottomNavBar_Root"
+            "MorePageRoot"
         };
 
         private static readonly string[] ObsoleteRootNames =
@@ -41,22 +41,38 @@ namespace TalismanBag.V03.EditorTools
             "SecondaryBottomNavRoot"
         };
 
-        [MenuItem("Tools/Talisman Bag/V0.3/NavigationFlow01/Build Scene")]
+        [MenuItem("Tools/Talisman Bag/V0.3/NavigationFlow01/[Writes Scene][Deprecated][Guard Only] Build Scene")]
         public static void BuildSceneBatch()
         {
+            if (!EditorUtility.DisplayDialog(
+                    "[Writes Scene][Deprecated][Guard Only] Build NavigationFlow01 Scene",
+                    "This deprecated Guard Only tool opens and saves:\n" +
+                    MainHomeScenePath + "\n\n" +
+                    "It destroys and recreates navigation roots, writes scene references, generates UI, and may update Build Settings.\n" +
+                    "Use in Edit Mode only after saving or backing up open work, with Guard or user confirmation.",
+                    "Proceed",
+                    "Cancel"))
+            {
+                return;
+            }
+
             Scene scene = EditorSceneManager.OpenScene(MainHomeScenePath, OpenSceneMode.Single);
             GameObject sceneRoot = FindSceneObject(scene, "MainHomeSceneRoot");
             GameObject canvasObject = FindSceneObject(scene, "Canvas");
             GameObject homeRoot = FindSceneObject(scene, "MainHomeRoot");
+            GameObject safeAreaRoot = FindSceneObject(scene, "MobileSafeAreaRoot");
 
             Require(sceneRoot != null, "MainHomeSceneRoot is missing.");
             Require(canvasObject != null, "Canvas is missing.");
             Require(homeRoot != null, "MainHomeRoot is missing.");
+            Transform contentRoot = safeAreaRoot != null ? safeAreaRoot.transform : canvasObject.transform;
 
             foreach (string rootName in SecondaryRootNames)
             {
                 DestroyNamedObject(scene, rootName);
             }
+
+            DestroyNamedObject(scene, BottomNavRootName);
 
             foreach (string rootName in ObsoleteRootNames)
             {
@@ -72,28 +88,28 @@ namespace TalismanBag.V03.EditorTools
 
             GameObject refineRoot = CreatePageRoot(
                 "RefinePageRoot",
-                canvasObject.transform,
+                contentRoot,
                 "养成",
                 "符箓升级",
                 "符桌已备好。\n当前先承接首次符箓升级，后续再扩展完整养成页。",
                 new Color(0.12f, 0.16f, 0.13f, 0.99f));
             GameObject exploreRoot = CreatePageRoot(
                 "ExplorePageRoot",
-                canvasObject.transform,
+                contentRoot,
                 "探索",
                 "Coming Soon",
                 "青石坡外的秘境仍在勘定。\n随机节点、三选一与天机炉将在后续版本开放。",
                 new Color(0.10f, 0.13f, 0.17f, 0.99f));
             GameObject moreRoot = CreatePageRoot(
                 "MorePageRoot",
-                canvasObject.transform,
+                contentRoot,
                 "更多",
                 "本地入口集合",
                 "商店　活动　公告　邮件　设置\n以上入口当前均为本地占位，不接入正式系统。",
                 new Color(0.16f, 0.13f, 0.10f, 0.99f));
 
             GameObject bottomNavRoot = CreateBottomNav(
-                canvasObject.transform,
+                contentRoot,
                 out Button homeButton,
                 out Button trialButton,
                 out Button refineButton,
@@ -130,7 +146,7 @@ namespace TalismanBag.V03.EditorTools
             refineRoot.SetActive(false);
             exploreRoot.SetActive(false);
             moreRoot.SetActive(false);
-            bottomNavRoot.SetActive(false);
+            bottomNavRoot.SetActive(true);
 
             EditorSceneManager.MarkSceneDirty(scene);
             Require(EditorSceneManager.SaveScene(scene), "Could not save V03 main home scene.");
@@ -146,7 +162,7 @@ namespace TalismanBag.V03.EditorTools
                 "trialMode=LoadSceneMode.Single");
         }
 
-        [MenuItem("Tools/Talisman Bag/V0.3/NavigationFlow01/Verify Static")]
+        [MenuItem("Tools/Talisman Bag/V0.3/NavigationFlow01/[QA Only] Verify Static")]
         public static void VerifyStaticBatch()
         {
             EditorSceneManager.OpenScene(MainHomeScenePath, OpenSceneMode.Single);
@@ -174,6 +190,12 @@ namespace TalismanBag.V03.EditorTools
                 Require(FindAllSceneObjects(scene, rootName).Length == 1,
                     $"Scene must contain exactly one {rootName}.");
             }
+
+            GameObject bottomNavRoot = FindSceneObject(scene, BottomNavRootName);
+            Require(bottomNavRoot != null, $"{BottomNavRootName} is missing.");
+            Require(bottomNavRoot.activeSelf, $"{BottomNavRootName} must be active on disk.");
+            Require(FindAllSceneObjects(scene, BottomNavRootName).Length == 1,
+                $"Scene must contain exactly one {BottomNavRootName}.");
 
             V03NavigationFlowController controller =
                 sceneRoot.GetComponent<V03NavigationFlowController>();
@@ -211,8 +233,6 @@ namespace TalismanBag.V03.EditorTools
 
             Require(texts.Any(text => text.text == "梦签"),
                 "Main home scene is missing the DreamSign home hotspot label.");
-            GameObject bottomNavRoot = FindSceneObject(scene, "BottomNavBar_Root");
-            Require(bottomNavRoot != null, "BottomNavBar_Root is missing.");
             Text[] bottomNavTexts = bottomNavRoot.GetComponentsInChildren<Text>(true);
             string[] expectedBottomNavLabels = { "首页", "养成", "试炼", "探索", "更多" };
             Require(
@@ -230,7 +250,7 @@ namespace TalismanBag.V03.EditorTools
 
             Debug.Log(
                 "[V0.3-NavigationFlow01] NF01_STATIC_SUCCESS " +
-                "defaultHome=true secondaryRoots=false bottomNav=false missingScripts=0");
+                "defaultHome=true secondaryRoots=false bottomNav=true missingScripts=0");
         }
 
         private static GameObject CreatePageRoot(
@@ -297,7 +317,7 @@ namespace TalismanBag.V03.EditorTools
             out Button moreButton)
         {
             GameObject root = new(
-                "BottomNavBar_Root",
+                BottomNavRootName,
                 typeof(RectTransform),
                 typeof(Image));
             root.transform.SetParent(parent, false);

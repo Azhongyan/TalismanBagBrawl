@@ -33,6 +33,10 @@ namespace TalismanBag.V03.EditorTools
             "FullBackgroundBlackUnderlay";
         private const string FullBackgroundSlotName =
             "FullBackgroundImageSlot";
+        private const string MobileSafeAreaRootName =
+            "MobileSafeAreaRoot";
+        private const string BottomNavRootName =
+            "BottomNavBar_Root";
         private const float HomeFullBackgroundSize = 2200f;
 
         private static int playModeFrames;
@@ -46,9 +50,22 @@ namespace TalismanBag.V03.EditorTools
             EditorApplication.update += OnEditorUpdate;
         }
 
-        [MenuItem("Tools/Talisman Bag/V0.3/Fix02/Build Independent Main Home Scene")]
+        [MenuItem("Tools/Talisman Bag/V0.3/Fix02/[Writes Scene][Deprecated][Guard Only] Build Independent Main Home Scene")]
         public static void BuildSceneBatch()
         {
+            if (!EditorUtility.DisplayDialog(
+                    "[Writes Scene][Deprecated][Guard Only] Build Independent Main Home Scene",
+                    "This deprecated Guard Only tool rebuilds and saves:\n" +
+                    ScenePath + "\n\n" +
+                    "It can also open and modify legacy scene cleanup targets:\n" +
+                    LegacyScenePath + "\n\n" +
+                    "Use in Edit Mode only after saving or backing up open work, with Guard or user confirmation.",
+                    "Proceed",
+                    "Cancel"))
+            {
+                return;
+            }
+
             EnsureProjectDirectories();
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -115,7 +132,7 @@ namespace TalismanBag.V03.EditorTools
                 "legacySceneDelivery=false");
         }
 
-        [MenuItem("Tools/Talisman Bag/V0.3/Fix02/Verify Static Scene")]
+        [MenuItem("Tools/Talisman Bag/V0.3/Fix02/[QA Only] Verify Static Scene")]
         public static void VerifyStaticBatch()
         {
             EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
@@ -137,32 +154,44 @@ namespace TalismanBag.V03.EditorTools
             GameObject backgroundUnderlay = FindSceneObject(scene, FullBackgroundUnderlayName);
             GameObject backgroundSlot = FindSceneObject(scene, FullBackgroundSlotName);
             GameObject homeRoot = FindSceneObject(scene, "MainHomeRoot");
+            GameObject safeAreaRoot = FindSceneObject(scene, MobileSafeAreaRootName);
+            GameObject bottomNavRoot = FindSceneObject(scene, BottomNavRootName);
             GameObject eventSystemObject = FindSceneObject(scene, "EventSystem");
+            Transform contentRoot = safeAreaRoot != null ? safeAreaRoot.transform : canvasObject?.transform;
 
             Require(sceneRoot != null, "MainHomeSceneRoot is missing.");
             Require(canvasObject != null, "Canvas is missing.");
             Require(backgroundUnderlay != null, $"{FullBackgroundUnderlayName} is missing.");
             Require(backgroundSlot != null, "FullBackgroundImageSlot is missing.");
             Require(homeRoot != null, "MainHomeRoot is missing.");
+            Require(bottomNavRoot != null, "BottomNavBar_Root is missing.");
             Require(eventSystemObject != null, "EventSystem is missing.");
             Require(sceneRoot.activeSelf, "MainHomeSceneRoot must be active on disk.");
             Require(canvasObject.activeSelf, "Canvas must be active on disk.");
+            Require(safeAreaRoot == null || safeAreaRoot.activeSelf,
+                "MobileSafeAreaRoot must be active on disk when present.");
             Require(backgroundUnderlay.activeSelf, $"{FullBackgroundUnderlayName} must be active on disk.");
             Require(backgroundSlot.activeSelf, "FullBackgroundImageSlot must be active on disk.");
             Require(homeRoot.activeSelf, "MainHomeRoot must be active on disk.");
+            Require(bottomNavRoot.activeSelf, "BottomNavBar_Root must be active on disk.");
             Require(eventSystemObject.activeSelf, "EventSystem must be active on disk.");
-            Require(backgroundUnderlay.transform.parent == canvasObject.transform,
-                $"{FullBackgroundUnderlayName} must be a direct child of Canvas.");
-            Require(backgroundSlot.transform.parent == canvasObject.transform,
-                "FullBackgroundImageSlot must be a direct child of Canvas.");
-            Require(homeRoot.transform.parent == canvasObject.transform,
-                "MainHomeRoot must be a direct child of Canvas.");
+            Require(contentRoot != null, "Main home content root is missing.");
+            Require(safeAreaRoot == null || safeAreaRoot.transform.parent == canvasObject.transform,
+                "MobileSafeAreaRoot must be a direct child of Canvas.");
+            Require(backgroundUnderlay.transform.parent == contentRoot,
+                $"{FullBackgroundUnderlayName} must be a direct child of the main home content root.");
+            Require(backgroundSlot.transform.parent == contentRoot,
+                "FullBackgroundImageSlot must be a direct child of the main home content root.");
+            Require(homeRoot.transform.parent == contentRoot,
+                "MainHomeRoot must be a direct child of the main home content root.");
+            Require(bottomNavRoot.transform.parent == contentRoot,
+                "BottomNavBar_Root must be a direct child of the main home content root.");
             Require(canvasObject.transform.parent == sceneRoot.transform,
                 "Canvas must be a direct child of MainHomeSceneRoot.");
             Require(eventSystemObject.transform.parent == sceneRoot.transform,
                 "EventSystem must be a direct child of MainHomeSceneRoot.");
             Require(backgroundUnderlay.transform.GetSiblingIndex() == 0,
-                $"{FullBackgroundUnderlayName} must be the first Canvas child.");
+                $"{FullBackgroundUnderlayName} must be the first main home content child.");
             Require(backgroundSlot.transform.GetSiblingIndex() > backgroundUnderlay.transform.GetSiblingIndex(),
                 "FullBackgroundImageSlot must render above the black underlay.");
 
@@ -170,6 +199,8 @@ namespace TalismanBag.V03.EditorTools
                 "Scene must contain exactly one MainHomeSceneRoot.");
             Require(FindAllSceneObjects(scene, "Canvas").Length == 1,
                 "Scene must contain exactly one Canvas.");
+            Require(FindAllSceneObjects(scene, MobileSafeAreaRootName).Length <= 1,
+                "Scene must not contain duplicate MobileSafeAreaRoot objects.");
             Require(FindAllSceneObjects(scene, "EventSystem").Length == 1,
                 "Scene must contain exactly one EventSystem.");
             Require(FindAllSceneObjects(scene, FullBackgroundUnderlayName).Length == 1,
@@ -178,12 +209,16 @@ namespace TalismanBag.V03.EditorTools
                 "Scene must contain exactly one FullBackgroundImageSlot.");
             Require(FindAllSceneObjects(scene, "MainHomeRoot").Length == 1,
                 "Scene must contain exactly one MainHomeRoot.");
+            Require(FindAllSceneObjects(scene, BottomNavRootName).Length == 1,
+                "Scene must contain exactly one BottomNavBar_Root.");
 
             Canvas canvas = canvasObject.GetComponent<Canvas>();
             RectTransform underlayRect = backgroundUnderlay.GetComponent<RectTransform>();
             Image underlayImage = backgroundUnderlay.GetComponent<Image>();
             RectTransform backgroundRect = backgroundSlot.GetComponent<RectTransform>();
             Image backgroundImage = backgroundSlot.GetComponent<Image>();
+            RectTransform bottomNavRect = bottomNavRoot.GetComponent<RectTransform>();
+            Image bottomNavImage = bottomNavRoot.GetComponent<Image>();
             MainHomeGreyboxPanel panel = homeRoot.GetComponent<MainHomeGreyboxPanel>();
             Image homeRootImage = homeRoot.GetComponent<Image>();
             Outline homeRootOutline = homeRoot.GetComponent<Outline>();
@@ -211,6 +246,9 @@ namespace TalismanBag.V03.EditorTools
                 "MainHomeRoot Image must stay disabled.");
             Require(homeRootOutline == null || !homeRootOutline.enabled,
                 "MainHomeRoot Outline must stay disabled.");
+            Require(bottomNavRect != null, "BottomNavBar_Root must have a RectTransform.");
+            Require(bottomNavImage == null || !bottomNavImage.raycastTarget,
+                "BottomNavBar_Root background must not block input.");
             Require(bootstrap != null && bootstrap.enabled,
                 "MainHomeSceneRoot must contain an enabled lifecycle bootstrap.");
 
@@ -240,9 +278,25 @@ namespace TalismanBag.V03.EditorTools
                     "Static scene relies on runtime V03 UIUE layout hook until Builder is rerun.");
             }
 
-            Require(!texts.Any(text => text.text.Contains("BattleBackpack")),
+            Text[] sceneTexts = scene
+                .GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Text>(true))
+                .ToArray();
+            Text[] bottomNavTexts = bottomNavRoot.GetComponentsInChildren<Text>(true);
+            string[] expectedBottomNavLabels = { "首页", "养成", "试炼", "探索", "更多" };
+            Require(
+                GetBottomNavLabelsByX(bottomNavTexts).SequenceEqual(expectedBottomNavLabels),
+                "Bottom nav order must be 首页 / 养成 / 试炼 / 探索 / 更多.");
+            Require(!bottomNavTexts.Any(text =>
+                    text.text.Contains("BattleBackpack") ||
+                    text.text.Contains("背包") ||
+                    text.text.Contains("梦签")),
+                "Bottom navigation exposes a forbidden DreamSign or backpack label.");
+            Require(!sceneTexts.Any(text => text.text.Contains("暂时收起")),
+                "Main home scene must not restore the temporary collapse button.");
+            Require(!sceneTexts.Any(text => text.text.Contains("BattleBackpack")),
                 "Main home scene exposes a forbidden BattleBackpack label.");
-            Require(!texts.Any(text => text.text == "论道"),
+            Require(!sceneTexts.Any(text => text.text == "论道"),
                 "Main home scene exposes the forbidden PVP name 论道.");
             Require(CountMissingScripts(sceneRoot) == 0,
                 "Main home scene contains Missing Script components.");
@@ -255,7 +309,7 @@ namespace TalismanBag.V03.EditorTools
                 "defaultActive=true, missingScripts=0");
         }
 
-        [MenuItem("Tools/Talisman Bag/V0.3/Fix02/Verify PlayMode First Frame")]
+        [MenuItem("Tools/Talisman Bag/V0.3/Fix02/[QA Only] Verify PlayMode First Frame")]
         public static void VerifyPlayModeBatch()
         {
             SessionState.SetBool(ForceEditorExitKey, false);
@@ -361,19 +415,49 @@ namespace TalismanBag.V03.EditorTools
 
             GameObject homeRoot = FindSceneObject(scene, "MainHomeRoot");
             GameObject canvasObject = FindSceneObject(scene, "Canvas");
+            GameObject backgroundUnderlay = FindSceneObject(scene, FullBackgroundUnderlayName);
+            GameObject backgroundSlot = FindSceneObject(scene, FullBackgroundSlotName);
+            GameObject bottomNavRoot = FindSceneObject(scene, BottomNavRootName);
             Require(homeRoot != null, "PlayMode MainHomeRoot is missing.");
             Require(canvasObject != null, "PlayMode Canvas is missing.");
+            Require(backgroundUnderlay != null, "PlayMode FullBackgroundBlackUnderlay is missing.");
+            Require(backgroundSlot != null, "PlayMode FullBackgroundImageSlot is missing.");
+            Require(bottomNavRoot != null, "PlayMode BottomNavBar_Root is missing.");
+            Require(FindAllSceneObjects(scene, FullBackgroundUnderlayName).Length == 1,
+                "PlayMode must contain exactly one FullBackgroundBlackUnderlay.");
+            Require(FindAllSceneObjects(scene, FullBackgroundSlotName).Length == 1,
+                "PlayMode must contain exactly one FullBackgroundImageSlot.");
+            Require(FindAllSceneObjects(scene, BottomNavRootName).Length == 1,
+                "PlayMode must contain exactly one BottomNavBar_Root.");
             Require(homeRoot.activeSelf,
                 "PlayMode MainHomeRoot activeSelf must remain true.");
             Require(homeRoot.activeInHierarchy,
                 "PlayMode MainHomeRoot must be visible in hierarchy.");
+            Require(backgroundUnderlay.activeInHierarchy,
+                "PlayMode black underlay must remain visible in hierarchy.");
+            Require(backgroundSlot.activeInHierarchy,
+                "PlayMode full background slot must remain visible in hierarchy.");
+            Require(bottomNavRoot.activeInHierarchy,
+                "PlayMode bottom navigation must remain visible in hierarchy.");
 
             Canvas canvas = canvasObject.GetComponent<Canvas>();
             MainHomeGreyboxPanel panel = homeRoot.GetComponent<MainHomeGreyboxPanel>();
+            Image underlayImage = backgroundUnderlay.GetComponent<Image>();
+            Image backgroundImage = backgroundSlot.GetComponent<Image>();
+            Image homeRootImage = homeRoot.GetComponent<Image>();
+            Outline homeRootOutline = homeRoot.GetComponent<Outline>();
             Require(canvas != null && canvas.enabled && canvas.gameObject.activeInHierarchy,
                 "PlayMode Canvas must be active and enabled.");
             Require(panel != null && panel.enabled,
                 "PlayMode home panel must be enabled.");
+            Require(underlayImage != null && underlayImage.enabled && !underlayImage.raycastTarget,
+                "PlayMode black underlay Image state was rewritten.");
+            Require(backgroundImage != null && backgroundImage.enabled && !backgroundImage.raycastTarget,
+                "PlayMode full background Image state was rewritten.");
+            Require(homeRootImage == null || !homeRootImage.enabled,
+                "PlayMode MainHomeRoot Image must stay disabled.");
+            Require(homeRootOutline == null || !homeRootOutline.enabled,
+                "PlayMode MainHomeRoot Outline must stay disabled.");
 
             string[] requiredTexts =
             {
@@ -398,6 +482,21 @@ namespace TalismanBag.V03.EditorTools
                 Require(text != null && text.enabled && text.gameObject.activeInHierarchy,
                     $"PlayMode text '{requiredText}' is not visible.");
             }
+
+            Text[] sceneTexts = scene
+                .GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Text>(true))
+                .ToArray();
+            string[] expectedBottomNavLabels = { "首页", "养成", "试炼", "探索", "更多" };
+            Require(
+                GetBottomNavLabelsByX(bottomNavRoot.GetComponentsInChildren<Text>(true))
+                    .SequenceEqual(expectedBottomNavLabels),
+                "PlayMode bottom nav order must be 首页 / 养成 / 试炼 / 探索 / 更多.");
+            Require(!sceneTexts.Any(text =>
+                    text.text.Contains("暂时收起") ||
+                    text.text.Contains("BattleBackpack") ||
+                    text.text.Contains("背包")),
+                "PlayMode restored a forbidden temporary collapse or backpack label.");
 
             Debug.Log(
                 "[V0.3-MainHomeScene01-Retry-Fix02] " +
@@ -543,6 +642,19 @@ namespace TalismanBag.V03.EditorTools
                 .Sum(transform =>
                     GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(
                         transform.gameObject));
+        }
+
+        private static string[] GetBottomNavLabelsByX(Text[] texts)
+        {
+            return texts
+                .Where(text => text != null)
+                .OrderBy(text =>
+                {
+                    RectTransform parentRect = text.transform.parent as RectTransform;
+                    return parentRect != null ? parentRect.anchoredPosition.x : 0f;
+                })
+                .Select(text => text.text)
+                .ToArray();
         }
 
         private static void Require(bool condition, string message)

@@ -12,8 +12,11 @@ namespace TalismanBag.V03.Forge
         private V03NavigationFlowController navigation;
         private MainHomeGreyboxPanel homePanel;
         private Transform uiParent;
-        private GameObject guideRoot;
-        private Text imageSlotText;
+        [SerializeField] private GameObject homeUpgradeGuideRoot;
+        [SerializeField] private GameObject homeTrialGuideRoot;
+        [SerializeField] private Text homeUpgradeImageSlotText;
+        [SerializeField] private Text homeTrialImageSlotText;
+
         private MainTrialFlowService mainTrialFlowService;
 
         public void Initialize(
@@ -24,7 +27,7 @@ namespace TalismanBag.V03.Forge
             navigation = navigationController;
             homePanel = panel;
             uiParent = ResolveUiParent(panel, navigationController);
-            EnsureGuideRoot();
+            BindGuideRoots();
         }
 
         public void OnHomeShown()
@@ -71,18 +74,22 @@ namespace TalismanBag.V03.Forge
 
         public void HideGuideSlot()
         {
-            if (guideRoot != null)
+            SetGuideRootActive(homeUpgradeGuideRoot, false);
+            if (homeTrialGuideRoot != homeUpgradeGuideRoot)
             {
-                guideRoot.SetActive(false);
+                SetGuideRootActive(homeTrialGuideRoot, false);
             }
         }
 
         private MainTrialPhase GetCurrentPhase()
         {
-            return EnsureMainTrialFlowService().GetCurrentPhase();
+            MainTrialFlowService flowService = ResolveMainTrialFlowService();
+            return flowService != null
+                ? flowService.GetCurrentPhase()
+                : MainTrialPhase.NotStarted;
         }
 
-        private MainTrialFlowService EnsureMainTrialFlowService()
+        private MainTrialFlowService ResolveMainTrialFlowService()
         {
             if (mainTrialFlowService != null)
             {
@@ -96,36 +103,53 @@ namespace TalismanBag.V03.Forge
                 return mainTrialFlowService;
             }
 
-            GameObject serviceObject = new("V03MainTrialFlowService_Runtime");
-            mainTrialFlowService = serviceObject.AddComponent<MainTrialFlowService>();
-            mainTrialFlowService.Bind(SaveService.GetOrCreate());
-            return mainTrialFlowService;
+            Debug.LogError(
+                "[V0.3-BootGuideUpgradeRuntimeLock01] MainTrialFlowService is missing; " +
+                "runtime service creation is disabled.",
+                this);
+            return null;
         }
 
         private void ShowGuideImageSlot(string slotName, string slotText)
         {
-            GameObject root = EnsureGuideRoot();
+            GameObject root = ResolveGuideRoot(slotName);
             if (root == null)
             {
+                Debug.LogError(
+                    $"[V0.3-BootGuideUpgradeRuntimeLock01] MainHome guide slot '{slotName}' is missing; " +
+                    "runtime guide overlay creation is disabled.",
+                    this);
                 return;
             }
 
-            root.name = slotName;
+            HideGuideSlot();
             root.SetActive(true);
-            root.transform.SetAsLastSibling();
-            if (imageSlotText != null)
+
+            Text slotTextComponent = string.Equals(
+                    slotName,
+                    "V03_GuideImageSlot_HomeTrial",
+                    System.StringComparison.Ordinal)
+                ? homeTrialImageSlotText
+                : homeUpgradeImageSlotText;
+            if (slotTextComponent != null)
             {
-                imageSlotText.text = slotText;
+                slotTextComponent.text = slotText;
             }
         }
 
-        private GameObject EnsureGuideRoot()
+        private GameObject ResolveGuideRoot(string slotName)
         {
-            if (guideRoot != null)
+            BindGuideRoots();
+            if (string.Equals(slotName, "V03_GuideImageSlot_HomeTrial", System.StringComparison.Ordinal))
             {
-                return guideRoot;
+                return homeTrialGuideRoot;
             }
 
+            return homeUpgradeGuideRoot;
+        }
+
+        private void BindGuideRoots()
+        {
             if (uiParent == null)
             {
                 uiParent = ResolveUiParent(homePanel, navigation);
@@ -133,100 +157,64 @@ namespace TalismanBag.V03.Forge
 
             if (uiParent == null)
             {
+                return;
+            }
+
+            homeUpgradeGuideRoot ??= FindGameObject(uiParent, "V03_GuideImageSlot_HomeUpgrade");
+            homeTrialGuideRoot ??= FindGameObject(uiParent, "V03_GuideImageSlot_HomeTrial");
+
+            GameObject sharedRoot = FindGameObject(uiParent, "V03_GuideImageSlotRoot");
+            homeUpgradeGuideRoot ??= sharedRoot;
+            homeTrialGuideRoot ??= sharedRoot;
+
+            homeUpgradeImageSlotText ??= FindText(homeUpgradeGuideRoot, "V03_GuideImageSlotText");
+            homeTrialImageSlotText ??= FindText(homeTrialGuideRoot, "V03_GuideImageSlotText");
+            homeUpgradeImageSlotText ??= FindText(homeUpgradeGuideRoot, "Text");
+            homeTrialImageSlotText ??= FindText(homeTrialGuideRoot, "Text");
+        }
+
+        private static void SetGuideRootActive(GameObject root, bool active)
+        {
+            if (root != null && root.activeSelf != active)
+            {
+                root.SetActive(active);
+            }
+        }
+
+        private static GameObject FindGameObject(Transform parent, string objectName)
+        {
+            Transform found = FindDeepChild(parent, objectName);
+            return found != null ? found.gameObject : null;
+        }
+
+        private static Text FindText(GameObject root, string objectName)
+        {
+            Transform found = root != null ? FindDeepChild(root.transform, objectName) : null;
+            return found != null ? found.GetComponent<Text>() : null;
+        }
+
+        private static Transform FindDeepChild(Transform parent, string objectName)
+        {
+            if (parent == null || string.IsNullOrWhiteSpace(objectName))
+            {
                 return null;
             }
 
-            guideRoot = new GameObject("V03_GuideImageSlotRoot", typeof(RectTransform), typeof(CanvasGroup));
-            guideRoot.transform.SetParent(uiParent, false);
-            RectTransform rootRect = guideRoot.GetComponent<RectTransform>();
-            rootRect.anchorMin = Vector2.zero;
-            rootRect.anchorMax = Vector2.one;
-            rootRect.pivot = new Vector2(0.5f, 0.5f);
-            rootRect.anchoredPosition = Vector2.zero;
-            rootRect.sizeDelta = Vector2.zero;
+            foreach (Transform child in parent)
+            {
+                if (child.name == objectName)
+                {
+                    return child;
+                }
 
-            CanvasGroup canvasGroup = guideRoot.GetComponent<CanvasGroup>();
-            canvasGroup.interactable = false;
-            canvasGroup.blocksRaycasts = false;
+                Transform found = FindDeepChild(child, objectName);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
 
-            CreateMask(guideRoot.transform);
-            CreateImageSlot(guideRoot.transform);
-            guideRoot.SetActive(false);
-            return guideRoot;
-        }
-
-        private void CreateMask(Transform parent)
-        {
-            GameObject maskObject = new("V03_GuideBlackMask", typeof(RectTransform), typeof(Image));
-            maskObject.transform.SetParent(parent, false);
-            RectTransform rect = maskObject.GetComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = Vector2.zero;
-
-            Image image = maskObject.GetComponent<Image>();
-            image.color = new Color(0f, 0f, 0f, 0.5f);
-            image.raycastTarget = false;
-        }
-
-        private void CreateImageSlot(Transform parent)
-        {
-            GameObject slotObject = new("V03_GuideImageSlot", typeof(RectTransform), typeof(Image), typeof(Outline));
-            slotObject.transform.SetParent(parent, false);
-            RectTransform rect = slotObject.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 1f);
-            rect.anchorMax = new Vector2(0.5f, 1f);
-            rect.pivot = new Vector2(0.5f, 1f);
-            rect.anchoredPosition = new Vector2(0f, -160f);
-            rect.sizeDelta = new Vector2(760f, 360f);
-
-            Image image = slotObject.GetComponent<Image>();
-            image.color = new Color(0.06f, 0.065f, 0.06f, 0.88f);
-            image.raycastTarget = false;
-
-            Outline outline = slotObject.GetComponent<Outline>();
-            outline.effectColor = new Color(0.88f, 0.78f, 0.48f, 0.95f);
-            outline.effectDistance = new Vector2(3f, -3f);
-
-            imageSlotText = CreateText(
-                "V03_GuideImageSlotText",
-                slotObject.transform,
-                "图片插槽占位",
-                34,
-                FontStyle.Bold,
-                new Color(0.92f, 0.86f, 0.66f));
-        }
-
-        private static Text CreateText(
-            string objectName,
-            Transform parent,
-            string value,
-            int fontSize,
-            FontStyle style,
-            Color color)
-        {
-            GameObject textObject = new(objectName, typeof(RectTransform), typeof(Text));
-            textObject.transform.SetParent(parent, false);
-            RectTransform rect = textObject.GetComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = Vector2.zero;
-
-            Text text = textObject.GetComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = fontSize;
-            text.fontStyle = style;
-            text.color = color;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Truncate;
-            text.raycastTarget = false;
-            text.text = value;
-            return text;
+            return null;
         }
 
         private static Transform ResolveUiParent(
