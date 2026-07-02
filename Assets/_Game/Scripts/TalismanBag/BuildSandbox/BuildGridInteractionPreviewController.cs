@@ -16,6 +16,10 @@ namespace TalismanBag.BuildSandbox
         public const int TrayColumns = 5;
         public const int TrayRows = 8;
         public const int TrayVisibleRows = 5;
+        private const float BattlePrepareMoveSpeed = 9f;
+        private const float BattlePreparePullOffset = 320f;
+        private const string BattlePrepareActionBarName = "V04BattlePrepareBottomActions";
+        private const string BattlePrepareOverlayName = "V04BattlePrepareDarkOverlay";
 
         public static readonly string[] CategoryLabels =
         {
@@ -48,6 +52,14 @@ namespace TalismanBag.BuildSandbox
         [SerializeField] private Button rotatePreviewButton;
         [SerializeField] private RectTransform dragGhostRoot;
         [SerializeField] private Text dragGhostText;
+        [SerializeField] private RectTransform battlePrepareMotionRoot;
+        [SerializeField] private Image battlePrepareDarkOverlay;
+        [SerializeField] private RectTransform battlePrepareActionBar;
+        [SerializeField] private Button battlePrepareBackButton;
+        [SerializeField] private Button battlePrepareStateButton;
+        [SerializeField] private Button battlePrepareToggleButton;
+        [SerializeField] private Text battlePrepareStateButtonText;
+        [SerializeField] private Text battlePrepareToggleButtonText;
 
         private readonly Dictionary<ItemShapeCell, BuildGridPreviewSlotView> boardSlotByCell = new();
         private readonly Dictionary<string, PreviewItem> itemById = new(StringComparer.Ordinal);
@@ -67,6 +79,13 @@ namespace TalismanBag.BuildSandbox
         private readonly HashSet<string> placedItemIds = new(StringComparer.Ordinal);
         private string activeDragItemId = string.Empty;
         private int placementSequence;
+        private CanvasGroup itemTrayCanvasGroup;
+        private Vector2 battlePrepareNormalPosition;
+        private Vector2 battlePrepareOpenPosition;
+        private bool hasBattlePreparePositions;
+        private bool battlePrepareStateActive;
+        private bool battlePrepareContinueStateActive;
+        private bool sandboxBattleActive;
 
         public bool DevOnly => devOnly;
         public bool IsEnabled => isEnabled;
@@ -185,6 +204,59 @@ namespace TalismanBag.BuildSandbox
             placementFeedbackView?.ShowInfo($"已切换到「{safeCategory}」分类。");
         }
 
+        public void CompactTrayWhenReturningToAllCategory()
+        {
+            if (shapeAwareTrayGrid == null
+                || itemTrayView == null
+                || !string.IsNullOrEmpty(activeDragItemId))
+            {
+                return;
+            }
+
+            List<PreviewItem> remainingItems = itemById.Values
+                .Where(item => item != null && !placedItemIds.Contains(item.ItemId))
+                .ToList();
+            if (remainingItems.Count == 0)
+            {
+                return;
+            }
+
+            shapeAwareTrayGrid.Clear();
+            List<PreviewItem> packedItems = new();
+            while (remainingItems.Count > 0)
+            {
+                int firstEmptySlot = FindFirstEmptyTraySlotIndex();
+                if (firstEmptySlot < 0)
+                {
+                    break;
+                }
+
+                ItemShapeCell firstEmptyCell = shapeAwareTrayGrid.SlotIndexToCell(firstEmptySlot);
+                int fittingIndex = FindItemIndexThatFitsTrayCell(remainingItems, firstEmptyCell);
+                if (fittingIndex >= 0)
+                {
+                    PreviewItem fittingItem = remainingItems[fittingIndex];
+                    if (TryCommitTrayItemAt(fittingItem, firstEmptyCell, out _))
+                    {
+                        packedItems.Add(fittingItem);
+                    }
+
+                    remainingItems.RemoveAt(fittingIndex);
+                    continue;
+                }
+
+                if (!TryPackFirstRemainingTrayItem(remainingItems, packedItems))
+                {
+                    break;
+                }
+            }
+
+            foreach (PreviewItem item in packedItems)
+            {
+                RefreshTrayPlacement(item);
+            }
+        }
+
         public void SelectItem(BuildItemPreviewCardView card, bool showInfoPanel = true)
         {
             if (card == null || !itemById.TryGetValue(card.ItemId, out PreviewItem item))
@@ -241,6 +313,12 @@ namespace TalismanBag.BuildSandbox
             UpdateSelectedItemInfo(item);
             RefreshItemInfoPanel(item);
 
+            if (!battlePrepareStateActive)
+            {
+                placementFeedbackView?.ShowInfo("Open Prepare before rotating tray items.");
+                return;
+            }
+
             if (placedItemIds.Contains(item.ItemId))
             {
                 placementFeedbackView?.ShowInfo("该道具已经放到棋盘上；取消后才可重新旋转。");
@@ -276,6 +354,12 @@ namespace TalismanBag.BuildSandbox
 
         public void BeginDrag(BuildItemPreviewCardView card, PointerEventData eventData)
         {
+            if (!battlePrepareStateActive)
+            {
+                placementFeedbackView?.ShowInfo("Open Prepare before moving items.");
+                return;
+            }
+
             if (card == null)
             {
                 return;
@@ -320,9 +404,18 @@ namespace TalismanBag.BuildSandbox
 
         public void BeginBoardSlotDrag(BuildGridPreviewSlotView slot, PointerEventData eventData)
         {
+            if (!battlePrepareStateActive)
+            {
+                placementFeedbackView?.ShowInfo("Open Prepare before moving board items.");
+                return;
+            }
+
+            ItemShapeCell boardCell = slot == null
+                ? default
+                : BoardDataCellFromVisualCell(slot.Cell);
             if (slot == null
                 || boardReceiver == null
-                || !boardReceiver.TryGetItemAtCell(slot.Cell, out string itemId)
+                || !boardReceiver.TryGetItemAtCell(boardCell, out string itemId)
                 || !itemById.TryGetValue(itemId, out PreviewItem item))
             {
                 return;
@@ -397,6 +490,10 @@ namespace TalismanBag.BuildSandbox
             SetSelectedItemInfoVisible(false);
             UpdateSelectedItemInfo(null);
             itemInfoPanel?.Hide();
+            sandboxBattleActive = false;
+            battlePrepareStateActive = false;
+            battlePrepareContinueStateActive = false;
+            RefreshBattlePrepareChrome(snapMotion: true);
             placementFeedbackView?.ShowNeutral("已取消。单击道具查看信息；在信息弹窗点 Rotate 调整方向；拖到棋盘松手直接放置。");
         }
 
@@ -408,8 +505,14 @@ namespace TalismanBag.BuildSandbox
             BuildItemLookup();
             InitializePlacementRuntime();
             WireButtons();
+            EnsureBattlePrepareChrome();
             itemTrayView?.Initialize(this, itemById.Values.ToList(), CategoryLabels);
             ResetPreview();
+        }
+
+        private void Update()
+        {
+            UpdateBattlePrepareMotion();
         }
 
         private void OnDestroy()
@@ -488,9 +591,15 @@ namespace TalismanBag.BuildSandbox
                 if (slot != null)
                 {
                     slot.SetController(this);
-                    boardSlotByCell[slot.Cell] = slot;
+                    boardSlotByCell[BoardDataCellFromVisualCell(slot.Cell)] = slot;
                 }
             }
+        }
+
+        private static ItemShapeCell BoardDataCellFromVisualCell(ItemShapeCell visualCell)
+        {
+            // Scene board slots are authored bottom-up; placement data follows tray rows top-down.
+            return new ItemShapeCell(visualCell.x, BoardRows - 1 - visualCell.y);
         }
 
         private void BuildShapeLookup()
@@ -571,6 +680,315 @@ namespace TalismanBag.BuildSandbox
                 rotatePreviewButton.onClick.RemoveAllListeners();
                 rotatePreviewButton.interactable = false;
                 rotatePreviewButton.gameObject.SetActive(false);
+            }
+        }
+
+        private void EnsureBattlePrepareChrome()
+        {
+            if (battlePrepareMotionRoot == null)
+            {
+                battlePrepareMotionRoot = FindRectTransform("BattleLikePreviewArea");
+            }
+
+            RectTransform safeAreaRoot = FindRectTransform("SafeAreaRoot");
+            if (safeAreaRoot == null && battlePrepareMotionRoot != null)
+            {
+                safeAreaRoot = battlePrepareMotionRoot.parent as RectTransform;
+            }
+
+            EnsureBattlePrepareOverlay(safeAreaRoot);
+            EnsureBattlePrepareActionBar(safeAreaRoot);
+            EnsureBattlePrepareTrayCanvasGroup();
+            CaptureBattlePreparePositions();
+            WireBattlePrepareButtons();
+            RefreshBattlePrepareChrome(snapMotion: true);
+        }
+
+        private void EnsureBattlePrepareOverlay(RectTransform parent)
+        {
+            if (battlePrepareDarkOverlay == null)
+            {
+                RectTransform existing = FindRectTransform(BattlePrepareOverlayName);
+                battlePrepareDarkOverlay = existing == null ? null : existing.GetComponent<Image>();
+            }
+
+            if (battlePrepareDarkOverlay != null || parent == null)
+            {
+                return;
+            }
+
+            GameObject overlayObject = new(BattlePrepareOverlayName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            overlayObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            overlayObject.transform.SetParent(parent, false);
+            RectTransform rect = overlayObject.GetComponent<RectTransform>();
+            SetRuntimeAnchors(rect, Vector2.zero, Vector2.one);
+
+            battlePrepareDarkOverlay = overlayObject.GetComponent<Image>();
+            battlePrepareDarkOverlay.color = new Color(0f, 0f, 0f, 0.42f);
+            battlePrepareDarkOverlay.raycastTarget = false;
+        }
+
+        private void EnsureBattlePrepareActionBar(RectTransform parent)
+        {
+            if (battlePrepareActionBar == null)
+            {
+                battlePrepareActionBar = FindRectTransform(BattlePrepareActionBarName);
+            }
+
+            if (battlePrepareActionBar == null && parent != null)
+            {
+                GameObject barObject = new(BattlePrepareActionBarName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(GridLayoutGroup));
+                barObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                barObject.transform.SetParent(parent, false);
+
+                battlePrepareActionBar = barObject.GetComponent<RectTransform>();
+                battlePrepareActionBar.anchorMin = new Vector2(0.5f, 0f);
+                battlePrepareActionBar.anchorMax = new Vector2(0.5f, 0f);
+                battlePrepareActionBar.pivot = new Vector2(0.5f, 0f);
+                battlePrepareActionBar.sizeDelta = new Vector2(800f, 92f);
+                battlePrepareActionBar.anchoredPosition = new Vector2(0f, 24f);
+                battlePrepareActionBar.localScale = Vector3.one;
+
+                Image image = barObject.GetComponent<Image>();
+                image.color = new Color(0.10f, 0.11f, 0.105f, 0.96f);
+                image.raycastTarget = true;
+
+                GridLayoutGroup grid = barObject.GetComponent<GridLayoutGroup>();
+                grid.padding = new RectOffset(12, 12, 7, 7);
+                grid.spacing = new Vector2(16f, 0f);
+                grid.cellSize = new Vector2(246f, 78f);
+                grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+                grid.constraintCount = 3;
+
+                battlePrepareBackButton = CreateBattlePrepareButton(
+                    "V04BattlePrepareBackButton",
+                    battlePrepareActionBar,
+                    "\u56de\u9996\u9875",
+                    new Color(0.22f, 0.28f, 0.32f, 1f),
+                    out _);
+                battlePrepareStateButton = CreateBattlePrepareButton(
+                    "V04BattlePrepareStateButton",
+                    battlePrepareActionBar,
+                    "\u7ee7\u7eed\u6218\u6597",
+                    new Color(0.28f, 0.31f, 0.34f, 1f),
+                    out battlePrepareStateButtonText);
+                battlePrepareToggleButton = CreateBattlePrepareButton(
+                    "V04BattlePrepareToggleButton",
+                    battlePrepareActionBar,
+                    "\u6574\u5907",
+                    new Color(0.50f, 0.32f, 0.16f, 1f),
+                    out battlePrepareToggleButtonText);
+            }
+
+            if (battlePrepareActionBar == null)
+            {
+                return;
+            }
+
+            if (battlePrepareBackButton == null)
+            {
+                battlePrepareBackButton = battlePrepareActionBar.Find("V04BattlePrepareBackButton")?.GetComponent<Button>();
+            }
+
+            if (battlePrepareStateButton == null)
+            {
+                battlePrepareStateButton = battlePrepareActionBar.Find("V04BattlePrepareStateButton")?.GetComponent<Button>();
+            }
+
+            if (battlePrepareToggleButton == null)
+            {
+                battlePrepareToggleButton = battlePrepareActionBar.Find("V04BattlePrepareToggleButton")?.GetComponent<Button>();
+            }
+
+            if (battlePrepareStateButtonText == null && battlePrepareStateButton != null)
+            {
+                battlePrepareStateButtonText = battlePrepareStateButton.GetComponentInChildren<Text>(true);
+            }
+
+            if (battlePrepareToggleButtonText == null && battlePrepareToggleButton != null)
+            {
+                battlePrepareToggleButtonText = battlePrepareToggleButton.GetComponentInChildren<Text>(true);
+            }
+
+            battlePrepareDarkOverlay?.transform.SetAsLastSibling();
+            battlePrepareActionBar.SetAsLastSibling();
+        }
+
+        private void EnsureBattlePrepareTrayCanvasGroup()
+        {
+            if (itemTrayView == null)
+            {
+                return;
+            }
+
+            itemTrayCanvasGroup = itemTrayView.GetComponent<CanvasGroup>();
+            if (itemTrayCanvasGroup == null)
+            {
+                itemTrayCanvasGroup = itemTrayView.gameObject.AddComponent<CanvasGroup>();
+                itemTrayCanvasGroup.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            }
+        }
+
+        private void CaptureBattlePreparePositions()
+        {
+            if (hasBattlePreparePositions || battlePrepareMotionRoot == null)
+            {
+                return;
+            }
+
+            battlePrepareOpenPosition = battlePrepareMotionRoot.anchoredPosition;
+            battlePrepareNormalPosition = battlePrepareOpenPosition + new Vector2(0f, -BattlePreparePullOffset);
+            hasBattlePreparePositions = true;
+        }
+
+        private void WireBattlePrepareButtons()
+        {
+            if (battlePrepareBackButton != null)
+            {
+                battlePrepareBackButton.onClick.RemoveListener(HandleBattlePrepareBackClicked);
+                battlePrepareBackButton.onClick.AddListener(HandleBattlePrepareBackClicked);
+            }
+
+            if (battlePrepareStateButton != null)
+            {
+                battlePrepareStateButton.onClick.RemoveListener(HandleBattlePrepareStateClicked);
+                battlePrepareStateButton.onClick.AddListener(HandleBattlePrepareStateClicked);
+            }
+
+            if (battlePrepareToggleButton != null)
+            {
+                battlePrepareToggleButton.onClick.RemoveListener(HandleBattlePrepareToggleClicked);
+                battlePrepareToggleButton.onClick.AddListener(HandleBattlePrepareToggleClicked);
+            }
+        }
+
+        private void HandleBattlePrepareBackClicked()
+        {
+            battlePrepareStateActive = false;
+            battlePrepareContinueStateActive = false;
+            sandboxBattleActive = false;
+            RefreshBattlePrepareChrome(snapMotion: false);
+            placementFeedbackView?.ShowInfo("V0.4 sandbox: home flow is not connected. Battle prepare UI is folded.");
+        }
+
+        private void HandleBattlePrepareStateClicked()
+        {
+            if (battlePrepareContinueStateActive)
+            {
+                return;
+            }
+
+            if (battlePrepareStateActive)
+            {
+                battlePrepareStateActive = false;
+                battlePrepareContinueStateActive = true;
+                sandboxBattleActive = true;
+                RefreshBattlePrepareChrome(snapMotion: false);
+                placementFeedbackView?.ShowValid("V0.4 sandbox: layout accepted, folding battle prepare UI.");
+                return;
+            }
+
+            if (!sandboxBattleActive)
+            {
+                sandboxBattleActive = true;
+                battlePrepareStateActive = false;
+                battlePrepareContinueStateActive = true;
+                RefreshBattlePrepareChrome(snapMotion: false);
+                placementFeedbackView?.ShowInfo("V0.4 sandbox battle preview started. Enemy combat is not connected.");
+                return;
+            }
+
+            placementFeedbackView?.ShowInfo("V0.4 sandbox battle preview is running. Press Prepare to reopen layout UI.");
+        }
+
+        private void HandleBattlePrepareToggleClicked()
+        {
+            if (battlePrepareStateActive || battlePrepareContinueStateActive)
+            {
+                return;
+            }
+
+            battlePrepareStateActive = true;
+            RefreshBattlePrepareChrome(snapMotion: false);
+            placementFeedbackView?.ShowInfo("V0.4 sandbox prepare UI opened. Drag items between tray and board.");
+        }
+
+        private void UpdateBattlePrepareMotion()
+        {
+            if (!hasBattlePreparePositions || battlePrepareMotionRoot == null)
+            {
+                return;
+            }
+
+            Vector2 target = battlePrepareStateActive ? battlePrepareOpenPosition : battlePrepareNormalPosition;
+            Vector2 current = battlePrepareMotionRoot.anchoredPosition;
+            Vector2 next = Vector2.Lerp(current, target, Mathf.Clamp01(Time.unscaledDeltaTime * BattlePrepareMoveSpeed));
+            if ((next - target).sqrMagnitude <= 1f)
+            {
+                next = target;
+            }
+
+            battlePrepareMotionRoot.anchoredPosition = next;
+            if (battlePrepareContinueStateActive && !battlePrepareStateActive && (next - battlePrepareNormalPosition).sqrMagnitude <= 1f)
+            {
+                battlePrepareContinueStateActive = false;
+                RefreshBattlePrepareChrome(snapMotion: false);
+            }
+        }
+
+        private void RefreshBattlePrepareChrome(bool snapMotion)
+        {
+            CaptureBattlePreparePositions();
+
+            if (hasBattlePreparePositions && battlePrepareMotionRoot != null && snapMotion)
+            {
+                battlePrepareMotionRoot.anchoredPosition = battlePrepareStateActive
+                    ? battlePrepareOpenPosition
+                    : battlePrepareNormalPosition;
+            }
+
+            bool prepareOrContinue = battlePrepareStateActive || battlePrepareContinueStateActive;
+            if (battlePrepareDarkOverlay != null)
+            {
+                battlePrepareDarkOverlay.gameObject.SetActive(prepareOrContinue);
+                battlePrepareDarkOverlay.color = new Color(0f, 0f, 0f, battlePrepareStateActive ? 0.42f : 0.24f);
+            }
+
+            if (itemTrayCanvasGroup != null)
+            {
+                itemTrayCanvasGroup.alpha = battlePrepareStateActive ? 1f : 0.68f;
+                itemTrayCanvasGroup.interactable = battlePrepareStateActive;
+                itemTrayCanvasGroup.blocksRaycasts = battlePrepareStateActive;
+            }
+
+            if (battlePrepareStateButtonText != null)
+            {
+                battlePrepareStateButtonText.text = sandboxBattleActive && !battlePrepareStateActive && !battlePrepareContinueStateActive
+                    ? "\u6218\u6597\u4e2d"
+                    : "\u7ee7\u7eed\u6218\u6597";
+            }
+
+            if (battlePrepareToggleButtonText != null)
+            {
+                battlePrepareToggleButtonText.text = battlePrepareStateActive || battlePrepareContinueStateActive
+                    ? "\u6574\u5907\u4e2d"
+                    : "\u6574\u5907";
+            }
+
+            if (battlePrepareStateButton != null)
+            {
+                battlePrepareStateButton.interactable = !battlePrepareContinueStateActive;
+            }
+
+            if (battlePrepareToggleButton != null)
+            {
+                battlePrepareToggleButton.interactable = !battlePrepareStateActive && !battlePrepareContinueStateActive;
+            }
+
+            if (battlePrepareActionBar != null)
+            {
+                battlePrepareActionBar.gameObject.SetActive(true);
+                battlePrepareActionBar.SetAsLastSibling();
             }
         }
 
@@ -852,6 +1270,103 @@ namespace TalismanBag.BuildSandbox
             return result;
         }
 
+        private int FindFirstEmptyTraySlotIndex()
+        {
+            if (shapeAwareTrayGrid == null)
+            {
+                return -1;
+            }
+
+            for (int slotIndex = 0; slotIndex < shapeAwareTrayGrid.SlotCount; slotIndex++)
+            {
+                ItemShapeCell cell = shapeAwareTrayGrid.SlotIndexToCell(slotIndex);
+                if (!shapeAwareTrayGrid.OccupiedCells.ContainsKey(cell))
+                {
+                    return slotIndex;
+                }
+            }
+
+            return -1;
+        }
+
+        private int FindItemIndexThatFitsTrayCell(
+            IReadOnlyList<PreviewItem> items,
+            ItemShapeCell anchorCell)
+        {
+            if (shapeAwareTrayGrid == null)
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < (items?.Count ?? 0); i++)
+            {
+                PreviewItem item = items[i];
+                if (item == null)
+                {
+                    continue;
+                }
+
+                ShapePlacementResult result = shapeAwareTrayGrid.CanPlace(
+                    BuildPayload(item, ShapePlacementSource.Tray),
+                    anchorCell);
+                if (result != null && result.IsValid)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private bool TryPackFirstRemainingTrayItem(
+            List<PreviewItem> remainingItems,
+            List<PreviewItem> packedItems)
+        {
+            if (shapeAwareTrayGrid == null || remainingItems == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < remainingItems.Count; i++)
+            {
+                PreviewItem item = remainingItems[i];
+                if (item == null)
+                {
+                    continue;
+                }
+
+                if (shapeAwareTrayGrid.TryPack(
+                        BuildPayload(item, ShapePlacementSource.Tray),
+                        out ShapePlacementResult result)
+                    && result != null
+                    && result.IsValid)
+                {
+                    packedItems?.Add(item);
+                    remainingItems.RemoveAt(i);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool TryCommitTrayItemAt(
+            PreviewItem item,
+            ItemShapeCell anchorCell,
+            out ShapePlacementResult result)
+        {
+            result = null;
+            if (shapeAwareTrayGrid == null || item == null)
+            {
+                return false;
+            }
+
+            ShapePlacementSession traySession = new();
+            traySession.Begin(BuildPayload(item, ShapePlacementSource.Tray), trayAnchorCell: anchorCell);
+            result = traySession.Commit(shapeAwareTrayGrid);
+            return result != null && result.IsValid;
+        }
+
         private ShapeItemPayload BuildPayload(PreviewItem item, ShapePlacementSource source)
         {
             if (item == null || !shapeById.TryGetValue(item.ShapeId, out ItemShapeConfig shapeConfig))
@@ -921,6 +1436,7 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
+            Color itemColor = ResolvePreviewItemColor(result.ItemId);
             foreach (ItemShapeCell cell in result.OccupiedCells)
             {
                 if (boardSlotByCell.TryGetValue(cell, out BuildGridPreviewSlotView slot))
@@ -931,7 +1447,7 @@ namespace TalismanBag.BuildSandbox
                     }
                     else
                     {
-                        slot.SetPreview(result.IsValid);
+                        slot.SetPreview(result.IsValid, itemColor);
                     }
                 }
             }
@@ -965,11 +1481,22 @@ namespace TalismanBag.BuildSandbox
                     continue;
                 }
 
-                string displayName = itemById.TryGetValue(occupied.Value, out PreviewItem item)
-                    ? item.DisplayName
-                    : occupied.Value;
-                slot.SetPlaced(displayName);
+                if (itemById.TryGetValue(occupied.Value, out PreviewItem item))
+                {
+                    slot.SetPlaced(item.DisplayName, item.CardColor);
+                }
+                else
+                {
+                    slot.SetPlaced(occupied.Value);
+                }
             }
+        }
+
+        private Color ResolvePreviewItemColor(string itemId)
+        {
+            return itemById.TryGetValue(itemId ?? string.Empty, out PreviewItem item)
+                ? item.CardColor
+                : new Color(0.44f, 0.35f, 0.18f, 1f);
         }
 
         private void UpdateSelectedItemInfo(PreviewItem item)
@@ -1089,7 +1616,8 @@ namespace TalismanBag.BuildSandbox
                 return false;
             }
 
-            return string.IsNullOrEmpty(activeDragItemId)
+            return battlePrepareStateActive
+                && string.IsNullOrEmpty(activeDragItemId)
                 && (mobileInput == null
                     || mobileInput.CurrentState == MobileShapePlacementInputState.Idle
                     || mobileInput.CurrentState == MobileShapePlacementInputState.Cancelled);
@@ -1280,6 +1808,38 @@ namespace TalismanBag.BuildSandbox
             text.color = new Color(0.91f, 0.88f, 0.76f, 1f);
             text.raycastTarget = false;
             return text;
+        }
+
+        private static Button CreateBattlePrepareButton(
+            string name,
+            Transform parent,
+            string label,
+            Color color,
+            out Text labelText)
+        {
+            GameObject buttonObject = new(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            buttonObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            buttonObject.transform.SetParent(parent, false);
+
+            RectTransform rect = buttonObject.GetComponent<RectTransform>();
+            rect.localScale = Vector3.one;
+
+            Image image = buttonObject.GetComponent<Image>();
+            image.color = color;
+            image.raycastTarget = true;
+
+            Button button = buttonObject.GetComponent<Button>();
+            ColorBlock colors = button.colors;
+            colors.normalColor = color;
+            colors.highlightedColor = Color.Lerp(color, Color.white, 0.12f);
+            colors.pressedColor = Color.Lerp(color, Color.black, 0.22f);
+            colors.selectedColor = colors.highlightedColor;
+            colors.disabledColor = new Color(color.r * 0.55f, color.g * 0.55f, color.b * 0.55f, 0.72f);
+            button.colors = colors;
+
+            labelText = CreateRuntimeText("Label", buttonObject.transform, label, 20, FontStyle.Bold, TextAnchor.MiddleCenter);
+            SetRuntimeAnchors(labelText.rectTransform, Vector2.zero, Vector2.one);
+            return button;
         }
 
         private static void SetRuntimeAnchors(RectTransform rect, Vector2 anchorMin, Vector2 anchorMax)

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using TalismanBag.V02.CoreLoop.MainTrial;
 using TalismanBag.V02.CoreLoop.Resources;
@@ -11,12 +12,37 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace TalismanBag.V03.EditorTools
 {
     public static class V03TalismanUpgradeSceneBuilder
     {
         private const string RootName = "TalismanUpgradeSceneRoot";
+        private const string PageRootName = "V03TalismanUpgradePageRoot";
+        private const string ItemTrayRootName = "V03Upgrade_TalismanListPanel";
+        private const string LegacyItemTrayRootName = "V02BottomOperationArea";
+        private const int ExpectedItemTraySlotCount = 40;
+        private const int ExpectedPreviewCardCount = 5;
+
+        private static readonly string[] RequiredItemTrayTabs =
+        {
+            "All",
+            "Talisman",
+            "Tool",
+            "Material",
+            "Consumable",
+            "Special"
+        };
+
+        private static readonly string[] RequiredBottomNavButtons =
+        {
+            "BottomNav_Home",
+            "BottomNav_Develop",
+            "BottomNav_Trial",
+            "BottomNav_Explore",
+            "BottomNav_More"
+        };
 
         [MenuItem("Tools/Talisman Bag/V0.3/ForgeFirstUpgradeGuide01/[Writes Scene][Guard Only] Build Upgrade Scene")]
         public static void BuildSceneBatch()
@@ -53,6 +79,14 @@ namespace TalismanBag.V03.EditorTools
         {
             EditorSceneManager.OpenScene(V03NavigationFlowController.UpgradeScenePath, OpenSceneMode.Single);
             VerifyStaticScene();
+        }
+
+        [MenuItem("Tools/Talisman Bag/V0.3/DevelopUpgradePage01-SlotAuthoring01/[QA Only] Verify Upgrade Slot Contract")]
+        public static void VerifyUpgradeSlotContractBatch()
+        {
+            EditorSceneManager.OpenScene(V03NavigationFlowController.UpgradeScenePath, OpenSceneMode.Single);
+            VerifyStaticScene();
+            Debug.Log("[V0.3-DevelopUpgradePage01-SlotAuthoring01] UPGRADE_SLOT_CONTRACT_VERIFY_SUCCESS");
         }
 
         [MenuItem("Tools/Talisman Bag/V0.3/ForgeFirstUpgradeGuide01/[Writes Scene][Guard Only] Rebuild Editable Upgrade Preview")]
@@ -162,8 +196,233 @@ namespace TalismanBag.V03.EditorTools
             Require(
                 UnityEngine.Object.FindObjectOfType<EventSystem>(true) != null,
                 "Upgrade scene must contain a scene-authored EventSystem.");
+            VerifyUpgradeSlotContract();
             Require(!scene.isDirty, "Static verification must not leave scene dirty.");
             VerifyBuildSettings();
+        }
+
+        private static void VerifyUpgradeSlotContract()
+        {
+            Canvas[] canvases = UnityEngine.Object.FindObjectsOfType<Canvas>(true);
+            Require(canvases.Length == 1, $"Upgrade scene must contain exactly one Canvas; found {canvases.Length}.");
+
+            Transform pageRoot = RequireDeepChild(canvases[0].transform, PageRootName);
+            Require(pageRoot.GetComponent<RectTransform>() != null, $"{PageRootName} must have RectTransform.");
+            Require(pageRoot.gameObject.activeSelf, $"{PageRootName} must be active by default.");
+
+            RequireUnique(pageRoot, "V03Upgrade_BackgroundImageSlot");
+            RequireImage(pageRoot, "V03Upgrade_BackgroundImageSlot");
+            RequireUnique(pageRoot, "V03Upgrade_ResourceStrip");
+            RequireText(pageRoot, "ResourceText");
+            RequireUnique(pageRoot, "V03Upgrade_DetailPanel");
+            RequireText(pageRoot, "ItemName");
+            RequireText(pageRoot, "ItemLevel");
+            RequireTextUnder(pageRoot, "BeforeBlock", "Body");
+            RequireTextUnder(pageRoot, "AfterBlock", "Body");
+            RequireText(pageRoot, "CostText");
+            RequireText(pageRoot, "StatusText");
+            RequireButtonWithText(pageRoot, "UpgradeButton");
+            RequireButtonWithText(pageRoot, "InfoButton");
+
+            VerifyItemTrayContract(pageRoot);
+            VerifyInfoPopupContract(pageRoot);
+            VerifyGuideContract(pageRoot);
+            VerifyBottomNavContract(pageRoot);
+        }
+
+        private static void VerifyItemTrayContract(Transform pageRoot)
+        {
+            Require(FindDeepChild(pageRoot, LegacyItemTrayRootName) == null,
+                $"Legacy {LegacyItemTrayRootName} must not be used as the authored upgrade slot root.");
+
+            Transform tray = RequireDeepChild(pageRoot, ItemTrayRootName);
+            Require(tray.GetComponent<RectTransform>() != null, $"{ItemTrayRootName} must have RectTransform.");
+            Require(tray.GetComponent<Image>() != null, $"{ItemTrayRootName} must have Image.");
+            RequireText(tray, "ItemTrayTitle");
+            RequireText(tray, "ItemTrayEmptyState");
+
+            Transform tabs = RequireDeepChild(tray, "ItemTrayCategoryTabs");
+            Require(tabs.GetComponent<GridLayoutGroup>() != null, "ItemTrayCategoryTabs must have GridLayoutGroup.");
+            foreach (string category in RequiredItemTrayTabs)
+            {
+                RequireButtonWithText(tabs, $"ItemTrayTab_{category}");
+            }
+
+            Transform scroll = RequireDeepChild(tray, "ItemTrayScroll");
+            ScrollRect scrollRect = RequireComponent<ScrollRect>(scroll, "ItemTrayScroll must have ScrollRect.");
+            Transform viewport = RequireDeepChild(scroll, "Viewport");
+            Require(viewport.GetComponent<Mask>() != null, "ItemTrayScroll/Viewport must have Mask.");
+            Transform content = RequireDeepChild(viewport, "Content");
+            Require(content.GetComponent<GridLayoutGroup>() != null, "ItemTrayScroll/Viewport/Content must have GridLayoutGroup.");
+            Require(content.GetComponent<ContentSizeFitter>() != null, "ItemTrayScroll/Viewport/Content must have ContentSizeFitter.");
+            Require(scrollRect.content == content, "ItemTrayScroll ScrollRect.content must point to Content.");
+            Require(scrollRect.viewport == viewport, "ItemTrayScroll ScrollRect.viewport must point to Viewport.");
+            Require(scrollRect.verticalScrollbar != null, "ItemTrayScroll must bind ItemTrayVerticalScrollbar.");
+            RequireDeepChild(scroll, "ItemTrayVerticalScrollbar");
+
+            List<Transform> slots = FindChildrenWithPrefix(content, "ItemTrayGridSlot_");
+            Require(slots.Count == ExpectedItemTraySlotCount,
+                $"Upgrade item tray must contain exactly {ExpectedItemTraySlotCount} ItemTrayGridSlot_* slots; found {slots.Count}.");
+            for (int i = 1; i <= ExpectedItemTraySlotCount; i++)
+            {
+                string slotName = $"ItemTrayGridSlot_{i:00}";
+                Transform slot = RequireDeepChild(content, slotName);
+                Require(slot.parent == content, $"{slotName} must be a direct child of Content.");
+                Require(slot.GetComponent<RectTransform>() != null, $"{slotName} must have RectTransform.");
+                Require(slot.GetComponent<Image>() != null, $"{slotName} must have Image.");
+                Require(slot.GetComponent<Outline>() != null, $"{slotName} must have Outline.");
+            }
+
+            for (int i = 1; i <= ExpectedPreviewCardCount; i++)
+            {
+                string cardName = $"TalismanCard_{i:00}";
+                Transform card = RequireDeepChild(tray, cardName);
+                Require(card.GetComponent<Button>() != null, $"{cardName} must have Button.");
+                Require(card.GetComponent<Image>() != null, $"{cardName} must have Image.");
+                RequireText(card, "Name");
+                RequireText(card, "Level");
+                RequireText(card, "ItemId");
+                RequireText(card, "Amount");
+            }
+
+            Transform templateRoot = RequireDeepChild(pageRoot, "V03ItemTrayTemplates");
+            Require(!templateRoot.gameObject.activeSelf, "V03ItemTrayTemplates must stay inactive by default.");
+            RequireDeepChild(tray, "ItemTrayBattleLockedOverlay");
+        }
+
+        private static void VerifyInfoPopupContract(Transform pageRoot)
+        {
+            Transform popupRoot = RequireDeepChild(pageRoot, "V03Upgrade_ItemInfoPopup");
+            Require(popupRoot.GetComponent<RectTransform>() != null, "V03Upgrade_ItemInfoPopup must have RectTransform.");
+            Require(popupRoot.GetComponent<Image>() != null, "V03Upgrade_ItemInfoPopup must have Image.");
+            Transform popupPanel = RequireDeepChild(popupRoot, "PopupPanel");
+            Require(popupPanel.GetComponent<Image>() != null, "PopupPanel must have Image.");
+            RequireText(popupPanel, "PopupTitle");
+            RequireText(popupPanel, "PopupBody");
+            RequireButtonWithText(popupPanel, "PopupCloseButton");
+        }
+
+        private static void VerifyGuideContract(Transform pageRoot)
+        {
+            Transform guideRoot = RequireDeepChild(pageRoot, "V03Upgrade_GuideOverlay");
+            Require(guideRoot.GetComponent<CanvasGroup>() != null, "V03Upgrade_GuideOverlay must have CanvasGroup.");
+            RequireImage(guideRoot, "BlackMask");
+            Transform guideSlot = RequireDeepChild(guideRoot, "V03Upgrade_GuideImageSlot");
+            Require(guideSlot.GetComponent<Image>() != null, "V03Upgrade_GuideImageSlot must have Image.");
+            RequireText(guideSlot, "Text");
+        }
+
+        private static void VerifyBottomNavContract(Transform pageRoot)
+        {
+            Transform bottomBar = RequireDeepChild(pageRoot, "BottomBar_Global");
+            Require(bottomBar.GetComponent<Image>() != null, "BottomBar_Global must have Image.");
+            foreach (string buttonName in RequiredBottomNavButtons)
+            {
+                RequireButtonWithText(bottomBar, buttonName);
+            }
+        }
+
+        private static void RequireUnique(Transform parent, string objectName)
+        {
+            List<Transform> matches = FindChildrenByName(parent, objectName);
+            Require(matches.Count == 1, $"{objectName} must exist exactly once under {parent.name}; found {matches.Count}.");
+        }
+
+        private static Transform RequireDeepChild(Transform parent, string objectName)
+        {
+            Transform child = FindDeepChild(parent, objectName);
+            Require(child != null, $"{BuildTransformPath(parent)} is missing required child {objectName}.");
+            return child;
+        }
+
+        private static void RequireImage(Transform parent, string objectName)
+        {
+            Transform child = RequireDeepChild(parent, objectName);
+            Require(child.GetComponent<Image>() != null, $"{objectName} must have Image.");
+        }
+
+        private static void RequireText(Transform parent, string objectName)
+        {
+            Transform child = RequireDeepChild(parent, objectName);
+            Require(child.GetComponent<Text>() != null, $"{BuildTransformPath(child)} must have Text.");
+        }
+
+        private static void RequireTextUnder(Transform parent, string childName, string textName)
+        {
+            Transform child = RequireDeepChild(parent, childName);
+            RequireText(child, textName);
+        }
+
+        private static void RequireButtonWithText(Transform parent, string objectName)
+        {
+            Transform child = RequireDeepChild(parent, objectName);
+            Require(child.GetComponent<Button>() != null, $"{BuildTransformPath(child)} must have Button.");
+            Require(
+                child.GetComponentsInChildren<Text>(true).Length > 0,
+                $"{BuildTransformPath(child)} must contain a Text label.");
+        }
+
+        private static T RequireComponent<T>(Transform target, string message) where T : Component
+        {
+            T component = target != null ? target.GetComponent<T>() : null;
+            Require(component != null, message);
+            return component;
+        }
+
+        private static List<Transform> FindChildrenByName(Transform root, string objectName)
+        {
+            List<Transform> matches = new();
+            if (root == null)
+            {
+                return matches;
+            }
+
+            foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name == objectName)
+                {
+                    matches.Add(child);
+                }
+            }
+
+            return matches;
+        }
+
+        private static List<Transform> FindChildrenWithPrefix(Transform root, string prefix)
+        {
+            List<Transform> matches = new();
+            if (root == null)
+            {
+                return matches;
+            }
+
+            foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name.StartsWith(prefix, StringComparison.Ordinal))
+                {
+                    matches.Add(child);
+                }
+            }
+
+            return matches;
+        }
+
+        private static string BuildTransformPath(Transform target)
+        {
+            if (target == null)
+            {
+                return "<null>";
+            }
+
+            string path = target.name;
+            Transform parent = target.parent;
+            while (parent != null)
+            {
+                path = parent.name + "/" + path;
+                parent = parent.parent;
+            }
+
+            return path;
         }
 
         private static EventSystem EnsureEventSystem(Transform root)

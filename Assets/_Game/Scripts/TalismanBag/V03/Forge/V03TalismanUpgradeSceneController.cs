@@ -21,6 +21,8 @@ namespace TalismanBag.V03.Forge
         private const string TrialSceneName = "Scene_TalismanBag_V02_FormationCounter";
         private const string TrialScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity";
         private const string PageRootName = "V03TalismanUpgradePageRoot";
+        private const string ItemTrayRootName = "V03Upgrade_TalismanListPanel";
+        private const string LegacyItemTrayRootName = "V02BottomOperationArea";
         private const float ItemTraySize = 800f;
         private const int ItemTrayColumnCount = 5;
         private const int ItemTrayRowCount = 8;
@@ -304,12 +306,12 @@ namespace TalismanBag.V03.Forge
             AddMissing(missing, guideSlotText, "V03Upgrade_GuideImageSlot/Text");
             if (itemCards.Count == 0)
             {
-                missing.Add("TalismanCard_* under V02BottomOperationArea or V03Upgrade_TalismanListPanel");
+                missing.Add($"TalismanCard_* under {ItemTrayRootName} (legacy fallback: {LegacyItemTrayRootName})");
             }
 
             if (itemTraySlotRoots.Count == 0)
             {
-                missing.Add("ItemTrayGridSlot_* under V02BottomOperationArea or V03Upgrade_TalismanListPanel");
+                missing.Add($"ItemTrayGridSlot_* under {ItemTrayRootName} (legacy fallback: {LegacyItemTrayRootName})");
             }
 
             Debug.LogError(
@@ -416,13 +418,13 @@ namespace TalismanBag.V03.Forge
 
         private GameObject FindItemTrayGameObject()
         {
-            GameObject tray = FindGameObject(pageRoot, "V02BottomOperationArea");
+            GameObject tray = FindGameObject(pageRoot, ItemTrayRootName);
             if (tray != null)
             {
                 return tray;
             }
 
-            return FindGameObject(pageRoot, "V03Upgrade_TalismanListPanel");
+            return FindGameObject(pageRoot, LegacyItemTrayRootName);
         }
 
         private void BindExistingButtons()
@@ -627,7 +629,7 @@ namespace TalismanBag.V03.Forge
             currentCategory = ItemTrayCategory.All;
 
             GameObject tray = CreatePanel(
-                "V02BottomOperationArea",
+                ItemTrayRootName,
                 parent,
                 new Color(0.065f, 0.076f, 0.07f, 0.98f));
             itemTrayRoot = tray.GetComponent<RectTransform>();

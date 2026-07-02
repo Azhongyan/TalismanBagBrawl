@@ -14,6 +14,12 @@ namespace TalismanBag.BuildSandbox
     public sealed class BuildItemTrayPreviewView : MonoBehaviour
     {
         public const bool SupportsShapeAwareCellSpans = true;
+        private const string AllCategory = "\u5168\u90e8";
+        private const string TalismanCategory = "\u7b26\u7b93";
+        private const string ArtifactCategory = "\u6cd5\u5668";
+        private const string MaterialCategory = "\u6750\u6599";
+        private const string ConsumableCategory = "\u6d88\u8017";
+        private const string SpecialCategory = "\u7279\u6b8a";
 
         [SerializeField] private ScrollRect scrollRect;
         [SerializeField] private RectTransform contentRoot;
@@ -33,7 +39,8 @@ namespace TalismanBag.BuildSandbox
         private readonly TrayItemLayoutView itemLayoutView = new();
         private readonly TrayGridReservationView reservationView = new();
         private List<BuildGridInteractionPreviewController.PreviewItem> currentItems = new();
-        private string activeCategory = "鍏ㄩ儴";
+        private BuildGridInteractionPreviewController controller;
+        private string activeCategory = AllCategory;
 
 #if UNITY_EDITOR
         private bool editModePreviewRefreshQueued;
@@ -73,6 +80,7 @@ namespace TalismanBag.BuildSandbox
             IReadOnlyList<BuildGridInteractionPreviewController.PreviewItem> items,
             IReadOnlyList<string> categories)
         {
+            this.controller = controller;
             currentItems = (items ?? Array.Empty<BuildGridInteractionPreviewController.PreviewItem>())
                 .Where(item => item != null)
                 .ToList();
@@ -81,12 +89,19 @@ namespace TalismanBag.BuildSandbox
             InitializeCategoryButtons(controller, categories ?? Array.Empty<string>());
             BindViewAuthorities();
             InitializeCards(controller);
-            ApplyFilter("鍏ㄩ儴");
+            ApplyFilter(AllCategory);
         }
 
         public void ApplyFilter(string category)
         {
-            activeCategory = string.IsNullOrWhiteSpace(category) ? "鍏ㄩ儴" : category;
+            string previousCategory = NormalizeCategory(activeCategory);
+            string nextCategory = NormalizeCategory(category);
+            activeCategory = nextCategory;
+            if (previousCategory != AllCategory && nextCategory == AllCategory)
+            {
+                controller?.CompactTrayWhenReturningToAllCategory();
+            }
+
             HashSet<string> visibleIds = BuildVisibleItemIds();
 
             foreach (BuildItemPreviewCardView card in cards)
@@ -214,11 +229,7 @@ namespace TalismanBag.BuildSandbox
             {
                 Button button = categoryButtons[i];
                 Text label = categoryLabels[i];
-                string category = i < categories.Count ? categories[i] : label.text;
-                if (string.IsNullOrWhiteSpace(category))
-                {
-                    category = "鍏ㄩ儴";
-                }
+                string category = NormalizeCategory(i < categories.Count ? categories[i] : label.text, i);
 
                 label.text = category;
                 buttonsByCategory[category] = button;
@@ -231,6 +242,47 @@ namespace TalismanBag.BuildSandbox
                     button.onClick.AddListener(() => controller.ApplyCategoryFilter(captured));
                 }
             }
+        }
+
+        private static string NormalizeCategory(string category, int categoryIndex = -1)
+        {
+            if (categoryIndex == 0 || string.IsNullOrWhiteSpace(category))
+            {
+                return AllCategory;
+            }
+
+            string value = category.Trim();
+            if (value == AllCategory || value == "鍏ㄩ儴" || value == "閸忋劑鍎?")
+            {
+                return AllCategory;
+            }
+
+            if (value == TalismanCategory || value == "绗︾畵")
+            {
+                return TalismanCategory;
+            }
+
+            if (value == ArtifactCategory || value == "娉曞櫒")
+            {
+                return ArtifactCategory;
+            }
+
+            if (value == MaterialCategory || value == "鏉愭枡")
+            {
+                return MaterialCategory;
+            }
+
+            if (value == ConsumableCategory || value.StartsWith("娑堣", StringComparison.Ordinal))
+            {
+                return ConsumableCategory;
+            }
+
+            if (value == SpecialCategory || value == "鐗规畩")
+            {
+                return SpecialCategory;
+            }
+
+            return value;
         }
 
 #if UNITY_EDITOR
@@ -703,9 +755,11 @@ namespace TalismanBag.BuildSandbox
 
         private HashSet<string> BuildVisibleItemIds()
         {
+            string normalizedActiveCategory = NormalizeCategory(activeCategory);
             return new HashSet<string>(
                 currentItems
-                    .Where(item => activeCategory == "鍏ㄩ儴" || item.Category == activeCategory)
+                    .Where(item => normalizedActiveCategory == AllCategory
+                        || NormalizeCategory(item.Category) == normalizedActiveCategory)
                     .Where(item => !hiddenItemIds.Contains(item.ItemId))
                     .Select(item => item.ItemId),
                 StringComparer.Ordinal);
@@ -714,8 +768,174 @@ namespace TalismanBag.BuildSandbox
         private void RefreshTrayViews(HashSet<string> visibleIds)
         {
             HashSet<string> safeVisibleIds = visibleIds ?? new HashSet<string>(StringComparer.Ordinal);
-            itemLayoutView.Refresh(placementModels, cardsByItemId, safeVisibleIds);
-            reservationView.Refresh(placementModels, safeVisibleIds);
+            IReadOnlyList<TrayPlacementViewModel> viewPlacements = BuildViewPlacements(safeVisibleIds);
+            itemLayoutView.Refresh(viewPlacements, cardsByItemId, safeVisibleIds);
+            reservationView.Refresh(viewPlacements, safeVisibleIds);
+        }
+
+        private IReadOnlyList<TrayPlacementViewModel> BuildViewPlacements(ISet<string> visibleIds)
+        {
+            if (visibleIds == null
+                || visibleIds.Count == 0
+                || NormalizeCategory(activeCategory) == AllCategory)
+            {
+                return placementModels;
+            }
+
+            return BuildCompactedFilterPlacements(visibleIds);
+        }
+
+        private List<TrayPlacementViewModel> BuildCompactedFilterPlacements(ISet<string> visibleIds)
+        {
+            Dictionary<string, TrayPlacementViewModel> sourcePlacements = new(StringComparer.Ordinal);
+            foreach (TrayPlacementViewModel placement in placementModels)
+            {
+                if (placement == null || string.IsNullOrWhiteSpace(placement.itemId))
+                {
+                    continue;
+                }
+
+                sourcePlacements[placement.itemId] = placement;
+            }
+
+            int traySlotCount = GetTraySlotCount();
+            HashSet<int> occupiedSlots = new();
+            List<TrayPlacementViewModel> compactedPlacements = new();
+            foreach (BuildGridInteractionPreviewController.PreviewItem item in currentItems)
+            {
+                if (item == null
+                    || !visibleIds.Contains(item.ItemId)
+                    || !sourcePlacements.TryGetValue(item.ItemId, out TrayPlacementViewModel sourcePlacement)
+                    || sourcePlacement == null
+                    || !sourcePlacement.isValid)
+                {
+                    continue;
+                }
+
+                List<ItemShapeCell> normalizedOffsets = BuildNormalizedOffsets(sourcePlacement);
+                if (!TryFindCompactPlacement(
+                    normalizedOffsets,
+                    occupiedSlots,
+                    traySlotCount,
+                    out int anchorSlotIndex,
+                    out List<int> itemOccupiedSlots))
+                {
+                    compactedPlacements.Add(sourcePlacement);
+                    foreach (int slotIndex in sourcePlacement.occupiedSlotIndexes ?? Array.Empty<int>())
+                    {
+                        if (slotIndex >= 0)
+                        {
+                            occupiedSlots.Add(slotIndex);
+                        }
+                    }
+
+                    continue;
+                }
+
+                foreach (int slotIndex in itemOccupiedSlots)
+                {
+                    occupiedSlots.Add(slotIndex);
+                }
+
+                compactedPlacements.Add(new TrayPlacementViewModel
+                {
+                    itemId = sourcePlacement.itemId,
+                    anchorSlotIndex = anchorSlotIndex,
+                    occupiedSlotIndexes = itemOccupiedSlots,
+                    rotation = sourcePlacement.rotation,
+                    isValid = sourcePlacement.isValid
+                });
+            }
+
+            return compactedPlacements;
+        }
+
+        private static List<ItemShapeCell> BuildNormalizedOffsets(TrayPlacementViewModel placement)
+        {
+            IReadOnlyList<int> occupiedSlotIndexes = placement.occupiedSlotIndexes ?? Array.Empty<int>();
+            int anchorSlotIndex = placement.anchorSlotIndex >= 0
+                ? placement.anchorSlotIndex
+                : occupiedSlotIndexes.FirstOrDefault();
+            int anchorColumn = anchorSlotIndex % BuildGridInteractionPreviewController.TrayColumns;
+            int anchorRow = anchorSlotIndex / BuildGridInteractionPreviewController.TrayColumns;
+            IEnumerable<int> sourceSlots = occupiedSlotIndexes.Count > 0
+                ? occupiedSlotIndexes.Distinct()
+                : new[] { Mathf.Max(0, anchorSlotIndex) };
+
+            List<ItemShapeCell> offsets = new();
+            foreach (int slotIndex in sourceSlots)
+            {
+                if (slotIndex < 0)
+                {
+                    continue;
+                }
+
+                offsets.Add(new ItemShapeCell(
+                    slotIndex % BuildGridInteractionPreviewController.TrayColumns - anchorColumn,
+                    slotIndex / BuildGridInteractionPreviewController.TrayColumns - anchorRow));
+            }
+
+            if (offsets.Count == 0)
+            {
+                offsets.Add(new ItemShapeCell(0, 0));
+            }
+
+            int minX = offsets.Min(cell => cell.x);
+            int minY = offsets.Min(cell => cell.y);
+            return offsets
+                .Select(cell => new ItemShapeCell(cell.x - minX, cell.y - minY))
+                .Distinct()
+                .OrderBy(cell => cell.y)
+                .ThenBy(cell => cell.x)
+                .ToList();
+        }
+
+        private static bool TryFindCompactPlacement(
+            IReadOnlyList<ItemShapeCell> offsets,
+            ISet<int> occupiedSlots,
+            int traySlotCount,
+            out int anchorSlotIndex,
+            out List<int> itemOccupiedSlots)
+        {
+            itemOccupiedSlots = new List<int>();
+            for (int slotIndex = 0; slotIndex < traySlotCount; slotIndex++)
+            {
+                int anchorColumn = slotIndex % BuildGridInteractionPreviewController.TrayColumns;
+                int anchorRow = slotIndex / BuildGridInteractionPreviewController.TrayColumns;
+                List<int> candidateSlots = new();
+                bool isValid = true;
+
+                foreach (ItemShapeCell offset in offsets ?? Array.Empty<ItemShapeCell>())
+                {
+                    int column = anchorColumn + offset.x;
+                    int row = anchorRow + offset.y;
+                    int candidateSlotIndex = row * BuildGridInteractionPreviewController.TrayColumns + column;
+                    if (column < 0
+                        || column >= BuildGridInteractionPreviewController.TrayColumns
+                        || row < 0
+                        || candidateSlotIndex < 0
+                        || candidateSlotIndex >= traySlotCount
+                        || occupiedSlots.Contains(candidateSlotIndex))
+                    {
+                        isValid = false;
+                        break;
+                    }
+
+                    candidateSlots.Add(candidateSlotIndex);
+                }
+
+                if (!isValid)
+                {
+                    continue;
+                }
+
+                anchorSlotIndex = slotIndex;
+                itemOccupiedSlots = candidateSlots;
+                return true;
+            }
+
+            anchorSlotIndex = -1;
+            return false;
         }
 
         private int GetTraySlotCount()
@@ -740,6 +960,7 @@ namespace TalismanBag.BuildSandbox
 
         private void RefreshCategoryVisuals()
         {
+            string normalizedActiveCategory = NormalizeCategory(activeCategory);
             foreach (KeyValuePair<string, Text> pair in labelsByCategory)
             {
                 if (pair.Value == null)
@@ -747,7 +968,7 @@ namespace TalismanBag.BuildSandbox
                     continue;
                 }
 
-                pair.Value.color = pair.Key == activeCategory
+                pair.Value.color = NormalizeCategory(pair.Key) == normalizedActiveCategory
                     ? new Color(1f, 0.86f, 0.42f, 1f)
                     : new Color(0.86f, 0.84f, 0.74f, 1f);
             }
@@ -760,7 +981,7 @@ namespace TalismanBag.BuildSandbox
                     continue;
                 }
 
-                image.color = pair.Key == activeCategory
+                image.color = NormalizeCategory(pair.Key) == normalizedActiveCategory
                     ? new Color(0.42f, 0.32f, 0.16f, 1f)
                     : new Color(0.18f, 0.18f, 0.14f, 1f);
             }

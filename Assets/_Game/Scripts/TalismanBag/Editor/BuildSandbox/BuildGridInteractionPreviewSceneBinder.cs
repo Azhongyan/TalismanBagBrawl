@@ -56,6 +56,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 RectTransform feedback = RequireRect(RequireChild(battleArea, "PlacementFeedback"));
                 RectTransform controlBar = RequireRect(RequireChild(safeArea, "DevOnlyControlBar"));
 
+                EnsureBattlePrepareChrome(safeArea);
                 LocalizeStaticLabels(battleArea, tray, selectedInfo, feedback, controlBar);
                 List<BuildGridPreviewSlotView> boardSlots = BindBoardSlots(board);
                 BuildItemTrayPreviewView trayView = BindTray(tray);
@@ -472,6 +473,80 @@ namespace TalismanBag.EditorTools.BuildSandbox
             colors.selectedColor = colors.highlightedColor;
             button.colors = colors;
             EnsureChildText(buttonRect, "Label", label, 16, TextAnchor.MiddleCenter);
+            return button;
+        }
+
+        private static void EnsureBattlePrepareChrome(Transform safeArea)
+        {
+            RectTransform overlay = EnsureRectChild(safeArea, "V04BattlePrepareDarkOverlay");
+            SetAnchors(overlay, Vector2.zero, Vector2.one);
+            Image overlayImage = EnsureImage(overlay.gameObject, new Color(0f, 0f, 0f, 0.42f), raycast: false);
+            overlayImage.raycastTarget = false;
+            overlay.gameObject.SetActive(false);
+
+            RectTransform actionBar = EnsureRectChild(safeArea, "V04BattlePrepareBottomActions");
+            actionBar.anchorMin = new Vector2(0.5f, 0f);
+            actionBar.anchorMax = new Vector2(0.5f, 0f);
+            actionBar.pivot = new Vector2(0.5f, 0f);
+            actionBar.sizeDelta = new Vector2(800f, 92f);
+            actionBar.anchoredPosition = new Vector2(0f, 24f);
+            actionBar.localScale = Vector3.one;
+            Image barImage = EnsureImage(actionBar.gameObject, new Color(0.10f, 0.11f, 0.105f, 0.96f), raycast: true);
+            barImage.raycastTarget = true;
+
+            GridLayoutGroup grid = actionBar.GetComponent<GridLayoutGroup>();
+            if (grid == null)
+            {
+                grid = actionBar.gameObject.AddComponent<GridLayoutGroup>();
+            }
+            grid.padding = new RectOffset(12, 12, 7, 7);
+            grid.spacing = new Vector2(16f, 0f);
+            grid.cellSize = new Vector2(246f, 78f);
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = 3;
+
+            EnsureBattlePrepareButton(
+                actionBar,
+                "V04BattlePrepareBackButton",
+                "\u56de\u9996\u9875",
+                new Color(0.22f, 0.28f, 0.32f, 1f));
+            EnsureBattlePrepareButton(
+                actionBar,
+                "V04BattlePrepareStateButton",
+                "\u7ee7\u7eed\u6218\u6597",
+                new Color(0.28f, 0.31f, 0.34f, 1f));
+            EnsureBattlePrepareButton(
+                actionBar,
+                "V04BattlePrepareToggleButton",
+                "\u6574\u5907",
+                new Color(0.50f, 0.32f, 0.16f, 1f));
+
+            overlay.SetAsLastSibling();
+            actionBar.SetAsLastSibling();
+        }
+
+        private static Button EnsureBattlePrepareButton(RectTransform actionBar, string name, string label, Color color)
+        {
+            RectTransform buttonRect = EnsureRectChild(actionBar, name);
+            buttonRect.localScale = Vector3.one;
+            Image image = EnsureImage(buttonRect.gameObject, color, raycast: true);
+            image.raycastTarget = true;
+
+            Button button = buttonRect.GetComponent<Button>();
+            if (button == null)
+            {
+                button = buttonRect.gameObject.AddComponent<Button>();
+            }
+            ColorBlock colors = button.colors;
+            colors.normalColor = color;
+            colors.highlightedColor = Color.Lerp(color, Color.white, 0.12f);
+            colors.pressedColor = Color.Lerp(color, Color.black, 0.22f);
+            colors.selectedColor = colors.highlightedColor;
+            colors.disabledColor = new Color(color.r * 0.55f, color.g * 0.55f, color.b * 0.55f, 0.72f);
+            button.colors = colors;
+
+            Text text = EnsureChildText(buttonRect, "Label", label, 20, TextAnchor.MiddleCenter);
+            SetAnchors(text.rectTransform, Vector2.zero, Vector2.one);
             return button;
         }
 

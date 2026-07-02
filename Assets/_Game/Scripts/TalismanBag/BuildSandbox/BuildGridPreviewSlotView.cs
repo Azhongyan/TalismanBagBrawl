@@ -54,7 +54,12 @@ namespace TalismanBag.BuildSandbox
 
         public void SetPreview(bool valid)
         {
-            SetColor(valid ? previewValidColor : previewInvalidColor);
+            SetPreview(valid, previewValidColor);
+        }
+
+        public void SetPreview(bool valid, Color validColor)
+        {
+            SetColor(valid ? validColor : previewInvalidColor);
             if (labelText != null && !placed)
             {
                 labelText.text = valid ? string.Empty : "×";
@@ -81,8 +86,14 @@ namespace TalismanBag.BuildSandbox
 
         public void SetPlaced(string itemName)
         {
+            SetPlaced(itemName, placedColor);
+        }
+
+        public void SetPlaced(string itemName, Color itemColor)
+        {
             placed = true;
             placedName = itemName ?? string.Empty;
+            placedColor = itemColor;
             SetColor(placedColor);
             if (labelText != null)
             {

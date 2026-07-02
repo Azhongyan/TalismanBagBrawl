@@ -28,6 +28,8 @@ namespace TalismanBag.EditorTools.BuildSandbox
             "ProblemSelectorPanel",
             "BuildSandboxDataPanelDock",
             "DevOnlyControlBar",
+            "V04BattlePrepareDarkOverlay",
+            "V04BattlePrepareBottomActions",
             "PopupLayer"
         };
 
@@ -62,6 +64,13 @@ namespace TalismanBag.EditorTools.BuildSandbox
             "RunSimulationButtonSlot",
             "ResetPreviewButtonSlot",
             "ExportReportButtonSlot"
+        };
+
+        private static readonly string[] RequiredBattlePrepareActionSlots =
+        {
+            "V04BattlePrepareBackButton",
+            "V04BattlePrepareStateButton",
+            "V04BattlePrepareToggleButton"
         };
 
         public static BuildSandboxValidationReport Validate()
@@ -122,6 +131,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 .Concat(RequiredProblemSlots.Select(slot => "BuildSandboxPreviewCanvas/SafeAreaRoot/ProblemSelectorPanel/" + slot))
                 .Concat(RequiredDataSlots.Select(slot => "BuildSandboxPreviewCanvas/SafeAreaRoot/BuildSandboxDataPanelDock/" + slot))
                 .Concat(RequiredControlSlots.Select(slot => "BuildSandboxPreviewCanvas/SafeAreaRoot/DevOnlyControlBar/" + slot))
+                .Concat(RequiredBattlePrepareActionSlots.Select(slot => "BuildSandboxPreviewCanvas/SafeAreaRoot/V04BattlePrepareBottomActions/" + slot))
                 .ToArray();
         }
 
@@ -260,6 +270,16 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 if (controlSlot != null && controlSlot.GetComponent<Button>() == null)
                 {
                     report.AddError("BATTLE_SANDBOX_CONTROL_BUTTON_MISSING", $"{slot} must have Button.", BuildPath(controlSlot));
+                }
+            }
+
+            Transform prepareActions = FindDeepChild(safeArea, "V04BattlePrepareBottomActions");
+            foreach (string slot in RequiredBattlePrepareActionSlots)
+            {
+                Transform actionSlot = RequireChild(report, prepareActions, slot);
+                if (actionSlot != null && actionSlot.GetComponent<Button>() == null)
+                {
+                    report.AddError("BATTLE_SANDBOX_PREPARE_BUTTON_MISSING", $"{slot} must have Button.", BuildPath(actionSlot));
                 }
             }
         }

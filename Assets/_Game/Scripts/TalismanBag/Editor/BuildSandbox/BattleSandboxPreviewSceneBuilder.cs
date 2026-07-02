@@ -109,6 +109,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
             BuildProblemSelectorPanel(safeArea);
             BuildDataPanelDock(safeArea);
             BuildControlBar(safeArea);
+            BuildBattlePrepareChrome(safeArea);
             CreatePanel(safeArea, "PopupLayer", new Color(0f, 0f, 0f, 0f), Vector2.zero, Vector2.one);
         }
 
@@ -291,6 +292,77 @@ namespace TalismanBag.EditorTools.BuildSandbox
             colors.selectedColor = colors.highlightedColor;
             button.colors = colors;
             AddLabel(slot, "Label", label, 17, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one);
+        }
+
+        private static void BuildBattlePrepareChrome(Transform parent)
+        {
+            Transform overlay = CreatePanel(
+                parent,
+                "V04BattlePrepareDarkOverlay",
+                new Color(0f, 0f, 0f, 0.42f),
+                Vector2.zero,
+                Vector2.one);
+            overlay.gameObject.SetActive(false);
+
+            GameObject barObject = new("V04BattlePrepareBottomActions", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(GridLayoutGroup));
+            barObject.transform.SetParent(parent, false);
+            RectTransform bar = barObject.GetComponent<RectTransform>();
+            bar.anchorMin = new Vector2(0.5f, 0f);
+            bar.anchorMax = new Vector2(0.5f, 0f);
+            bar.pivot = new Vector2(0.5f, 0f);
+            bar.sizeDelta = new Vector2(800f, 92f);
+            bar.anchoredPosition = new Vector2(0f, 24f);
+            bar.localScale = Vector3.one;
+
+            Image image = barObject.GetComponent<Image>();
+            image.color = new Color(0.10f, 0.11f, 0.105f, 0.96f);
+            image.raycastTarget = true;
+
+            GridLayoutGroup grid = barObject.GetComponent<GridLayoutGroup>();
+            grid.padding = new RectOffset(12, 12, 7, 7);
+            grid.spacing = new Vector2(16f, 0f);
+            grid.cellSize = new Vector2(246f, 78f);
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = 3;
+
+            CreateBattlePrepareButton(
+                bar,
+                "V04BattlePrepareBackButton",
+                "\u56de\u9996\u9875",
+                new Color(0.22f, 0.28f, 0.32f, 1f));
+            CreateBattlePrepareButton(
+                bar,
+                "V04BattlePrepareStateButton",
+                "\u7ee7\u7eed\u6218\u6597",
+                new Color(0.28f, 0.31f, 0.34f, 1f));
+            CreateBattlePrepareButton(
+                bar,
+                "V04BattlePrepareToggleButton",
+                "\u6574\u5907",
+                new Color(0.50f, 0.32f, 0.16f, 1f));
+        }
+
+        private static void CreateBattlePrepareButton(Transform parent, string name, string label, Color color)
+        {
+            GameObject buttonObject = new(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+            RectTransform rect = buttonObject.GetComponent<RectTransform>();
+            rect.localScale = Vector3.one;
+
+            Image image = buttonObject.GetComponent<Image>();
+            image.color = color;
+            image.raycastTarget = true;
+
+            Button button = buttonObject.GetComponent<Button>();
+            ColorBlock colors = button.colors;
+            colors.normalColor = color;
+            colors.highlightedColor = Color.Lerp(color, Color.white, 0.12f);
+            colors.pressedColor = Color.Lerp(color, Color.black, 0.22f);
+            colors.selectedColor = colors.highlightedColor;
+            colors.disabledColor = new Color(color.r * 0.55f, color.g * 0.55f, color.b * 0.55f, 0.72f);
+            button.colors = colors;
+
+            AddLabel(buttonObject.transform, "Label", label, 20, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one);
         }
 
         private static Transform CreatePanel(Transform parent, string name, Color color, Vector2 anchorMin, Vector2 anchorMax)

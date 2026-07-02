@@ -27,6 +27,7 @@ namespace TalismanBag.V03.BattlePrepare
         private static readonly Vector2 ItemTraySlotSpacing = new(14f, 14f);
         private static readonly Vector2 NormalPosition = new(0f, -920f);
         private static readonly Vector2 PreparePosition = new(0f, -220f);
+        private static IBattlePrepareExtensionSeamProvider pendingExtensionSeamProvider;
 
         private readonly List<CategoryButtonBinding> categoryButtons = new();
         private readonly List<RectTransform> itemTraySlotRoots = new();
@@ -57,6 +58,7 @@ namespace TalismanBag.V03.BattlePrepare
         private int knownItemViewCount = -1;
         private float nextItemViewScanTime;
         private ItemTrayCategory currentCategory = ItemTrayCategory.All;
+        private IBattlePrepareExtensionSeamProvider extensionSeamProvider;
 
         private enum ItemTrayCategory
         {
@@ -114,10 +116,184 @@ namespace TalismanBag.V03.BattlePrepare
             return true;
         }
 
+        public static bool TryInjectExtensionSeamProvider(IBattlePrepareExtensionSeamProvider provider)
+        {
+            if (provider == null || !provider.IsBattlePrepareExtensionEnabled)
+            {
+                return false;
+            }
+
+            pendingExtensionSeamProvider = provider;
+            V03BattlePrepareInteractionController controller =
+                UnityEngine.Object.FindObjectOfType<V03BattlePrepareInteractionController>(true);
+            if (controller == null || !controller.isActiveAndEnabled)
+            {
+                return false;
+            }
+
+            controller.SetExtensionSeamProvider(provider);
+            return true;
+        }
+
+        public static void ClearExtensionSeamProvider(IBattlePrepareExtensionSeamProvider provider = null)
+        {
+            if (provider == null || ReferenceEquals(pendingExtensionSeamProvider, provider))
+            {
+                pendingExtensionSeamProvider = null;
+            }
+
+            V03BattlePrepareInteractionController[] controllers =
+                UnityEngine.Object.FindObjectsOfType<V03BattlePrepareInteractionController>(true);
+            foreach (V03BattlePrepareInteractionController controller in controllers)
+            {
+                if (controller == null)
+                {
+                    continue;
+                }
+
+                if (provider == null || ReferenceEquals(controller.extensionSeamProvider, provider))
+                {
+                    controller.SetExtensionSeamProvider(null);
+                }
+            }
+        }
+
+        public RectTransform BoardFrame => boardFrame;
+        public RectTransform ItemTrayRoot => itemTrayRoot;
+        public RectTransform ItemTrayContent => itemTrayContent;
+        public IReadOnlyList<RectTransform> ItemTraySlots => itemTraySlotRoots;
+        public Canvas RootCanvas => rootCanvas;
+        public RectTransform MotionRoot => motionRoot;
+        public bool IsPrepareStateActive => prepareStateActive;
+
+        public void SetExtensionSeamProvider(IBattlePrepareExtensionSeamProvider provider)
+        {
+            extensionSeamProvider =
+                provider != null && provider.IsBattlePrepareExtensionEnabled
+                    ? provider
+                    : null;
+        }
+
+        public bool TryResolveBoardSlot(
+            Vector2 screenPoint,
+            Camera eventCamera,
+            out TalismanGridSlotView slot)
+        {
+            slot = null;
+            TalismanGridSlotView[] slots = UnityEngine.Object.FindObjectsOfType<TalismanGridSlotView>(true);
+            foreach (TalismanGridSlotView candidate in slots)
+            {
+                RectTransform rect = candidate != null ? candidate.transform as RectTransform : null;
+                if (rect == null ||
+                    !RectTransformUtility.RectangleContainsScreenPoint(rect, screenPoint, eventCamera))
+                {
+                    continue;
+                }
+
+                slot = candidate;
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool TryResolveItemTraySlot(
+            Vector2 screenPoint,
+            Camera eventCamera,
+            out RectTransform slot,
+            out int slotIndex)
+        {
+            slot = null;
+            slotIndex = -1;
+            for (int i = 0; i < itemTraySlotRoots.Count; i++)
+            {
+                RectTransform candidate = itemTraySlotRoots[i];
+                if (candidate == null ||
+                    !RectTransformUtility.RectangleContainsScreenPoint(candidate, screenPoint, eventCamera))
+                {
+                    continue;
+                }
+
+                slot = candidate;
+                slotIndex = i;
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool TryGetItemTraySlotIndex(RectTransform slot, out int slotIndex)
+        {
+            slotIndex = itemTraySlotRoots.IndexOf(slot);
+            return slotIndex >= 0;
+        }
+
+        public bool TryResolveShapeBoardReceiver(
+            Vector2 screenPoint,
+            Camera eventCamera,
+            out object receiver,
+            out TalismanGridSlotView slot)
+        {
+            receiver = null;
+            TryResolveBoardSlot(screenPoint, eventCamera, out slot);
+            if (!IsExtensionSeamEnabled ||
+                extensionSeamProvider.ShapeGridReceiverProvider == null)
+            {
+                return false;
+            }
+
+            Vector2Int gridPosition = slot != null ? slot.GridPosition : default;
+            BattlePrepareBoardReceiverContext context = new(
+                this,
+                screenPoint,
+                eventCamera,
+                slot,
+                gridPosition);
+            return extensionSeamProvider.ShapeGridReceiverProvider.TryResolveBoardReceiver(context, out receiver)
+                && receiver != null;
+        }
+
+        public bool TryResolveShapeItemTrayReceiver(
+            Vector2 screenPoint,
+            Camera eventCamera,
+            out object receiver,
+            out RectTransform slot,
+            out int slotIndex)
+        {
+            receiver = null;
+            TryResolveItemTraySlot(screenPoint, eventCamera, out slot, out slotIndex);
+            if (!IsExtensionSeamEnabled ||
+                extensionSeamProvider.ShapeGridReceiverProvider == null)
+            {
+                return false;
+            }
+
+            BattlePrepareItemTrayReceiverContext context = new(
+                this,
+                screenPoint,
+                eventCamera,
+                slot,
+                slotIndex);
+            return extensionSeamProvider.ShapeGridReceiverProvider.TryResolveItemTrayReceiver(context, out receiver)
+                && receiver != null;
+        }
+
         private IEnumerator Start()
         {
             yield return null;
             Setup();
+        }
+
+        private void OnEnable()
+        {
+            DraggableTalismanItemView.ItemClicked += HandleExtensionItemClicked;
+            DraggableTalismanItemView.ItemDragStarted += HandleExtensionItemDragStarted;
+        }
+
+        private void OnDisable()
+        {
+            DraggableTalismanItemView.ItemClicked -= HandleExtensionItemClicked;
+            DraggableTalismanItemView.ItemDragStarted -= HandleExtensionItemDragStarted;
         }
 
         private void Update()
@@ -144,6 +320,7 @@ namespace TalismanBag.V03.BattlePrepare
 
         private void OnDestroy()
         {
+            NotifyExtensionPlacementCancelled("controller_destroyed");
             if (combatController != null && combatController.IsBattlePreparePaused)
             {
                 combatController.EndBattlePreparePause();
@@ -186,6 +363,7 @@ namespace TalismanBag.V03.BattlePrepare
             RefreshTrayItems();
             RefreshVisualState(true);
             setupComplete = true;
+            ApplyPendingExtensionSeamProvider();
         }
 
         private void ReportRuntimeFallbackIfNeeded()
@@ -709,7 +887,11 @@ namespace TalismanBag.V03.BattlePrepare
 
         private void ExitPrepareState()
         {
+            BattlePreparePlacementCommitContext extensionContext =
+                BuildPlacementCommitContext(null, null, isBattlePrepareContinueCommit: true);
+            extensionSeamProvider?.PlacementCommitAdapter?.OnBattlePrepareCommitRequested(extensionContext);
             combatController?.CommitBattlePrepareLayout();
+            extensionSeamProvider?.PlacementCommitAdapter?.OnBattlePrepareCommitted(extensionContext);
             prepareStateActive = false;
             continueStateActive = true;
             RefreshTrayItems();
@@ -748,6 +930,7 @@ namespace TalismanBag.V03.BattlePrepare
 
         private void BackToMainHome()
         {
+            NotifyExtensionPlacementCancelled("back_to_main_home");
             if (prepareStateActive || continueStateActive)
             {
                 prepareStateActive = false;
@@ -1068,6 +1251,15 @@ namespace TalismanBag.V03.BattlePrepare
                 return;
             }
 
+            BattlePreparePlacementCommitContext extensionContext =
+                BuildPlacementCommitContext(dragged, targetSlot, isBattlePrepareContinueCommit: false);
+            if (extensionSeamProvider?.PlacementCommitAdapter?.TryCommitItemTrayPlacement(extensionContext) == true)
+            {
+                dragged.AcceptInventoryDrop();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(itemTrayContent);
+                return;
+            }
+
             RectTransform sourceSlot = dragged.DragReturnParent as RectTransform;
             DraggableTalismanItemView occupied = FindTrayItemInSlot(targetSlot, dragged);
             if (occupied != null && sourceSlot != null && sourceSlot != targetSlot && itemTraySlotRoots.Contains(sourceSlot))
@@ -1082,6 +1274,7 @@ namespace TalismanBag.V03.BattlePrepare
             MoveItemToTray(dragged, targetSlot);
             dragged.AcceptInventoryDrop();
             LayoutRebuilder.ForceRebuildLayoutImmediate(itemTrayContent);
+            extensionSeamProvider?.PlacementCommitAdapter?.OnItemTrayPlacementCommitted(extensionContext);
         }
 
         private void MoveItemToFirstEmptyTraySlot(DraggableTalismanItemView view, RectTransform excludedSlot)
@@ -1139,6 +1332,140 @@ namespace TalismanBag.V03.BattlePrepare
             }
 
             return null;
+        }
+
+        private bool IsExtensionSeamEnabled =>
+            extensionSeamProvider != null && extensionSeamProvider.IsBattlePrepareExtensionEnabled;
+
+        private void ApplyPendingExtensionSeamProvider()
+        {
+            if (pendingExtensionSeamProvider != null &&
+                pendingExtensionSeamProvider.IsBattlePrepareExtensionEnabled)
+            {
+                SetExtensionSeamProvider(pendingExtensionSeamProvider);
+            }
+        }
+
+        private void HandleExtensionItemClicked(DraggableTalismanItemView view)
+        {
+            NotifyExtensionDragContext(view, null, "item_clicked");
+        }
+
+        private void HandleExtensionItemDragStarted(DraggableTalismanItemView view)
+        {
+            NotifyExtensionDragContext(view, null, "item_drag_started");
+        }
+
+        private void NotifyExtensionDragContext(
+            DraggableTalismanItemView view,
+            PointerEventData eventData,
+            string phase)
+        {
+            if (!IsExtensionSeamEnabled || view == null)
+            {
+                return;
+            }
+
+            BattlePrepareDragContext context = BuildDragContext(view, eventData, phase);
+            if (!TryBuildExtensionPayload(context, out BattlePrepareShapeItemPayload payload))
+            {
+                return;
+            }
+
+            Vector2 screenPoint = eventData != null ? eventData.position : Vector2.zero;
+            extensionSeamProvider.GhostPreviewAdapter?.PreviewGhost(
+                new BattlePrepareGhostPreviewContext(
+                    this,
+                    view,
+                    screenPoint,
+                    context.SourceBoardSlot,
+                    context.SourceTraySlot,
+                    payload.IsValid,
+                    phase,
+                    payload.RuntimePayload));
+        }
+
+        private BattlePrepareDragContext BuildDragContext(
+            DraggableTalismanItemView view,
+            PointerEventData eventData,
+            string phase)
+        {
+            RectTransform traySlot = FindCurrentTraySlot(view);
+            int traySlotIndex = -1;
+            if (traySlot != null)
+            {
+                TryGetItemTraySlotIndex(traySlot, out traySlotIndex);
+            }
+
+            return new BattlePrepareDragContext(
+                this,
+                view,
+                eventData,
+                view != null ? view.CurrentSlot : null,
+                traySlot,
+                traySlotIndex,
+                phase);
+        }
+
+        private bool TryBuildExtensionPayload(
+            BattlePrepareDragContext context,
+            out BattlePrepareShapeItemPayload payload)
+        {
+            payload = default;
+            if (!IsExtensionSeamEnabled ||
+                extensionSeamProvider.ShapeItemPayloadProvider == null ||
+                context == null)
+            {
+                return false;
+            }
+
+            return extensionSeamProvider.ShapeItemPayloadProvider.TryBuildShapeItemPayload(
+                context,
+                out payload)
+                && payload.IsValid;
+        }
+
+        private BattlePreparePlacementCommitContext BuildPlacementCommitContext(
+            DraggableTalismanItemView itemView,
+            RectTransform traySlot,
+            bool isBattlePrepareContinueCommit)
+        {
+            int traySlotIndex = -1;
+            if (traySlot != null)
+            {
+                TryGetItemTraySlotIndex(traySlot, out traySlotIndex);
+            }
+
+            object runtimePayload = null;
+            if (itemView != null &&
+                TryBuildExtensionPayload(
+                    BuildDragContext(itemView, null, "placement_commit"),
+                    out BattlePrepareShapeItemPayload payload))
+            {
+                runtimePayload = payload.RuntimePayload;
+            }
+
+            return new BattlePreparePlacementCommitContext(
+                this,
+                itemView,
+                itemView != null ? itemView.CurrentSlot : null,
+                traySlot,
+                traySlotIndex,
+                isBattlePrepareContinueCommit,
+                runtimePayload);
+        }
+
+        private void NotifyExtensionPlacementCancelled(string reason)
+        {
+            if (!IsExtensionSeamEnabled)
+            {
+                return;
+            }
+
+            BattlePreparePlacementCancelContext context =
+                new(this, null, reason);
+            extensionSeamProvider.GhostPreviewAdapter?.ClearGhostPreview(context);
+            extensionSeamProvider.PlacementCancelAdapter?.CancelPlacement(context);
         }
 
         internal static bool IsPlacedOnBoard(DraggableTalismanItemView view)

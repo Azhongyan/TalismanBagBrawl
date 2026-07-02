@@ -77,10 +77,13 @@ Phase 2 Package Queue
 | 9F-Seam01 | `V0.4-BattlePrepareExtensionSeam01` | `DONE_AS_REFERENCE / NOT_CURRENT_ROUTE` | 成熟 BattlePrepare seam 已验证可加，未来回迁 V0.3 可参考；当前不继续强接 V0.3 runtime | 保留为参考 |
 | 9G | `V0.4-BattleSandboxShapePlacementVerticalSlice01` | `USER_QA_FAILED / INPUT_CONFLICT_AND_TRAY_SHAPE_FAILED` | 回到 `Scene_TalismanBag_V04_BattleSandboxPreview`，用 V0.4 ShapePlacement 内核跑通 x2 最小真实闭环；视觉表层尽量复刻 V0.2/V0.3 | 用户手测发现：单次点击道具当前打开物品信息，与“点击再点击旋转”冲突；x2 道具未在道具栏中真实 2 格显示 |
 | 9G-Fix01 | `V0.4-BattleSandboxShapePlacementVerticalSlice01-FixInputConflict01` | `USER_QA_FAILED / INTERACTION_STILL_TOO_COMPLEX` | 修正 x2 垂直切片的输入语义与托盘形状显示，不扩 x3/x4 | 用户决定砍掉复杂交互：不再做持有态 / 虚影态旋转，不再继续二次确认复杂链路 |
-| 9G-Fix02 | `V0.4-BattleSandboxShapePlacementVerticalSlice01-FixSimplifiedTrayRotate01` | `DEV_DONE / STATIC_READY / UNITY_BATCH_INCOMPLETE / WAITING_USER_HANDTEST` | 回退到更简单稳定的摆放逻辑：只允许在道具栏内点击旋转按钮，旋转好后再拖到棋盘放置 | 等待用户 Play 手测：托盘内 Rotate、拖动后不再旋转、合法松手直接放置、非法松手返回托盘 |
+| 9G-Fix02 | `V0.4-BattleSandboxShapePlacementVerticalSlice01-FixSimplifiedTrayRotate01` | `USER_ACCEPTED / QA_PASSED_BY_USER / WAITING_REPOOPS_RECORD` | 回退到更简单稳定的摆放逻辑：只允许在道具栏内点击旋转按钮，旋转好后再拖到棋盘放置 | 用户确认当前 UI / 交互逻辑已调整好；等待 RepoOps 记录 |
+| 9H | `V0.4-BattleSandboxShapePlacementRegression01` | `USER_ACCEPTED / QA_PASSED_BY_USER / WAITING_REPOOPS_RECORD` | x2 / x3 / x4 摆放交互回归，确认当前 V04 沙盒摆放主干已完成 | 用户确认“这个我做好了”；等待 RepoOps 记录 |
 | 10 | `V0.4-MechanicHintFeedbackPreview01` | `USER_ACCEPTED / QA_PASSED_BY_USER / WAITING_REPOOPS_RECORD` | 地图机制 / 敌人机制 / Boss 技能 / 失败反馈的玩家侧线索预览，复用既有战斗提示 UI 语言，不显示答案 | 用户已确认通过；等待 RepoOps 记录 |
-| 11 | `V0.4-DevChapterBalanceRun01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | devOnly 3-10 / 4-10 难度曲线与调参验证流，不是玩家正式章节 | 等机制反馈预览稳定 |
-| 12 | `V0.4-BuildSandboxPlayableRegression01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | Phase 2 整体验收与 PromoteCandidateDraft | 等全部包通过 |
+| 11 | `V0.4-BattleSandboxEnemyEncounterPreview01` | `CURRENT / WAITING_GUARD_ASSIGNMENT` | 在 V04 沙盒场景接 devOnly 敌人 / Boss 预览，不接正式战斗系统 | 下一步收口 assignment |
+| 12 | `V0.4-BattleSandboxBuildCombatPreview01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | 将棋盘 Build、羁绊、词条、Modifier 与 devOnly 敌人题目连接，输出沙盒战斗反馈 | 等 EnemyEncounterPreview01 通过 |
+| 13 | `V0.4-DevChapterBalanceRun01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | devOnly 3-10 / 4-10 难度曲线与调参验证流，不是玩家正式章节 | 等 BuildCombatPreview01 通过 |
+| 14 | `V0.4-BuildSandboxPlayableRegression01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | Phase 2 整体验收与 PromoteCandidateDraft | 等全部包通过 |
 
 ## 4. 当前包 assignment
 
@@ -174,6 +177,19 @@ FixSimplifiedTrayRotate01 手测重点：
 9. 非法位置松手后不放置，返回道具栏原位置。
 10. 拖动中、棋盘上、预览中都不能旋转。
 11. Console 无本包红色 Error / 黄色 Warning。
+
+用户后续确认：
+```text
+V0.4-BattleSandboxShapePlacementRegression01 已做好。
+当前 V04 沙盒场景下 x2 / x3 / x4 摆放交互主干视为通过。
+```
+
+Guard 当前推进到：
+```text
+V0.4-BattleSandboxEnemyEncounterPreview01
+```
+
+下一步不是接正式 V0.2 / V0.3 战斗系统，而是在 V04 沙盒场景接 devOnly 敌人 / Boss 预览。
 ```
 
 ## 5. Phase 2 统一禁止

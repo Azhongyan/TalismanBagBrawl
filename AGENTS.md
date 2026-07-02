@@ -34,6 +34,7 @@ Codex 接到任务后的第一件事是任务入场审查，不是写代码。
 12. `Docs/LOCKED/CODEX_ROLE_WINDOW_REGISTRY.md`
 13. `Docs/LOCKED/DELIVERY_ACCEPTANCE_GATE.md`
 14. `Docs/LOCKED/CROSS_SYSTEM_EXECUTOR_PROTOCOL.md`
+15. `Docs/LOCKED/BUILD_SANDBOX_BOUNDARY_LOCK.md`
 
 若当前版本存在 ROADMAP / CURRENT / Package Queue，还必须读取：
 
@@ -41,6 +42,13 @@ Codex 接到任务后的第一件事是任务入场审查，不是写代码。
 Docs/ROADMAP/VERSION_ROADMAP.md
 Docs/CURRENT/V0.3_PRODUCT_FLOW01.md
 Docs/V0.3/V0.3_PACKAGE_QUEUE.md
+```
+
+若任务属于 Build / 词条 / 羁绊 / 多格占位 / 验证池后台沙盒线，还必须读取：
+
+```text
+Docs/ROADMAP/V0.4_BUILD_SYNERGY_ROADMAP.md
+Docs/V0.4/BUILD_PACKAGE_QUEUE.md
 ```
 
 ROADMAP / CURRENT 定义当前版本总蓝图；Package Queue 用于判断当前包、上一包验收状态和下一包。默认采用 Light Guard + RepoOps 模式：用户在 GPT / 外部策划流程拆包，Guard 收口边界和队列，任务窗口开发并自测，用户手测后只同步 Guard + RepoOps。producer tech pm、tech architect、codex task writer、QA reviewer 旧线程均停用自动流转。
@@ -79,6 +87,8 @@ ROADMAP / CURRENT 定义当前版本总蓝图；Package Queue 用于判断当前
 - `V0.3-BattlePrepareRuntimeLock01` 已开发收口并由用户确认“好的 当前任务通过”，状态为 `USER_ACCEPTED / REPOOPS_RECORD_REQUESTED`。本包实际修改仅限 `Assets/_Game/Scripts/TalismanBag/V03/BattlePrepare/V03BattlePrepareInteractionController.cs`：BattlePrepare Runtime 改为优先绑定场景内既有 V03 BattlePrepare 节点；缺正式锁定节点时保留过渡 fallback 但输出 BattlePrepareRuntimeLock warning / error；过渡 ItemTray 使用 `V03BattlePrepareItemTrayRoot`，不再新建同名 `V02BottomOperationArea`；旧 `V02BottomOperationArea` 只 lookup + hide legacy，不 rename / destroy；移除或避免 SetAsLastSibling、GridSlots_5x5 layout 重写、`CreatePanel("V02BottomOperationArea")`。验证通过：Unity batch compile `Logs/codex_battleprepare_runtime_lock_compile.log` return code 0；git diff --check 通过；静态检查确认 controller 内无 SetAsLastSibling、无 GridSlots_5x5、无 CreatePanel("V02BottomOperationArea")。
 - `V0.3-BootGuideUpgradeRuntimeLock01` 已开发收口并由用户确认“好的 我觉得当前包流程都好了 你同步给guard吧”，状态为 `USER_CONFIRMED_FLOW_OK / REPOOPS_RECORD_REQUESTED`。本包处理 BootEntry / Guide Overlay / Upgrade fallback Runtime Lock 与必要场景真源绑定：BootEntry 不再 runtime 创建 BootEntryCanvas / pages / buttons，改为绑定场景内 BootEntryCanvas、LoadingPage、StartGamePage、OpeningStoryPanel、StartGameButton、SkipOpeningStoryButton；MainHome Guide Overlay 不再 runtime 创建黑幕 / 图片槽 / 文本或 SetAsLastSibling，改为绑定场景内 HomeUpgrade / HomeTrial / shared guide roots；V03TalismanUpgradeSceneController 不再 Play 时创建 Canvas / EventSystem / full page / runtime services，改为绑定现有 Canvas、PageRoot、guide overlay、info popup、item tray、UpgradeService、MainTrialFlowService、EventSystem；升级场景已通过显式 Editor 菜单补齐 V03Upgrade_ResourceService、V03Upgrade_UpgradeService、V03Upgrade_MainTrialFlowService、EventSystem。未有意修改 V02RunFlowController、BuildSettings、Save UI tools、SceneResidueIsolation、奖励 / Boss / RunFlow 语义、存档结构、升级数值、AGENTS / LOCKED / Package Queue。下一 UI Runtime Lock 包为 `V0.3-SceneResidueIsolation01 / WAITING_GUARD_ASSIGNMENT`；用户观察到 `Scene_TalismanBag_V02_FormationCounter` Edit Mode 仍显示 V0.2 battle page，作为该下一包候选问题，不混入本包。
 - UI Slot Authoring Lock 已写入：`GUARD_SYNC_UI_SLOT_AUTHORING_LOCK_ACCEPTED`。Codex 可以管 Slot Contract：创建 Root / Slot / 默认灰盒 / 默认层级 / 脚本 / 引用 / 缺失组件 / iconKey / visualKey / 结构检查；用户手调并 Lock 后，Layout Authoring 由场景真源说了算，Runtime / Bootstrap / Ensure / CreateRuntime / Builder 不得自动覆盖 RectTransform、父节点、siblingIndex、LayoutGroup、GridLayoutGroup、ContentSizeFitter、LayoutElement、ScrollRect、Image / Outline / Text 等手调布局与视觉字段。
+- 成熟 UI 复用源规则已写入：`GUARD_SYNC_UI_REUSE_SOURCE_REGISTRY_ACCEPTED`。后续 V0.4 BuildSandbox 可视化不得重复仿制 V0.2 / V0.3 已经调好的 UI、动画和交互手感；成熟 UI 默认复用，新系统只做 Adapter / ViewModel / 字段扩展。`Scene_TalismanBag_V04_BattleSandboxPreview` 中为验证逻辑创建的 Board / ItemTray / Popup / ProblemSelector / DataBlock 默认只是 `temporary preview / logic test bench`，不作为正式 UI 真源。权威登记见 `Docs/V0.4/UI_REUSE_SOURCE_REGISTRY.md`。
+- 成熟组件优先扩展规则已写入：`GUARD_SYNC_EXTEND_EXISTING_COMPONENT_FIRST_ACCEPTED`。该规则不是禁止新玩法、禁止修改旧组件或禁止新增交互；恰恰相反，已有成熟组件应作为 Base Component，被新玩法通过 Extension Layer / Adapter Layer 扩展。V0.4 多格占用、旋转、形状预览、词条/羁绊字段应优先形成 BoardOccupancyExtension、ItemTrayShapeExtension、DragRotationPlacementExtension、ItemInfoBuildFieldsExtension 等扩展，而不是重建 V04Board / V04ItemTray / V04DragSystem / V04ItemInfoPopup。权威规则见 `Docs/V0.4/REUSABLE_COMPONENT_EXTENSION_RULE.md`。
 - 不得顺手修 Bug、扩大版本范围、进行无关重构、commit、tag、push 或回滚。
 
 ## 5. 项目记忆文件的窗口权限
@@ -119,6 +129,8 @@ ROADMAP / CURRENT 定义当前版本总蓝图；Package Queue 用于判断当前
 - 场景、页面和 UI 任务必须遵守 `DELIVERY_ACCEPTANCE_GATE.md`；自动测试不得替功能主动制造成功状态。
 - UI 修改必须遵守“原地编辑优先”：能改 RectTransform / Layout / Text / Image / CanvasGroup 就不新建 GameObject；能复用原按钮就不删旧按钮重建；任何带脚本、delegate、事件绑定、引用字段、serialized data 的对象默认禁止删除重建；必须重建时先列迁移清单并等 Guard 批准。
 - UI 任务还必须遵守 Builder / Hand Tune / Runtime Lock：Builder 只负责初始骨架；用户手调锁定后，Runtime / Bootstrap / Ensure / Builder / SceneBuilder 只能读取、绑定和驱动已有对象，不得重排或覆盖用户手调版面。
+- UI 任务还必须遵守“成熟 UI 复用源优先”：已登记或可确认成熟的 V0.2 / V0.3 UI、动画、ScrollRect、拖拽、弹窗、战斗反馈和信息组织方式不得被 V0.4 重新仿制；若新数据需要展示，优先新增 Adapter / ViewModel。若任务窗口认为不能复用，必须先向 Guard 写明原因，不得直接新画一套。
+- UI / 交互任务还必须遵守“成熟组件优先扩展”：成熟组件不是不能改，而是不得被职责重叠的新组件替代。允许在旧组件上新增按钮、插槽、状态层、占格预览、旋转交互、字段和反馈；禁止因为一个新规则就重画整套棋盘、道具栏、拖拽系统或弹窗。
 - Play UI Snapshot / Apply 工具不得自动运行；没有用户显式点击时，Play 状态改动不得被视为正式版面真源。若战斗运行时纯动态 HUD 需要例外，必须由任务说明 / Guard assignment 单独授权，不得默认例外。
 - 锁功能边界、禁止项、版本范围和稳定基线；不锁导航顺序、布局、颜色、尺寸、临时文案等普通实现细节。
 
