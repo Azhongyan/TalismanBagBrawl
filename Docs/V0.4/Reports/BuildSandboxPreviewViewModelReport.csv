@@ -1,0 +1,13 @@
+section,key,value,status,devOnly,isEnabled,formalScope,summary
+buildSummary,placedItemCount,8,PASS,True,False,PASS,8 occupied cells
+buildSummary,problemSeedCounts,10/10/6,PASS,True,False,PASS,map/enemy/boss
+synergy,activeSynergies,3,PASS,True,False,PASS,bs_synergy_corruption_ward;bs_synergy_guardian_energy;bs_synergy_lihuo_talisman
+synergy,activeThresholds,6,PASS,True,False,PASS,bs_synergy_corruption_ward:2;bs_synergy_guardian_energy:2;bs_synergy_guardian_energy:4;bs_synergy_guardian_energy:6;bs_synergy_lihuo_talisman:2;bs_synergy_lihuo_talisman:4
+shapeOccupancy,placementSamples,5/4,PASS,True,False,PASS,valid/invalid QA samples
+affixModifier,affixes,6,PASS,True,False,PASS,bs_affix_bond_plus_one;bs_affix_focus_gather;bs_affix_guardian_ward;bs_affix_lihuo_spark;bs_affix_orange_core;bs_affix_purifying_seal
+affixModifier,modifierEvents,33/36,PASS,True,False,PASS,modifiers/events
+problemSelector,options,10/10/6,PASS,True,False,PASS,map/enemy/boss selectors
+problemReadiness,bossRows,6,PASS,True,False,PASS,5 ready
+problemReadiness,keys,19/25,PASS,True,False,PASS,satisfied/total
+simulationResult,results,4,PASS,True,False,PASS,best=sandbox_no_synergy
+simulationResult,averages,0.953/115.335,PASS,True,False,PASS,winRate/clearTimeSeconds

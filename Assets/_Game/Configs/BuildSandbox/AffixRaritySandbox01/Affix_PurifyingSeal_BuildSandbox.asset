@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32d4e5f036844c3aa7e05dc4451a2bb1, type: 3}
+  m_Name: Affix_PurifyingSeal_BuildSandbox
+  m_EditorClassIdentifier:
+  configId: affix_purifying_seal_buildsandbox
+  devOnly: 1
+  isEnabled: 0
+  referencedSystemKeys: []
+  notes: AffixRaritySandbox01 seed. BuildSandbox only; keep disabled.
+  affixId: bs_affix_purifying_seal
+  displayName: Purifying Seal Preview
+  affixGroup: control_preview
+  requiredTags:
+  - cleanse_preview
+  - control_preview
+  allowedRarities:
+  - blue
+  - purple
+  - orange
+  minRoll: 8
+  maxRoll: 16
+  previewResultToken: affix_purifying_seal_preview
+  previewSummary: Preview-only warding affix. Does not emit formal control or cleanse events.

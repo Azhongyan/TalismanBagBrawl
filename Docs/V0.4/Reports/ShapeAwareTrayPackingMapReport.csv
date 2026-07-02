@@ -1,0 +1,5 @@
+shapeId,initialAnchorSlot,initialOccupiedSlots,moveProbeAnchorSlot,moveProbeOccupiedSlots,footprintWidth,footprintHeight,occupiedOffsets,initialPackingInBounds,initialPackingHasOverlap,trayPackingUsesOccupiedCells,trayDragStatePersists,illegalTrayDropReturnsToLastLegal,boardPreviewDragDoesNotReturnToWrongInitialPosition,boardCommitMode,usesMatureItemTray,redrawsItemTray,writesFormalConfig,writesSaveData
+Single1,0,0,4,4,1,1,"0,0",True,False,True,True,True,True,DEFERRED_TO_MOBILE_SHAPE_PLACEMENT_INTERACTION01,True,False,False,False
+Vertical2,1,1;6,10,10;15,1,2,"0,0;0,1",True,False,True,True,True,True,DEFERRED_TO_MOBILE_SHAPE_PLACEMENT_INTERACTION01,True,False,False,False
+Corner3,2,2;3;7,15,15;16;20,2,2,"0,0;1,0;0,1",True,False,True,True,True,True,DEFERRED_TO_MOBILE_SHAPE_PLACEMENT_INTERACTION01,True,False,False,False
+Square4,8,8;9;13;14,20,20;21;25;26,2,2,"0,0;1,0;0,1;1,1",True,False,True,True,True,True,DEFERRED_TO_MOBILE_SHAPE_PLACEMENT_INTERACTION01,True,False,False,False

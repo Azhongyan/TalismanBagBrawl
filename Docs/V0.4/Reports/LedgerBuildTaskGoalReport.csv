@@ -1,0 +1,9 @@
+taskGoalId,chineseDescription,goalType,sourceEvent,requiredValue,observedValue,completed,devOnly,isEnabled,entersFormalFlow,grantsFormalReward,entersFormalTaskList,formalTaskListEntry
+ledger_goal_activate_synergy_2,激活一次 2 件羁绊,activate_synergy_threshold,BuildEvaluationResult,2,6,True,True,False,False,False,False,false
+ledger_goal_activate_synergy_4,激活一次 4 件羁绊,activate_synergy_threshold,BuildEvaluationResult,4,6,True,True,False,False,False,False,false
+ledger_goal_activate_synergy_6,激活一次 6 件羁绊,activate_synergy_threshold,BuildEvaluationResult,6,6,True,True,False,False,False,False,false
+ledger_goal_thunder_defeat_shield_boss,用惊雷 Build 击败护盾 Boss,defeat_shield_boss_with_build,BuildSimulationResult,1,5,True,True,False,False,False,False,false
+ledger_goal_cleanse_negative_status,用净厄 Build 清除负面状态,cleanse_negative_status_with_build,BuildSimulationResult,1,15,True,True,False,False,False,False,false
+ledger_goal_complete_specified_build_validation,完成一次指定 Build 验证,complete_build_validation,DevChapterContentPoolResult,1,5,True,True,False,False,False,False,false
+ledger_goal_obtain_orange_core_affix,获得一个橙色核心词条,obtain_orange_core_affix,AffixPreview,1,1,True,True,False,False,False,False,false
+ledger_goal_complete_affix_reroll,完成一次词条洗练,complete_affix_reroll,AffixPreview,1,5,True,True,False,False,False,False,false

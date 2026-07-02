@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ab0aca8abf34543b276997773a1cc98, type: 3}
+  m_Name: Synergy_GuardianEnergy_BuildSandbox
+  m_EditorClassIdentifier:
+  configId: synergy_guardian_energy_buildsandbox
+  devOnly: 1
+  isEnabled: 0
+  referencedSystemKeys: []
+  notes: SynergyDataFoundation01 seed. Data only; no evaluator.
+  synergyId: bs_synergy_guardian_energy
+  displayName: Guardian Energy Seed
+  requiredTags:
+  - 护阵
+  - 聚能
+  - 法器
+  thresholds:
+  - pieceCount: 2
+    tierLabel: 2-piece
+    effectToken: guardian_energy_2_preview
+    effectSummary: Preview data for early guard energy identity.
+    devOnly: 1
+    isEnabled: 0
+  - pieceCount: 4
+    tierLabel: 4-piece
+    effectToken: guardian_energy_4_preview
+    effectSummary: Preview data for mid guard energy identity.
+    devOnly: 1
+    isEnabled: 0
+  - pieceCount: 6
+    tierLabel: 6-piece
+    effectToken: guardian_energy_6_preview
+    effectSummary: Preview data for late guard energy identity.
+    devOnly: 1
+    isEnabled: 0
+  placementConditions:
+  - conditionId: guardian_same_row_preview
+    conditionType: same_row
+    requiredTag: 护阵
+    requiredCount: 2
+    notes: Data-only row seed for later evaluator work.
+    devOnly: 1
+    isEnabled: 0
+  energyConditions:
+  - conditionId: guardian_positive_energy_preview
+    requiredProviderTag: 聚能
+    minimumEnergy: 1
+    maximumEnergy: 10
+    requiresPositiveNetEnergy: 1
+    notes: Data-only energy seed for later evaluator work.
+    devOnly: 1
+    isEnabled: 0
+  designNotes: Demonstrates a synergy that does not need an 8-piece tier.

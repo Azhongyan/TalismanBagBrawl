@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ab0aca8abf34543b276997773a1cc98, type: 3}
+  m_Name: Synergy_LihuoTalisman_BuildSandbox
+  m_EditorClassIdentifier:
+  configId: synergy_lihuo_talisman_buildsandbox
+  devOnly: 1
+  isEnabled: 0
+  referencedSystemKeys: []
+  notes: SynergyDataFoundation01 seed. Data only; no evaluator.
+  synergyId: bs_synergy_lihuo_talisman
+  displayName: Lihuo Talisman Seed
+  requiredTags:
+  - 离火
+  - 符箓
+  thresholds:
+  - pieceCount: 2
+    tierLabel: 2-piece
+    effectToken: li_huo_talisman_2_preview
+    effectSummary: Preview data for a small burn-oriented build identity.
+    devOnly: 1
+    isEnabled: 0
+  - pieceCount: 4
+    tierLabel: 4-piece
+    effectToken: li_huo_talisman_4_preview
+    effectSummary: Preview data for a medium burn-oriented build identity.
+    devOnly: 1
+    isEnabled: 0
+  - pieceCount: 6
+    tierLabel: 6-piece
+    effectToken: li_huo_talisman_6_preview
+    effectSummary: Preview data for a high burn-oriented build identity.
+    devOnly: 1
+    isEnabled: 0
+  - pieceCount: 8
+    tierLabel: 8-piece
+    effectToken: li_huo_talisman_8_preview
+    effectSummary: Preview data proving 8-piece threshold support.
+    devOnly: 1
+    isEnabled: 0
+  placementConditions:
+  - conditionId: li_huo_adjacent_preview
+    conditionType: adjacent_to_tag
+    requiredTag: 聚能
+    requiredCount: 1
+    notes: Data-only adjacency seed for later evaluator work.
+    devOnly: 1
+    isEnabled: 0
+  energyConditions:
+  - conditionId: li_huo_energy_preview
+    requiredProviderTag: 聚能
+    minimumEnergy: 2
+    maximumEnergy: 8
+    requiresPositiveNetEnergy: 1
+    notes: Data-only energy seed for later evaluator work.
+    devOnly: 1
+    isEnabled: 0
+  designNotes: Covers 2/4/6/8 threshold structure without combat connection.

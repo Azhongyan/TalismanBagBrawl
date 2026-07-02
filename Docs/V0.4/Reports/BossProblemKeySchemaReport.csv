@@ -1,0 +1,11 @@
+configType,fieldName,fieldType,defaultValue,purpose,isolationRule
+BossProblemConfig,bossProblemId,string,boss_problem_schema,Unique Boss problem id.,devOnly seed id only.
+BossProblemConfig,bossLockType,string,multi_key_lock,How the Boss checks Build completeness.,Not product Boss logic.
+BossProblemConfig,keyRequirements,List<BossProblemKeyRequirement>,empty,Multi-key requirements.,devOnly and disabled.
+BossProblemConfig,minimumKeysRequired,int,1,Minimum solved keys for readiness.,Schema only.
+BossProblemConfig,targetBuildTags,List<string>,empty,Build tags checked by the Boss.,devOnly tags only.
+BossProblemConfig,readinessCheckIds,List<string>,empty,Readiness checks used by the Boss.,Report-only checks.
+BossProblemConfig,weaknessWindowIds,List<string>,empty,Weakness windows used by the Boss.,Preview-only windows.
+BossProblemConfig,failureHintIds,List<string>,empty,Failure hints used by reports.,No product UI write.
+BossProblemConfig,BossProblemKeyRequirement.devOnly,bool,true,Nested key isolation.,Must stay true.
+BossProblemConfig,BossProblemKeyRequirement.isEnabled,bool,false,Nested key activation gate.,Must stay false.

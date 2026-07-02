@@ -1,0 +1,5 @@
+sampleId,actionChinese,shapeId,anchor,occupiedCells,isValid,invalidReason,feedbackChinese
+legal_place,合法放置,Single1,"0,0","0,0",True,None,可以放置，占用 1 格。
+rotation_place,旋转预览,Vertical2,"1,1","1,1;2,1",True,None,可以放置，占用 2 格。
+out_of_grid,越界检测,Square4,"4,4","4,4;5,4;4,5;5,5",False,OutOfGrid,越界：有格子超出棋盘。
+overlap,重叠检测,Corner3,"2,2","2,2;3,2;2,3",False,CellOccupied,重叠：目标格子已被占用。

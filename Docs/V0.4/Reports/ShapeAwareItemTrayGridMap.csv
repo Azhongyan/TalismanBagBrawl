@@ -1,0 +1,11 @@
+sampleId,action,itemId,shapeId,cellCount,anchor,occupiedCells,occupiedSlots,expectedValid,actualValid,invalidReason,stateAfter,receiverMutated,anchorStable,note
+pack_single1,Pack,item_single1,Single1,1,"0,0","0,0",0,True,True,None,Committed,True,True,Row-major packing commits the item through ShapeGridReceiver.Commit.
+pack_vertical2,Pack,item_vertical2,Vertical2,2,"1,0","1,0;1,1",1;6,True,True,None,Committed,True,True,Row-major packing commits the item through ShapeGridReceiver.Commit.
+pack_corner3,Pack,item_corner3,Corner3,3,"2,0","2,0;3,0;2,1",2;3;7,True,True,None,Committed,True,True,Row-major packing commits the item through ShapeGridReceiver.Commit.
+pack_square4,Pack,item_square4,Square4,4,"3,1","3,1;4,1;3,2;4,2",8;9;13;14,True,True,None,Committed,True,True,Row-major packing commits the item through ShapeGridReceiver.Commit.
+bounds_rejects_square4,CanPlace,bounds_square4,Square4,4,"4,7","4,7;5,7;4,8;5,8",39;40;44;45,False,False,OutOfGrid,HoldingItem,False,True,A 2x2 shape anchored at the last slot exceeds the 5x8 tray bounds.
+overlap_rejects_corner3,CanPlace,overlap_corner3,Corner3,3,"0,0","0,0;1,0;0,1",0;1;5,False,False,CellOccupied,HoldingItem,False,True,A new item cannot overlap already committed tray cells.
+illegal_commit_keeps_stable_anchor,Preview+Commit,item_square4,Square4,4,"4,7","4,7;5,7;4,8;5,8",39;40;44;45,False,False,OutOfGrid,InvalidPreview,False,True,Illegal tray drops do not mutate the committed placement or stable tray anchor.
+legal_move_updates_stable_anchor,Preview+Commit,item_square4,Square4,4,"0,2","0,2;1,2;0,3;1,3",10;11;15;16,True,True,None,Committed,True,True,Legal tray moves update the receiver-owned stable tray anchor.
+rotation_normalizes_corner3,CanPlace,rotated_corner3,Corner3,3,"0,0","0,0;0,1;1,1",0;5;6,True,True,None,HoldingItem,False,True,Rotated offsets are normalized so the tray anchor remains the top-left stable cell.
+screen_point_to_cell,ScreenPointToCell,,,0,"2,3",,,True,True,None,Idle,False,True,Screen point maps to a tray cell without reading or writing formal UI layout.

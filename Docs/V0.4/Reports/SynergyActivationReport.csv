@@ -1,0 +1,10 @@
+testBuild,synergyId,activeThresholds,synergyLevel,sourceItems,placementSatisfied,energySatisfied,simulationWinRateEstimate,simulationClearTimeEstimate,devOnly,isEnabled,sandboxEstimate
+sandbox_no_affix,bs_synergy_corruption_ward,bs_synergy_corruption_ward:2,6,seed_corruption_1;seed_corruption_2,True,True,0.8119,191.34,True,False,sandbox estimate
+sandbox_no_affix,bs_synergy_guardian_energy,bs_synergy_guardian_energy:2;bs_synergy_guardian_energy:4;bs_synergy_guardian_energy:6,6,seed_guardian_1;seed_guardian_2;seed_lihuo_1;seed_lihuo_2;seed_lihuo_3;seed_lihuo_4,True,True,0.8119,191.34,True,False,sandbox estimate
+sandbox_no_affix,bs_synergy_lihuo_talisman,bs_synergy_lihuo_talisman:2;bs_synergy_lihuo_talisman:4,6,seed_lihuo_1;seed_lihuo_2;seed_lihuo_3;seed_lihuo_4,True,True,0.8119,191.34,True,False,sandbox estimate
+sandbox_full_preview,bs_synergy_corruption_ward,bs_synergy_corruption_ward:2,6,seed_corruption_1;seed_corruption_2,True,True,1,90,True,False,sandbox estimate
+sandbox_full_preview,bs_synergy_guardian_energy,bs_synergy_guardian_energy:2;bs_synergy_guardian_energy:4;bs_synergy_guardian_energy:6,6,seed_guardian_1;seed_guardian_2;seed_lihuo_1;seed_lihuo_2;seed_lihuo_3;seed_lihuo_4,True,True,1,90,True,False,sandbox estimate
+sandbox_full_preview,bs_synergy_lihuo_talisman,bs_synergy_lihuo_talisman:2;bs_synergy_lihuo_talisman:4,6,seed_lihuo_1;seed_lihuo_2;seed_lihuo_3;seed_lihuo_4,True,True,1,90,True,False,sandbox estimate
+sandbox_boss_placeholder,bs_synergy_corruption_ward,bs_synergy_corruption_ward:2,6,seed_corruption_1;seed_corruption_2,True,True,1,90,True,False,sandbox estimate
+sandbox_boss_placeholder,bs_synergy_guardian_energy,bs_synergy_guardian_energy:2;bs_synergy_guardian_energy:4;bs_synergy_guardian_energy:6,6,seed_guardian_1;seed_guardian_2;seed_lihuo_1;seed_lihuo_2;seed_lihuo_3;seed_lihuo_4,True,True,1,90,True,False,sandbox estimate
+sandbox_boss_placeholder,bs_synergy_lihuo_talisman,bs_synergy_lihuo_talisman:2;bs_synergy_lihuo_talisman:4,6,seed_lihuo_1;seed_lihuo_2;seed_lihuo_3;seed_lihuo_4,True,True,1,90,True,False,sandbox estimate

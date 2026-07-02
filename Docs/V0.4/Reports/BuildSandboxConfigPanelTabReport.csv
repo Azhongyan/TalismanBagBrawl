@@ -1,0 +1,11 @@
+tab,label,dataSource,count,editable,reportOnly,formalDataSource
+Overview,Overview / 总览,BuildProblemSeedDataset,1,False,True,False
+MapRule,MapRule / 地图规则,BuildProblemSeedDataset.mapRules,10,False,True,False
+EnemyProblem,EnemyProblem / 敌人题目,BuildProblemSeedDataset.enemyProblems,10,False,True,False
+BossProblem,BossProblem / Boss 多钥匙锁,BuildProblemSeedDataset.bossProblems,6,False,True,False
+WeaknessWindow,WeaknessWindow / 弱点窗口,BuildProblemSeedDataset.weaknessWindows,6,False,True,False
+DropBias,DropBias / 定向倾向,BuildProblemSeedDataset.dropBiases,18,False,True,False
+BuildReadiness,BuildReadiness / 破题准备度,Boss required attributes + key requirements,8,False,True,False
+DevChapter,DevChapter / devOnly 章节预留,reserved placeholder,0,False,True,False
+Simulation,Simulation / 模拟结果预留,reserved placeholder,0,False,True,False
+Validation,Validation / 校验,BuildSandboxConfigPanelValidator.BuildValidationReports,7,False,True,False

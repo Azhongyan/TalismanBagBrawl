@@ -1,0 +1,6 @@
+channel,englishStableKey,chineseDisplayName,reuseSurface,reuseRecommendation,playerFacingAllowed,developerPanelAllowed,referenceOnly,canWriteFormalUi,createsDedicatedPanel,maskingNote
+BattleHint,battleHint,战斗提示,PlacementFeedback / DevOnlyControlBar hint lane,"Use short Chinese clue copy for map rules, enemy pressure, and failed placement feedback.",True,True,True,False,False,只显示线索、状态和失败反馈，不显示完整解法。
+DamageFeedback,damageFeedback,伤害反馈,PlacementFeedback / combat feedback lane,"Use the same concise feedback rhythm for damage, mitigation, and trigger feedback.",True,True,True,False,False,玩家侧只显示中文战斗反馈，不暴露数值调参答案。
+CombatLog,combatLog,战斗日志,BuildSandboxDataPanelDock event preview,"Reuse one event-feed language for trigger order, mechanic feedback, and simulation summaries.",True,True,True,False,False,玩家侧日志只保留可理解事件，不显示配置键或权重。
+Tooltip,tooltip,状态说明,SelectedItemInfo / tooltip summary,"Use selected-item and status tooltip language for tags, shapes, affix summaries, and hint explanations.",True,True,True,False,False,玩家侧说明只中文；English stable key stays in report/config/dev field layer.
+BossInfo,bossInfo,Boss信息,ProblemReadinessPanelSlot / boss summary hint,Use a compact boss summary plus staged clues; keep full keys in developer tuning data.,True,True,True,False,False,玩家侧只显示阶段线索，不显示 Boss 六钥匙完整答案。

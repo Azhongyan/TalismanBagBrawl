@@ -1,0 +1,5 @@
+receiverId,source,canPlace,preview,commit,cancel,screenPointToCell,commitMode,formalUiTouched,formalFlowTouched
+dev_tray_receiver,Tray,yes,yes,yes,yes,yes,devOnly in-memory,false,false
+dev_board_receiver,Board,yes,yes,disabled,yes,yes,preview-only,false,false
+future_v03_item_tray_adapter,Tray,planned,planned,devOnly only,planned,slot enumeration,adapter boundary only,false,false
+future_v03_board_adapter,Board,planned,planned,disabled until authorized,planned,slot enumeration,preview-only,false,false

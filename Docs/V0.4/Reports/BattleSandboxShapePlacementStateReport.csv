@@ -1,0 +1,13 @@
+sampleId,action,fromInputState,toInputState,expectedInputState,fromSessionState,toSessionState,expectedSessionState,expectedValid,actualValid,anchor,occupiedCells,invalidReason,ghostVisible,receiverCommitBefore,receiverCommitAfter,note
+tray_vertical_two_cell_default,ShapeAwareItemTrayGrid.TryPack,Idle,Idle,Idle,Idle,Idle,Idle,True,True,,"0,0;0,1",None,False,0,1,"Vertical2 defaults to a real vertical two-cell tray span; occupied slots=0;5; secondary slot is visually reserved."
+tray_rotate_to_horizontal,Info popup Rotate button,Idle,Idle,Idle,Idle,Committed,Committed,True,True,"0,0","0,0;1,0",None,False,1,2,Popup Rotate changes Vertical2 to a horizontal two-cell tray span.
+tray_rotate_back_to_vertical,Info popup Rotate button again,Idle,Idle,Idle,Idle,Committed,Committed,True,True,"0,0","0,0;0,1",None,False,2,3,Popup Rotate toggles the x2 item back to vertical.
+tray_rotate_invalid_keeps_direction,Info popup Rotate button at right edge,Idle,Idle,Idle,Idle,InvalidPreview,InvalidPreview,False,False,"4,0","4,0;5,0",OutOfGrid,False,1,2,Out-of-bounds popup rotation is rejected and the previous vertical placement remains.
+initial_idle,Open scene,Idle,Idle,Idle,Idle,Idle,Idle,True,True,,,None,False,0,0,Initial state is idle before item interaction.
+click_item_info_only,Click item info,Idle,Idle,Idle,Idle,Idle,Idle,True,True,,,None,False,0,0,Single click refreshes item info only; it does not begin placement or rotate.
+drag_starts_placement,BeginDrag tray item,Idle,HoldingItem,HoldingItem,Idle,HoldingItem,HoldingItem,True,True,,,None,False,0,0,Dragging the x2 item starts the V0.4 placement session.
+drag_to_board_ghost,Drag to board,HoldingItem,DraggingPreview,DraggingPreview,HoldingItem,Previewing,Previewing,True,True,"2,2","2,2;2,3",None,True,0,0,Dragging over the board creates a same-shape ghost preview.
+release_valid_commits,Release drag,DraggingPreview,Placed,Placed,Previewing,Committed,Committed,True,True,"2,2","2,2;2,3",None,False,0,1,Valid release commits directly without ghost click confirm.
+no_ghost_click_confirm,No ghost click confirm,Placed,Placed,Placed,Committed,Committed,Committed,True,True,"2,2","2,2;2,3",None,False,1,1,Controller does not call TapGhostToConfirm or ReleaseDragLockPreview.
+release_invalid_returns_to_tray,Release invalid drag,InvalidPreview,Cancelled,Cancelled,InvalidPreview,Cancelled,Cancelled,True,True,,,OutOfGrid,False,0,0,Invalid release cancels the active drag and returns the item to tray without board commit.
+cancel_available,Cancel,DraggingPreview,Cancelled,Cancelled,Previewing,Cancelled,Cancelled,True,True,,,None,False,0,0,Cancel clears active drag/session without board commit.

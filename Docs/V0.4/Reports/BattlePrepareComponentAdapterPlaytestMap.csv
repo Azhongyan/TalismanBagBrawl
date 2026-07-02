@@ -1,0 +1,8 @@
+ProbeId,PlaytestSurface,MatureSource,AdapterOutput,StaticOnly,RealRuntimeInteractionExecuted,RectTransformRewrite,FormalStateTouch,Result,Notes
+BPPLAYTEST-01,boardOccupancy,V02FormationGridFrame,BoardOccupancy,true,false,false,false,PASS,"Board occupancy is mapped to mature formation grid ownership only."
+BPPLAYTEST-02,itemTrayShape,V03BattlePrepareItemTrayRoot,ItemTrayShape,true,false,false,false,PASS,"Tray shape remains a mature BattlePrepare surface."
+BPPLAYTEST-03,dragRotationPlacement,DraggableTalismanItemView,DragRotationPlacement,true,false,false,false,PASS,"Drag and rotate handfeel uses existing draggable item ownership."
+BPPLAYTEST-04,itemInfoBuildFields,V02TalismanTooltipUI,ItemInfoBuildFields,true,false,false,false,PASS,"Info/build field display remains tooltip-owned."
+BPPLAYTEST-05,battleFeedbackMechanicHint,BattleLog / Tooltip / FloatingCombatText,BattleFeedbackMechanicHint,true,false,false,false,PASS,"Feedback hint is adapter documentation only."
+BPPLAYTEST-06,pullUpHandFeel,V03BattlePrepareMotionRoot,Board + tray synchronized motion,true,false,false,false,PASS,"Pull-up verification records expected mature motion; no animation is rewritten."
+BPPLAYTEST-07,trayScrollHandFeel,V03BattlePrepareItemTrayRoot,5x8 tray vertical scroll,true,false,false,false,PASS,"Scroll handfeel is mapped to the mature tray without layout rewrite."

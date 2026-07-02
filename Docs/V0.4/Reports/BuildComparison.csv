@@ -1,0 +1,4 @@
+comparisonName,baselineBuild,challengerBuild,clearTimeDeltaSeconds,winRateDelta,remainingHpDelta,totalDamageDelta,shieldBreakEfficiencyDelta,eventCountDelta,comparedDimension,devOnly,isEnabled,sandboxEstimate
+with_vs_without_synergy,sandbox_no_synergy,sandbox_full_preview,0,0,0,1317,0.1938,12,synergy,True,False,True
+with_vs_without_affix,sandbox_no_affix,sandbox_full_preview,-101.34,0.1881,0.2273,4249.35,0.2096,24,affix,True,False,True
+training_vs_boss_placeholder,sandbox_full_preview,sandbox_boss_placeholder,0,0,0,0,0,0,boss placeholder,True,False,True

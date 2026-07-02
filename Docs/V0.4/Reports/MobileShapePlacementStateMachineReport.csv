@@ -1,0 +1,15 @@
+sampleId,action,fromState,toState,expectedState,expectedValid,actualValid,anchor,occupiedCells,invalidReason,ghostVisible,ghostOutline,ghostHint,previewLocked,releaseSubmitted,receiverCommitBefore,receiverCommitAfter,note
+tap_select_holding,TapTrayItem,Idle,HoldingItem,HoldingItem,True,True,,,None,False,Hidden,,False,False,0,0,First tap selects the tray item and enters HoldingItem.
+tap_selected_rotates,TapSelectedItemToRotate,HoldingItem,RotateHoldingItem,RotateHoldingItem,True,True,,,None,False,Hidden,,False,False,0,0,Second tap rotates the selected shape through data-driven occupied offsets.
+drag_generates_ghost,DragToReceiver,RotateHoldingItem,DraggingPreview,DraggingPreview,True,True,"2,2","2,2;3,2",None,True,Valid,再次点击放下,False,False,0,0,Drag over the board produces a ghost preview and does not commit.
+release_locks_preview_without_commit,ReleaseDragLockPreview,DraggingPreview,PreviewLocked,PreviewLocked,True,True,"2,2","2,2;3,2",None,True,Locked,再次点击放下,True,False,0,0,Release keeps the ghost visible and locked without mutating receiver placement.
+tap_ghost_commits,TapGhostToConfirm,PreviewLocked,Placed,Placed,True,True,"2,2","2,2;3,2",None,False,Confirmed,已放下,False,False,0,1,Clicking the locked ghost is the only sample path that commits placement.
+invalid_position_red_feedback,DragInvalidPosition,HoldingItem,InvalidPreview,InvalidPreview,True,True,"7,7","7,7;8,7;7,8;8,8",OutOfGrid,True,Invalid,当前位置无法放置,False,False,1,1,"Out-of-grid preview stays invalid, shows red feedback, and cannot lock or commit."
+cancel_clears_session,Cancel,HoldingItem,Cancelled,Cancelled,True,True,,,None,False,Hidden,已取消,False,False,1,1,Cancel button clears the active preview without writing placement state.
+single_shape_no_rotation_hint,TapSelectedItemToRotate,HoldingItem,HoldingItem,HoldingItem,True,True,,,None,False,Hidden,,False,False,1,1,Single-cell shapes are data-detected as non-rotating and return a light hint.
+
+shapeId,offsets,cellCount,expectedCellCount,uniqueRotationCount,expectedUniqueRotationCount,canRotate
+Single1,"0,0",1,1,1,1,False
+Vertical2,"0,0;0,1",2,2,2,2,True
+Corner3,"0,0;1,0;0,1",3,3,4,4,True
+Square4,"0,0;1,0;0,1;1,1",4,4,1,1,False

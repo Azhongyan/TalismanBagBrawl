@@ -1,0 +1,7 @@
+bossProblemId,bossName,weaknessWindowId,displayName,triggerCondition,startSecond,durationSecond,exposedBuildTags,devOnly,isEnabled
+dev_boss_black_furnace_shell,黑炉护壳师,weak_black_shell_break_3,连续破三层护壳 -> Boss 虚弱,layered_shell_break,12,5,BreakPower;BurstWindow,True,False
+dev_boss_dirty_dream_mother,秽签梦母,weak_dirty_mother_cleanse_3,净化三次污染 -> Boss 本体显露,cleanse_reveal,8,6,CleansePower;ControlPower,True,False
+dev_boss_spirit_thief_core,偷灵炉心,weak_spirit_core_interrupt,镇魂打断蓄力 -> Boss 僵直,charge_interrupt,10,4,ControlPower;BurstWindow,True,False
+dev_boss_bronze_formation_general,叩阵铜将,weak_bronze_general_counter,护阵挡住敲阵 -> Boss 被反震,guard_counter,9,5,GuardPower;PlacementShape,True,False
+dev_boss_paper_faces,纸人千面阵,weak_paper_faces_clear_all,清掉全部召唤物 -> Boss 核心暴露,summon_clear_reveal,7,5,ClearPower;BurstWindow,True,False
+dev_boss_black_furnace_complex_eye,黑炉复合阵眼,weak_complex_eye_counter_loop,供能链反制成功 -> 玩家全阵爆发一次,full_loop_counter,15,6,EnergyStability;BurstWindow;ClearPower,True,False

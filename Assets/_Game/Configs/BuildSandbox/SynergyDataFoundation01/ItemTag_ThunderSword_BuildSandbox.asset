@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4947931bc7244aa4b870dd3efa1eb798, type: 3}
+  m_Name: ItemTag_ThunderSword_BuildSandbox
+  m_EditorClassIdentifier:
+  configId: itemtag_thunder_sword_buildsandbox
+  devOnly: 1
+  isEnabled: 0
+  referencedSystemKeys: []
+  notes: SynergyDataFoundation01 seed. BuildSandbox only; keep disabled.
+  itemId: bs_thunder_sword_seed
+  tags:
+  - 惊雷
+  - 剑器
+  baseFunction: thunder sword synergy seed
+  energyCost: 3
+  itemCategory: weapon
+  rarityAllowed:
+  - rare
+  - epic

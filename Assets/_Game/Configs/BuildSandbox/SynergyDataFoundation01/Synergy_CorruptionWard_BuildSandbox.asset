@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ab0aca8abf34543b276997773a1cc98, type: 3}
+  m_Name: Synergy_CorruptionWard_BuildSandbox
+  m_EditorClassIdentifier:
+  configId: synergy_corruption_ward_buildsandbox
+  devOnly: 1
+  isEnabled: 0
+  referencedSystemKeys: []
+  notes: SynergyDataFoundation01 seed. Data only; no evaluator.
+  synergyId: bs_synergy_corruption_ward
+  displayName: Corruption Ward Seed
+  requiredTags:
+  - 黑炉污染
+  - 净厄
+  - 镇魂
+  thresholds:
+  - pieceCount: 2
+    tierLabel: 2-piece
+    effectToken: corruption_ward_2_preview
+    effectSummary: Preview data for controlled risk identity.
+    devOnly: 1
+    isEnabled: 0
+  - pieceCount: 4
+    tierLabel: 4-piece
+    effectToken: corruption_ward_4_preview
+    effectSummary: Preview data for stronger ward identity.
+    devOnly: 1
+    isEnabled: 0
+  placementConditions:
+  - conditionId: corruption_not_adjacent_preview
+    conditionType: separated_from_tag
+    requiredTag: 黑炉污染
+    requiredCount: 1
+    notes: Data-only separation seed for later evaluator work.
+    devOnly: 1
+    isEnabled: 0
+  energyConditions:
+  - conditionId: corruption_low_energy_preview
+    requiredProviderTag: 法器
+    minimumEnergy: 0
+    maximumEnergy: 4
+    requiresPositiveNetEnergy: 0
+    notes: Data-only risk seed for later evaluator work.
+    devOnly: 1
+    isEnabled: 0
+  designNotes: Keeps black furnace pollution as disabled dev-only data.

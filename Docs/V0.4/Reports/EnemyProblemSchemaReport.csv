@@ -1,0 +1,12 @@
+configType,fieldName,fieldType,defaultValue,purpose,isolationRule
+EnemyProblemConfig,enemyProblemId,string,enemy_problem_schema,Unique enemy problem id.,devOnly seed id only.
+EnemyProblemConfig,enemyRole,string,problem_enemy,Enemy role used to expose a Build gap.,Not a product enemy definition.
+EnemyProblemConfig,exposureType,string,build_gap,How the gap is exposed.,Report and preview only.
+EnemyProblemConfig,targetBuildGap,string,missing_counter,Named Build gap under test.,Schema only.
+EnemyProblemConfig,targetBuildTags,List<string>,empty,Build tags challenged by the enemy.,devOnly tags only.
+EnemyProblemConfig,recommendedSynergyIds,List<string>,empty,Synergies recommended by the problem.,devOnly references only.
+EnemyProblemConfig,weaknessWindowIds,List<string>,empty,Linked weakness windows.,Preview-only windows.
+EnemyProblemConfig,readinessCheckIds,List<string>,empty,Checks needed before this problem.,Report-only checks.
+EnemyProblemConfig,failureHintIds,List<string>,empty,Failure hints shown in reports.,No product UI write.
+EnemyProblemConfig,devOnly,bool,true,BuildSandbox isolation flag.,Must stay true.
+EnemyProblemConfig,isEnabled,bool,false,Activation gate.,Must stay false.

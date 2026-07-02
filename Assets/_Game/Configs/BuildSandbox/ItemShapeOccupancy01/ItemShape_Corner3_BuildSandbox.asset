@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaef7430154d46a6aa191dc0ffa80346, type: 3}
+  m_Name: ItemShape_Corner3_BuildSandbox
+  m_EditorClassIdentifier:
+  configId: itemshape_corner3_buildsandbox
+  devOnly: 1
+  isEnabled: 0
+  referencedSystemKeys: []
+  notes: ItemShapeOccupancy01 seed. Corner3 / Triangle3 alias; BuildSandbox only.
+  shapeId: Corner3
+  shapeName: Corner3 / Triangle3
+  cellCount: 3
+  occupiedOffsets:
+  - x: 0
+    y: 0
+  - x: 1
+    y: 0
+  - x: 0
+    y: 1
+  defaultRotation: 0
+  rotationAllowed: 0
+  visualKey: shape_corner3_placeholder

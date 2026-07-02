@@ -1,0 +1,11 @@
+configType,fieldName,fieldType,defaultValue,purpose,isolationRule
+MapRuleConfig,mapRuleId,string,map_rule_schema,Unique map rule id.,devOnly seed id only.
+MapRuleConfig,mapRuleType,string,problem_map,Rule category for problem selection.,No product stage hookup.
+MapRuleConfig,targetBuildTags,List<string>,empty,Build tags required by the map problem.,Schema only.
+MapRuleConfig,enemyProblemIds,List<string>,empty,Enemy problems attached to this map rule.,devOnly references only.
+MapRuleConfig,bossProblemIds,List<string>,empty,Boss problems attached to this map rule.,devOnly references only.
+MapRuleConfig,readinessCheckIds,List<string>,empty,Readiness checks used by this map rule.,Report-only checks.
+MapRuleConfig,weaknessWindowIds,List<string>,empty,Weakness windows used by this map rule.,Preview-only windows.
+MapRuleConfig,dropBiasId,string,empty,Optional devOnly drop tendency id.,No product drop edit.
+MapRuleConfig,devOnly,bool,true,BuildSandbox isolation flag.,Must stay true.
+MapRuleConfig,isEnabled,bool,false,Activation gate.,Must stay false.

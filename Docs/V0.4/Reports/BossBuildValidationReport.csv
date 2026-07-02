@@ -1,0 +1,8 @@
+bossId,chineseRole,bossMechanic,validationTargetBuild,validationTags,recommendedSynergies,devOnly,isEnabled,entersFormalFlow,simulatorReadable,scenarioId,simulationWinRateEstimate,simulationClearTimeEstimate
+dev_boss_shield_jinglei,护盾Boss：验证惊雷,shield_boss,jing_lei_break,shield;boss;break_test,惊雷,True,False,False,True,pool_boss_dev_boss_shield_jinglei,1,90
+dev_boss_swarm_lihuo,群怪Boss：验证离火,swarm_boss,li_huo_aoe,swarm;boss;multi_target,离火,True,False,False,True,pool_boss_dev_boss_swarm_lihuo,1,90
+dev_boss_burst_huzhen,高爆发Boss：验证护阵,burst_boss,hu_zhen_survive,burst;boss;low_hp_pressure,护阵,True,False,False,True,pool_boss_dev_boss_burst_huzhen,1,90
+dev_boss_debuff_jinge,负面状态Boss：验证净厄,debuff_boss,jing_e_cleanse,negative_status;boss;cleanse,净厄,True,False,False,True,pool_boss_dev_boss_debuff_jinge,1,90
+dev_boss_caster_zhenhun,施法Boss：验证镇魂,caster_boss,zhen_hun_control,caster;boss;skill_cast,镇魂,True,False,False,True,pool_boss_dev_boss_caster_zhenhun,1,90
+dev_boss_energy_juneng,供能干扰Boss：验证聚能,energy_jammer_boss,ju_neng_energy,energy_drain;boss;resource_disrupt,聚能,True,False,False,True,pool_boss_dev_boss_energy_juneng,1,90
+dev_boss_hybrid_combo,混合机制Boss：验证组合Build,hybrid_combo_boss,combo_build,hybrid;boss;combo,惊雷;离火;护阵;净厄;镇魂;聚能,True,False,False,True,pool_boss_dev_boss_hybrid_combo,1,90

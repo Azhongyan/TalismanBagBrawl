@@ -1,0 +1,10 @@
+sampleId,action,fromState,toState,expectedState,expectedValid,actualValid,anchor,occupiedCells,invalidReason,ghostVisible,ghostOutline,ghostHint,releaseSubmitted,receiverCommitBefore,receiverCommitAfter,note
+runtime_connected,BindRuntimePlaytest,Idle,Idle,Idle,True,True,,,None,False,Hidden,,False,0,0,"RuntimePlaytest bind uses ShapePlacementSession, ShapeAwareItemTrayGrid, and MobileShapePlacementInputExtension."
+tap_select_holding,TapTrayItem,Idle,HoldingItem,HoldingItem,True,True,,,None,False,Hidden,,False,0,0,Clicking a tray item starts the session with the tray grid anchor.
+tap_selected_rotates,TapSelectedItemToRotate,HoldingItem,RotateHoldingItem,RotateHoldingItem,True,True,,,None,False,Hidden,,False,0,0,Clicking the already selected shape rotates through the session authority.
+drag_generates_ghost,DragToReceiver,RotateHoldingItem,DraggingPreview,DraggingPreview,True,True,"2,2","2,2;3,2",None,True,Valid,再次点击放下,False,0,0,Dragging over the board generates a ghost preview without committing.
+release_locks_preview_without_commit,ReleaseDragLockPreview,DraggingPreview,PreviewLocked,PreviewLocked,True,True,"2,2","2,2;3,2",None,True,Locked,再次点击放下,False,0,0,Release locks the ghost and leaves receiver commit count unchanged.
+drag_locked_ghost,DragLockedGhostToReceiver,PreviewLocked,PreviewLocked,PreviewLocked,True,True,"3,2","3,2;4,2",None,True,Locked,再次点击放下,False,0,0,Dragging a locked ghost moves the preview and relocks it.
+tap_ghost_commits,TapGhostToConfirm,PreviewLocked,Placed,Placed,True,True,"3,2","3,2;4,2",None,False,Confirmed,已放下,False,0,1,Clicking the locked ghost is the only commit path.
+invalid_position_red_feedback,DragInvalidPosition,HoldingItem,InvalidPreview,InvalidPreview,True,True,"7,7","7,7;8,7;7,8;8,8",OutOfGrid,True,Invalid,当前位置无法放置,False,1,1,"Invalid preview stays red, cannot lock, and does not commit."
+cancel_clears_session,Cancel,HoldingItem,Cancelled,Cancelled,True,True,,,None,False,Hidden,已取消,False,1,1,Cancel clears the visible ghost and calls receiver cancel.
