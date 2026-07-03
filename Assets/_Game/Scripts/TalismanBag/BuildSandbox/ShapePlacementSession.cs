@@ -58,16 +58,34 @@ namespace TalismanBag.BuildSandbox
 
         public IReadOnlyList<ItemShapeCell> BuildOccupiedCells(ItemShapeCell anchorCell)
         {
+            IReadOnlyList<ItemShapeCell> offsets = BuildNormalizedOffsets();
+            return offsets
+                .Select(offset => new ItemShapeCell(anchorCell.x + offset.x, anchorCell.y + offset.y))
+                .OrderBy(cell => cell.y)
+                .ThenBy(cell => cell.x)
+                .ToArray();
+        }
+
+        public IReadOnlyList<ItemShapeCell> BuildNormalizedOffsets()
+        {
             var offsets = occupiedOffsets ?? Array.Empty<ItemShapeCell>();
-            var rotation = Rotation;
-            var cells = new ItemShapeCell[offsets.Length];
-            for (var i = 0; i < offsets.Length; i++)
+            if (offsets.Length == 0)
             {
-                var rotatedOffset = ApplyRotation(offsets[i], rotation);
-                cells[i] = new ItemShapeCell(anchorCell.x + rotatedOffset.x, anchorCell.y + rotatedOffset.y);
+                return Array.Empty<ItemShapeCell>();
             }
 
-            return cells;
+            ItemShapeRotation rotation = Rotation;
+            ItemShapeCell[] rotatedOffsets = offsets
+                .Select(offset => ApplyRotation(offset, rotation))
+                .ToArray();
+            int minX = rotatedOffsets.Min(cell => cell.x);
+            int minY = rotatedOffsets.Min(cell => cell.y);
+            return rotatedOffsets
+                .Select(cell => new ItemShapeCell(cell.x - minX, cell.y - minY))
+                .Distinct()
+                .OrderBy(cell => cell.y)
+                .ThenBy(cell => cell.x)
+                .ToArray();
         }
 
         private static ItemShapeCell ApplyRotation(ItemShapeCell offset, ItemShapeRotation rotation)

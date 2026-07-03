@@ -20,6 +20,8 @@ namespace TalismanBag.BuildSandbox
         private const float BattlePreparePullOffset = 320f;
         private const string BattlePrepareActionBarName = "V04BattlePrepareBottomActions";
         private const string BattlePrepareOverlayName = "V04BattlePrepareDarkOverlay";
+        private const string DragGhostCellLayerName = "DragGhostCellLayer";
+        private const string DragGhostCellNamePrefix = "DragGhostCell_";
 
         public static readonly string[] CategoryLabels =
         {
@@ -86,6 +88,11 @@ namespace TalismanBag.BuildSandbox
         private bool battlePrepareStateActive;
         private bool battlePrepareContinueStateActive;
         private bool sandboxBattleActive;
+        private RectTransform dragGhostCellLayer;
+        private Image dragGhostBackgroundImage;
+        private Vector2 dragGhostDefaultSize;
+        private Color dragGhostDefaultBackgroundColor;
+        private bool hasDragGhostDefaults;
 
         public bool DevOnly => devOnly;
         public bool IsEnabled => isEnabled;
@@ -412,7 +419,7 @@ namespace TalismanBag.BuildSandbox
 
             ItemShapeCell boardCell = slot == null
                 ? default
-                : BoardDataCellFromVisualCell(slot.Cell);
+                : ResolveBoardDataCellFromVisualCell(slot.Cell);
             if (slot == null
                 || boardReceiver == null
                 || !boardReceiver.TryGetItemAtCell(boardCell, out string itemId)
@@ -591,15 +598,43 @@ namespace TalismanBag.BuildSandbox
                 if (slot != null)
                 {
                     slot.SetController(this);
-                    boardSlotByCell[BoardDataCellFromVisualCell(slot.Cell)] = slot;
+                    boardSlotByCell[ResolveBoardDataCellFromVisualCell(slot.Cell)] = slot;
                 }
             }
         }
 
-        private static ItemShapeCell BoardDataCellFromVisualCell(ItemShapeCell visualCell)
+        private ItemShapeCell ResolveBoardDataCellFromVisualCell(ItemShapeCell visualCell)
         {
-            // Scene board slots are authored bottom-up; placement data follows tray rows top-down.
-            return new ItemShapeCell(visualCell.x, BoardRows - 1 - visualCell.y);
+            return BoardVisualRowsAreTopDown()
+                ? visualCell
+                : new ItemShapeCell(visualCell.x, BoardRows - 1 - visualCell.y);
+        }
+
+        private bool BoardVisualRowsAreTopDown()
+        {
+            GridLayoutGroup boardGrid = ResolveBoardGridLayoutGroup();
+            return boardGrid != null
+                && (boardGrid.startCorner == GridLayoutGroup.Corner.UpperLeft
+                    || boardGrid.startCorner == GridLayoutGroup.Corner.UpperRight);
+        }
+
+        private GridLayoutGroup ResolveBoardGridLayoutGroup()
+        {
+            foreach (BuildGridPreviewSlotView slot in boardSlots ?? Array.Empty<BuildGridPreviewSlotView>())
+            {
+                if (slot != null && slot.transform.parent != null)
+                {
+                    GridLayoutGroup parentGrid = slot.transform.parent.GetComponent<GridLayoutGroup>();
+                    if (parentGrid != null)
+                    {
+                        return parentGrid;
+                    }
+                }
+            }
+
+            return boardGridPreview == null
+                ? null
+                : boardGridPreview.GetComponentInChildren<GridLayoutGroup>(true);
         }
 
         private void BuildShapeLookup()
@@ -636,7 +671,8 @@ namespace TalismanBag.BuildSandbox
                 "battle_sandbox_x2_board",
                 boardGridPreview,
                 BoardColumns,
-                BoardRows);
+                BoardRows,
+                boardSlotByCell);
 
             foreach (PreviewItem item in itemById.Values)
             {
@@ -1045,7 +1081,6 @@ namespace TalismanBag.BuildSandbox
 
         private void UpdateActiveDrag(PointerEventData eventData)
         {
-            ShowDragGhost(selectedItem, eventData, "拖动中");
             if (TryPreviewTrayDrag(eventData, out ShapePlacementResult trayResult))
             {
                 lastPreviewResult = trayResult;
@@ -1056,6 +1091,7 @@ namespace TalismanBag.BuildSandbox
                 }
 
                 ClearPreviewCells();
+                ShowDragGhost(selectedItem, eventData, "拖动中", trayResult, ShapePlacementSource.Tray);
                 if (trayResult != null && trayResult.IsValid)
                 {
                     placementFeedbackView?.ShowValid("松手移动到道具栏空位。");
@@ -1079,6 +1115,7 @@ namespace TalismanBag.BuildSandbox
             }
 
             DrawPreviewResult(result, locked: false);
+            ShowDragGhost(selectedItem, eventData, "拖动中", result, ShapePlacementSource.Board);
             if (result != null && result.IsValid)
             {
                 placementFeedbackView?.ShowValid($"松手直接放置“{selectedItem.DisplayName}”。");
@@ -1686,18 +1723,35 @@ namespace TalismanBag.BuildSandbox
             return string.Join("、", cells.Select(cell => $"第{cell.x + 1}列第{cell.y + 1}行"));
         }
 
-        private void ShowDragGhost(PreviewItem item, PointerEventData eventData, string state)
+        private void ShowDragGhost(
+            PreviewItem item,
+            PointerEventData eventData,
+            string state,
+            ShapePlacementResult result = null,
+            ShapePlacementSource source = ShapePlacementSource.Unknown)
         {
             if (dragGhostRoot == null || item == null || eventData == null)
             {
                 return;
             }
 
+            CacheDragGhostDefaults();
             dragGhostRoot.gameObject.SetActive(true);
-            dragGhostRoot.position = eventData.position + new Vector2(0f, 50f);
+            dragGhostRoot.position = eventData.position
+                + new Vector2(0f, MobileShapePlacementInputSettings.DefaultFingerGhostOffsetPixels);
             if (dragGhostText != null)
             {
                 dragGhostText.text = $"{item.DisplayName}\n{state}";
+                dragGhostText.transform.SetAsLastSibling();
+            }
+
+            if (TryResolveDragGhostLayout(item, result, source, out ShapeCellVisualLayout layout))
+            {
+                ApplyDragGhostLayout(layout, item, result);
+            }
+            else
+            {
+                RestoreDragGhostBoxVisual();
             }
         }
 
@@ -1707,6 +1761,216 @@ namespace TalismanBag.BuildSandbox
             {
                 dragGhostRoot.gameObject.SetActive(false);
             }
+
+            if (dragGhostCellLayer != null)
+            {
+                dragGhostCellLayer.gameObject.SetActive(false);
+            }
+        }
+
+        private bool TryResolveDragGhostLayout(
+            PreviewItem item,
+            ShapePlacementResult result,
+            ShapePlacementSource source,
+            out ShapeCellVisualLayout layout)
+        {
+            layout = null;
+            if (result != null && result.OccupiedCells.Count > 0)
+            {
+                if (source == ShapePlacementSource.Board
+                    && TryBuildBoardCellVisualLayout(result.OccupiedCells, out layout))
+                {
+                    return true;
+                }
+
+                if (source == ShapePlacementSource.Tray
+                    && itemTrayView != null
+                    && itemTrayView.TryBuildCellVisualLayout(result.OccupiedCells, out layout))
+                {
+                    return true;
+                }
+            }
+
+            if (item != null
+                && itemTrayView != null
+                && TryGetTrayPlacement(item.ItemId, out ShapeAwareItemTrayGridPlacement placement)
+                && placement != null
+                && itemTrayView.TryBuildCellVisualLayout(placement.OccupiedCells, out layout))
+            {
+                return true;
+            }
+
+            ShapeItemPayload payload = BuildPayload(item, ShapePlacementSource.Board);
+            return payload.IsValid
+                && TryBuildBoardCellVisualLayout(payload.BuildNormalizedOffsets(), out layout);
+        }
+
+        private bool TryBuildBoardCellVisualLayout(
+            IReadOnlyList<ItemShapeCell> occupiedCells,
+            out ShapeCellVisualLayout layout)
+        {
+            return ShapeGridCellVisualLayoutUtility.TryBuildFromSlots(
+                occupiedCells,
+                ResolveBoardSlotRect,
+                boardGridPreview,
+                out layout);
+        }
+
+        private RectTransform ResolveBoardSlotRect(ItemShapeCell dataCell)
+        {
+            if (!boardSlotByCell.TryGetValue(dataCell, out BuildGridPreviewSlotView slot)
+                || slot == null)
+            {
+                return null;
+            }
+
+            return slot.transform as RectTransform;
+        }
+
+        private void ApplyDragGhostLayout(
+            ShapeCellVisualLayout layout,
+            PreviewItem item,
+            ShapePlacementResult result)
+        {
+            if (layout == null || dragGhostRoot == null)
+            {
+                return;
+            }
+
+            dragGhostRoot.sizeDelta = layout.SizeDelta;
+            dragGhostRoot.localScale = Vector3.one;
+            if (dragGhostBackgroundImage != null)
+            {
+                dragGhostBackgroundImage.color = Color.clear;
+            }
+
+            RectTransform layer = EnsureDragGhostCellLayer();
+            if (layer == null)
+            {
+                return;
+            }
+
+            layer.gameObject.SetActive(true);
+            layer.anchorMin = new Vector2(0f, 1f);
+            layer.anchorMax = new Vector2(0f, 1f);
+            layer.pivot = new Vector2(0f, 1f);
+            layer.anchoredPosition = Vector2.zero;
+            layer.sizeDelta = layout.SizeDelta;
+            layer.localScale = Vector3.one;
+            layer.SetAsFirstSibling();
+
+            IReadOnlyList<ShapeCellVisualRect> cellRects = layout.CellRects;
+            while (layer.childCount < cellRects.Count)
+            {
+                GameObject cellObject = new(
+                    $"{DragGhostCellNamePrefix}{layer.childCount:00}",
+                    typeof(RectTransform),
+                    typeof(Image));
+                cellObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                cellObject.transform.SetParent(layer, false);
+            }
+
+            Color color = ResolveDragGhostCellColor(item, result);
+            for (int i = 0; i < layer.childCount; i++)
+            {
+                Transform child = layer.GetChild(i);
+                bool active = i < cellRects.Count;
+                child.gameObject.SetActive(active);
+                if (!active)
+                {
+                    continue;
+                }
+
+                RectTransform cellRect = child as RectTransform;
+                if (cellRect != null)
+                {
+                    ShapeCellVisualRect visualRect = cellRects[i];
+                    cellRect.anchorMin = new Vector2(0f, 1f);
+                    cellRect.anchorMax = new Vector2(0f, 1f);
+                    cellRect.pivot = new Vector2(0f, 1f);
+                    cellRect.anchoredPosition = visualRect.AnchoredPosition;
+                    cellRect.sizeDelta = visualRect.SizeDelta;
+                    cellRect.localScale = Vector3.one;
+                }
+
+                Image image = child.GetComponent<Image>();
+                if (image != null)
+                {
+                    image.color = color;
+                    image.raycastTarget = false;
+                }
+            }
+        }
+
+        private RectTransform EnsureDragGhostCellLayer()
+        {
+            if (dragGhostRoot == null)
+            {
+                return null;
+            }
+
+            if (dragGhostCellLayer != null)
+            {
+                return dragGhostCellLayer;
+            }
+
+            dragGhostCellLayer = dragGhostRoot.Find(DragGhostCellLayerName) as RectTransform;
+            if (dragGhostCellLayer == null)
+            {
+                GameObject layerObject = new(DragGhostCellLayerName, typeof(RectTransform));
+                layerObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                layerObject.transform.SetParent(dragGhostRoot, false);
+                dragGhostCellLayer = layerObject.GetComponent<RectTransform>();
+            }
+
+            return dragGhostCellLayer;
+        }
+
+        private Color ResolveDragGhostCellColor(PreviewItem item, ShapePlacementResult result)
+        {
+            Color color = result != null && !result.IsValid
+                ? new Color(0.62f, 0.20f, 0.16f, 0.76f)
+                : item?.CardColor ?? new Color(0.44f, 0.35f, 0.18f, 1f);
+            color.a = Mathf.Min(color.a, 0.82f);
+            return color;
+        }
+
+        private void RestoreDragGhostBoxVisual()
+        {
+            if (dragGhostRoot == null)
+            {
+                return;
+            }
+
+            if (hasDragGhostDefaults)
+            {
+                dragGhostRoot.sizeDelta = dragGhostDefaultSize;
+            }
+
+            if (dragGhostBackgroundImage != null && hasDragGhostDefaults)
+            {
+                dragGhostBackgroundImage.color = dragGhostDefaultBackgroundColor;
+            }
+
+            if (dragGhostCellLayer != null)
+            {
+                dragGhostCellLayer.gameObject.SetActive(false);
+            }
+        }
+
+        private void CacheDragGhostDefaults()
+        {
+            if (hasDragGhostDefaults || dragGhostRoot == null)
+            {
+                return;
+            }
+
+            dragGhostDefaultSize = dragGhostRoot.sizeDelta;
+            dragGhostBackgroundImage = dragGhostRoot.GetComponent<Image>();
+            dragGhostDefaultBackgroundColor = dragGhostBackgroundImage == null
+                ? Color.clear
+                : dragGhostBackgroundImage.color;
+            hasDragGhostDefaults = true;
         }
 
         private void EnsureShapeLookupForQuery()
@@ -1908,18 +2172,29 @@ namespace TalismanBag.BuildSandbox
         private sealed class UiBoardShapeGridReceiver : ShapeGridReceiver
         {
             private readonly Dictionary<ItemShapeCell, string> occupiedByItemId = new();
+            private readonly Dictionary<ItemShapeCell, RectTransform> slotRectsByCell = new();
             private readonly RectTransform boardRect;
 
             public UiBoardShapeGridReceiver(
                 string receiverId,
                 RectTransform boardRect,
                 int width,
-                int height)
+                int height,
+                IReadOnlyDictionary<ItemShapeCell, BuildGridPreviewSlotView> slotsByCell = null)
             {
                 ReceiverId = string.IsNullOrWhiteSpace(receiverId) ? "battle_sandbox_board" : receiverId;
                 this.boardRect = boardRect;
                 Width = width;
                 Height = height;
+                foreach (KeyValuePair<ItemShapeCell, BuildGridPreviewSlotView> pair
+                         in slotsByCell ?? new Dictionary<ItemShapeCell, BuildGridPreviewSlotView>())
+                {
+                    RectTransform slotRect = pair.Value == null ? null : pair.Value.transform as RectTransform;
+                    if (slotRect != null)
+                    {
+                        slotRectsByCell[pair.Key] = slotRect;
+                    }
+                }
             }
 
             public string ReceiverId { get; }
@@ -1936,6 +2211,21 @@ namespace TalismanBag.BuildSandbox
             public bool ScreenPointToCell(Vector2 screenPoint, Camera eventCamera, out ItemShapeCell anchorCell)
             {
                 anchorCell = default;
+                if (TryScreenPointToAuthoredSlot(screenPoint, eventCamera, out anchorCell))
+                {
+                    return true;
+                }
+
+                if (TryScreenPointToSlotBounds(screenPoint, eventCamera, out anchorCell))
+                {
+                    return true;
+                }
+
+                if (slotRectsByCell.Count > 0)
+                {
+                    return false;
+                }
+
                 if (boardRect == null)
                 {
                     return false;
@@ -1966,6 +2256,112 @@ namespace TalismanBag.BuildSandbox
                 int x = Mathf.Clamp(Mathf.FloorToInt(normalizedX * Width), 0, Width - 1);
                 int y = Mathf.Clamp(Mathf.FloorToInt((1f - normalizedY) * Height), 0, Height - 1);
                 anchorCell = new ItemShapeCell(x, y);
+                return true;
+            }
+
+            private bool TryScreenPointToAuthoredSlot(
+                Vector2 screenPoint,
+                Camera eventCamera,
+                out ItemShapeCell anchorCell)
+            {
+                foreach (KeyValuePair<ItemShapeCell, RectTransform> pair in slotRectsByCell)
+                {
+                    RectTransform slotRect = pair.Value;
+                    if (slotRect == null)
+                    {
+                        continue;
+                    }
+
+                    if (RectTransformUtility.RectangleContainsScreenPoint(slotRect, screenPoint, eventCamera))
+                    {
+                        anchorCell = pair.Key;
+                        return true;
+                    }
+                }
+
+                anchorCell = default;
+                return false;
+            }
+
+            private bool TryScreenPointToSlotBounds(
+                Vector2 screenPoint,
+                Camera eventCamera,
+                out ItemShapeCell anchorCell)
+            {
+                anchorCell = default;
+                if (boardRect == null
+                    || slotRectsByCell.Count == 0
+                    || !TryResolveSlotLocalBounds(out Rect bounds)
+                    || bounds.width <= 0f
+                    || bounds.height <= 0f
+                    || !RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        boardRect,
+                        screenPoint,
+                        eventCamera,
+                        out Vector2 localPoint))
+                {
+                    return false;
+                }
+
+                float normalizedX = (localPoint.x - bounds.xMin) / bounds.width;
+                float normalizedY = (localPoint.y - bounds.yMin) / bounds.height;
+                if (normalizedX < 0f || normalizedX >= 1f || normalizedY < 0f || normalizedY >= 1f)
+                {
+                    return false;
+                }
+
+                int x = Mathf.Clamp(Mathf.FloorToInt(normalizedX * Width), 0, Width - 1);
+                int y = Mathf.Clamp(Mathf.FloorToInt((1f - normalizedY) * Height), 0, Height - 1);
+                anchorCell = new ItemShapeCell(x, y);
+                return true;
+            }
+
+            private bool TryResolveSlotLocalBounds(out Rect bounds)
+            {
+                bounds = default;
+                if (boardRect == null || slotRectsByCell.Count == 0)
+                {
+                    return false;
+                }
+
+                float minX = float.PositiveInfinity;
+                float maxX = float.NegativeInfinity;
+                float minY = float.PositiveInfinity;
+                float maxY = float.NegativeInfinity;
+                Vector3[] worldCorners = new Vector3[4];
+                foreach (RectTransform slotRect in slotRectsByCell.Values)
+                {
+                    if (slotRect == null)
+                    {
+                        continue;
+                    }
+
+                    slotRect.GetWorldCorners(worldCorners);
+                    for (int i = 0; i < worldCorners.Length; i++)
+                    {
+                        Vector3 localCorner = boardRect.InverseTransformPoint(worldCorners[i]);
+                        minX = Mathf.Min(minX, localCorner.x);
+                        maxX = Mathf.Max(maxX, localCorner.x);
+                        minY = Mathf.Min(minY, localCorner.y);
+                        maxY = Mathf.Max(maxY, localCorner.y);
+                    }
+                }
+
+                if (float.IsNaN(minX)
+                    || float.IsInfinity(minX)
+                    || float.IsNaN(maxX)
+                    || float.IsInfinity(maxX)
+                    || float.IsNaN(minY)
+                    || float.IsInfinity(minY)
+                    || float.IsNaN(maxY)
+                    || float.IsInfinity(maxY)
+                    || maxX <= minX
+                    || maxY <= minY)
+                {
+                    return false;
+                }
+
+                bounds = Rect.MinMaxRect(minX, minY, maxX, maxY);
                 return true;
             }
 

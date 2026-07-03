@@ -207,6 +207,13 @@ namespace TalismanBag.BuildSandbox
             return true;
         }
 
+        internal bool TryBuildCellVisualLayout(
+            IReadOnlyList<ItemShapeCell> occupiedCells,
+            out ShapeCellVisualLayout layout)
+        {
+            return itemLayoutView.TryBuildCellVisualLayout(occupiedCells, out layout);
+        }
+
         private void BindViewAuthorities()
         {
             itemLayoutView.Bind(

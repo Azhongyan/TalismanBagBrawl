@@ -67,17 +67,27 @@ namespace TalismanBag.EditorTools.BuildSandbox
             "BuildGridPreviewSlotView.cs",
             "BuildItemPreviewCardView.cs",
             "BuildItemTrayPreviewView.cs",
+            "TrayGridReservationView.cs",
+            "TrayItemLayoutView.cs",
             "BuildGridInteractionPreviewController.cs",
             "BuildGridInteractionPreviewSceneBinder.cs",
             "BuildGridInteractionPreviewValidator.cs",
             "BuildGridInteractionPreviewReportWriter.cs",
+            "MobileShapePlacementRuntimeIntegration.cs",
+            "BattleSandboxEnemyEncounterPreviewController.cs",
+            "BattleSandboxEnemyEncounterPreviewSceneBinder.cs",
+            "BattleSandboxEnemyEncounterPreviewValidator.cs",
+            "BattleSandboxEnemyCombatFeedbackController.cs",
+            "BattleSandboxEnemyCombatFeedbackUiReuseSceneBinder.cs",
+            "BattleSandboxEnemyCombatFeedbackUiReuseValidator.cs",
             "BattlePrepareComponentAdapterRuntimePlaytest.cs",
             "ShapeAwareItemTrayFixtureView.cs"
         };
 
         private static readonly string[] FormalUiSourceReferenceOnlyFiles =
         {
-            "BattlePrepareComponentAdapterRuntimePlaytest.cs"
+            "BattlePrepareComponentAdapterRuntimePlaytest.cs",
+            "BattleSandboxShapePlacementVerticalSliceReportWriter.cs"
         };
 
         public static BuildSandboxValidationReport Validate()

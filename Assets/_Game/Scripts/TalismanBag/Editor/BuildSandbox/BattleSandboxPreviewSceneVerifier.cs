@@ -37,8 +37,8 @@ namespace TalismanBag.EditorTools.BuildSandbox
         {
             "BoardGridPreview",
             "ItemTrayPreview",
-            "SelectedItemInfo",
-            "PlacementFeedback"
+            "PlacementFeedback",
+            "EnemyCombatFeedbackPanel"
         };
 
         private static readonly string[] RequiredProblemSlots =
@@ -46,7 +46,8 @@ namespace TalismanBag.EditorTools.BuildSandbox
             "MapRuleDropdownSlot",
             "EnemyProblemDropdownSlot",
             "BossProblemDropdownSlot",
-            "DevChapterDropdownSlot"
+            "DevChapterDropdownSlot",
+            "EnemyCombatFeedbackControlPanel"
         };
 
         private static readonly string[] RequiredDataSlots =
@@ -56,7 +57,13 @@ namespace TalismanBag.EditorTools.BuildSandbox
             "ShapeOccupancyPanelSlot",
             "AffixModifierPanelSlot",
             "ProblemReadinessPanelSlot",
-            "SimulationResultPanelSlot"
+            "SimulationResultPanelSlot",
+            "EnemyCombatFeedbackDeveloperPanel"
+        };
+
+        private static readonly string[] RequiredPopupSlots =
+        {
+            "EnemyCombatFeedbackFloatingRoot"
         };
 
         private static readonly string[] RequiredControlSlots =
@@ -132,6 +139,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 .Concat(RequiredDataSlots.Select(slot => "BuildSandboxPreviewCanvas/SafeAreaRoot/BuildSandboxDataPanelDock/" + slot))
                 .Concat(RequiredControlSlots.Select(slot => "BuildSandboxPreviewCanvas/SafeAreaRoot/DevOnlyControlBar/" + slot))
                 .Concat(RequiredBattlePrepareActionSlots.Select(slot => "BuildSandboxPreviewCanvas/SafeAreaRoot/V04BattlePrepareBottomActions/" + slot))
+                .Concat(RequiredPopupSlots.Select(slot => "BuildSandboxPreviewCanvas/SafeAreaRoot/PopupLayer/" + slot))
                 .ToArray();
         }
 
@@ -212,17 +220,19 @@ namespace TalismanBag.EditorTools.BuildSandbox
         private static void ValidateCanvas(BuildSandboxValidationReport report)
         {
             Canvas[] canvases = UnityEngine.Object.FindObjectsOfType<Canvas>(true);
-            if (canvases.Length != 1)
+            Canvas[] previewCanvases = canvases
+                .Where(canvas => canvas.name == "BuildSandboxPreviewCanvas")
+                .ToArray();
+            if (previewCanvases.Length != 1)
             {
-                report.AddError("BATTLE_SANDBOX_CANVAS_COUNT_INVALID", $"Expected one Canvas; found {canvases.Length}.", "BuildSandboxPreviewCanvas");
+                report.AddError(
+                    "BATTLE_SANDBOX_CANVAS_COUNT_INVALID",
+                    $"Expected one BuildSandboxPreviewCanvas; found {previewCanvases.Length}. totalCanvas={canvases.Length}.",
+                    "BuildSandboxPreviewCanvas");
                 return;
             }
 
-            Canvas canvas = canvases[0];
-            if (canvas.name != "BuildSandboxPreviewCanvas")
-            {
-                report.AddError("BATTLE_SANDBOX_CANVAS_NAME_INVALID", $"Unexpected Canvas name: {canvas.name}.", canvas.name);
-            }
+            Canvas canvas = previewCanvases[0];
 
             if (canvas.GetComponent<CanvasScaler>() == null)
             {
@@ -261,6 +271,12 @@ namespace TalismanBag.EditorTools.BuildSandbox
             foreach (string slot in RequiredDataSlots)
             {
                 RequireChild(report, dataDock, slot);
+            }
+
+            Transform popupLayer = FindDeepChild(safeArea, "PopupLayer");
+            foreach (string slot in RequiredPopupSlots)
+            {
+                RequireChild(report, popupLayer, slot);
             }
 
             Transform controlBar = FindDeepChild(safeArea, "DevOnlyControlBar");

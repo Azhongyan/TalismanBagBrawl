@@ -110,7 +110,8 @@ namespace TalismanBag.EditorTools.BuildSandbox
             BuildDataPanelDock(safeArea);
             BuildControlBar(safeArea);
             BuildBattlePrepareChrome(safeArea);
-            CreatePanel(safeArea, "PopupLayer", new Color(0f, 0f, 0f, 0f), Vector2.zero, Vector2.one);
+            Transform popupLayer = CreatePanel(safeArea, "PopupLayer", new Color(0f, 0f, 0f, 0f), Vector2.zero, Vector2.one);
+            BuildEnemyCombatFeedbackFloatingRoot(popupLayer);
         }
 
         private static void BuildBattleLikePreviewArea(Transform parent)
@@ -167,6 +168,8 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 Vector2.zero,
                 Vector2.zero);
             AddLabel(feedback, "PlacementFeedbackText", "PlacementFeedback", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one);
+
+            BuildEnemyCombatFeedbackPanel(area);
         }
 
         private static void BuildProblemSelectorPanel(Transform parent)
@@ -179,12 +182,13 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 new Vector2(0.24f, 0.88f),
                 Vector2.zero,
                 Vector2.zero);
-            AddLabel(panel, "Title", "Problem Selector", 24, TextAnchor.MiddleCenter, new Vector2(0f, 0.91f), new Vector2(1f, 1f));
+            AddLabel(panel, "Title", "沙盒选择", 24, TextAnchor.MiddleCenter, new Vector2(0f, 0.91f), new Vector2(1f, 1f));
 
-            CreateSlot(panel, "MapRuleDropdownSlot", "Map Rule", 0.75f);
-            CreateSlot(panel, "EnemyProblemDropdownSlot", "Enemy Problem", 0.57f);
-            CreateSlot(panel, "BossProblemDropdownSlot", "Boss Problem", 0.39f);
-            CreateSlot(panel, "DevChapterDropdownSlot", "Dev Chapter", 0.21f);
+            CreateSlot(panel, "MapRuleDropdownSlot", "地图规则", 0.82f);
+            CreateSlot(panel, "EnemyProblemDropdownSlot", "敌人压力", 0.67f);
+            CreateSlot(panel, "BossProblemDropdownSlot", "首领机制", 0.52f);
+            CreateSlot(panel, "DevChapterDropdownSlot", "开发章节", 0.37f);
+            BuildEnemyCombatFeedbackControlPanel(panel);
         }
 
         private static void BuildDataPanelDock(Transform parent)
@@ -197,7 +201,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 new Vector2(0.98f, 0.88f),
                 Vector2.zero,
                 Vector2.zero);
-            AddLabel(panel, "Title", "Build Sandbox Data", 24, TextAnchor.MiddleCenter, new Vector2(0f, 0.91f), new Vector2(1f, 1f));
+            AddLabel(panel, "Title", "沙盒数据 / 开发者遮罩", 24, TextAnchor.MiddleCenter, new Vector2(0f, 0.91f), new Vector2(1f, 1f));
 
             string[] slots =
             {
@@ -211,9 +215,89 @@ namespace TalismanBag.EditorTools.BuildSandbox
 
             for (int i = 0; i < slots.Length; i++)
             {
-                float top = 0.82f - i * 0.13f;
+                float top = 0.84f - i * 0.055f;
                 CreateSlot(panel, slots[i], slots[i], top);
             }
+
+            BuildEnemyCombatFeedbackDeveloperPanel(panel);
+        }
+
+        private static void BuildEnemyCombatFeedbackControlPanel(Transform parent)
+        {
+            Transform panel = CreateAnchoredPanel(
+                parent,
+                "EnemyCombatFeedbackControlPanel",
+                PanelColor,
+                new Vector2(0.06f, 0.03f),
+                new Vector2(0.94f, 0.29f),
+                Vector2.zero,
+                Vector2.zero);
+            AddLabel(panel, "Title", "战斗反馈预览", 17, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.76f), new Vector2(0.96f, 0.98f));
+            CreateButtonSlot(panel, "PreviousFeedbackButton", "上一反馈", new Vector2(0.05f, 0.52f), new Vector2(0.47f, 0.72f));
+            CreateButtonSlot(panel, "NextFeedbackButton", "下一反馈", new Vector2(0.53f, 0.52f), new Vector2(0.95f, 0.72f));
+            CreateButtonSlot(panel, "TriggerFloatingFeedbackButton", "触发短句", new Vector2(0.05f, 0.28f), new Vector2(0.95f, 0.48f));
+            AddLabel(panel, "ControlStatusText", "只显示状态、施法、机制短句", 13, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.06f), new Vector2(0.95f, 0.24f));
+        }
+
+        private static void BuildEnemyCombatFeedbackPanel(Transform parent)
+        {
+            Transform panel = CreateAnchoredPanel(
+                parent,
+                "EnemyCombatFeedbackPanel",
+                new Color(0.055f, 0.065f, 0.065f, 0.92f),
+                new Vector2(0.08f, 0.66f),
+                new Vector2(0.92f, 0.91f),
+                Vector2.zero,
+                Vector2.zero);
+            AddLabel(panel, "Title", "战斗反馈预览", 19, TextAnchor.MiddleCenter, new Vector2(0.03f, 0.75f), new Vector2(0.97f, 0.97f));
+            AddLabel(panel, "BossStateText", "首领状态反馈", 18, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.55f), new Vector2(0.95f, 0.75f));
+            AddLabel(panel, "BossSkillText", "施法中：锁阵冲击", 17, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.36f), new Vector2(0.70f, 0.54f));
+
+            Transform castBar = CreateAnchoredPanel(
+                panel,
+                "BossCastBarRoot",
+                new Color(0.07f, 0.075f, 0.075f, 0.96f),
+                new Vector2(0.05f, 0.20f),
+                new Vector2(0.95f, 0.34f),
+                Vector2.zero,
+                Vector2.zero);
+            Transform fill = CreateAnchoredPanel(castBar, "BossCastFill", new Color(1f, 0.48f, 0.30f, 1f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            Image fillImage = fill.GetComponent<Image>();
+            fillImage.type = Image.Type.Filled;
+            fillImage.fillMethod = Image.FillMethod.Horizontal;
+            fillImage.fillOrigin = (int)Image.OriginHorizontal.Left;
+            fillImage.fillAmount = 0.85f;
+            AddLabel(castBar, "BossCastTimerText", "2.4秒", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one);
+            AddLabel(panel, "CombatLogText", "【机制】阵面压力升高。", 15, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.03f), new Vector2(0.95f, 0.18f));
+        }
+
+        private static void BuildEnemyCombatFeedbackFloatingRoot(Transform parent)
+        {
+            Transform root = CreateAnchoredPanel(parent, "EnemyCombatFeedbackFloatingRoot", new Color(0f, 0f, 0f, 0f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            Text text = AddLabel(root, "MechanicFloatingText", "破绽窗口出现", 28, TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            text.fontStyle = FontStyle.Bold;
+            text.color = new Color(1f, 0.95f, 0.45f, 1f);
+            RectTransform rect = text.rectTransform;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(120f, 110f);
+            rect.sizeDelta = new Vector2(360f, 54f);
+            text.gameObject.AddComponent<CanvasGroup>();
+        }
+
+        private static void BuildEnemyCombatFeedbackDeveloperPanel(Transform parent)
+        {
+            Transform panel = CreateAnchoredPanel(
+                parent,
+                "EnemyCombatFeedbackDeveloperPanel",
+                PanelColor,
+                new Vector2(0.05f, 0.02f),
+                new Vector2(0.95f, 0.51f),
+                Vector2.zero,
+                Vector2.zero);
+            AddLabel(panel, "Title", "开发者数据遮罩", 18, TextAnchor.MiddleCenter, new Vector2(0.03f, 0.86f), new Vector2(0.97f, 0.98f));
+            AddLabel(panel, "MaskedDeveloperFieldsText", "敏感答案字段只留在这里或报告。", 13, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.54f), new Vector2(0.95f, 0.84f));
+            AddLabel(panel, "CombatFeedbackIsolationText", "不接正式战斗、奖励、存档、章节推进或功能开关。", 13, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.30f), new Vector2(0.95f, 0.52f));
+            AddLabel(panel, "CombatFeedbackReuseText", "复用浮字、敌人意图施法条与首领状态口径。", 13, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.12f), new Vector2(0.95f, 0.28f));
         }
 
         private static void BuildControlBar(Transform parent)

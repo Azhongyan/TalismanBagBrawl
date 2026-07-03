@@ -286,22 +286,7 @@ namespace TalismanBag.BuildSandbox
                 return Array.Empty<ItemShapeCell>();
             }
 
-            ItemShapeCell[] rotatedOffsets = payload.OccupiedOffsets
-                .Select(offset => ApplyRotation(offset, payload.Rotation))
-                .ToArray();
-            if (rotatedOffsets.Length == 0)
-            {
-                return Array.Empty<ItemShapeCell>();
-            }
-
-            int minX = rotatedOffsets.Min(cell => cell.x);
-            int minY = rotatedOffsets.Min(cell => cell.y);
-            return rotatedOffsets
-                .Select(cell => new ItemShapeCell(cell.x - minX, cell.y - minY))
-                .Distinct()
-                .OrderBy(cell => cell.y)
-                .ThenBy(cell => cell.x)
-                .ToArray();
+            return payload.BuildNormalizedOffsets();
         }
 
         private void ReleaseItem(string itemId)
@@ -377,20 +362,6 @@ namespace TalismanBag.BuildSandbox
             yield return new ItemShapeCell(cell.x, cell.y - 1);
         }
 
-        private static ItemShapeCell ApplyRotation(ItemShapeCell offset, ItemShapeRotation rotation)
-        {
-            switch (rotation)
-            {
-                case ItemShapeRotation.Rotation90:
-                    return new ItemShapeCell(offset.y, -offset.x);
-                case ItemShapeRotation.Rotation180:
-                    return new ItemShapeCell(-offset.x, -offset.y);
-                case ItemShapeRotation.Rotation270:
-                    return new ItemShapeCell(-offset.y, offset.x);
-                default:
-                    return offset;
-            }
-        }
     }
 
     public sealed class ShapeAwareItemTrayGridPlacement

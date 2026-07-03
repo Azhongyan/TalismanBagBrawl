@@ -78,6 +78,18 @@ namespace TalismanBag.BuildSandbox
             return false;
         }
 
+        internal bool TryBuildCellVisualLayout(
+            IReadOnlyList<ItemShapeCell> occupiedCells,
+            out ShapeCellVisualLayout layout)
+        {
+            RectTransform referenceRect = cardLayer != null ? cardLayer : contentRoot;
+            return ShapeGridCellVisualLayoutUtility.TryBuildFromSlots(
+                occupiedCells,
+                ResolveSlotRect,
+                referenceRect,
+                out layout);
+        }
+
         private void ApplyCardRect(BuildItemPreviewCardView card, TrayPlacementViewModel placement)
         {
             RectTransform cardRect = card.RectTransform;
@@ -246,6 +258,12 @@ namespace TalismanBag.BuildSandbox
             }
 
             return layout;
+        }
+
+        private RectTransform ResolveSlotRect(ItemShapeCell cell)
+        {
+            int slotIndex = cell.y * columnCount + cell.x;
+            return slotIndex >= 0 && slotIndex < slotRects.Count ? slotRects[slotIndex] : null;
         }
 
         private void ApplyLayoutCellVisuals(
@@ -450,6 +468,126 @@ namespace TalismanBag.BuildSandbox
             public Vector2 sizeDelta;
             public bool usesCellVisuals;
             public readonly List<TrayCardCellRect> cellRects = new();
+        }
+    }
+
+    internal readonly struct ShapeCellVisualRect
+    {
+        public ShapeCellVisualRect(Vector2 anchoredPosition, Vector2 sizeDelta)
+        {
+            AnchoredPosition = anchoredPosition;
+            SizeDelta = sizeDelta;
+        }
+
+        public Vector2 AnchoredPosition { get; }
+        public Vector2 SizeDelta { get; }
+    }
+
+    internal sealed class ShapeCellVisualLayout
+    {
+        public ShapeCellVisualLayout(Vector2 sizeDelta, IReadOnlyList<ShapeCellVisualRect> cellRects)
+        {
+            SizeDelta = sizeDelta;
+            CellRects = (cellRects ?? Array.Empty<ShapeCellVisualRect>()).ToArray();
+        }
+
+        public Vector2 SizeDelta { get; }
+        public IReadOnlyList<ShapeCellVisualRect> CellRects { get; }
+    }
+
+    internal static class ShapeGridCellVisualLayoutUtility
+    {
+        public static bool TryBuildFromSlots(
+            IReadOnlyList<ItemShapeCell> occupiedCells,
+            Func<ItemShapeCell, RectTransform> resolveSlotRect,
+            RectTransform referenceRect,
+            out ShapeCellVisualLayout layout)
+        {
+            layout = null;
+            if (occupiedCells == null
+                || occupiedCells.Count == 0
+                || resolveSlotRect == null
+                || referenceRect == null)
+            {
+                return false;
+            }
+
+            float minX = float.PositiveInfinity;
+            float maxX = float.NegativeInfinity;
+            float minY = float.PositiveInfinity;
+            float maxY = float.NegativeInfinity;
+            Vector3[] worldCorners = new Vector3[4];
+            List<LocalSlotRect> localSlotRects = new();
+            foreach (ItemShapeCell cell in occupiedCells.Distinct())
+            {
+                RectTransform slotRect = resolveSlotRect(cell);
+                if (slotRect == null)
+                {
+                    return false;
+                }
+
+                slotRect.GetWorldCorners(worldCorners);
+                float slotMinX = float.PositiveInfinity;
+                float slotMaxX = float.NegativeInfinity;
+                float slotMinY = float.PositiveInfinity;
+                float slotMaxY = float.NegativeInfinity;
+                for (int i = 0; i < worldCorners.Length; i++)
+                {
+                    Vector3 localCorner = referenceRect.InverseTransformPoint(worldCorners[i]);
+                    slotMinX = Mathf.Min(slotMinX, localCorner.x);
+                    slotMaxX = Mathf.Max(slotMaxX, localCorner.x);
+                    slotMinY = Mathf.Min(slotMinY, localCorner.y);
+                    slotMaxY = Mathf.Max(slotMaxY, localCorner.y);
+                    minX = Mathf.Min(minX, localCorner.x);
+                    maxX = Mathf.Max(maxX, localCorner.x);
+                    minY = Mathf.Min(minY, localCorner.y);
+                    maxY = Mathf.Max(maxY, localCorner.y);
+                }
+
+                localSlotRects.Add(new LocalSlotRect(slotMinX, slotMaxX, slotMinY, slotMaxY));
+            }
+
+            if (!IsFinite(minX)
+                || !IsFinite(maxX)
+                || !IsFinite(minY)
+                || !IsFinite(maxY)
+                || maxX <= minX
+                || maxY <= minY)
+            {
+                return false;
+            }
+
+            List<ShapeCellVisualRect> cellRects = new();
+            foreach (LocalSlotRect slotRect in localSlotRects)
+            {
+                cellRects.Add(new ShapeCellVisualRect(
+                    new Vector2(slotRect.MinX - minX, -(maxY - slotRect.MaxY)),
+                    new Vector2(slotRect.MaxX - slotRect.MinX, slotRect.MaxY - slotRect.MinY)));
+            }
+
+            layout = new ShapeCellVisualLayout(new Vector2(maxX - minX, maxY - minY), cellRects);
+            return true;
+        }
+
+        private static bool IsFinite(float value)
+        {
+            return !float.IsNaN(value) && !float.IsInfinity(value);
+        }
+
+        private readonly struct LocalSlotRect
+        {
+            public LocalSlotRect(float minX, float maxX, float minY, float maxY)
+            {
+                MinX = minX;
+                MaxX = maxX;
+                MinY = minY;
+                MaxY = maxY;
+            }
+
+            public float MinX { get; }
+            public float MaxX { get; }
+            public float MinY { get; }
+            public float MaxY { get; }
         }
     }
 }

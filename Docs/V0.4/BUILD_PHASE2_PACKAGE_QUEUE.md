@@ -80,8 +80,9 @@ Phase 2 Package Queue
 | 9G-Fix02 | `V0.4-BattleSandboxShapePlacementVerticalSlice01-FixSimplifiedTrayRotate01` | `USER_ACCEPTED / QA_PASSED_BY_USER / WAITING_REPOOPS_RECORD` | 回退到更简单稳定的摆放逻辑：只允许在道具栏内点击旋转按钮，旋转好后再拖到棋盘放置 | 用户确认当前 UI / 交互逻辑已调整好；等待 RepoOps 记录 |
 | 9H | `V0.4-BattleSandboxShapePlacementRegression01` | `USER_ACCEPTED / QA_PASSED_BY_USER / WAITING_REPOOPS_RECORD` | x2 / x3 / x4 摆放交互回归，确认当前 V04 沙盒摆放主干已完成 | 用户确认“这个我做好了”；等待 RepoOps 记录 |
 | 10 | `V0.4-MechanicHintFeedbackPreview01` | `USER_ACCEPTED / QA_PASSED_BY_USER / WAITING_REPOOPS_RECORD` | 地图机制 / 敌人机制 / Boss 技能 / 失败反馈的玩家侧线索预览，复用既有战斗提示 UI 语言，不显示答案 | 用户已确认通过；等待 RepoOps 记录 |
-| 11 | `V0.4-BattleSandboxEnemyEncounterPreview01` | `CURRENT / WAITING_GUARD_ASSIGNMENT` | 在 V04 沙盒场景接 devOnly 敌人 / Boss 预览，不接正式战斗系统 | 下一步收口 assignment |
-| 12 | `V0.4-BattleSandboxBuildCombatPreview01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | 将棋盘 Build、羁绊、词条、Modifier 与 devOnly 敌人题目连接，输出沙盒战斗反馈 | 等 EnemyEncounterPreview01 通过 |
+| 11 | `V0.4-BattleSandboxEnemyEncounterPreview01` | `RETURNED / WRONG_UI_DIRECTION / DO_NOT_CONTINUE_PANEL_ROUTE` | 原实现偏向“敌人/Boss题目预览面板”，与用户意图不符 | 停止继续堆题目面板 |
+| 11A | `V0.4-BattleSandboxEnemyCombatFeedbackUiReuse01` | `CURRENT / GUARD_PASS_BATTLESANDBOX_ENEMY_COMBAT_FEEDBACK_UI_REUSE01 / READY_FOR_DEV` | 复用战斗反馈语言：像伤害数字一样弹 Boss 状态/机制反馈；Boss 施法条接到既有敌人施法条口径 | assignment：`Docs/V0.4/BattleSandboxEnemyCombatFeedbackUiReuse01_Assignment.md` |
+| 12 | `V0.4-BattleSandboxBuildCombatPreview01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | 将棋盘 Build、羁绊、词条、Modifier 与 devOnly 敌人/Boss反馈连接，输出沙盒战斗反馈 | 等 EnemyCombatFeedbackUiReuse01 通过 |
 | 13 | `V0.4-DevChapterBalanceRun01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | devOnly 3-10 / 4-10 难度曲线与调参验证流，不是玩家正式章节 | 等 BuildCombatPreview01 通过 |
 | 14 | `V0.4-BuildSandboxPlayableRegression01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | Phase 2 整体验收与 PromoteCandidateDraft | 等全部包通过 |
 
@@ -190,6 +191,36 @@ V0.4-BattleSandboxEnemyEncounterPreview01
 ```
 
 下一步不是接正式 V0.2 / V0.3 战斗系统，而是在 V04 沙盒场景接 devOnly 敌人 / Boss 预览。
+
+EnemyEncounterPreview01 开发窗口已回报完成：
+```text
+新增 devOnly 敌人 / Boss 预览数据与控制器。
+EnemyEncounterSelectorPanel / EnemyEncounterPreviewPanel / EnemyEncounterPreviewRuntime 已接到 Scene_TalismanBag_V04_BattleSandboxPreview。
+静态检查通过。
+CSV 18 行预览，玩家文本无空值、无英文字母、无禁用答案 token。
+Unity batch 未运行，因为 shell 找不到 Unity.exe。
+```
+
+用户后续纠正：
+```text
+Boss 题目只是开发者比喻。
+玩家侧不应该显示“题目面板”。
+Boss 有技能，用户需要通过战斗表现、技能和机制反馈去摸解法。
+只需要像 V0.2 / V0.3 弹出伤害数字一样，加上 Boss 状态 / 机制反馈弹字。
+Boss 施法条接到之前的敌人施法条上。
+```
+
+Guard 裁定：
+```text
+EnemyEncounterPreview01 的“题目面板”方向停止。
+题目 / 六钥匙 / readiness / required tags 只保留在开发者数据面板和报告。
+玩家侧改走战斗反馈 UI 复用路线。
+```
+
+Guard 当前推进到：
+```text
+V0.4-BattleSandboxEnemyCombatFeedbackUiReuse01
+```
 ```
 
 ## 5. Phase 2 统一禁止

@@ -208,6 +208,18 @@ namespace TalismanBag.EditorTools.BuildSandbox
             RunMechanicHintFeedbackPreview(throwOnFailure: false);
         }
 
+        [MenuItem(BattleSandboxEnemyEncounterPreviewValidator.QaMenuPath)]
+        public static void RunBattleSandboxEnemyEncounterPreviewMenu()
+        {
+            RunBattleSandboxEnemyEncounterPreview(throwOnFailure: false);
+        }
+
+        [MenuItem(BattleSandboxEnemyCombatFeedbackUiReuseValidator.QaMenuPath)]
+        public static void RunBattleSandboxEnemyCombatFeedbackUiReuseMenu()
+        {
+            RunBattleSandboxEnemyCombatFeedbackUiReuse(throwOnFailure: false);
+        }
+
         public static void RunGuardBaselineBatch()
         {
             bool passed = RunGuardBaseline(throwOnFailure: true);
@@ -472,6 +484,24 @@ namespace TalismanBag.EditorTools.BuildSandbox
         public static void RunMechanicHintFeedbackPreviewBatch()
         {
             bool passed = RunMechanicHintFeedbackPreview(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBattleSandboxEnemyEncounterPreviewBatch()
+        {
+            bool passed = RunBattleSandboxEnemyEncounterPreview(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBattleSandboxEnemyCombatFeedbackUiReuseBatch()
+        {
+            bool passed = RunBattleSandboxEnemyCombatFeedbackUiReuse(throwOnFailure: true);
             if (Application.isBatchMode)
             {
                 EditorApplication.Exit(passed ? 0 : 1);
@@ -1834,6 +1864,84 @@ namespace TalismanBag.EditorTools.BuildSandbox
             {
                 throw new InvalidOperationException(
                     $"BuildSandbox MechanicHintFeedbackPreview01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
+            }
+
+            return errors == 0;
+        }
+
+        public static bool RunBattleSandboxEnemyEncounterPreview(bool throwOnFailure)
+        {
+            List<BuildSandboxValidationReport> reports =
+                BattleSandboxEnemyEncounterPreviewValidator.BuildValidationReports();
+            BattleSandboxEnemyEncounterPreview preview =
+                BattleSandboxEnemyEncounterPreviewValidator.BuildDefaultPreview();
+            string[] reportPaths =
+                BattleSandboxEnemyEncounterPreviewReportWriter.WriteReports(reports, preview);
+            int errors = reports.Sum(report => report.ErrorCount);
+            int warnings = reports.Sum(report => report.WarningCount);
+
+            foreach (BuildSandboxValidationIssue issue in reports.SelectMany(report => report.Issues))
+            {
+                switch (issue.Level)
+                {
+                    case BuildSandboxValidationLevel.Error:
+                        Debug.LogError(issue.ToString());
+                        break;
+                    case BuildSandboxValidationLevel.Warning:
+                        Debug.LogWarning(issue.ToString());
+                        break;
+                    default:
+                        Debug.Log(issue.ToString());
+                        break;
+                }
+            }
+
+            Debug.Log(
+                $"[BuildSandbox-BattleSandboxEnemyEncounterPreview01] completed errors={errors}, warnings={warnings}, reports={string.Join(", ", reportPaths)}");
+
+            if (errors > 0 && throwOnFailure)
+            {
+                throw new InvalidOperationException(
+                    $"BuildSandbox BattleSandboxEnemyEncounterPreview01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
+            }
+
+            return errors == 0;
+        }
+
+        public static bool RunBattleSandboxEnemyCombatFeedbackUiReuse(bool throwOnFailure)
+        {
+            List<BuildSandboxValidationReport> reports =
+                BattleSandboxEnemyCombatFeedbackUiReuseValidator.BuildValidationReports();
+            BattleSandboxEnemyCombatFeedbackPreview preview =
+                BattleSandboxEnemyCombatFeedbackUiReuseValidator.BuildDefaultPreview();
+            string[] reportPaths =
+                BattleSandboxEnemyCombatFeedbackUiReuseReportWriter.WriteReports(reports, preview);
+            int errors = reports.Sum(report => report.ErrorCount);
+            int warnings = reports.Sum(report => report.WarningCount);
+
+            foreach (BuildSandboxValidationIssue issue in reports.SelectMany(report => report.Issues))
+            {
+                switch (issue.Level)
+                {
+                    case BuildSandboxValidationLevel.Error:
+                        Debug.LogError(issue.ToString());
+                        break;
+                    case BuildSandboxValidationLevel.Warning:
+                        Debug.LogWarning(issue.ToString());
+                        break;
+                    default:
+                        Debug.Log(issue.ToString());
+                        break;
+                }
+            }
+
+            Debug.Log(
+                $"[BuildSandbox-BattleSandboxEnemyCombatFeedbackUiReuse01] completed errors={errors}, warnings={warnings}, reports={string.Join(", ", reportPaths)}");
+
+            if (errors > 0 && throwOnFailure)
+            {
+                throw new InvalidOperationException(
+                    $"BuildSandbox BattleSandboxEnemyCombatFeedbackUiReuse01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
             }
 
             return errors == 0;
