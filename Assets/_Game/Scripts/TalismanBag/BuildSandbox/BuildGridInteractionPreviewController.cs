@@ -27,14 +27,7 @@ namespace TalismanBag.BuildSandbox
         private const string DragGhostCellNamePrefix = "DragGhostCell_";
 
         public static readonly string[] CategoryLabels =
-        {
-            "全部",
-            "符箓",
-            "法器",
-            "材料",
-            "消耗",
-            "特殊"
-        };
+            BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategoryDisplayLabels.ToArray();
 
         [SerializeField] private bool devOnly = true;
         [SerializeField] private bool isEnabled;
@@ -68,6 +61,8 @@ namespace TalismanBag.BuildSandbox
         [SerializeField] private RectTransform enemyCombatFeedbackPanel;
         [SerializeField] private RectTransform enemyCombatFeedbackFloatingRoot;
         [SerializeField] private BattleSandboxEnemyCombatFeedbackController enemyCombatFeedbackController;
+        [SerializeField] private BattleSandboxManaLoopRuntime manaLoopRuntime;
+        [SerializeField] private BattleSandboxRuntimeLoopRuntime runtimeLoopRuntime;
 
         private readonly Dictionary<ItemShapeCell, BuildGridPreviewSlotView> boardSlotByCell = new();
         private readonly Dictionary<string, PreviewItem> itemById = new(StringComparer.Ordinal);
@@ -116,6 +111,8 @@ namespace TalismanBag.BuildSandbox
         public bool UsesShapePlacementSession => placementSession != null;
         public bool UsesShapeAwareItemTrayGrid => shapeAwareTrayGrid != null;
         public bool UsesMobileShapePlacementInputExtension => mobileInput != null;
+        public bool IsSandboxBattleModeActive =>
+            sandboxBattleActive && !battlePrepareStateActive && !battlePrepareContinueStateActive;
 
         public void Bind(
             RectTransform boardRoot,
@@ -146,6 +143,7 @@ namespace TalismanBag.BuildSandbox
             return new List<ItemShapeConfig>
             {
                 CreateShape("Vertical2", "竖二格", true, new ItemShapeCell(0, 0), new ItemShapeCell(0, 1)),
+                CreateShape("vertical_3", "竖三格", true, new ItemShapeCell(0, 0), new ItemShapeCell(0, 1), new ItemShapeCell(0, 2)),
                 CreateShape("Single1", "单格", false, new ItemShapeCell(0, 0)),
                 CreateShape("Corner3", "拐角三格", true, new ItemShapeCell(0, 0), new ItemShapeCell(1, 0), new ItemShapeCell(0, 1)),
                 CreateShape("Square4", "方四格", false, new ItemShapeCell(0, 0), new ItemShapeCell(1, 0), new ItemShapeCell(0, 1), new ItemShapeCell(1, 1))
@@ -154,18 +152,74 @@ namespace TalismanBag.BuildSandbox
 
         public static List<PreviewItem> CreatePreviewItems()
         {
-            return new List<PreviewItem>
+            return BuildSandboxLegacyAndAdvancedItemRosterCatalog.AllItems
+                .Select(row => new PreviewItem(
+                    row.ItemId,
+                    row.DisplayName,
+                    row.CategoryDisplayName,
+                    row.ShapeId,
+                    row.ShapeDisplayName,
+                    ResolveRosterCardColor(row),
+                    BuildSandboxItemStatCatalog.Resolve(row.ItemId),
+                    row.CategoryIds))
+                .ToList();
+        }
+
+        private static Color ResolveRosterCardColor(BuildSandboxLegacyAndAdvancedItemRosterRow row)
+        {
+            switch (row?.ItemId ?? string.Empty)
             {
-                new("preview_x2_wood_talisman", "护阵木牌", "符箓", "Vertical2", "竖二格", new Color(0.24f, 0.38f, 0.22f, 1f)),
-                new("preview_fire_talisman", "炽火符", "符箓", "Single1", "单格", new Color(0.55f, 0.20f, 0.14f, 1f)),
-                new("preview_guard_wood", "守护木牌", "法器", "Vertical2", "竖二格", new Color(0.22f, 0.34f, 0.40f, 1f)),
-                new("preview_cleanse_corner", "净化折符", "符箓", "Corner3", "拐角三格", new Color(0.38f, 0.25f, 0.52f, 1f)),
-                new("preview_stone_core", "炉芯石", "材料", "Square4", "方四格", new Color(0.36f, 0.32f, 0.25f, 1f)),
-                new("preview_energy_incense", "聚能香", "消耗", "Vertical2", "竖二格", new Color(0.47f, 0.35f, 0.12f, 1f)),
-                new("preview_old_bell", "镇邪铃", "特殊", "Corner3", "拐角三格", new Color(0.28f, 0.42f, 0.38f, 1f)),
-                new("preview_thunder_sword", "雷引剑符", "符箓", "Single1", "单格", new Color(0.30f, 0.31f, 0.58f, 1f)),
-                new("preview_soul_seal", "镇魂法印", "法器", "Square4", "方四格", new Color(0.42f, 0.24f, 0.30f, 1f))
-            };
+                case "preview_x2_wood_talisman":
+                    return new Color(0.24f, 0.38f, 0.22f, 1f);
+                case "preview_fire_talisman":
+                    return new Color(0.55f, 0.20f, 0.14f, 1f);
+                case "preview_guard_wood":
+                    return new Color(0.22f, 0.34f, 0.40f, 1f);
+                case "preview_taomu_sword":
+                    return new Color(0.48f, 0.30f, 0.16f, 1f);
+                case "preview_cleanse_corner":
+                    return new Color(0.38f, 0.25f, 0.52f, 1f);
+                case "preview_stone_core":
+                    return new Color(0.36f, 0.32f, 0.25f, 1f);
+                case "preview_energy_incense":
+                    return new Color(0.47f, 0.35f, 0.12f, 1f);
+                case "preview_old_bell":
+                    return new Color(0.28f, 0.42f, 0.38f, 1f);
+                case "preview_thunder_sword":
+                    return new Color(0.30f, 0.31f, 0.58f, 1f);
+                case "preview_soul_seal":
+                    return new Color(0.42f, 0.24f, 0.30f, 1f);
+                case "fire_talisman_basic":
+                    return new Color(1f, 0.42f, 0.2f, 1f);
+                case "thunder_talisman_basic":
+                    return new Color(0.62f, 0.58f, 1f, 1f);
+                case "shield_talisman_basic":
+                    return new Color(0.45f, 0.9f, 0.55f, 1f);
+                case "qi_pill_basic":
+                    return new Color(0.95f, 0.5f, 0.92f, 1f);
+                case "spirit_stone_basic":
+                    return new Color(0.28f, 0.68f, 1f, 1f);
+                case "sword_pill_basic":
+                    return new Color(0.8f, 0.85f, 0.9f, 1f);
+                case "chain_thunder_talisman_basic":
+                    return new Color(0.48f, 0.72f, 1f, 1f);
+                case "purify_talisman_basic":
+                    return new Color(0.58f, 0.92f, 1f, 1f);
+                case "soul_suppress_talisman_basic":
+                    return new Color(0.72f, 0.62f, 0.96f, 1f);
+                case "seal_basic":
+                    return new Color(0.9f, 0.82f, 0.42f, 1f);
+                case "water_talisman_basic":
+                    return new Color(0.35f, 0.82f, 0.95f, 1f);
+                case "exorcism_bell_basic":
+                    return new Color(0.96f, 0.74f, 0.34f, 1f);
+                case "peach_wood_basic":
+                    return new Color(0.72f, 0.48f, 0.28f, 1f);
+                default:
+                    return row != null && row.HasCategory(BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategoryCore)
+                        ? new Color(0.36f, 0.32f, 0.25f, 1f)
+                        : new Color(0.44f, 0.35f, 0.18f, 1f);
+            }
         }
 
         public bool TryGetPreviewShapeFootprint(
@@ -537,6 +591,8 @@ namespace TalismanBag.BuildSandbox
             sandboxBattleActive = false;
             battlePrepareStateActive = false;
             battlePrepareContinueStateActive = false;
+            manaLoopRuntime?.ResetLoop();
+            runtimeLoopRuntime?.ResetLoop();
             RefreshBattlePrepareChrome(snapMotion: true);
             placementFeedbackView?.ShowNeutral("已取消。单击道具查看信息；在信息弹窗点“旋转”调整方向；拖到棋盘松手直接放置。");
         }
@@ -550,6 +606,8 @@ namespace TalismanBag.BuildSandbox
             InitializePlacementRuntime();
             WireButtons();
             EnsureBattlePrepareChrome();
+            EnsureManaLoopRuntime();
+            EnsureRuntimeLoopRuntime();
             itemTrayView?.Initialize(this, itemById.Values.ToList(), CategoryLabels);
             ResetPreview();
         }
@@ -765,6 +823,39 @@ namespace TalismanBag.BuildSandbox
             {
                 shapeAwareTrayGrid.TryPack(BuildPayload(item, ShapePlacementSource.Tray), out _);
             }
+        }
+
+        private void EnsureManaLoopRuntime()
+        {
+            if (manaLoopRuntime == null)
+            {
+                manaLoopRuntime = GetComponent<BattleSandboxManaLoopRuntime>();
+            }
+
+            if (manaLoopRuntime == null)
+            {
+                manaLoopRuntime = gameObject.AddComponent<BattleSandboxManaLoopRuntime>();
+                manaLoopRuntime.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            }
+
+            manaLoopRuntime.Bind(this);
+        }
+
+        private void EnsureRuntimeLoopRuntime()
+        {
+            if (runtimeLoopRuntime == null)
+            {
+                runtimeLoopRuntime = GetComponent<BattleSandboxRuntimeLoopRuntime>();
+            }
+
+            if (runtimeLoopRuntime == null)
+            {
+                runtimeLoopRuntime = gameObject.AddComponent<BattleSandboxRuntimeLoopRuntime>();
+                runtimeLoopRuntime.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            }
+
+            EnsureEnemyCombatFeedbackVisibilityReferences();
+            runtimeLoopRuntime.Bind(this, manaLoopRuntime, enemyCombatFeedbackController);
         }
 
         private void EnsureTrayPlacementLookupForQuery()
@@ -1062,6 +1153,26 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
+            if (sandboxBattleActive && !battlePrepareStateActive)
+            {
+                if (runtimeLoopRuntime != null && runtimeLoopRuntime.HasSandboxResult)
+                {
+                    runtimeLoopRuntime.RestartLoop();
+                    RefreshBattlePrepareChrome(snapMotion: false);
+                    placementFeedbackView?.ShowValid("V0.4 沙盒：已重开当前测试敌人。");
+                    return;
+                }
+
+                string enemyLabel = runtimeLoopRuntime == null
+                    ? string.Empty
+                    : runtimeLoopRuntime.SelectNextDevEnemy();
+                RefreshBattlePrepareChrome(snapMotion: false);
+                placementFeedbackView?.ShowInfo(string.IsNullOrWhiteSpace(enemyLabel)
+                    ? "V0.4 沙盒：已切换测试敌人。"
+                    : $"V0.4 沙盒：已切换到 {enemyLabel}。");
+                return;
+            }
+
             if (battlePrepareStateActive)
             {
                 battlePrepareStateActive = false;
@@ -1095,6 +1206,11 @@ namespace TalismanBag.BuildSandbox
             battlePrepareStateActive = true;
             RefreshBattlePrepareChrome(snapMotion: false);
             placementFeedbackView?.ShowInfo("V0.4 沙盒整备界面已打开；可在道具栏与棋盘间拖动道具。");
+        }
+
+        public void RefreshSandboxBattleActionChrome()
+        {
+            RefreshBattlePrepareChrome(snapMotion: false);
         }
 
         private void UpdateBattlePrepareMotion()
@@ -1164,7 +1280,9 @@ namespace TalismanBag.BuildSandbox
             if (battlePrepareStateButtonText != null)
             {
                 battlePrepareStateButtonText.text = sandboxBattleActive && !battlePrepareStateActive && !battlePrepareContinueStateActive
-                    ? "\u6218\u6597\u4e2d"
+                    ? runtimeLoopRuntime != null && runtimeLoopRuntime.HasSandboxResult
+                        ? "\u91cd\u5f00\u672c\u573a"
+                        : "\u5207\u6362\u654c\u4eba"
                     : "\u7ee7\u7eed\u6218\u6597";
             }
 
@@ -1224,6 +1342,7 @@ namespace TalismanBag.BuildSandbox
                 enemyCombatFeedbackController?.RestartBattleModePreview();
             }
 
+            runtimeLoopRuntime?.SetBattleModeVisible(feedbackVisible);
             enemyCombatFeedbackVisibleLastFrame = feedbackVisible;
         }
 
@@ -1818,6 +1937,7 @@ namespace TalismanBag.BuildSandbox
             selectedItemInfoBody.text =
                 $"分类：{item.Category}\n" +
                 $"形状：{item.ShapeDisplayName}\n" +
+                $"沙盒属性：{BuildSandboxItemStatCatalog.FormatPlayerFacing(item.ItemStat)}\n" +
                 $"旋转：{FormatRotation(item.Rotation)}\n" +
                 $"状态：{state}";
         }
@@ -2405,7 +2525,9 @@ namespace TalismanBag.BuildSandbox
                 string category,
                 string shapeId,
                 string shapeDisplayName,
-                Color cardColor)
+                Color cardColor,
+                BuildSandboxItemStat itemStat = null,
+                IReadOnlyList<string> categoryIds = null)
             {
                 ItemId = itemId ?? string.Empty;
                 DisplayName = displayName ?? string.Empty;
@@ -2414,6 +2536,14 @@ namespace TalismanBag.BuildSandbox
                 ShapeDisplayName = shapeDisplayName ?? string.Empty;
                 CardColor = cardColor;
                 Rotation = ItemShapeRotation.Rotation0;
+                ItemStat = BuildSandboxItemStatCatalog.ResolveFrom(itemStat, ItemId);
+                BuildSandboxItemIdentityFamilyRecord identity =
+                    BuildSandboxItemIdentityFamilyCatalog.Resolve(ItemId);
+                ItemFamily = identity.ItemFamily;
+                BaseItemId = identity.BaseItemId;
+                Tier = identity.Tier;
+                RelationshipToBase = identity.RelationshipToBase;
+                CategoryIds = NormalizeCategoryIds(categoryIds, Category, Tier);
             }
 
             public string ItemId { get; }
@@ -2421,8 +2551,55 @@ namespace TalismanBag.BuildSandbox
             public string Category { get; }
             public string ShapeId { get; }
             public string ShapeDisplayName { get; }
+            public string ItemFamily { get; }
+            public string BaseItemId { get; }
+            public string Tier { get; }
+            public string RelationshipToBase { get; }
+            public IReadOnlyList<string> CategoryIds { get; }
             public Color CardColor { get; }
+            public BuildSandboxItemStat ItemStat { get; }
             public ItemShapeRotation Rotation { get; set; }
+
+            public bool MatchesCategory(string categoryOrDisplay)
+            {
+                string categoryId = BuildSandboxLegacyAndAdvancedItemRosterCatalog.NormalizeCategoryId(categoryOrDisplay);
+                return string.Equals(categoryId, BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategoryAll, StringComparison.Ordinal)
+                    || CategoryIds.Any(value => string.Equals(value, categoryId, StringComparison.Ordinal));
+            }
+
+            private static IReadOnlyList<string> NormalizeCategoryIds(
+                IReadOnlyList<string> categoryIds,
+                string categoryDisplayName,
+                string tier)
+            {
+                List<string> normalized = new();
+                foreach (string categoryId in categoryIds ?? Array.Empty<string>())
+                {
+                    AddNormalizedCategory(normalized, categoryId);
+                }
+
+                AddNormalizedCategory(normalized, categoryDisplayName);
+                AddNormalizedCategory(normalized, tier);
+                if (normalized.Count == 0)
+                {
+                    normalized.Add(BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategoryTestDevOnly);
+                }
+
+                return normalized;
+            }
+
+            private static void AddNormalizedCategory(List<string> categories, string value)
+            {
+                string normalized = BuildSandboxLegacyAndAdvancedItemRosterCatalog.NormalizeCategoryId(value);
+                if (string.IsNullOrWhiteSpace(normalized)
+                    || string.Equals(normalized, BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategoryAll, StringComparison.Ordinal)
+                    || categories.Contains(normalized, StringComparer.Ordinal))
+                {
+                    return;
+                }
+
+                categories.Add(normalized);
+            }
         }
 
         private sealed class UiBoardShapeGridReceiver : ShapeGridReceiver

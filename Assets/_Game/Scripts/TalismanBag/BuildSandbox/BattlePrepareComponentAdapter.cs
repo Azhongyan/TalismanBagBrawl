@@ -419,7 +419,7 @@ namespace TalismanBag.BuildSandbox
 
             if (itemId.IndexOf("energy", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                return "聚能香";
+                return "醒符香";
             }
 
             if (itemId.IndexOf("thunder", StringComparison.OrdinalIgnoreCase) >= 0)

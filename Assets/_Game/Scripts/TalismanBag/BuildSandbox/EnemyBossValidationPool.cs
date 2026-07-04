@@ -13,6 +13,8 @@ namespace TalismanBag.BuildSandbox
         public List<string> validationTargetBuilds = new();
         public List<string> validationTags = new();
         public List<string> recommendedSynergies = new();
+        public int attackDamage = 12;
+        public float attackIntervalSeconds = 2.4f;
         public bool devOnly = true;
         public bool isEnabled;
         public bool simulatorReadable = true;
@@ -31,6 +33,8 @@ namespace TalismanBag.BuildSandbox
         public List<string> validationTargetBuilds = new();
         public List<string> validationTags = new();
         public List<string> recommendedSynergies = new();
+        public int attackDamage = 36;
+        public float attackIntervalSeconds = 2.2f;
         public bool devOnly = true;
         public bool isEnabled;
         public bool simulatorReadable = true;
@@ -255,6 +259,8 @@ namespace TalismanBag.BuildSandbox
                 validationTargetBuilds = targetBuilds.ToList(),
                 validationTags = tags.ToList(),
                 recommendedSynergies = synergies.ToList(),
+                attackDamage = ResolveEnemyAttackDamage(enemyType),
+                attackIntervalSeconds = ResolveEnemyAttackIntervalSeconds(enemyType),
                 devOnly = true,
                 isEnabled = false,
                 simulatorReadable = true,
@@ -282,6 +288,8 @@ namespace TalismanBag.BuildSandbox
                 validationTargetBuilds = targetBuilds.ToList(),
                 validationTags = tags.ToList(),
                 recommendedSynergies = synergies.ToList(),
+                attackDamage = ResolveBossAttackDamage(mechanic),
+                attackIntervalSeconds = ResolveBossAttackIntervalSeconds(mechanic),
                 devOnly = true,
                 isEnabled = false,
                 simulatorReadable = true,
@@ -289,6 +297,73 @@ namespace TalismanBag.BuildSandbox
                 referencesFormalEnemyPool = false,
                 referencesFormalBossPool = false,
                 notes = notes
+            };
+        }
+
+        private static int ResolveEnemyAttackDamage(string enemyType)
+        {
+            return enemyType switch
+            {
+                "burst" => 30,
+                "formation_eye_disrupt" => 24,
+                "caster" => 22,
+                "spirit_thief" => 20,
+                "burning" => 18,
+                "seal_lock" => 18,
+                "poison" => 16,
+                "high_hp" => 16,
+                "shield_guard" => 14,
+                "swarm" => 14,
+                _ => 12
+            };
+        }
+
+        private static float ResolveEnemyAttackIntervalSeconds(string enemyType)
+        {
+            return enemyType switch
+            {
+                "swarm" => 1.6f,
+                "spirit_thief" => 1.9f,
+                "burning" => 2.0f,
+                "formation_eye_disrupt" => 2.1f,
+                "poison" => 2.2f,
+                "seal_lock" => 2.3f,
+                "basic" => 2.4f,
+                "caster" => 2.4f,
+                "shield_guard" => 2.6f,
+                "high_hp" => 2.6f,
+                "burst" => 2.8f,
+                _ => 2.4f
+            };
+        }
+
+        private static int ResolveBossAttackDamage(string mechanic)
+        {
+            return mechanic switch
+            {
+                "burst_boss" => 55,
+                "energy_jammer_boss" => 44,
+                "debuff_boss" => 42,
+                "caster_boss" => 40,
+                "hybrid_combo_boss" => 38,
+                "shield_boss" => 36,
+                "swarm_boss" => 34,
+                _ => 36
+            };
+        }
+
+        private static float ResolveBossAttackIntervalSeconds(string mechanic)
+        {
+            return mechanic switch
+            {
+                "burst_boss" => 1.5f,
+                "energy_jammer_boss" => 1.65f,
+                "swarm_boss" => 1.7f,
+                "debuff_boss" => 1.8f,
+                "hybrid_combo_boss" => 1.9f,
+                "caster_boss" => 2.0f,
+                "shield_boss" => 2.2f,
+                _ => 2.0f
             };
         }
     }

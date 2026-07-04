@@ -22,6 +22,7 @@ namespace TalismanBag.BuildSandbox
         public bool placementSamplesPass;
         public bool currentBoardReadPass;
         public bool buildFeedbackVariationPass;
+        public bool manaLoopPass;
         public bool devChapterBalancePass;
         public bool playerLeakPass;
         public bool featureFlagsDefaultFalsePass;
@@ -42,6 +43,11 @@ namespace TalismanBag.BuildSandbox
         public int combatLogRowCount;
         public int shapeRuleFeedbackRowCount;
         public int distinctBuildFeedbackCount;
+        public int manaLoopGainRowCount;
+        public int manaLoopSpendRowCount;
+        public int manaLoopGeneratedManaTotal;
+        public int manaLoopSpentManaTotal;
+        public int manaLoopUiLayoutWriteCount;
         public int devBalance310StageCount;
         public int devBalance410StageCount;
         public int playerSideAnswerLeakCount;
@@ -67,6 +73,7 @@ namespace TalismanBag.BuildSandbox
             && placementSamplesPass
             && currentBoardReadPass
             && buildFeedbackVariationPass
+            && manaLoopPass
             && devChapterBalancePass
             && playerLeakPass
             && featureFlagsDefaultFalsePass

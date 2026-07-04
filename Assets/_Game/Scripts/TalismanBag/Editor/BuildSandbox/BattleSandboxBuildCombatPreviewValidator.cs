@@ -74,6 +74,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
             ValidateTrue(report, "BUILD_COMBAT_CALCULATES_MODIFIER", preview.calculatesModifierPreview);
             ValidateTrue(report, "BUILD_COMBAT_CALCULATES_READINESS", preview.calculatesReadinessPreview);
             ValidateTrue(report, "BUILD_COMBAT_CALCULATES_SHAPE_RULES", preview.calculatesShapeBuildRulePreview);
+            ValidateTrue(report, "BUILD_COMBAT_CALCULATES_ITEM_STATS", preview.calculatesItemStatCombatPreview);
             ValidateTrue(report, "BUILD_COMBAT_WRITES_BOSS_STATE", preview.writesBossStateShortLine);
             ValidateTrue(report, "BUILD_COMBAT_WRITES_CAST_BAR", preview.writesCastBar);
             ValidateTrue(report, "BUILD_COMBAT_WRITES_FLOATING", preview.writesMechanicFloatingText);
@@ -125,7 +126,17 @@ namespace TalismanBag.EditorTools.BuildSandbox
             ValidateMinimum(report, "BUILD_COMBAT_SHAPE_RULE_DEFINITION_COUNT", "Shape build rule definition", preview?.ShapeBuildRuleDefinitionCount ?? 0, 4);
             ValidateMinimum(report, "BUILD_COMBAT_SHAPE_RULE_MATCH_COUNT", "Shape build rule match", preview?.ShapeBuildRuleMatchCount ?? 0, 3);
             ValidateMinimum(report, "BUILD_COMBAT_SHAPE_RULE_FEEDBACK_COUNT", "Shape build rule feedback row", preview?.ShapeBuildRuleFeedbackRowCount ?? 0, 3);
+            ValidateMinimum(report, "BUILD_COMBAT_ITEM_STAT_PROFILE_COUNT", "ItemStat profile", preview?.ItemStatProfileCount ?? 0, 1);
+            ValidateMinimum(report, "BUILD_COMBAT_ITEM_STAT_FEEDBACK_COUNT", "ItemStat combat feedback row", preview?.ItemStatCombatFeedbackRowCount ?? 0, 3);
             ValidateMinimum(report, "BUILD_COMBAT_BOSS_READINESS_COUNT", "Boss readiness row", preview?.BossReadinessCount ?? 0, 1);
+
+            if ((preview?.ItemStatScopeLeakCount ?? 1) != 0)
+            {
+                report.AddError(
+                    "BUILD_COMBAT_ITEM_STAT_SCOPE_LEAK",
+                    $"ItemStat profiles must stay devOnly=true and isEnabled=false. actual leaks={preview?.ItemStatScopeLeakCount ?? 1}.",
+                    nameof(BuildSandboxItemStat));
+            }
 
             BuildSandboxPreviewContext context = preview?.context;
             if (context == null

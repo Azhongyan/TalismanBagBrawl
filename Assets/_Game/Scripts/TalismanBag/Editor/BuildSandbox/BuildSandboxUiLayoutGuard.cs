@@ -78,6 +78,8 @@ namespace TalismanBag.EditorTools.BuildSandbox
             "BattleSandboxEnemyEncounterPreviewSceneBinder.cs",
             "BattleSandboxEnemyEncounterPreviewValidator.cs",
             "BattleSandboxEnemyCombatFeedbackController.cs",
+            "BattleSandboxManaLoopRuntime.cs",
+            "BattleSandboxRuntimeLoop.cs",
             "BattleSandboxEnemyCombatFeedbackUiReuseSceneBinder.cs",
             "BattleSandboxCombatInfoHudSceneBinder.cs",
             "BattleSandboxEnemyCombatFeedbackUiReuseValidator.cs",

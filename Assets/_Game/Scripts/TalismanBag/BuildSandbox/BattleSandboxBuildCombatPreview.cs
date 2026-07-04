@@ -22,6 +22,7 @@ namespace TalismanBag.BuildSandbox
         public bool calculatesModifierPreview = true;
         public bool calculatesReadinessPreview = true;
         public bool calculatesShapeBuildRulePreview = true;
+        public bool calculatesItemStatCombatPreview = true;
         public bool writesBossStateShortLine = true;
         public bool writesCastBar = true;
         public bool writesMechanicFloatingText = true;
@@ -48,6 +49,13 @@ namespace TalismanBag.BuildSandbox
         public int ShapeBuildRuleDefinitionCount => shapeBuildRulePreview?.RuleDefinitionCount ?? 0;
         public int ShapeBuildRuleMatchCount => shapeBuildRulePreview?.MatchedRuleCount ?? 0;
         public int ShapeBuildRuleFeedbackRowCount => shapeBuildRulePreview?.FeedbackRowCount ?? 0;
+        public int ItemStatProfileCount => context?.layoutSnapshot?.placedItems?
+            .Count(item => item?.itemStat != null) ?? 0;
+        public int ItemStatScopeLeakCount => CountItemStatScopeLeaks();
+        public int ItemStatCombatFeedbackRowCount => rows?.Count(row =>
+            row != null
+            && !string.IsNullOrWhiteSpace(row.sourceDataPath)
+            && row.sourceDataPath.IndexOf(".itemStat", StringComparison.OrdinalIgnoreCase) >= 0) ?? 0;
         public int BossReadinessCount => context?.viewModel?.problemReadiness?.bossReadinessCount ?? 0;
         public int ReadyBossCount => context?.viewModel?.problemReadiness?.readyBossCount ?? 0;
         public int PlayerSideAnswerLeakCount => rows?.Count(row => row != null && row.playerSideAnswerLeak) ?? 1;
@@ -63,7 +71,8 @@ namespace TalismanBag.BuildSandbox
             && shapeBuildRulePreview.DevOnlyIsolationPass
             && feedbackPreview != null
             && feedbackPreview.devOnly
-            && !feedbackPreview.isEnabled;
+            && !feedbackPreview.isEnabled
+            && ItemStatScopeLeakCount == 0;
 
         private int CountFormalFlowLeaks()
         {
@@ -76,6 +85,7 @@ namespace TalismanBag.BuildSandbox
             if (!calculatesModifierPreview) leaks++;
             if (!calculatesReadinessPreview) leaks++;
             if (!calculatesShapeBuildRulePreview) leaks++;
+            if (!calculatesItemStatCombatPreview) leaks++;
             if (runsFormalCombat) leaks++;
             if (callsFormalDamageSettlement) leaks++;
             if (writesFormalFlow) leaks++;
@@ -97,9 +107,26 @@ namespace TalismanBag.BuildSandbox
 
             leaks += feedbackPreview?.FormalLeakCount ?? 1;
             leaks += shapeBuildRulePreview?.FormalLeakCount ?? 1;
+            leaks += ItemStatScopeLeakCount;
             leaks += rows?.Count(row => row == null || row.formalFlowLeak) ?? 1;
             leaks += FeatureFlagDefaultTrueCount;
             return leaks;
+        }
+
+        private int CountItemStatScopeLeaks()
+        {
+            IReadOnlyList<BuildSandboxPlacedItemSnapshot> items =
+                context?.layoutSnapshot?.placedItems ?? new List<BuildSandboxPlacedItemSnapshot>();
+            if (items.Count == 0)
+            {
+                return 1;
+            }
+
+            return items.Count(item =>
+                item == null
+                || item.itemStat == null
+                || !item.itemStat.devOnly
+                || item.itemStat.isEnabled);
         }
     }
 
@@ -188,8 +215,11 @@ namespace TalismanBag.BuildSandbox
 
             IReadOnlyList<BattleSandboxEnemyCombatFeedbackRow> shapeBuildRows =
                 BattleSandboxShapeBuildRulePreviewBuilder.BuildFeedbackRows(shapeBuildRulePreview);
+            IReadOnlyList<BattleSandboxEnemyCombatFeedbackRow> itemStatRows =
+                BuildItemStatCombatFeedbackRows(context);
             IReadOnlyList<BattleSandboxEnemyCombatFeedbackRow> buildRows = BuildBuildAwareFeedbackRows(context);
             feedbackPreview.rows.InsertRange(0, buildRows);
+            feedbackPreview.rows.InsertRange(0, itemStatRows);
             feedbackPreview.rows.InsertRange(0, shapeBuildRows);
             feedbackPreview.sourcePreviewBuildId = context.previewBuildId;
 
@@ -205,6 +235,7 @@ namespace TalismanBag.BuildSandbox
                 calculatesModifierPreview = true,
                 calculatesReadinessPreview = true,
                 calculatesShapeBuildRulePreview = true,
+                calculatesItemStatCombatPreview = true,
                 writesBossStateShortLine = true,
                 writesCastBar = true,
                 writesMechanicFloatingText = true,
@@ -268,10 +299,15 @@ namespace TalismanBag.BuildSandbox
         {
             BuildSandboxLayoutSnapshot snapshot = new();
             snapshot.placedItems.Add(CreatePlacedItemSnapshot(
+                "preview_taomu_sword",
+                "vertical_3",
+                ItemShapeRotation.Rotation0,
+                new[] { new ItemShapeCell(0, 0), new ItemShapeCell(0, 1), new ItemShapeCell(0, 2) }));
+            snapshot.placedItems.Add(CreatePlacedItemSnapshot(
                 "preview_energy_incense",
                 "Vertical2",
                 ItemShapeRotation.Rotation0,
-                new[] { new ItemShapeCell(0, 1), new ItemShapeCell(0, 2) }));
+                new[] { new ItemShapeCell(2, 3), new ItemShapeCell(2, 4) }));
             snapshot.placedItems.Add(CreatePlacedItemSnapshot(
                 "preview_fire_talisman",
                 "Single1",
@@ -323,7 +359,7 @@ namespace TalismanBag.BuildSandbox
                 ? default
                 : cells.OrderBy(cell => cell.x).ThenBy(cell => cell.y).First();
 
-            return new BuildSandboxPlacedItemSnapshot
+            BuildSandboxPlacedItemSnapshot snapshot = new()
             {
                 itemId = itemId ?? string.Empty,
                 shapeId = shapeId ?? string.Empty,
@@ -334,8 +370,11 @@ namespace TalismanBag.BuildSandbox
                 isPowered = false,
                 energySourceId = string.Empty,
                 affixList = ResolvePreviewAffixes(itemId).ToList(),
-                rarity = ResolvePreviewRarity(itemId)
+                rarity = ResolvePreviewRarity(itemId),
+                itemStat = BuildSandboxItemStatCatalog.Resolve(itemId)
             };
+            BuildSandboxItemIdentityFamilyCatalog.ApplyTo(snapshot);
+            return snapshot;
         }
 
         public static void ApplyPreviewEnergyLinks(BuildSandboxLayoutSnapshot snapshot)
@@ -402,8 +441,18 @@ namespace TalismanBag.BuildSandbox
                     affixList = ResolveMergedAffixes(item).ToList(),
                     rarity = string.IsNullOrWhiteSpace(item.rarity)
                         ? ResolvePreviewRarity(item.itemId)
-                        : item.rarity
+                        : item.rarity,
+                    itemFamily = item.itemFamily ?? string.Empty,
+                    baseItemId = item.baseItemId ?? string.Empty,
+                    tier = string.IsNullOrWhiteSpace(item.tier)
+                        ? BuildSandboxItemIdentityFamilyCatalog.TierTestOnly
+                        : item.tier,
+                    relationshipToBase = string.IsNullOrWhiteSpace(item.relationshipToBase)
+                        ? BuildSandboxItemIdentityFamilyCatalog.RelationshipTestOnly
+                        : item.relationshipToBase,
+                    itemStat = BuildSandboxItemStatCatalog.ResolveFrom(item.itemStat, item.itemId)
                 };
+                BuildSandboxItemIdentityFamilyCatalog.ApplyTo(copy);
 
                 if (copy.occupiedCells.Count == 0)
                 {
@@ -445,6 +494,116 @@ namespace TalismanBag.BuildSandbox
             return explicitAffixes.Count > 0
                 ? explicitAffixes
                 : ResolvePreviewAffixes(item?.itemId);
+        }
+
+        private static IReadOnlyList<BattleSandboxEnemyCombatFeedbackRow> BuildItemStatCombatFeedbackRows(
+            BuildSandboxPreviewContext context)
+        {
+            ItemStatCombatSummary summary = BuildItemStatCombatSummary(context?.layoutSnapshot);
+            if (summary.itemCount <= 0)
+            {
+                return Array.Empty<BattleSandboxEnemyCombatFeedbackRow>();
+            }
+
+            List<BattleSandboxEnemyCombatFeedbackRow> rows = new()
+            {
+                CreateFeedbackRow(
+                    "itemStat.attackBreak",
+                    BattleSandboxEnemyCombatFeedbackKinds.MechanicFeedback,
+                    summary.attack + summary.shieldBreak >= summary.guard + summary.spirit
+                        ? "\u9996\u9886\uff1a\u950b\u8292\u903c\u8fd1\u62a4\u52bf"
+                        : "\u9996\u9886\uff1a\u9635\u9762\u6b63\u5728\u8bd5\u63a2",
+                    "\u7834\u52bf\u56de\u54cd",
+                    summary.shieldBreak > summary.attack / 2 ? "\u62a4\u52bf\u9707\u52a8" : "\u950b\u8292\u6e10\u8d77",
+                    "\u3010\u5c5e\u6027\u3011\u950b\u8292\u8ba9\u62a4\u52bf\u51fa\u73b0\u6ce2\u52a8",
+                    "FloatingCombatText",
+                    "ItemStat attack and break are masked as battle phenomena",
+                    SourceDataPath + ".itemStat.attackBreak",
+                    "itemStatCombatPreview",
+                    usesCastBar: false,
+                    usesBossInfo: false,
+                    2.1f),
+                CreateFeedbackRow(
+                    "itemStat.guardSpirit",
+                    BattleSandboxEnemyCombatFeedbackKinds.BossState,
+                    summary.guard + summary.spirit > summary.attack
+                        ? "\u9996\u9886\uff1a\u9635\u9762\u7a33\u4f4f\u538b\u529b"
+                        : "\u9996\u9886\uff1a\u9635\u9762\u627f\u538b",
+                    "\u7075\u6c14\u56de\u62a4",
+                    summary.spirit >= summary.guard ? "\u7075\u6c14\u56de\u6d41" : "\u9635\u7ebf\u7a33\u4f4f",
+                    "\u3010\u5c5e\u6027\u3011\u62a4\u9635\u8ba9\u538b\u8feb\u77ed\u6682\u51cf\u7f13",
+                    "BossInfoPanel",
+                    "ItemStat guard and spirit are shown as stability feedback",
+                    SourceDataPath + ".itemStat.guardSpirit",
+                    "itemStatCombatPreview",
+                    usesCastBar: false,
+                    usesBossInfo: true,
+                    2.4f),
+                CreateFeedbackRow(
+                    "itemStat.controlCleanse",
+                    BattleSandboxEnemyCombatFeedbackKinds.MechanicFeedback,
+                    summary.control + summary.cleanse > 0
+                        ? "\u673a\u5236\u53cd\u9988\uff1a\u6d4a\u6c14\u88ab\u7275\u4f4f"
+                        : "\u673a\u5236\u53cd\u9988\uff1a\u7f3a\u5c11\u51c0\u538b\u56de\u54cd",
+                    "\u51c0\u63a7\u56de\u54cd",
+                    summary.cleanse >= summary.control ? "\u6c61\u75d5\u9000\u6563" : "\u77ed\u6682\u505c\u6ede",
+                    "\u3010\u5c5e\u6027\u3011\u51c0\u5316\u4e0e\u538b\u5236\u77ed\u6682\u751f\u6548",
+                    "BattleHint",
+                    "ItemStat control and cleanse are masked as mechanic feedback",
+                    SourceDataPath + ".itemStat.controlCleanse",
+                    "itemStatCombatPreview",
+                    usesCastBar: false,
+                    usesBossInfo: false,
+                    2.2f)
+            };
+
+            if (summary.hasTaomuSword)
+            {
+                rows.Add(CreateFeedbackRow(
+                    "itemStat.taomuSword",
+                    BattleSandboxEnemyCombatFeedbackKinds.WeaknessWindow,
+                    "\u9996\u9886\uff1a\u6843\u6728\u950b\u8292\u7834\u5f00\u90aa\u6c14",
+                    "\u6843\u6728\u56de\u54cd",
+                    "\u90aa\u6c14\u9000\u6563",
+                    "\u3010\u5c5e\u6027\u3011\u6843\u6728\u5251\u5e26\u6765\u7834\u90aa\u53cd\u9988",
+                    "FloatingCombatText",
+                    "Taomu sword ItemStat produces a masked weakness-window cue",
+                    SourceDataPath + ".itemStat.taomuSword",
+                    "itemStatCombatPreview",
+                    usesCastBar: false,
+                    usesBossInfo: false,
+                    2.5f));
+            }
+
+            return rows;
+        }
+
+        private static ItemStatCombatSummary BuildItemStatCombatSummary(
+            BuildSandboxLayoutSnapshot snapshot)
+        {
+            ItemStatCombatSummary summary = new();
+            foreach (BuildSandboxPlacedItemSnapshot item in snapshot?.placedItems
+                         ?? new List<BuildSandboxPlacedItemSnapshot>())
+            {
+                if (item == null)
+                {
+                    continue;
+                }
+
+                BuildSandboxItemStat stat =
+                    BuildSandboxItemStatCatalog.ResolveFrom(item.itemStat, item.itemId);
+                summary.itemCount++;
+                summary.attack += stat.attack;
+                summary.guard += stat.guard;
+                summary.spirit += stat.spirit;
+                summary.control += stat.control;
+                summary.shieldBreak += stat.shieldBreak;
+                summary.cleanse += stat.cleanse;
+                summary.hasTaomuSword |= (item.itemId ?? string.Empty)
+                    .IndexOf("taomu_sword", StringComparison.OrdinalIgnoreCase) >= 0;
+            }
+
+            return summary;
         }
 
         private static IReadOnlyList<BattleSandboxEnemyCombatFeedbackRow> BuildBuildAwareFeedbackRows(
@@ -702,6 +861,86 @@ namespace TalismanBag.BuildSandbox
             }
 
             string id = (itemId ?? string.Empty).Trim().ToLowerInvariant();
+            switch (id)
+            {
+                case "shield_talisman_basic":
+                    tags.Add("guard");
+                    tags.Add("ward");
+                    tags.Add("shield");
+                    tags.Add("defense_preview");
+                    tags.Add("shieldBonus");
+                    break;
+                case "qi_pill_basic":
+                    tags.Add("pill");
+                    tags.Add("heal");
+                    tags.Add("recovery_preview");
+                    tags.Add("cleanse_preview");
+                    break;
+                case "spirit_stone_basic":
+                    tags.Add("stone");
+                    tags.Add("spirit");
+                    tags.Add("energy_source");
+                    tags.Add("core_preview");
+                    tags.Add("rhythm_preview");
+                    break;
+                case "sword_pill_basic":
+                    tags.Add("sword");
+                    tags.Add("burst");
+                    tags.Add("damage_preview");
+                    tags.Add("shield_break");
+                    break;
+                case "chain_thunder_talisman_basic":
+                    tags.Add("chain");
+                    tags.Add("aoe");
+                    tags.Add("damage_preview");
+                    tags.Add("shield_break");
+                    break;
+                case "purify_talisman_basic":
+                    tags.Add("jing_e");
+                    tags.Add("cleanse");
+                    tags.Add("purify");
+                    tags.Add("purifying");
+                    tags.Add("talisman_preview");
+                    tags.Add("cleanse_preview");
+                    tags.Add("ward_preview");
+                    break;
+                case "soul_suppress_talisman_basic":
+                    tags.Add("zhen_hun");
+                    tags.Add("soul");
+                    tags.Add("control");
+                    tags.Add("interrupt");
+                    tags.Add("control_preview");
+                    tags.Add("ward_preview");
+                    break;
+                case "seal_basic":
+                    tags.Add("seal");
+                    tags.Add("enhance");
+                    tags.Add("bond_preview");
+                    tags.Add("synergy_preview");
+                    break;
+                case "water_talisman_basic":
+                    tags.Add("water");
+                    tags.Add("heal");
+                    tags.Add("cleanse");
+                    tags.Add("recovery_preview");
+                    tags.Add("cleanse_preview");
+                    break;
+                case "exorcism_bell_basic":
+                    tags.Add("bell");
+                    tags.Add("exorcism");
+                    tags.Add("control");
+                    tags.Add("control_preview");
+                    tags.Add("cleanse_preview");
+                    break;
+                case "peach_wood_basic":
+                    tags.Add("taomu");
+                    tags.Add("wood");
+                    tags.Add("exorcism");
+                    tags.Add("ward_preview");
+                    tags.Add("control_preview");
+                    break;
+            }
+
             if (id.Contains("wood_talisman") || id.Contains("guard_wood"))
             {
                 tags.Add("hu_zhen");
@@ -710,6 +949,21 @@ namespace TalismanBag.BuildSandbox
                 tags.Add("defense_preview");
                 tags.Add("ward_preview");
                 tags.Add("shieldBonus");
+            }
+
+            if (id.Contains("taomu_sword"))
+            {
+                tags.Add("taomu");
+                tags.Add("wood");
+                tags.Add("sword");
+                tags.Add("guard");
+                tags.Add("break");
+                tags.Add("purify");
+                tags.Add("damage_preview");
+                tags.Add("defense_preview");
+                tags.Add("shield_break");
+                tags.Add("talisman_preview");
+                tags.Add("ward_preview");
             }
 
             if (id.Contains("fire"))
@@ -790,6 +1044,32 @@ namespace TalismanBag.BuildSandbox
         private static IEnumerable<string> ResolvePreviewAffixes(string itemId)
         {
             string id = (itemId ?? string.Empty).Trim().ToLowerInvariant();
+            switch (id)
+            {
+                case "shield_talisman_basic":
+                    return new[] { "bs_affix_guardian_ward" };
+                case "qi_pill_basic":
+                    return new[] { "bs_affix_focus_gather" };
+                case "spirit_stone_basic":
+                    return new[] { "bs_affix_focus_gather" };
+                case "sword_pill_basic":
+                    return new[] { "bs_affix_break_boost" };
+                case "chain_thunder_talisman_basic":
+                    return new[] { "bs_affix_break_boost", "bs_affix_bond_plus_one" };
+                case "purify_talisman_basic":
+                    return new[] { "bs_affix_purifying_seal" };
+                case "soul_suppress_talisman_basic":
+                    return new[] { "bs_affix_control_hold" };
+                case "seal_basic":
+                    return new[] { "bs_affix_bond_plus_one" };
+                case "water_talisman_basic":
+                    return new[] { "bs_affix_purifying_seal" };
+                case "exorcism_bell_basic":
+                    return new[] { "bs_affix_control_hold", "bs_affix_purifying_seal" };
+                case "peach_wood_basic":
+                    return new[] { "bs_affix_guardian_ward" };
+            }
+
             if (id.Contains("fire"))
             {
                 return new[] { "bs_affix_lihuo_spark" };
@@ -798,6 +1078,11 @@ namespace TalismanBag.BuildSandbox
             if (id.Contains("thunder"))
             {
                 return new[] { "bs_affix_break_boost", "bs_affix_lihuo_spark" };
+            }
+
+            if (id.Contains("taomu_sword"))
+            {
+                return new[] { "bs_affix_guardian_ward", "bs_affix_break_boost", "bs_affix_purifying_seal" };
             }
 
             if (id.Contains("wood_talisman"))
@@ -846,7 +1131,7 @@ namespace TalismanBag.BuildSandbox
                 return "purple";
             }
 
-            if (id.Contains("thunder") || id.Contains("cleanse") || id.Contains("guard_wood"))
+            if (id.Contains("thunder") || id.Contains("cleanse") || id.Contains("guard_wood") || id.Contains("taomu_sword"))
             {
                 return "blue";
             }
@@ -944,6 +1229,18 @@ namespace TalismanBag.BuildSandbox
             return string.IsNullOrWhiteSpace(previewBuildId)
                 ? PreviewBuildId
                 : previewBuildId.Trim();
+        }
+
+        private struct ItemStatCombatSummary
+        {
+            public int itemCount;
+            public int attack;
+            public int guard;
+            public int spirit;
+            public int control;
+            public int shieldBreak;
+            public int cleanse;
+            public bool hasTaomuSword;
         }
 
         private sealed class PreviewConfigSet : IDisposable

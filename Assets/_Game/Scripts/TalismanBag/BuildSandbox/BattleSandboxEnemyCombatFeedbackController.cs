@@ -39,6 +39,9 @@ namespace TalismanBag.BuildSandbox
         private float floatingTimer;
         private int rowIndex;
         private bool buttonsBound;
+        private bool runtimeLoopMode;
+        private string runtimeFloatingText = string.Empty;
+        private Color runtimeFloatingColor = Color.white;
 
         public bool DevOnly => devOnly;
         public bool IsEnabled => isEnabled;
@@ -105,6 +108,12 @@ namespace TalismanBag.BuildSandbox
 
         private void Update()
         {
+            if (runtimeLoopMode)
+            {
+                RefreshFloatingAnimation();
+                return;
+            }
+
             if (rows.Count == 0)
             {
                 SetText(controlStatusText, "暂无战斗反馈行");
@@ -127,6 +136,11 @@ namespace TalismanBag.BuildSandbox
 
         public void ShowPreviousFeedback()
         {
+            if (runtimeLoopMode)
+            {
+                return;
+            }
+
             if (rows.Count > 0)
             {
                 rowIndex = (rowIndex - 1 + rows.Count) % rows.Count;
@@ -137,6 +151,11 @@ namespace TalismanBag.BuildSandbox
 
         public void ShowNextFeedback()
         {
+            if (runtimeLoopMode)
+            {
+                return;
+            }
+
             if (rows.Count > 0)
             {
                 rowIndex = (rowIndex + 1) % rows.Count;
@@ -148,15 +167,61 @@ namespace TalismanBag.BuildSandbox
         public void TriggerFloatingFeedback()
         {
             floatingTimer = 0f;
+            if (runtimeLoopMode)
+            {
+                ShowRuntimeFloatingText(runtimeFloatingText, runtimeFloatingColor);
+                return;
+            }
+
             ShowFloatingText(CurrentRow());
         }
 
         public void RestartBattleModePreview()
         {
+            runtimeLoopMode = false;
             InitializePreview(forceRebuild: true);
             CacheFloatingStartPosition();
             rowIndex = FindFirstCastBarRowIndex();
             ShowCurrent(restartFloating: true);
+        }
+
+        public void SetRuntimeLoopMode(bool active)
+        {
+            if (runtimeLoopMode == active)
+            {
+                return;
+            }
+
+            runtimeLoopMode = active;
+            if (!runtimeLoopMode)
+            {
+                runtimeFloatingText = string.Empty;
+                runtimeFloatingColor = Color.white;
+                ShowCurrent(restartFloating: true);
+            }
+        }
+
+        public void ApplyRuntimeLoopFrame(BattleSandboxRuntimeLoopFrame frame)
+        {
+            if (frame == null)
+            {
+                return;
+            }
+
+            runtimeLoopMode = true;
+            runtimeFloatingText = frame.floatingTextChinese;
+            runtimeFloatingColor = frame.floatingColor;
+
+            SetText(previewTitleText, "战斗循环沙盒");
+            SetText(bossStateText, frame.stateLineChinese);
+            SetText(bossSkillText, frame.isSandboxResult ? frame.resultBodyChinese : frame.castSkillLineChinese);
+            SetText(castTimerText, frame.isSandboxResult ? frame.restartHintChinese : frame.castTimerTextChinese);
+            SetText(combatLogText, frame.combatLogLineChinese);
+            SetText(controlStatusText, frame.isSandboxResult ? frame.resultTitleChinese : "战斗循环运行中");
+            SetFill(frame.castFillAmount, frame.castFillColor);
+
+            floatingTimer = 0f;
+            ShowRuntimeFloatingText(runtimeFloatingText, runtimeFloatingColor);
         }
 
         private void InitializePreview(bool forceRebuild = false)
@@ -284,7 +349,14 @@ namespace TalismanBag.BuildSandbox
             if (floatingTimer > 1.3f)
             {
                 floatingTimer = 0f;
-                ShowFloatingText(CurrentRow());
+                if (runtimeLoopMode)
+                {
+                    ShowRuntimeFloatingText(runtimeFloatingText, runtimeFloatingColor);
+                }
+                else
+                {
+                    ShowFloatingText(CurrentRow());
+                }
             }
         }
 
@@ -301,6 +373,22 @@ namespace TalismanBag.BuildSandbox
             if (mechanicFloatingCanvasGroup != null)
             {
                 mechanicFloatingCanvasGroup.alpha = row == null ? 0f : 1f;
+            }
+        }
+
+        private void ShowRuntimeFloatingText(string text, Color color)
+        {
+            if (mechanicFloatingText == null)
+            {
+                return;
+            }
+
+            mechanicFloatingText.text = text ?? string.Empty;
+            mechanicFloatingText.color = color;
+            mechanicFloatingText.rectTransform.anchoredPosition = floatingStartPosition;
+            if (mechanicFloatingCanvasGroup != null)
+            {
+                mechanicFloatingCanvasGroup.alpha = string.IsNullOrWhiteSpace(text) ? 0f : 1f;
             }
         }
 

@@ -165,7 +165,9 @@ namespace TalismanBag.EditorTools.BuildSandbox
                     enemy.simulatorReadable,
                     enemy.entersFormalFlow,
                     enemy.referencesFormalEnemyPool,
-                    enemy.referencesFormalBossPool);
+                    enemy.referencesFormalBossPool,
+                    enemy.attackDamage,
+                    enemy.attackIntervalSeconds);
 
                 if (!string.IsNullOrWhiteSpace(enemy.enemyId) && ids.TryGetValue(enemy.enemyId, out string existing))
                 {
@@ -235,7 +237,9 @@ namespace TalismanBag.EditorTools.BuildSandbox
                     boss.simulatorReadable,
                     boss.entersFormalFlow,
                     boss.referencesFormalEnemyPool,
-                    boss.referencesFormalBossPool);
+                    boss.referencesFormalBossPool,
+                    boss.attackDamage,
+                    boss.attackIntervalSeconds);
 
                 if (!string.IsNullOrWhiteSpace(boss.bossId) && ids.TryGetValue(boss.bossId, out string existing))
                 {
@@ -280,7 +284,9 @@ namespace TalismanBag.EditorTools.BuildSandbox
             bool simulatorReadable,
             bool entersFormalFlow,
             bool referencesFormalEnemyPool,
-            bool referencesFormalBossPool)
+            bool referencesFormalBossPool,
+            int attackDamage,
+            float attackIntervalSeconds)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -330,6 +336,16 @@ namespace TalismanBag.EditorTools.BuildSandbox
             if (referencesFormalEnemyPool || referencesFormalBossPool)
             {
                 report.AddError("PROFILE_FORMAL_POOL_REFERENCE", "Profile must not reference formal enemy/Boss pools.", path);
+            }
+
+            if (attackDamage <= 0)
+            {
+                report.AddError("PROFILE_ATTACK_DAMAGE_ZERO", "Profile attackDamage must be greater than zero for sandbox runtime tests.", path);
+            }
+
+            if (float.IsNaN(attackIntervalSeconds) || float.IsInfinity(attackIntervalSeconds) || attackIntervalSeconds <= 0f)
+            {
+                report.AddError("PROFILE_ATTACK_INTERVAL_INVALID", "Profile attackIntervalSeconds must be a positive runtime timer value.", path);
             }
         }
 

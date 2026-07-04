@@ -10,16 +10,16 @@ using UnityEngine;
 
 namespace TalismanBag.EditorTools.BuildSandbox
 {
-    public static class BattleSandboxBuildCombatPreviewReportWriter
+    public static class BuildSandboxItemStatCombatPreviewReportWriter
     {
         public const string MainReportPath =
-            "Docs/V0.4/Reports/BattleSandboxBuildCombatPreviewReport.md";
+            "Docs/V0.4/Reports/BuildSandboxItemStatCombatPreviewReport.md";
 
         public const string RowReportPath =
-            "Docs/V0.4/Reports/BattleSandboxBuildCombatPreviewRows.csv";
+            "Docs/V0.4/Reports/BuildSandboxItemStatCombatPreviewRows.csv";
 
         public const string LeakCheckReportPath =
-            "Docs/V0.4/Reports/BattleSandboxBuildCombatPreviewLeakCheckReport.md";
+            "Docs/V0.4/Reports/BuildSandboxItemStatCombatPreviewLeakCheckReport.md";
 
         public static string[] WriteReports(
             IReadOnlyList<BuildSandboxValidationReport> reports,
@@ -28,7 +28,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
             IReadOnlyList<BuildSandboxValidationReport> safeReports =
                 reports ?? Array.Empty<BuildSandboxValidationReport>();
             BattleSandboxBuildCombatPreview safePreview =
-                preview ?? BattleSandboxBuildCombatPreviewValidator.BuildDefaultPreview();
+                preview ?? BuildSandboxItemStatCombatPreviewValidator.BuildDefaultPreview();
 
             string projectRoot = Directory.GetParent(Application.dataPath)?.FullName ?? string.Empty;
             string mainPath = Path.Combine(projectRoot, MainReportPath);
@@ -64,10 +64,15 @@ namespace TalismanBag.EditorTools.BuildSandbox
             int warnings,
             int leakCount)
         {
+            IReadOnlyList<BuildSandboxPlacedItemSnapshot> items =
+                BuildSandboxItemStatFoundationValidator.PlacedItems(preview);
+            IReadOnlyList<BattleSandboxBuildCombatPreviewRow> rows =
+                BuildSandboxItemStatCombatPreviewValidator.ItemStatRows(preview);
+
             StringBuilder builder = new();
-            builder.AppendLine("# BattleSandbox Build Combat Preview Report");
+            builder.AppendLine("# BuildSandbox ItemStat Combat Preview Report");
             builder.AppendLine();
-            builder.AppendLine($"Package: `{BattleSandboxBuildCombatPreview.PackageName}`");
+            builder.AppendLine($"Package: `{BuildSandboxItemStatCombatPreviewValidator.PackageName}`");
             builder.AppendLine($"Generated: `{DateTime.Now:yyyy-MM-dd HH:mm:ss}`");
             builder.AppendLine($"Status: `{(errors == 0 && leakCount == 0 ? "PASS" : "FAIL")}`");
             builder.AppendLine($"Errors: `{errors}`");
@@ -76,49 +81,23 @@ namespace TalismanBag.EditorTools.BuildSandbox
             builder.AppendLine();
             builder.AppendLine("## Scope");
             builder.AppendLine();
-            builder.AppendLine("- Reads the V04 sandbox board snapshot into devOnly preview data.");
-            builder.AppendLine("- Reads devOnly enemy/Boss problem seed data only.");
-            builder.AppendLine("- Computes synergy, affix/modifier, effect event, and readiness preview data.");
-            builder.AppendLine("- Converts devOnly BuildSandbox ItemStat profiles into masked combat feedback rows.");
-            builder.AppendLine("- Outputs only masked combat phenomena into existing Boss state, cast-bar, floating mechanic, and combat feedback rows.");
-            builder.AppendLine("- Does not connect formal RunFlow, formal damage settlement, rewards, saves, chapters, feature flags, or formal Boss/enemy configs.");
-            builder.AppendLine("- Player rows do not expose hardSolutionTags, requiredSynergy, requiredAffix, requiredStats, DropBias weights, or Boss six-key answers.");
-            builder.AppendLine("- No board, tray, or Boss feedback RectTransform movement is authored by this package.");
+            builder.AppendLine("- User-specified devOnly direct package; not listed in the current V0.4 Package Queue.");
+            builder.AppendLine("- Connects BuildSandboxItemStat from V04 placed snapshots into BattleSandbox BuildCombatPreview feedback rows.");
+            builder.AppendLine("- Player-side feedback stays masked as battle phenomena; exact stat values stay in reports/developer data.");
+            builder.AppendLine("- Does not touch V0.2/V0.3, formal battle, saves, rewards, Boss configs, formal number mainline, or scene UI layout.");
             builder.AppendLine();
-            builder.AppendLine("## Required Counters");
+            builder.AppendLine("## Counters");
             builder.AppendLine();
-            builder.AppendLine($"- preview scenario count: `{preview?.PreviewScenarioCount ?? 0}`");
-            builder.AppendLine($"- placed item snapshot count: `{preview?.PlacedItemSnapshotCount ?? 0}`");
-            builder.AppendLine($"- synergy match count: `{preview?.SynergyMatchCount ?? 0}`");
-            builder.AppendLine($"- modifier bundle count: `{preview?.ModifierBundleCount ?? 0}`");
-            builder.AppendLine($"- effect event count: `{preview?.EffectEventCount ?? 0}`");
-            builder.AppendLine($"- mechanic feedback count: `{preview?.MechanicFeedbackCount ?? 0}`");
-            builder.AppendLine($"- shape build rule definition count: `{preview?.ShapeBuildRuleDefinitionCount ?? 0}`");
-            builder.AppendLine($"- shape build rule match count: `{preview?.ShapeBuildRuleMatchCount ?? 0}`");
-            builder.AppendLine($"- shape build rule feedback row count: `{preview?.ShapeBuildRuleFeedbackRowCount ?? 0}`");
+            builder.AppendLine($"- placed item snapshot count: `{items.Count}`");
             builder.AppendLine($"- item stat profile count: `{preview?.ItemStatProfileCount ?? 0}`");
-            builder.AppendLine($"- item stat combat feedback row count: `{preview?.ItemStatCombatFeedbackRowCount ?? 0}`");
+            builder.AppendLine($"- item stat combat feedback row count: `{rows.Count}`");
             builder.AppendLine($"- item stat scope leak count: `{preview?.ItemStatScopeLeakCount ?? 1}`");
-            builder.AppendLine($"- boss readiness count: `{preview?.BossReadinessCount ?? 0}`");
-            builder.AppendLine($"- ready boss count: `{preview?.ReadyBossCount ?? 0}`");
             builder.AppendLine($"- player-side answer leak count: `{preview?.PlayerSideAnswerLeakCount ?? 1}`");
             builder.AppendLine($"- formal flow leak count: `{preview?.FormalFlowLeakCount ?? 1}`");
             builder.AppendLine($"- feature flag default true count: `{preview?.FeatureFlagDefaultTrueCount ?? 1}`");
-            builder.AppendLine($"- feature flags all disabled: `{preview?.FeatureFlagsAllDisabled ?? false}`");
-            builder.AppendLine($"- devOnly/isEnabled isolation pass: `{preview?.DevOnlyIsolationPass ?? false}`");
             builder.AppendLine();
-            builder.AppendLine("## Player Feedback Samples");
-            builder.AppendLine();
-            builder.AppendLine("| Feedback | Kind | State | Cast | Floating | Combat Log |");
-            builder.AppendLine("| --- | --- | --- | --- | --- | --- |");
-            foreach (BattleSandboxBuildCombatPreviewRow row in Rows(preview).Take(16))
-            {
-                builder.AppendLine(
-                    $"| `{Escape(row.feedbackId)}` | `{Escape(row.feedbackKind)}` | {Escape(row.stateLineChinese)} | {Escape(row.castSkillLineChinese)} | {Escape(row.floatingTextChinese)} | {Escape(row.combatLogLineChinese)} |");
-            }
-
-            AppendShapeBuildRuleSection(builder, preview);
-
+            AppendItemStatRows(builder, items);
+            AppendFeedbackRows(builder, rows);
             AppendValidationSummary(builder, reports);
             return builder.ToString();
         }
@@ -126,11 +105,10 @@ namespace TalismanBag.EditorTools.BuildSandbox
         private static string BuildRowsCsv(BattleSandboxBuildCombatPreview preview)
         {
             StringBuilder csv = new();
-            csv.AppendLine("scenarioId,feedbackId,feedbackKind,stateLineChinese,castSkillLineChinese,floatingTextChinese,combatLogLineChinese,sourceDataPath,developerDataPanelFieldKey,placedItemSnapshotCount,activeSynergyCount,modifierBundleCount,effectEventCount,bossReadinessCount,readyBossCount,playerSideAnswerLeak,formalFlowLeak");
-            foreach (BattleSandboxBuildCombatPreviewRow row in Rows(preview))
+            csv.AppendLine("feedbackId,feedbackKind,stateLineChinese,castSkillLineChinese,floatingTextChinese,combatLogLineChinese,sourceDataPath,developerDataPanelFieldKey,placedItemSnapshotCount,itemStatProfileCount,playerSideAnswerLeak,formalFlowLeak");
+            foreach (BattleSandboxBuildCombatPreviewRow row in BuildSandboxItemStatCombatPreviewValidator.ItemStatRows(preview))
             {
                 csv.AppendLine(Csv(
-                    row.scenarioId,
                     row.feedbackId,
                     row.feedbackKind,
                     row.stateLineChinese,
@@ -140,11 +118,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                     row.sourceDataPath,
                     row.developerDataPanelFieldKey,
                     row.placedItemSnapshotCount.ToString(),
-                    row.activeSynergyCount.ToString(),
-                    row.modifierBundleCount.ToString(),
-                    row.effectEventCount.ToString(),
-                    row.bossReadinessCount.ToString(),
-                    row.readyBossCount.ToString(),
+                    (preview?.ItemStatProfileCount ?? 0).ToString(),
                     row.playerSideAnswerLeak.ToString(),
                     row.formalFlowLeak.ToString()));
             }
@@ -160,9 +134,9 @@ namespace TalismanBag.EditorTools.BuildSandbox
             int leakCount)
         {
             StringBuilder builder = new();
-            builder.AppendLine("# BattleSandbox Build Combat Preview Leak Check Report");
+            builder.AppendLine("# BuildSandbox ItemStat Combat Preview Leak Check Report");
             builder.AppendLine();
-            builder.AppendLine($"Package: `{BattleSandboxBuildCombatPreview.PackageName}`");
+            builder.AppendLine($"Package: `{BuildSandboxItemStatCombatPreviewValidator.PackageName}`");
             builder.AppendLine($"Generated: `{DateTime.Now:yyyy-MM-dd HH:mm:ss}`");
             builder.AppendLine($"Status: `{(errors == 0 && leakCount == 0 ? "PASS" : "FAIL")}`");
             builder.AppendLine($"Errors: `{errors}`");
@@ -175,9 +149,6 @@ namespace TalismanBag.EditorTools.BuildSandbox
             builder.AppendLine($"| `featureFlagDefaultTrue` | {preview?.FeatureFlagDefaultTrueCount ?? 1} | 0 |");
             builder.AppendLine($"| `formalFlowLeakCount` | {preview?.FormalFlowLeakCount ?? 1} | 0 |");
             builder.AppendLine($"| `playerSideAnswerLeakCount` | {preview?.PlayerSideAnswerLeakCount ?? 1} | 0 |");
-            builder.AppendLine($"| `feedbackFormalLeakCount` | {preview?.feedbackPreview?.FormalLeakCount ?? 1} | 0 |");
-            builder.AppendLine($"| `shapeBuildRuleFormalLeakCount` | {preview?.shapeBuildRulePreview?.FormalLeakCount ?? 1} | 0 |");
-            builder.AppendLine($"| `shapeBuildRulePlayerLeakCount` | {preview?.shapeBuildRulePreview?.PlayerSideAnswerLeakCount ?? 1} | 0 |");
             builder.AppendLine($"| `itemStatScopeLeakCount` | {preview?.ItemStatScopeLeakCount ?? 1} | 0 |");
             builder.AppendLine("| `formalRunFlowConnections` | 0 | 0 |");
             builder.AppendLine("| `formalDamageSettlementCalls` | 0 | 0 |");
@@ -187,14 +158,11 @@ namespace TalismanBag.EditorTools.BuildSandbox
             builder.AppendLine("| `rectTransformMovesAuthored` | 0 | 0 |");
             builder.AppendLine($"| `totalLeaks` | {leakCount} | 0 |");
             builder.AppendLine();
-            builder.AppendLine("## Formal Scope Confirmation");
+            builder.AppendLine("## Scope Confirmation");
             builder.AppendLine();
-            builder.AppendLine("- Feature flags remain default false.");
-            builder.AppendLine("- Preview is devOnly and disabled by default.");
-            builder.AppendLine("- Modifier and event bundles stay affectsFormalCombat=false.");
-            builder.AppendLine("- Shape Build Rule preview stays devOnly, disabled, and snapshot-only.");
-            builder.AppendLine("- No formal save/progress/reward/chapter APIs are called by this package.");
-            builder.AppendLine("- Player-side feedback strings remain phenomenon-only and do not expose answer keys.");
+            builder.AppendLine("- ItemStat profiles remain devOnly=true and isEnabled=false.");
+            builder.AppendLine("- Feedback rows use existing BattleSandbox combat feedback language only.");
+            builder.AppendLine("- No formal combat, save, reward, Boss, numeric config, or UI layout writes are introduced.");
             AppendValidationSummary(builder, reports);
             return builder.ToString();
         }
@@ -203,46 +171,49 @@ namespace TalismanBag.EditorTools.BuildSandbox
         {
             return (preview?.FeatureFlagDefaultTrueCount ?? 1)
                 + (preview?.FormalFlowLeakCount ?? 1)
-                + (preview?.shapeBuildRulePreview?.PlayerSideAnswerLeakCount ?? 1)
-                + (preview?.ItemStatScopeLeakCount ?? 1)
-                + BattleSandboxBuildCombatPreviewValidator.CountPlayerTextLeaks(preview);
+                + (preview?.PlayerSideAnswerLeakCount ?? 1)
+                + (preview?.ItemStatScopeLeakCount ?? 1);
         }
 
-        private static void AppendShapeBuildRuleSection(
+        private static void AppendItemStatRows(
             StringBuilder builder,
-            BattleSandboxBuildCombatPreview preview)
+            IReadOnlyList<BuildSandboxPlacedItemSnapshot> items)
         {
+            builder.AppendLine("## ItemStat Source Rows");
             builder.AppendLine();
-            builder.AppendLine("## Shape Build Rule Preview");
-            builder.AppendLine();
-            builder.AppendLine("| Chinese Field | English Stable Key | Matched | Items | Shapes | Occupied Cells | Player Feedback |");
-            builder.AppendLine("| --- | --- | --- | --- | --- | --- | --- |");
-            foreach (BattleSandboxShapeBuildRuleMatch match in preview?.shapeBuildRulePreview?.matches
-                         ?? new List<BattleSandboxShapeBuildRuleMatch>())
+            builder.AppendLine("| Item | Shape | Stat Profile | Attack | Guard | Spirit | Control | Break | Cleanse | devOnly | isEnabled |");
+            builder.AppendLine("| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |");
+            foreach (BuildSandboxPlacedItemSnapshot item in items)
             {
-                if (match == null)
-                {
-                    continue;
-                }
-
+                BuildSandboxItemStat stat = item?.itemStat;
                 builder.AppendLine(
-                    $"| {Escape(match.chineseDisplayName)} | `{Escape(match.englishStableKey)}` | `{match.isMatched}` | `{Escape(match.matchedItemIds)}` | `{Escape(match.matchedShapeIds)}` | `{Escape(match.matchedOccupiedCells)}` | {Escape(match.combatLogLineChinese)} |");
+                    $"| `{Escape(item?.itemId)}` | `{Escape(item?.shapeId)}` | `{Escape(stat?.statProfileId)}` | {stat?.attack ?? 0} | {stat?.guard ?? 0} | {stat?.spirit ?? 0} | {stat?.control ?? 0} | {stat?.shieldBreak ?? 0} | {stat?.cleanse ?? 0} | `{stat?.devOnly ?? false}` | `{stat?.isEnabled ?? false}` |");
             }
+
+            builder.AppendLine();
         }
 
-        private static IEnumerable<BattleSandboxBuildCombatPreviewRow> Rows(
-            BattleSandboxBuildCombatPreview preview)
+        private static void AppendFeedbackRows(
+            StringBuilder builder,
+            IReadOnlyList<BattleSandboxBuildCombatPreviewRow> rows)
         {
-            return preview?.rows?
-                .Where(row => row != null)
-                ?? Enumerable.Empty<BattleSandboxBuildCombatPreviewRow>();
+            builder.AppendLine("## ItemStat Feedback Rows");
+            builder.AppendLine();
+            builder.AppendLine("| Feedback | Kind | State | Cast | Floating | Combat Log | Source |");
+            builder.AppendLine("| --- | --- | --- | --- | --- | --- | --- |");
+            foreach (BattleSandboxBuildCombatPreviewRow row in rows)
+            {
+                builder.AppendLine(
+                    $"| `{Escape(row.feedbackId)}` | `{Escape(row.feedbackKind)}` | {Escape(row.stateLineChinese)} | {Escape(row.castSkillLineChinese)} | {Escape(row.floatingTextChinese)} | {Escape(row.combatLogLineChinese)} | `{Escape(row.sourceDataPath)}` |");
+            }
+
+            builder.AppendLine();
         }
 
         private static void AppendValidationSummary(
             StringBuilder builder,
             IReadOnlyList<BuildSandboxValidationReport> reports)
         {
-            builder.AppendLine();
             builder.AppendLine("## Validation Summary");
             builder.AppendLine();
             builder.AppendLine("| Check | Status | Errors | Warnings | Info |");

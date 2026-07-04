@@ -15,11 +15,12 @@ namespace TalismanBag.BuildSandbox
     {
         public const bool SupportsShapeAwareCellSpans = true;
         private const string AllCategory = "\u5168\u90e8";
-        private const string TalismanCategory = "\u7b26\u7b93";
+        private const string BasicCategory = "基础";
+        private const string AdvancedCategory = "进阶";
+        private const string CoreCategory = "核心";
+        private const string SupportCategory = "辅助";
         private const string ArtifactCategory = "\u6cd5\u5668";
-        private const string MaterialCategory = "\u6750\u6599";
-        private const string ConsumableCategory = "\u6d88\u8017";
-        private const string SpecialCategory = "\u7279\u6b8a";
+        private const string TestDevOnlyCategory = "测试";
 
         [SerializeField] private ScrollRect scrollRect;
         [SerializeField] private RectTransform contentRoot;
@@ -398,43 +399,37 @@ namespace TalismanBag.BuildSandbox
 
         private static string NormalizeCategory(string category, int categoryIndex = -1)
         {
-            if (categoryIndex == 0 || string.IsNullOrWhiteSpace(category))
+            if (string.IsNullOrWhiteSpace(category))
             {
                 return AllCategory;
             }
 
             string value = category.Trim();
-            if (value == AllCategory || value == "鍏ㄩ儴" || value == "閸忋劑鍎?")
+            if (value == "閸忋劑鍎?")
             {
                 return AllCategory;
             }
 
-            if (value == TalismanCategory || value == "绗︾畵")
+            string categoryId = BuildSandboxLegacyAndAdvancedItemRosterCatalog.NormalizeCategoryId(value);
+            switch (categoryId)
             {
-                return TalismanCategory;
+                case BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategoryAll:
+                    return AllCategory;
+                case BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategoryBasic:
+                    return BasicCategory;
+                case BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategoryAdvanced:
+                    return AdvancedCategory;
+                case BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategoryCore:
+                    return CoreCategory;
+                case BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategorySupport:
+                    return SupportCategory;
+                case BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategoryArtifact:
+                    return ArtifactCategory;
+                case BuildSandboxLegacyAndAdvancedItemRosterCatalog.CategoryTestDevOnly:
+                    return TestDevOnlyCategory;
+                default:
+                    return value;
             }
-
-            if (value == ArtifactCategory || value == "娉曞櫒")
-            {
-                return ArtifactCategory;
-            }
-
-            if (value == MaterialCategory || value == "鏉愭枡")
-            {
-                return MaterialCategory;
-            }
-
-            if (value == ConsumableCategory || value.StartsWith("娑堣", StringComparison.Ordinal))
-            {
-                return ConsumableCategory;
-            }
-
-            if (value == SpecialCategory || value == "鐗规畩")
-            {
-                return SpecialCategory;
-            }
-
-            return value;
         }
 
 #if UNITY_EDITOR
@@ -662,6 +657,11 @@ namespace TalismanBag.BuildSandbox
 
         private int ResolvePreviewItemCardCount()
         {
+            if (!Application.isPlaying && cards != null && cards.Count > 0)
+            {
+                return cards.Count;
+            }
+
             if (currentItems.Count > 0)
             {
                 return currentItems.Count;
@@ -750,7 +750,7 @@ namespace TalismanBag.BuildSandbox
             GameObject textObject = new(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
             textObject.transform.SetParent(parent, worldPositionStays: false);
             Text text = textObject.GetComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             text.fontSize = fontSize;
             text.alignment = alignment;
             text.color = new Color(0.90f, 0.87f, 0.76f, 1f);
@@ -853,10 +853,104 @@ namespace TalismanBag.BuildSandbox
                 : contentRoot.Find($"TrayGridSlot_{index + 1:00}");
         }
 
+        private void EnsureRuntimeCardCapacity(int requiredCount)
+        {
+            if (!Application.isPlaying || requiredCount <= cards.Count)
+            {
+                return;
+            }
+
+            RectTransform cardLayer = itemCardLayer != null ? itemCardLayer : contentRoot;
+            if (cardLayer == null)
+            {
+                return;
+            }
+
+            for (int i = cards.Count; i < requiredCount; i++)
+            {
+                BuildItemPreviewCardView card = CreateRuntimeItemCard(cardLayer, i);
+                if (card != null)
+                {
+                    cards.Add(card);
+                }
+            }
+
+            BindViewAuthorities();
+        }
+
+        private static BuildItemPreviewCardView CreateRuntimeItemCard(RectTransform cardLayer, int index)
+        {
+            GameObject cardObject = new(
+                $"ItemCard_Runtime_{index + 1:00}",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(CanvasGroup),
+                typeof(Canvas),
+                typeof(GraphicRaycaster),
+                typeof(BuildItemPreviewCardView));
+            cardObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            cardObject.transform.SetParent(cardLayer, worldPositionStays: false);
+
+            RectTransform rect = cardObject.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.zero;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = Vector2.zero;
+            rect.localScale = Vector3.one;
+
+            Image image = cardObject.GetComponent<Image>();
+            image.color = new Color(0.27f, 0.22f, 0.15f, 1f);
+            image.raycastTarget = true;
+
+            CanvasGroup group = cardObject.GetComponent<CanvasGroup>();
+            group.blocksRaycasts = true;
+            group.interactable = true;
+
+            Canvas canvas = cardObject.GetComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 30;
+
+            Text title = CreateRuntimeCardText(rect, "Title", 11, TextAnchor.UpperCenter);
+            Text category = CreateRuntimeCardText(rect, "Category", 10, TextAnchor.MiddleCenter);
+            Text shape = CreateRuntimeCardText(rect, "Shape", 10, TextAnchor.UpperCenter);
+
+            BuildItemPreviewCardView card = cardObject.GetComponent<BuildItemPreviewCardView>();
+            card.Bind(rect, group, image, title, category, shape);
+            return card;
+        }
+
+        private static Text CreateRuntimeCardText(
+            RectTransform parent,
+            string name,
+            int fontSize,
+            TextAnchor alignment)
+        {
+            GameObject textObject = new(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
+            textObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            textObject.transform.SetParent(parent, worldPositionStays: false);
+
+            Text text = textObject.GetComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = fontSize;
+            text.alignment = alignment;
+            text.color = new Color(0.90f, 0.87f, 0.76f, 1f);
+            text.raycastTarget = false;
+
+            RectTransform rect = text.rectTransform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.localScale = Vector3.one;
+            return text;
+        }
+
         private void InitializeCards(BuildGridInteractionPreviewController controller)
         {
             cardsByItemId.Clear();
             placementModels.Clear();
+            EnsureRuntimeCardCapacity(currentItems.Count);
             foreach (BuildItemPreviewCardView card in cards)
             {
                 card?.Clear();
@@ -911,7 +1005,7 @@ namespace TalismanBag.BuildSandbox
             return new HashSet<string>(
                 currentItems
                     .Where(item => normalizedActiveCategory == AllCategory
-                        || NormalizeCategory(item.Category) == normalizedActiveCategory)
+                        || item.MatchesCategory(normalizedActiveCategory))
                     .Where(item => !hiddenItemIds.Contains(item.ItemId))
                     .Select(item => item.ItemId),
                 StringComparer.Ordinal);

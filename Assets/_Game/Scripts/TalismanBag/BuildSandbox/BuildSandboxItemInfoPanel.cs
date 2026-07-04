@@ -183,6 +183,7 @@ namespace TalismanBag.BuildSandbox
             Append(builder, "触发条件", profile.TriggerCondition);
             Append(builder, "冷却/频率", profile.CooldownFrequency);
             Append(builder, "数值", profile.ValueText);
+            Append(builder, "沙盒属性", BuildSandboxItemStatCatalog.FormatPlayerFacing(item.ItemStat));
             Append(builder, "词条", profile.AffixText);
             Append(builder, "羁绊贡献", profile.BondContribution);
             Append(builder, "摆放形状", item.ShapeDisplayName);
@@ -476,6 +477,23 @@ namespace TalismanBag.BuildSandbox
                     "触发时偏向护阵事件。",
                     "帮助构筑形成稳定骨架。",
                     "放在需要承接上下关系的位置，会更容易读出线索。"),
+                "preview_taomu_sword" => new ItemInfoProfile(
+                    "攻击法器",
+                    "蓝",
+                    "桃木、剑、破邪",
+                    "提供近身破邪与护阵反击倾向。",
+                    "有供能或贴近守护位时更容易读出价值。",
+                    "中等，偏稳定连击。",
+                    "攻击偏高，兼具少量护阵与净化倾向。",
+                    "桃木锋芒、破邪回护",
+                    "偏向守护、破势与净化交界羁绊。",
+                    "竖向三格，占用连续三格。",
+                    "用于观察竖向三格长条道具的托盘排布、旋转和放置边界。",
+                    "可能提示桃木破邪词条，不显示完整答案。",
+                    "预览中只表现为破势与护阵倾向变化。",
+                    "触发时偏向破邪短击事件。",
+                    "让构筑获得一条纵向进攻骨架。",
+                    "先确认三格空间，再与守护或供能道具相邻会更稳。"),
                 "preview_cleanse_corner" => new ItemInfoProfile(
                     "辅助符箓",
                     "紫",

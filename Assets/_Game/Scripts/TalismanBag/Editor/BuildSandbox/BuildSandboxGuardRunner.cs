@@ -226,6 +226,42 @@ namespace TalismanBag.EditorTools.BuildSandbox
             RunBattleSandboxBuildCombatPreview(throwOnFailure: false);
         }
 
+        [MenuItem(BuildSandboxItemStatFoundationValidator.QaMenuPath)]
+        public static void RunBuildSandboxItemStatFoundationMenu()
+        {
+            RunBuildSandboxItemStatFoundation(throwOnFailure: false);
+        }
+
+        [MenuItem(BuildSandboxItemIdentityFamilyCorrectionValidator.QaMenuPath)]
+        public static void RunBuildSandboxItemIdentityFamilyCorrectionMenu()
+        {
+            RunBuildSandboxItemIdentityFamilyCorrection(throwOnFailure: false);
+        }
+
+        [MenuItem(BuildSandboxItemStatCombatPreviewValidator.QaMenuPath)]
+        public static void RunBuildSandboxItemStatCombatPreviewMenu()
+        {
+            RunBuildSandboxItemStatCombatPreview(throwOnFailure: false);
+        }
+
+        [MenuItem(BattleSandboxManaLoopRuntimeValidator.QaMenuPath)]
+        public static void RunBattleSandboxManaLoopRuntimeMenu()
+        {
+            RunBattleSandboxManaLoopRuntime(throwOnFailure: false);
+        }
+
+        [MenuItem(BattleSandboxRuntimeLoopValidator.QaMenuPath)]
+        public static void RunBattleSandboxRuntimeLoopMenu()
+        {
+            RunBattleSandboxRuntimeLoop(throwOnFailure: false);
+        }
+
+        [MenuItem(BattleSandboxPlayableLoopValidator.QaMenuPath)]
+        public static void RunBattleSandboxPlayableLoopMenu()
+        {
+            RunBattleSandboxPlayableLoop(throwOnFailure: false);
+        }
+
         [MenuItem(BuildSandboxPlayableRegressionValidator.QaMenuPath)]
         public static void RunBuildSandboxPlayableRegressionMenu()
         {
@@ -523,6 +559,60 @@ namespace TalismanBag.EditorTools.BuildSandbox
         public static void RunBattleSandboxBuildCombatPreviewBatch()
         {
             bool passed = RunBattleSandboxBuildCombatPreview(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBuildSandboxItemStatFoundationBatch()
+        {
+            bool passed = RunBuildSandboxItemStatFoundation(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBuildSandboxItemIdentityFamilyCorrectionBatch()
+        {
+            bool passed = RunBuildSandboxItemIdentityFamilyCorrection(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBuildSandboxItemStatCombatPreviewBatch()
+        {
+            bool passed = RunBuildSandboxItemStatCombatPreview(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBattleSandboxManaLoopRuntimeBatch()
+        {
+            bool passed = RunBattleSandboxManaLoopRuntime(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBattleSandboxRuntimeLoopBatch()
+        {
+            bool passed = RunBattleSandboxRuntimeLoop(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBattleSandboxPlayableLoopBatch()
+        {
+            bool passed = RunBattleSandboxPlayableLoop(throwOnFailure: true);
             if (Application.isBatchMode)
             {
                 EditorApplication.Exit(passed ? 0 : 1);
@@ -2011,6 +2101,240 @@ namespace TalismanBag.EditorTools.BuildSandbox
             {
                 throw new InvalidOperationException(
                     $"BuildSandbox BattleSandboxBuildCombatPreview01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
+            }
+
+            return errors == 0;
+        }
+
+        public static bool RunBuildSandboxItemStatFoundation(bool throwOnFailure)
+        {
+            List<BuildSandboxValidationReport> reports =
+                BuildSandboxItemStatFoundationValidator.BuildValidationReports();
+            BattleSandboxBuildCombatPreview preview =
+                BuildSandboxItemStatFoundationValidator.BuildDefaultPreview();
+            string[] reportPaths =
+                BuildSandboxItemStatFoundationReportWriter.WriteReports(reports, preview);
+            int errors = reports.Sum(report => report.ErrorCount);
+            int warnings = reports.Sum(report => report.WarningCount);
+
+            foreach (BuildSandboxValidationIssue issue in reports.SelectMany(report => report.Issues))
+            {
+                switch (issue.Level)
+                {
+                    case BuildSandboxValidationLevel.Error:
+                        Debug.LogError(issue.ToString());
+                        break;
+                    case BuildSandboxValidationLevel.Warning:
+                        Debug.LogWarning(issue.ToString());
+                        break;
+                    default:
+                        Debug.Log(issue.ToString());
+                        break;
+                }
+            }
+
+            Debug.Log(
+                $"[BuildSandbox-ItemStatFoundation01] completed errors={errors}, warnings={warnings}, reports={string.Join(", ", reportPaths)}");
+
+            if (errors > 0 && throwOnFailure)
+            {
+                throw new InvalidOperationException(
+                    $"BuildSandbox ItemStatFoundation01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
+            }
+
+            return errors == 0;
+        }
+
+        public static bool RunBuildSandboxItemIdentityFamilyCorrection(bool throwOnFailure)
+        {
+            List<BuildSandboxValidationReport> reports =
+                BuildSandboxItemIdentityFamilyCorrectionValidator.BuildValidationReports();
+            BattleSandboxBuildCombatPreview preview =
+                BuildSandboxItemIdentityFamilyCorrectionValidator.BuildDefaultPreview();
+            string[] reportPaths =
+                BuildSandboxItemIdentityFamilyCorrectionReportWriter.WriteReports(reports, preview);
+            int errors = reports.Sum(report => report.ErrorCount);
+            int warnings = reports.Sum(report => report.WarningCount);
+
+            foreach (BuildSandboxValidationIssue issue in reports.SelectMany(report => report.Issues))
+            {
+                switch (issue.Level)
+                {
+                    case BuildSandboxValidationLevel.Error:
+                        Debug.LogError(issue.ToString());
+                        break;
+                    case BuildSandboxValidationLevel.Warning:
+                        Debug.LogWarning(issue.ToString());
+                        break;
+                    default:
+                        Debug.Log(issue.ToString());
+                        break;
+                }
+            }
+
+            Debug.Log(
+                $"[BuildSandbox-ItemIdentityFamilyCorrection01] completed errors={errors}, warnings={warnings}, reports={string.Join(", ", reportPaths)}");
+
+            if (errors > 0 && throwOnFailure)
+            {
+                throw new InvalidOperationException(
+                    $"BuildSandbox ItemIdentityFamilyCorrection01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
+            }
+
+            return errors == 0;
+        }
+
+        public static bool RunBuildSandboxItemStatCombatPreview(bool throwOnFailure)
+        {
+            List<BuildSandboxValidationReport> reports =
+                BuildSandboxItemStatCombatPreviewValidator.BuildValidationReports();
+            BattleSandboxBuildCombatPreview preview =
+                BuildSandboxItemStatCombatPreviewValidator.BuildDefaultPreview();
+            string[] reportPaths =
+                BuildSandboxItemStatCombatPreviewReportWriter.WriteReports(reports, preview);
+            int errors = reports.Sum(report => report.ErrorCount);
+            int warnings = reports.Sum(report => report.WarningCount);
+
+            foreach (BuildSandboxValidationIssue issue in reports.SelectMany(report => report.Issues))
+            {
+                switch (issue.Level)
+                {
+                    case BuildSandboxValidationLevel.Error:
+                        Debug.LogError(issue.ToString());
+                        break;
+                    case BuildSandboxValidationLevel.Warning:
+                        Debug.LogWarning(issue.ToString());
+                        break;
+                    default:
+                        Debug.Log(issue.ToString());
+                        break;
+                }
+            }
+
+            Debug.Log(
+                $"[BuildSandbox-ItemStatCombatPreview01] completed errors={errors}, warnings={warnings}, reports={string.Join(", ", reportPaths)}");
+
+            if (errors > 0 && throwOnFailure)
+            {
+                throw new InvalidOperationException(
+                    $"BuildSandbox ItemStatCombatPreview01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
+            }
+
+            return errors == 0;
+        }
+
+        public static bool RunBattleSandboxManaLoopRuntime(bool throwOnFailure)
+        {
+            List<BuildSandboxValidationReport> reports =
+                BattleSandboxManaLoopRuntimeValidator.BuildValidationReports();
+            BattleSandboxManaLoopPreview preview =
+                BattleSandboxManaLoopRuntimeValidator.BuildDefaultPreview();
+            string[] reportPaths =
+                BattleSandboxManaLoopRuntimeReportWriter.WriteReports(reports, preview);
+            int errors = reports.Sum(report => report.ErrorCount);
+            int warnings = reports.Sum(report => report.WarningCount);
+
+            foreach (BuildSandboxValidationIssue issue in reports.SelectMany(report => report.Issues))
+            {
+                switch (issue.Level)
+                {
+                    case BuildSandboxValidationLevel.Error:
+                        Debug.LogError(issue.ToString());
+                        break;
+                    case BuildSandboxValidationLevel.Warning:
+                        Debug.LogWarning(issue.ToString());
+                        break;
+                    default:
+                        Debug.Log(issue.ToString());
+                        break;
+                }
+            }
+
+            Debug.Log(
+                $"[BuildSandbox-BattleSandboxManaLoopRuntime01] completed errors={errors}, warnings={warnings}, reports={string.Join(", ", reportPaths)}");
+
+            if (errors > 0 && throwOnFailure)
+            {
+                throw new InvalidOperationException(
+                    $"BuildSandbox BattleSandboxManaLoopRuntime01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
+            }
+
+            return errors == 0;
+        }
+
+        public static bool RunBattleSandboxRuntimeLoop(bool throwOnFailure)
+        {
+            List<BuildSandboxValidationReport> reports =
+                BattleSandboxRuntimeLoopValidator.BuildValidationReports();
+            BattleSandboxRuntimeLoopPreview preview =
+                BattleSandboxRuntimeLoopValidator.BuildDefaultPreview();
+            string[] reportPaths =
+                BattleSandboxRuntimeLoopReportWriter.WriteReports(reports, preview);
+            int errors = reports.Sum(report => report.ErrorCount);
+            int warnings = reports.Sum(report => report.WarningCount);
+
+            foreach (BuildSandboxValidationIssue issue in reports.SelectMany(report => report.Issues))
+            {
+                switch (issue.Level)
+                {
+                    case BuildSandboxValidationLevel.Error:
+                        Debug.LogError(issue.ToString());
+                        break;
+                    case BuildSandboxValidationLevel.Warning:
+                        Debug.LogWarning(issue.ToString());
+                        break;
+                    default:
+                        Debug.Log(issue.ToString());
+                        break;
+                }
+            }
+
+            Debug.Log(
+                $"[BuildSandbox-BattleSandboxRuntimeLoop01] completed errors={errors}, warnings={warnings}, reports={string.Join(", ", reportPaths)}");
+
+            if (errors > 0 && throwOnFailure)
+            {
+                throw new InvalidOperationException(
+                    $"BuildSandbox BattleSandboxRuntimeLoop01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
+            }
+
+            return errors == 0;
+        }
+
+        public static bool RunBattleSandboxPlayableLoop(bool throwOnFailure)
+        {
+            List<BuildSandboxValidationReport> reports =
+                BattleSandboxPlayableLoopValidator.BuildValidationReports();
+            BattleSandboxPlayableLoopSnapshot snapshot =
+                BattleSandboxPlayableLoopValidator.BuildDefaultSnapshot();
+            string[] reportPaths =
+                BattleSandboxPlayableLoopReportWriter.WriteReports(reports, snapshot);
+            int errors = reports.Sum(report => report.ErrorCount);
+            int warnings = reports.Sum(report => report.WarningCount);
+
+            foreach (BuildSandboxValidationIssue issue in reports.SelectMany(report => report.Issues))
+            {
+                switch (issue.Level)
+                {
+                    case BuildSandboxValidationLevel.Error:
+                        Debug.LogError(issue.ToString());
+                        break;
+                    case BuildSandboxValidationLevel.Warning:
+                        Debug.LogWarning(issue.ToString());
+                        break;
+                    default:
+                        Debug.Log(issue.ToString());
+                        break;
+                }
+            }
+
+            Debug.Log(
+                $"[BuildSandbox-BattleSandboxPlayableLoop01] completed errors={errors}, warnings={warnings}, reports={string.Join(", ", reportPaths)}");
+
+            if (errors > 0 && throwOnFailure)
+            {
+                throw new InvalidOperationException(
+                    $"BuildSandbox BattleSandboxPlayableLoop01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
             }
 
             return errors == 0;

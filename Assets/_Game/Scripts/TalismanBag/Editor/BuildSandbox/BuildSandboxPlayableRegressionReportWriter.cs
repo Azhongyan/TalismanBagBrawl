@@ -68,6 +68,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
             builder.AppendLine($"| Drag/place/illegal return | `{PassFail(snapshot.placementSamplesPass)}` | legal={snapshot.legalPlacementSampleCount}; illegalReturn={snapshot.illegalReturnSampleCount} |");
             builder.AppendLine($"| Continue battle board read | `{PassFail(snapshot.currentBoardReadPass)}` | combat preview reads current board snapshot |");
             builder.AppendLine($"| Build-dependent Boss feedback | `{PassFail(snapshot.buildFeedbackVariationPass)}` | bossState={snapshot.bossStateRowCount}; cast={snapshot.castBarRowCount}; mechanic={snapshot.mechanicFloatingRowCount}; logs={snapshot.combatLogRowCount}; distinctBuildFeedback={snapshot.distinctBuildFeedbackCount} |");
+            builder.AppendLine($"| devOnly mana loop | `{PassFail(snapshot.manaLoopPass)}` | gainRows={snapshot.manaLoopGainRowCount}; spendRows={snapshot.manaLoopSpendRowCount}; generated={snapshot.manaLoopGeneratedManaTotal}; spent={snapshot.manaLoopSpentManaTotal}; layoutWrites={snapshot.manaLoopUiLayoutWriteCount} |");
             builder.AppendLine($"| 3-10 / 4-10 devOnly balance rows | `{PassFail(snapshot.devChapterBalancePass)}` | 3-10={snapshot.devBalance310StageCount}; 4-10={snapshot.devBalance410StageCount} |");
             builder.AppendLine($"| Player answer leak check | `{PassFail(snapshot.playerLeakPass)}` | leaks={snapshot.playerSideAnswerLeakCount} |");
             builder.AppendLine($"| Feature flags default false | `{PassFail(snapshot.featureFlagsDefaultFalsePass)}` | defaultTrue={snapshot.featureFlagDefaultTrueCount} |");
@@ -82,10 +83,11 @@ namespace TalismanBag.EditorTools.BuildSandbox
             builder.AppendLine("4. Drag x2/x3/x4 items to legal board cells and confirm they remain placed without snapping back, jumping, or disappearing.");
             builder.AppendLine("5. Drag an item out of bounds or over occupied cells and confirm it returns cleanly to the tray/state before the drag.");
             builder.AppendLine("6. Use prepare to continue battle after changing the board, then confirm Boss status, cast bar, floating mechanic text, and combat log refresh.");
-            builder.AppendLine("7. Try at least two different build layouts and confirm Boss feedback changes in visible wording or timing.");
-            builder.AppendLine("8. Review 3-10 / 4-10 devOnly balance rows and confirm the difficulty suggestions are readable.");
-            builder.AppendLine("9. Confirm player-visible UI does not show complete solution keys, answer weights, required tags, required affixes, required stats, or full Boss key answers.");
-            builder.AppendLine("10. Confirm no formal run flow, save data, rewards, drops, chapter progress, or feature flag activation appears during the sandbox test.");
+            builder.AppendLine("7. Confirm ManaText, PlayerManaBar fill, and mana floating text update after continuing battle.");
+            builder.AppendLine("8. Try at least two different build layouts and confirm Boss feedback changes in visible wording or timing.");
+            builder.AppendLine("9. Review 3-10 / 4-10 devOnly balance rows and confirm the difficulty suggestions are readable.");
+            builder.AppendLine("10. Confirm player-visible UI does not show complete solution keys, answer weights, required tags, required affixes, required stats, or full Boss key answers.");
+            builder.AppendLine("11. Confirm no formal run flow, save data, rewards, drops, chapter progress, or feature flag activation appears during the sandbox test.");
             builder.AppendLine();
             builder.AppendLine("## Checklist Rows");
             builder.AppendLine();

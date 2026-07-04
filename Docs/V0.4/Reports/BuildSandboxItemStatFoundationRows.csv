@@ -1,0 +1,9 @@
+itemId,shapeId,occupiedCellCount,statProfileId,attack,guard,spirit,control,shieldBreak,cleanse,statTag,devOnly,isEnabled
+preview_taomu_sword,vertical_3,3,stat_taomu_sword_vertical_3,8,5,2,1,4,2,taomu_sword_vertical_3,True,False
+preview_energy_incense,Vertical2,2,stat_energy_incense_vertical_2,1,1,7,0,0,0,energy_vertical,True,False
+preview_fire_talisman,Single1,1,stat_fire_talisman_single_1,6,0,3,0,1,0,fire_damage_single,True,False
+preview_thunder_sword,Single1,1,stat_thunder_sword_single_1,7,1,3,1,5,0,thunder_break_single,True,False
+preview_x2_wood_talisman,Vertical2,2,stat_guard_wood_vertical_2,2,6,3,1,1,0,guard_ward_vertical,True,False
+preview_guard_wood,Vertical2,2,stat_guard_wood_vertical_2,2,6,3,1,1,0,guard_ward_vertical,True,False
+preview_cleanse_corner,Corner3,3,stat_cleanse_corner_3,2,3,4,4,0,6,cleanse_corner,True,False
+preview_stone_core,Square4,4,stat_stone_core_square_4,5,6,6,1,2,0,core_square,True,False

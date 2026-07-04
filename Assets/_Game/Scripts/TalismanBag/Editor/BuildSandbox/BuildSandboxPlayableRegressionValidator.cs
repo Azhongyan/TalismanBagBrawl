@@ -66,6 +66,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
             List<BuildSandboxValidationReport> reports = new();
             reports.AddRange(BuildGridInteractionPreviewValidator.BuildValidationReports());
             reports.AddRange(BattleSandboxBuildCombatPreviewValidator.BuildValidationReports());
+            reports.AddRange(BattleSandboxManaLoopRuntimeValidator.BuildValidationReports());
             reports.AddRange(DevChapterBalanceRunValidator.BuildValidationReports());
             reports.Add(Validate());
             return reports;
@@ -96,6 +97,8 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 .ToDictionary(shape => shape.shapeId, StringComparer.Ordinal);
             BattleSandboxBuildCombatPreview combatPreview =
                 BattleSandboxBuildCombatPreviewValidator.BuildDefaultPreview();
+            BattleSandboxManaLoopPreview manaLoopPreview =
+                BattleSandboxManaLoopRuntimeValidator.BuildDefaultPreview();
             DevChapterBalanceRun balanceRun =
                 DevChapterBalanceRunValidator.BuildDefaultRun();
 
@@ -122,6 +125,11 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 combatLogRowCount = combatPreview?.rows?.Count(row =>
                     row != null && !string.IsNullOrWhiteSpace(row.combatLogLineChinese)) ?? 0,
                 shapeRuleFeedbackRowCount = combatPreview?.ShapeBuildRuleFeedbackRowCount ?? 0,
+                manaLoopGainRowCount = manaLoopPreview?.ManaGainRowCount ?? 0,
+                manaLoopSpendRowCount = manaLoopPreview?.ManaSpendRowCount ?? 0,
+                manaLoopGeneratedManaTotal = manaLoopPreview?.generatedManaTotal ?? 0,
+                manaLoopSpentManaTotal = manaLoopPreview?.spentManaTotal ?? 0,
+                manaLoopUiLayoutWriteCount = manaLoopPreview?.UiLayoutWriteCount ?? 1,
                 distinctBuildFeedbackCount = balanceRun?.stages?
                     .Where(stage => stage != null)
                     .Select(stage => stage.currentBuildFeedbackChinese)
@@ -174,15 +182,26 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 && balanceRun.FitStageCount > 0
                 && balanceRun.HardStageCount > 0
                 && balanceRun.DevOnlyIsolationPass;
+            snapshot.manaLoopPass =
+                manaLoopPreview != null
+                && manaLoopPreview.DevOnlyIsolationPass
+                && manaLoopPreview.sourceItemStatProfileCount > 0
+                && manaLoopPreview.ManaGainRowCount > 0
+                && manaLoopPreview.ManaSpendRowCount > 0
+                && manaLoopPreview.generatedManaTotal > 0
+                && manaLoopPreview.spentManaTotal > 0
+                && manaLoopPreview.UiLayoutWriteCount == 0;
 
             snapshot.playerSideAnswerLeakCount =
                 (combatPreview?.PlayerSideAnswerLeakCount ?? 1)
                 + (combatPreview?.shapeBuildRulePreview?.PlayerSideAnswerLeakCount ?? 1)
+                + (manaLoopPreview?.PlayerSideAnswerLeakCount ?? 1)
                 + (balanceRun?.PlayerSideAnswerLeakCount ?? 1)
                 + sceneSnapshot.PlayerTextLatinViolations.Count
                 + sceneSnapshot.ForbiddenAnswerTextViolations.Count;
             snapshot.formalFlowLeakCount =
                 (combatPreview?.FormalFlowLeakCount ?? 1)
+                + (manaLoopPreview?.FormalLeakCount ?? 1)
                 + (balanceRun?.FormalFlowLeakCount ?? 1)
                 + CountTrue(
                     sceneSnapshot.ControllerReadsFormalSave,
@@ -195,12 +214,14 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 combatPreview?.devOnly ?? false,
                 combatPreview?.feedbackPreview?.devOnly ?? false,
                 combatPreview?.shapeBuildRulePreview?.devOnly ?? false,
+                manaLoopPreview?.devOnly ?? false,
                 balanceRun?.devOnly ?? false);
             snapshot.isEnabledTrueCount = CountTrue(
                 sceneSnapshot.ControllerIsEnabled,
                 combatPreview?.isEnabled ?? true,
                 combatPreview?.feedbackPreview?.isEnabled ?? true,
                 combatPreview?.shapeBuildRulePreview?.isEnabled ?? true,
+                manaLoopPreview?.isEnabled ?? true,
                 balanceRun?.isEnabled ?? true);
 
             snapshot.playerLeakPass = snapshot.playerSideAnswerLeakCount == 0;
@@ -215,6 +236,8 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 !sceneSnapshot.BuildSettingsContainsPreview
                 && !(balanceRun?.touchesV02OrV03Scene ?? true)
                 && !(balanceRun?.touchesCurrentV04RectTransform ?? true)
+                && (manaLoopPreview?.UiLayoutWriteCount ?? 1) == 0
+                && !(manaLoopPreview?.touchesFormalSceneUiLayout ?? true)
                 && !sceneSnapshot.ControllerTouchesFormalScene;
             snapshot.checklistRows = BuildChecklistRows(snapshot);
             return snapshot;
@@ -230,6 +253,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
             RequireTrue(report, "PLAYABLE_REGRESSION_PLACEMENT_READY", snapshot.placementSamplesPass, "Legal placement and illegal-return samples are covered.");
             RequireTrue(report, "PLAYABLE_REGRESSION_BOARD_READ_READY", snapshot.currentBoardReadPass, "Build combat preview reads the current board snapshot.");
             RequireTrue(report, "PLAYABLE_REGRESSION_FEEDBACK_READY", snapshot.buildFeedbackVariationPass, "Different build layouts produce boss state, cast, mechanic, and combat log feedback.");
+            RequireTrue(report, "PLAYABLE_REGRESSION_MANA_LOOP_READY", snapshot.manaLoopPass, "devOnly mana loop reads BuildSandbox ItemStat and produces mana gain/spend rows.");
             RequireTrue(report, "PLAYABLE_REGRESSION_DEV_BALANCE_READY", snapshot.devChapterBalancePass, "3-10 and 4-10 devOnly balance run rows are present and readable.");
             RequireTrue(report, "PLAYABLE_REGRESSION_PLAYER_LEAK_CLEAR", snapshot.playerLeakPass, "Player-side forbidden answer leak counters are zero.");
             RequireTrue(report, "PLAYABLE_REGRESSION_FLAGS_FALSE", snapshot.featureFlagsDefaultFalsePass, "All BuildSandbox feature flags still default false.");
@@ -248,6 +272,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 Row("REG-04", "Placement", "Legal placement succeeds and illegal placement returns cleanly.", snapshot.placementSamplesPass, "Placement sample validator.", $"legal={snapshot.legalPlacementSampleCount}; illegalReturn={snapshot.illegalReturnSampleCount}", true, "User should test overlap and out-of-board release in Play mode."),
                 Row("REG-05", "Continue Battle", "Prepare to continue battle reads the current board and refreshes Boss feedback.", snapshot.currentBoardReadPass, "BuildCombatPreview default board snapshot and readiness scan.", $"bossReadinessRows={snapshot.bossStateRowCount}; placedSnapshotRead={snapshot.currentBoardReadPass}", true, "User should move a build, press continue battle, and observe refreshed feedback."),
                 Row("REG-06", "Build Feedback", "Different builds produce different Boss state, cast, floating text, and combat log lines.", snapshot.buildFeedbackVariationPass, "BuildCombatPreview rows + DevChapterBalanceRun distinct feedback scan.", $"bossState={snapshot.bossStateRowCount}; cast={snapshot.castBarRowCount}; mechanic={snapshot.mechanicFloatingRowCount}; logs={snapshot.combatLogRowCount}; distinctBuildFeedback={snapshot.distinctBuildFeedbackCount}", true, "User should compare at least two layouts before and after continuing battle."),
+                Row("REG-14", "Mana Loop", "devOnly mana loop produces and spends mana from V0.4 BuildSandbox ItemStat.", snapshot.manaLoopPass, "BattleSandboxManaLoopRuntime preview validator.", $"gainRows={snapshot.manaLoopGainRowCount}; spendRows={snapshot.manaLoopSpendRowCount}; generated={snapshot.manaLoopGeneratedManaTotal}; spent={snapshot.manaLoopSpentManaTotal}; layoutWrites={snapshot.manaLoopUiLayoutWriteCount}", true, "User should confirm ManaText, mana bar fill, and mana floating text update after continuing battle."),
                 Row("REG-07", "Dev Balance", "3-10 and 4-10 devOnly balance recommendations are generated and readable.", snapshot.devChapterBalancePass, "DevChapterBalanceRun validator.", $"3-10={snapshot.devBalance310StageCount}; 4-10={snapshot.devBalance410StageCount}", false, "Covers over-easy, fit, and over-hard buckets."),
                 Row("REG-08", "Player Leak", "Player UI does not leak complete answer fields or forbidden solution keys.", snapshot.playerLeakPass, "Grid text leak scan + BuildCombatPreview + ShapeBuildRule + DevBalance counters.", $"playerLeaks={snapshot.playerSideAnswerLeakCount}", true, "User should confirm player-visible text remains masked and Chinese-only."),
                 Row("REG-09", "Feature Flags", "All BuildSandbox feature flags remain default false.", snapshot.featureFlagsDefaultFalsePass, "BuildSandboxFeatureFlags.All scan.", $"defaultTrue={snapshot.featureFlagDefaultTrueCount}", false, string.Empty),
