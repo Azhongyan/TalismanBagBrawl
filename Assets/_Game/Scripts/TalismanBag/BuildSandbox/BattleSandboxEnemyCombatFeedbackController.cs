@@ -32,6 +32,7 @@ namespace TalismanBag.BuildSandbox
         [SerializeField] private Button triggerFloatingButton;
 
         private readonly List<BattleSandboxEnemyCombatFeedbackRow> rows = new();
+        private BattleSandboxBuildCombatPreview buildCombatPreview;
         private BattleSandboxEnemyCombatFeedbackPreview preview;
         private Vector2 floatingStartPosition;
         private float rowTimer;
@@ -50,6 +51,7 @@ namespace TalismanBag.BuildSandbox
         public bool OpensFeatureFlag => opensFeatureFlag;
         public bool ShowsCompleteAnswers => showsCompleteAnswers;
         public int PlayerVisibleRowCount => rows.Count;
+        public BattleSandboxBuildCombatPreview CurrentBuildCombatPreview => buildCombatPreview;
 
         public void Bind(
             Text title,
@@ -149,24 +151,44 @@ namespace TalismanBag.BuildSandbox
             ShowFloatingText(CurrentRow());
         }
 
-        private void InitializePreview()
+        public void RestartBattleModePreview()
         {
-            if (preview != null)
+            InitializePreview(forceRebuild: true);
+            CacheFloatingStartPosition();
+            rowIndex = FindFirstCastBarRowIndex();
+            ShowCurrent(restartFloating: true);
+        }
+
+        private void InitializePreview(bool forceRebuild = false)
+        {
+            if (preview != null && !forceRebuild)
             {
                 return;
             }
 
-            BuildSandboxPreviewContext context = BuildSandboxPreviewContextBuilder.Build(
-                new BuildSandboxPreviewContextBuildInput());
-            BuildTuningDataPanelPreview dataPanel =
-                BuildTuningDataPanelPreviewBuilder.Build(context);
-            MechanicHintFeedbackPreview hintPreview =
-                MechanicHintFeedbackPreviewBuilder.Build(context, dataPanel: dataPanel);
-            preview = BattleSandboxEnemyCombatFeedbackBuilder.Build(context, hintPreview, dataPanel);
+            BuildGridInteractionPreviewController gridController =
+                FindObjectOfType<BuildGridInteractionPreviewController>(true);
+            buildCombatPreview =
+                BattleSandboxBuildCombatPreviewBuilder.BuildFromCurrentBoard(gridController);
+            preview = buildCombatPreview.feedbackPreview;
 
             rows.Clear();
             rows.AddRange((preview.rows ?? new List<BattleSandboxEnemyCombatFeedbackRow>())
                 .Where(row => row != null && row.playerVisible));
+            rowIndex = rows.Count == 0 ? 0 : Mathf.Clamp(rowIndex, 0, rows.Count - 1);
+        }
+
+        private int FindFirstCastBarRowIndex()
+        {
+            for (int i = 0; i < rows.Count; i++)
+            {
+                if (rows[i] != null && rows[i].usesEnemyCastBarLanguage)
+                {
+                    return i;
+                }
+            }
+
+            return 0;
         }
 
         private void BindButtons()

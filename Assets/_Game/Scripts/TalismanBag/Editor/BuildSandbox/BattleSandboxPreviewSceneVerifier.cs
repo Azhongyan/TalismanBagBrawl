@@ -37,7 +37,6 @@ namespace TalismanBag.EditorTools.BuildSandbox
         {
             "BoardGridPreview",
             "ItemTrayPreview",
-            "PlacementFeedback",
             "EnemyCombatFeedbackPanel"
         };
 
@@ -260,6 +259,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
             {
                 RequireChild(report, battleArea, slot);
             }
+            ValidatePlacementFeedbackFallback(report, battleArea);
 
             Transform problemPanel = FindDeepChild(safeArea, "ProblemSelectorPanel");
             foreach (string slot in RequiredProblemSlots)
@@ -356,6 +356,37 @@ namespace TalismanBag.EditorTools.BuildSandbox
 
             report.AddInfo("BATTLE_SANDBOX_CHILD_PRESENT", BuildPath(child), BuildPath(child));
             return child;
+        }
+
+        private static void ValidatePlacementFeedbackFallback(
+            BuildSandboxValidationReport report,
+            Transform battleArea)
+        {
+            Transform placementFeedback = FindDeepChild(battleArea, "PlacementFeedback");
+            if (placementFeedback != null)
+            {
+                report.AddInfo(
+                    "BATTLE_SANDBOX_CHILD_PRESENT",
+                    BuildPath(placementFeedback),
+                    BuildPath(placementFeedback));
+                return;
+            }
+
+            BuildGridInteractionPreviewController controller =
+                UnityEngine.Object.FindObjectOfType<BuildGridInteractionPreviewController>(true);
+            if (controller != null && battleArea != null)
+            {
+                report.AddInfo(
+                    "BATTLE_SANDBOX_PLACEMENT_FEEDBACK_RUNTIME_FALLBACK",
+                    "Placement feedback is created at runtime when the hand-tuned scene does not serialize the legacy slot.",
+                    BuildPath(battleArea));
+                return;
+            }
+
+            report.AddError(
+                "BATTLE_SANDBOX_CHILD_MISSING",
+                $"{BuildPath(battleArea)} missing PlacementFeedback and runtime fallback controller.",
+                "PlacementFeedback");
         }
 
         private static Transform FindDeepChild(Transform parent, string objectName)

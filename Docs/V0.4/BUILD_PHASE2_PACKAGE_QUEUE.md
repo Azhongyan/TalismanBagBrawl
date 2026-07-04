@@ -81,8 +81,9 @@ Phase 2 Package Queue
 | 9H | `V0.4-BattleSandboxShapePlacementRegression01` | `USER_ACCEPTED / QA_PASSED_BY_USER / WAITING_REPOOPS_RECORD` | x2 / x3 / x4 摆放交互回归，确认当前 V04 沙盒摆放主干已完成 | 用户确认“这个我做好了”；等待 RepoOps 记录 |
 | 10 | `V0.4-MechanicHintFeedbackPreview01` | `USER_ACCEPTED / QA_PASSED_BY_USER / WAITING_REPOOPS_RECORD` | 地图机制 / 敌人机制 / Boss 技能 / 失败反馈的玩家侧线索预览，复用既有战斗提示 UI 语言，不显示答案 | 用户已确认通过；等待 RepoOps 记录 |
 | 11 | `V0.4-BattleSandboxEnemyEncounterPreview01` | `RETURNED / WRONG_UI_DIRECTION / DO_NOT_CONTINUE_PANEL_ROUTE` | 原实现偏向“敌人/Boss题目预览面板”，与用户意图不符 | 停止继续堆题目面板 |
-| 11A | `V0.4-BattleSandboxEnemyCombatFeedbackUiReuse01` | `CURRENT / GUARD_PASS_BATTLESANDBOX_ENEMY_COMBAT_FEEDBACK_UI_REUSE01 / READY_FOR_DEV` | 复用战斗反馈语言：像伤害数字一样弹 Boss 状态/机制反馈；Boss 施法条接到既有敌人施法条口径 | assignment：`Docs/V0.4/BattleSandboxEnemyCombatFeedbackUiReuse01_Assignment.md` |
-| 12 | `V0.4-BattleSandboxBuildCombatPreview01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | 将棋盘 Build、羁绊、词条、Modifier 与 devOnly 敌人/Boss反馈连接，输出沙盒战斗反馈 | 等 EnemyCombatFeedbackUiReuse01 通过 |
+| 11A | `V0.4-BattleSandboxEnemyCombatFeedbackUiReuse01` | `LOGIC_PASS / VISIBILITY_FIXED / WAITING_REPOOPS_RECORD` | 复用战斗反馈语言：像伤害数字一样弹 Boss 状态/机制反馈；Boss 施法条接到既有敌人施法条口径 | 逻辑接入与可见性修复均完成；等待 RepoOps 记录 |
+| 11A-Fix01 | `V0.4-BattleSandboxEnemyCombatFeedbackVisibilityFix01` | `USER_ACCEPTED / QA_PASSED_BY_USER / WAITING_REPOOPS_RECORD` | 最小修复：只在 V04 sandbox battle mode 激活 `EnemyCombatFeedbackPanel`，不动棋盘/道具栏布局 | 用户确认 V04 sandbox battle mode 下 Panel / FloatingRoot / Boss 状态 / 技能短句 / 施法条 / 机制浮字可见 |
+| 12 | `V0.4-BattleSandboxBuildCombatPreview01` | `DEV_DONE / STATIC_READY / UNITY_BATCH_NOT_RUN / WAITING_USER_HANDTEST` | 将棋盘 Build、羁绊、词条、Modifier 与 devOnly 敌人/Boss反馈连接，输出沙盒战斗反馈 | 等待用户手测：不同棋盘摆放能改变 Boss 状态 / 施法条 / 机制浮字 / 战斗反馈，且无答案泄漏、无正式流程写入 |
 | 13 | `V0.4-DevChapterBalanceRun01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | devOnly 3-10 / 4-10 难度曲线与调参验证流，不是玩家正式章节 | 等 BuildCombatPreview01 通过 |
 | 14 | `V0.4-BuildSandboxPlayableRegression01` | `QUEUED / WAITING_GUARD_ASSIGNMENT` | Phase 2 整体验收与 PromoteCandidateDraft | 等全部包通过 |
 
@@ -221,6 +222,82 @@ Guard 当前推进到：
 ```text
 V0.4-BattleSandboxEnemyCombatFeedbackUiReuse01
 ```
+
+EnemyCombatFeedbackUiReuse01 开发窗口回报：
+```text
+逻辑接入完成。
+BattleSandbox Enemy Combat Feedback UI Reuse 01 报告 PASS。
+Leak check = 0。
+EnemyCombatFeedbackRuntime 已在 V04 sandbox 场景内。
+Boss 状态 / 技能短句、施法条填充、倒计时、机制浮字循环 runtime 逻辑存在。
+未接正式 RunFlow、正式伤害、奖励、存档、章节或 FeatureFlag。
+```
+
+但用户/开发窗口确认：
+```text
+不算完全接到战斗模式可见。
+EnemyCombatFeedbackPanel 当前是关闭的。
+EnemyCombatFeedbackFloatingRoot 是开的，所以浮字可能可见。
+主战斗反馈面板不会稳定可见。
+```
+
+Guard 裁定：
+```text
+逻辑 PASS 不等于用户可见 PASS。
+当前进入最小可见性修复包。
+只允许在 V04 sandbox battle mode 激活 EnemyCombatFeedbackPanel。
+不动棋盘 / 道具栏 RectTransform。
+不重跑会改 UI 布局的 binder。
+```
+
+EnemyCombatFeedbackVisibilityFix01 用户手测通过：
+```text
+V04 sandbox battle mode 下 EnemyCombatFeedbackPanel / FloatingRoot 可见。
+Boss 状态、技能短句、施法条倒计时 / 填充、机制浮字可见。
+未接正式 RunFlow。
+未接正式战斗伤害。
+未发奖励。
+未写 save / progress。
+未推进章节。
+未启用 FeatureFlag。
+未出现答案面板。
+未重跑 scene binder。
+未重写 board / item tray RectTransform 布局。
+```
+
+Guard 当前推进到：
+```text
+V0.4-BattleSandboxBuildCombatPreview01
+```
+
+BattleSandboxBuildCombatPreview01 开发窗口已回报完成：
+```text
+新增 BattleSandboxBuildCombatPreview。
+BuildGridInteractionPreviewController 只加 BuildCurrentLayoutSnapshot 只读导出。
+EnemyCombatFeedbackController 进入沙盒战斗预览时按当前棋盘重建反馈。
+报告已输出：
+Docs/V0.4/Reports/BattleSandboxBuildCombatPreviewReport.md
+Docs/V0.4/Reports/BattleSandboxBuildCombatPreviewRows.csv
+Docs/V0.4/Reports/BattleSandboxBuildCombatPreviewLeakCheckReport.md
+未改 scene 文件。
+未 authored 棋盘 / 道具栏 / Boss feedback panel RectTransform。
+未接正式 RunFlow、正式伤害、奖励、存档、章节推进或 FeatureFlag。
+Unity batch 未运行，当前 shell 找不到 Unity。
+```
+
+Guard 当前只记录为 WAITING_USER_HANDTEST。
+未通过用户手测前，不进入 DevChapterBalanceRun01。
+
+BuildCombatPreview01 手测重点：
+1. x2 / x3 / x4 摆放交互不回退。
+2. 当前敌人 / Boss 反馈面板仍可见。
+3. 可以触发一次 BuildCombatPreview。
+4. 预览会读取当前棋盘道具摆放。
+5. 改变棋盘 Build 后，Boss 状态 / 机制浮字 / 战斗反馈会变化。
+6. 不同敌人 / Boss 会输出不同机制反馈。
+7. 玩家侧不显示 hardSolutionTags / requiredSynergy / requiredAffix / requiredStats / DropBias 权重 / Boss 六钥匙。
+8. 不进入正式战斗、不发奖励、不写存档、不推进章节。
+9. Console 无本包红色 Error / 黄色 Warning。
 ```
 
 ## 5. Phase 2 统一禁止

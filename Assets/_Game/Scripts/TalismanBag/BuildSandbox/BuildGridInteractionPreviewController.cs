@@ -20,6 +20,9 @@ namespace TalismanBag.BuildSandbox
         private const float BattlePreparePullOffset = 320f;
         private const string BattlePrepareActionBarName = "V04BattlePrepareBottomActions";
         private const string BattlePrepareOverlayName = "V04BattlePrepareDarkOverlay";
+        private const string ItemTrayLockedOverlayName = "ItemTrayBattleLockedOverlay";
+        private const string EnemyCombatFeedbackPanelName = "EnemyCombatFeedbackPanel";
+        private const string EnemyCombatFeedbackFloatingRootName = "EnemyCombatFeedbackFloatingRoot";
         private const string DragGhostCellLayerName = "DragGhostCellLayer";
         private const string DragGhostCellNamePrefix = "DragGhostCell_";
 
@@ -62,6 +65,9 @@ namespace TalismanBag.BuildSandbox
         [SerializeField] private Button battlePrepareToggleButton;
         [SerializeField] private Text battlePrepareStateButtonText;
         [SerializeField] private Text battlePrepareToggleButtonText;
+        [SerializeField] private RectTransform enemyCombatFeedbackPanel;
+        [SerializeField] private RectTransform enemyCombatFeedbackFloatingRoot;
+        [SerializeField] private BattleSandboxEnemyCombatFeedbackController enemyCombatFeedbackController;
 
         private readonly Dictionary<ItemShapeCell, BuildGridPreviewSlotView> boardSlotByCell = new();
         private readonly Dictionary<string, PreviewItem> itemById = new(StringComparer.Ordinal);
@@ -72,12 +78,9 @@ namespace TalismanBag.BuildSandbox
         private ShapeAwareItemTrayGrid shapeAwareTrayGrid;
         private UiBoardShapeGridReceiver boardReceiver;
         private PreviewItem selectedItem;
-        private PreviewItem lockedPreviewItem;
         private ShapePlacementResult lastPreviewResult;
-        private ShapePlacementResult lockedPreviewResult;
         private ItemShapeCell lastPreviewAnchor;
         private bool hasLastPreviewAnchor;
-        private bool hasLockedPreview;
         private readonly HashSet<string> placedItemIds = new(StringComparer.Ordinal);
         private string activeDragItemId = string.Empty;
         private int placementSequence;
@@ -88,6 +91,9 @@ namespace TalismanBag.BuildSandbox
         private bool battlePrepareStateActive;
         private bool battlePrepareContinueStateActive;
         private bool sandboxBattleActive;
+        private bool enemyCombatFeedbackVisibleLastFrame;
+        private Image itemTrayLockedOverlay;
+        private CanvasGroup itemTrayLockedOverlayCanvasGroup;
         private RectTransform dragGhostCellLayer;
         private Image dragGhostBackgroundImage;
         private Vector2 dragGhostDefaultSize;
@@ -204,6 +210,46 @@ namespace TalismanBag.BuildSandbox
                 && shapeAwareTrayGrid.TryGetPlacement(itemId, out placement);
         }
 
+        public BuildSandboxLayoutSnapshot BuildCurrentLayoutSnapshot()
+        {
+            BuildSandboxLayoutSnapshot snapshot = new();
+            if (itemById.Count == 0)
+            {
+                BuildItemLookup();
+            }
+
+            EnsureShapeLookupForQuery();
+            if (boardReceiver == null || boardReceiver.OccupiedCells.Count == 0)
+            {
+                return snapshot;
+            }
+
+            foreach (IGrouping<string, KeyValuePair<ItemShapeCell, string>> group in boardReceiver.OccupiedCells
+                         .Where(pair => !string.IsNullOrWhiteSpace(pair.Value))
+                         .GroupBy(pair => pair.Value, StringComparer.Ordinal)
+                         .OrderBy(group => group.Key, StringComparer.Ordinal))
+            {
+                if (!itemById.TryGetValue(group.Key, out PreviewItem item) || item == null)
+                {
+                    continue;
+                }
+
+                List<ItemShapeCell> cells = group
+                    .Select(pair => pair.Key)
+                    .OrderBy(cell => cell.x)
+                    .ThenBy(cell => cell.y)
+                    .ToList();
+                snapshot.placedItems.Add(BattleSandboxBuildCombatPreviewBuilder.CreatePlacedItemSnapshot(
+                    item.ItemId,
+                    item.ShapeId,
+                    item.Rotation,
+                    cells));
+            }
+
+            BattleSandboxBuildCombatPreviewBuilder.ApplyPreviewEnergyLinks(snapshot);
+            return snapshot;
+        }
+
         public void ApplyCategoryFilter(string category)
         {
             string safeCategory = string.IsNullOrWhiteSpace(category) ? "全部" : category;
@@ -283,14 +329,14 @@ namespace TalismanBag.BuildSandbox
                 RefreshItemInfoPanel(item);
             }
 
-            placementFeedbackView?.ShowInfo($"已查看“{item.DisplayName}”。单击只刷新信息；只可点击信息弹窗里的 Rotate 旋转。");
+            placementFeedbackView?.ShowInfo($"已查看“{item.DisplayName}”。单击只刷新信息；只可点击信息弹窗里的“旋转”按钮。");
         }
 
         public void RotateSelectedItem()
         {
             if (selectedItem == null)
             {
-                placementFeedbackView?.ShowInfo("请先单击道具打开信息弹窗，再点击弹窗里的 Rotate。");
+                placementFeedbackView?.ShowInfo("请先单击道具打开信息弹窗，再点击弹窗里的“旋转”按钮。");
                 return;
             }
 
@@ -322,7 +368,7 @@ namespace TalismanBag.BuildSandbox
 
             if (!battlePrepareStateActive)
             {
-                placementFeedbackView?.ShowInfo("Open Prepare before rotating tray items.");
+                placementFeedbackView?.ShowInfo("请先打开整备界面再旋转道具。");
                 return;
             }
 
@@ -363,7 +409,7 @@ namespace TalismanBag.BuildSandbox
         {
             if (!battlePrepareStateActive)
             {
-                placementFeedbackView?.ShowInfo("Open Prepare before moving items.");
+                placementFeedbackView?.ShowInfo("请先打开整备界面再移动道具。");
                 return;
             }
 
@@ -382,9 +428,6 @@ namespace TalismanBag.BuildSandbox
             itemTrayView?.SetRotateEnabled(item.ItemId, false);
             RefreshItemInfoPanel(item);
             ClearPreviewCells();
-            hasLockedPreview = false;
-            lockedPreviewResult = null;
-            lockedPreviewItem = null;
             ShowDragGhost(selectedItem, eventData, "拖动中");
         }
 
@@ -413,7 +456,7 @@ namespace TalismanBag.BuildSandbox
         {
             if (!battlePrepareStateActive)
             {
-                placementFeedbackView?.ShowInfo("Open Prepare before moving board items.");
+                placementFeedbackView?.ShowInfo("请先打开整备界面再移动棋盘道具。");
                 return;
             }
 
@@ -433,9 +476,6 @@ namespace TalismanBag.BuildSandbox
             itemTrayView?.SetRotateEnabled(item.ItemId, false);
             RefreshItemInfoPanel(item);
             ClearPreviewCells();
-            hasLockedPreview = false;
-            lockedPreviewResult = null;
-            lockedPreviewItem = null;
             ShowDragGhost(selectedItem, eventData, "拖动中");
         }
 
@@ -462,7 +502,7 @@ namespace TalismanBag.BuildSandbox
 
         public void ConfirmLockedPreviewFromCell(ItemShapeCell cell)
         {
-            placementFeedbackView?.ShowInfo("本包不需要点击 Ghost 确认：合法位置松手已直接放置。");
+            placementFeedbackView?.ShowInfo("本包不需要点击预览影确认：合法位置松手已直接放置。");
         }
 
         public void ResetPreview()
@@ -473,10 +513,7 @@ namespace TalismanBag.BuildSandbox
             placedItemIds.Clear();
             activeDragItemId = string.Empty;
             hasLastPreviewAnchor = false;
-            hasLockedPreview = false;
             lastPreviewResult = null;
-            lockedPreviewResult = null;
-            lockedPreviewItem = null;
             selectedItem = null;
             shapeAwareTrayGrid?.Clear();
             foreach (PreviewItem item in itemById.Values)
@@ -501,7 +538,7 @@ namespace TalismanBag.BuildSandbox
             battlePrepareStateActive = false;
             battlePrepareContinueStateActive = false;
             RefreshBattlePrepareChrome(snapMotion: true);
-            placementFeedbackView?.ShowNeutral("已取消。单击道具查看信息；在信息弹窗点 Rotate 调整方向；拖到棋盘松手直接放置。");
+            placementFeedbackView?.ShowNeutral("已取消。单击道具查看信息；在信息弹窗点“旋转”调整方向；拖到棋盘松手直接放置。");
         }
 
         private void Awake()
@@ -567,6 +604,7 @@ namespace TalismanBag.BuildSandbox
             {
                 placementFeedbackView = FindObjectOfType<BuildPlacementFeedbackView>(true);
             }
+            EnsureRuntimePlacementFeedback();
 
             if (selectedItemInfoRoot == null)
             {
@@ -587,7 +625,56 @@ namespace TalismanBag.BuildSandbox
                 itemInfoPanel.SetRotateHandler(RotateInfoPanelItem);
             }
 
+            EnsureEnemyCombatFeedbackVisibilityReferences();
             EnsureSelectedItemInfoCloseButton();
+        }
+
+        private void EnsureRuntimePlacementFeedback()
+        {
+            if (placementFeedbackView != null)
+            {
+                return;
+            }
+
+            RectTransform parent = FindRectTransform("BattleLikePreviewArea");
+            if (parent == null)
+            {
+                parent = boardGridPreview == null ? null : boardGridPreview.parent as RectTransform;
+            }
+
+            if (parent == null)
+            {
+                return;
+            }
+
+            GameObject feedbackObject = new(
+                "PlacementFeedback_Runtime",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(BuildPlacementFeedbackView));
+            feedbackObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            feedbackObject.transform.SetParent(parent, false);
+
+            RectTransform rect = feedbackObject.GetComponent<RectTransform>();
+            SetRuntimeAnchors(rect, new Vector2(0.04f, 0.02f), new Vector2(0.96f, 0.10f));
+
+            Image background = feedbackObject.GetComponent<Image>();
+            background.color = new Color(0.18f, 0.14f, 0.09f, 0.96f);
+            background.raycastTarget = false;
+
+            Text text = CreateRuntimeText(
+                "PlacementFeedbackText",
+                feedbackObject.transform,
+                "单击道具查看信息；合法松手直接放置，非法返回托盘。",
+                16,
+                FontStyle.Normal,
+                TextAnchor.MiddleCenter);
+            SetRuntimeAnchors(text.rectTransform, Vector2.zero, Vector2.one);
+
+            placementFeedbackView = feedbackObject.GetComponent<BuildPlacementFeedbackView>();
+            placementFeedbackView.Bind(text, background);
+            placementFeedbackView.ShowNeutral(text.text);
         }
 
         private void BuildSlotLookup()
@@ -735,6 +822,7 @@ namespace TalismanBag.BuildSandbox
             EnsureBattlePrepareOverlay(safeAreaRoot);
             EnsureBattlePrepareActionBar(safeAreaRoot);
             EnsureBattlePrepareTrayCanvasGroup();
+            EnsureItemTrayLockedOverlay();
             CaptureBattlePreparePositions();
             WireBattlePrepareButtons();
             RefreshBattlePrepareChrome(snapMotion: true);
@@ -846,7 +934,6 @@ namespace TalismanBag.BuildSandbox
                 battlePrepareToggleButtonText = battlePrepareToggleButton.GetComponentInChildren<Text>(true);
             }
 
-            battlePrepareDarkOverlay?.transform.SetAsLastSibling();
             battlePrepareActionBar.SetAsLastSibling();
         }
 
@@ -863,6 +950,67 @@ namespace TalismanBag.BuildSandbox
                 itemTrayCanvasGroup = itemTrayView.gameObject.AddComponent<CanvasGroup>();
                 itemTrayCanvasGroup.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
             }
+        }
+
+        private void EnsureItemTrayLockedOverlay()
+        {
+            if (itemTrayView == null)
+            {
+                return;
+            }
+
+            RectTransform trayRoot = itemTrayView.transform as RectTransform;
+            if (trayRoot == null)
+            {
+                return;
+            }
+
+            if (itemTrayLockedOverlay == null)
+            {
+                RectTransform existing = trayRoot.Find(ItemTrayLockedOverlayName) as RectTransform;
+                itemTrayLockedOverlay = existing == null ? null : existing.GetComponent<Image>();
+            }
+
+            if (itemTrayLockedOverlay == null)
+            {
+                GameObject overlayObject = new(
+                    ItemTrayLockedOverlayName,
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image),
+                    typeof(CanvasGroup));
+                overlayObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                overlayObject.transform.SetParent(trayRoot, false);
+
+                RectTransform rect = overlayObject.GetComponent<RectTransform>();
+                SetRuntimeAnchors(rect, Vector2.zero, Vector2.one);
+
+                itemTrayLockedOverlay = overlayObject.GetComponent<Image>();
+                itemTrayLockedOverlay.color = new Color(0f, 0f, 0f, 0.52f);
+                itemTrayLockedOverlay.raycastTarget = true;
+
+                Text hint = CreateRuntimeText(
+                    "Text",
+                    overlayObject.transform,
+                    "\u6218\u6597\u4e2d\u4e0d\u53ef\u8c03\u6574\n\u70b9\u51fb\u300c\u6574\u5907\u300d\u540e\u89e3\u9501\u9053\u5177\u680f",
+                    24,
+                    FontStyle.Bold,
+                    TextAnchor.MiddleCenter);
+                hint.color = new Color(0.92f, 0.96f, 1f, 1f);
+                SetRuntimeAnchors(hint.rectTransform, Vector2.zero, Vector2.one);
+            }
+
+            itemTrayLockedOverlayCanvasGroup = itemTrayLockedOverlay.GetComponent<CanvasGroup>();
+            if (itemTrayLockedOverlayCanvasGroup == null)
+            {
+                itemTrayLockedOverlayCanvasGroup = itemTrayLockedOverlay.gameObject.AddComponent<CanvasGroup>();
+                itemTrayLockedOverlayCanvasGroup.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            }
+
+            itemTrayLockedOverlayCanvasGroup.ignoreParentGroups = true;
+            itemTrayLockedOverlayCanvasGroup.interactable = false;
+            itemTrayLockedOverlay.gameObject.SetActive(false);
+            itemTrayLockedOverlay.rectTransform.SetAsLastSibling();
         }
 
         private void CaptureBattlePreparePositions()
@@ -904,7 +1052,7 @@ namespace TalismanBag.BuildSandbox
             battlePrepareContinueStateActive = false;
             sandboxBattleActive = false;
             RefreshBattlePrepareChrome(snapMotion: false);
-            placementFeedbackView?.ShowInfo("V0.4 sandbox: home flow is not connected. Battle prepare UI is folded.");
+            placementFeedbackView?.ShowInfo("V0.4 沙盒：未连接主页流程，战斗整备界面已收起。");
         }
 
         private void HandleBattlePrepareStateClicked()
@@ -920,7 +1068,7 @@ namespace TalismanBag.BuildSandbox
                 battlePrepareContinueStateActive = true;
                 sandboxBattleActive = true;
                 RefreshBattlePrepareChrome(snapMotion: false);
-                placementFeedbackView?.ShowValid("V0.4 sandbox: layout accepted, folding battle prepare UI.");
+                placementFeedbackView?.ShowValid("V0.4 沙盒：当前摆放已读取，正在收起整备界面。");
                 return;
             }
 
@@ -930,11 +1078,11 @@ namespace TalismanBag.BuildSandbox
                 battlePrepareStateActive = false;
                 battlePrepareContinueStateActive = true;
                 RefreshBattlePrepareChrome(snapMotion: false);
-                placementFeedbackView?.ShowInfo("V0.4 sandbox battle preview started. Enemy combat is not connected.");
+                placementFeedbackView?.ShowInfo("V0.4 沙盒战斗反馈预览已启动；未连接正式战斗。");
                 return;
             }
 
-            placementFeedbackView?.ShowInfo("V0.4 sandbox battle preview is running. Press Prepare to reopen layout UI.");
+            placementFeedbackView?.ShowInfo("V0.4 沙盒战斗预览运行中；点击整备可重新打开摆放界面。");
         }
 
         private void HandleBattlePrepareToggleClicked()
@@ -946,7 +1094,7 @@ namespace TalismanBag.BuildSandbox
 
             battlePrepareStateActive = true;
             RefreshBattlePrepareChrome(snapMotion: false);
-            placementFeedbackView?.ShowInfo("V0.4 sandbox prepare UI opened. Drag items between tray and board.");
+            placementFeedbackView?.ShowInfo("V0.4 沙盒整备界面已打开；可在道具栏与棋盘间拖动道具。");
         }
 
         private void UpdateBattlePrepareMotion()
@@ -984,17 +1132,33 @@ namespace TalismanBag.BuildSandbox
             }
 
             bool prepareOrContinue = battlePrepareStateActive || battlePrepareContinueStateActive;
+            bool trayLockedByBattle = !battlePrepareStateActive
+                && (sandboxBattleActive || battlePrepareContinueStateActive);
             if (battlePrepareDarkOverlay != null)
             {
                 battlePrepareDarkOverlay.gameObject.SetActive(prepareOrContinue);
                 battlePrepareDarkOverlay.color = new Color(0f, 0f, 0f, battlePrepareStateActive ? 0.42f : 0.24f);
+                RefreshBattlePrepareOverlayLayer();
+            }
+
+            if (itemTrayLockedOverlay != null)
+            {
+                itemTrayLockedOverlay.gameObject.SetActive(trayLockedByBattle);
+                itemTrayLockedOverlay.color = new Color(0f, 0f, 0f, trayLockedByBattle ? 0.52f : 0f);
+                itemTrayLockedOverlay.rectTransform.SetAsLastSibling();
+            }
+
+            if (itemTrayLockedOverlayCanvasGroup != null)
+            {
+                itemTrayLockedOverlayCanvasGroup.alpha = trayLockedByBattle ? 1f : 0f;
+                itemTrayLockedOverlayCanvasGroup.blocksRaycasts = trayLockedByBattle;
             }
 
             if (itemTrayCanvasGroup != null)
             {
-                itemTrayCanvasGroup.alpha = battlePrepareStateActive ? 1f : 0.68f;
+                itemTrayCanvasGroup.alpha = battlePrepareStateActive || trayLockedByBattle ? 1f : 0.68f;
                 itemTrayCanvasGroup.interactable = battlePrepareStateActive;
-                itemTrayCanvasGroup.blocksRaycasts = battlePrepareStateActive;
+                itemTrayCanvasGroup.blocksRaycasts = battlePrepareStateActive || trayLockedByBattle;
             }
 
             if (battlePrepareStateButtonText != null)
@@ -1021,11 +1185,113 @@ namespace TalismanBag.BuildSandbox
                 battlePrepareToggleButton.interactable = !battlePrepareStateActive && !battlePrepareContinueStateActive;
             }
 
+            RefreshEnemyCombatFeedbackVisibility();
+
             if (battlePrepareActionBar != null)
             {
                 battlePrepareActionBar.gameObject.SetActive(true);
                 battlePrepareActionBar.SetAsLastSibling();
             }
+        }
+
+        private void EnsureEnemyCombatFeedbackVisibilityReferences()
+        {
+            if (enemyCombatFeedbackPanel == null)
+            {
+                enemyCombatFeedbackPanel = FindRectTransform(EnemyCombatFeedbackPanelName);
+            }
+
+            if (enemyCombatFeedbackFloatingRoot == null)
+            {
+                enemyCombatFeedbackFloatingRoot = FindRectTransform(EnemyCombatFeedbackFloatingRootName);
+            }
+
+            if (enemyCombatFeedbackController == null)
+            {
+                enemyCombatFeedbackController = FindObjectOfType<BattleSandboxEnemyCombatFeedbackController>(true);
+            }
+        }
+
+        private void RefreshEnemyCombatFeedbackVisibility()
+        {
+            EnsureEnemyCombatFeedbackVisibilityReferences();
+
+            bool feedbackVisible = sandboxBattleActive && !battlePrepareStateActive;
+            SetGameObjectActive(enemyCombatFeedbackPanel, feedbackVisible);
+            SetGameObjectActive(enemyCombatFeedbackFloatingRoot, feedbackVisible);
+            if (feedbackVisible && !enemyCombatFeedbackVisibleLastFrame)
+            {
+                enemyCombatFeedbackController?.RestartBattleModePreview();
+            }
+
+            enemyCombatFeedbackVisibleLastFrame = feedbackVisible;
+        }
+
+        private static void SetGameObjectActive(Component component, bool active)
+        {
+            if (component != null && component.gameObject.activeSelf != active)
+            {
+                component.gameObject.SetActive(active);
+            }
+        }
+
+        private void RefreshBattlePrepareOverlayLayer()
+        {
+            if (battlePrepareDarkOverlay == null || battlePrepareMotionRoot == null)
+            {
+                return;
+            }
+
+            RectTransform overlayRect = battlePrepareDarkOverlay.rectTransform;
+            if (overlayRect == null || overlayRect.parent != battlePrepareMotionRoot.parent)
+            {
+                return;
+            }
+
+            RectTransform topLayer = ResolveBattlePrepareTopLayer(overlayRect.parent);
+            if (topLayer != null && topLayer != battlePrepareMotionRoot)
+            {
+                topLayer.SetAsLastSibling();
+                MoveBefore(battlePrepareMotionRoot, topLayer);
+            }
+            else
+            {
+                battlePrepareMotionRoot.SetAsLastSibling();
+            }
+
+            MoveBefore(overlayRect, battlePrepareMotionRoot);
+        }
+
+        private RectTransform ResolveBattlePrepareTopLayer(Transform sharedParent)
+        {
+            if (sharedParent == null || battlePrepareActionBar == null)
+            {
+                return null;
+            }
+
+            RectTransform actionParent = battlePrepareActionBar.parent as RectTransform;
+            if (actionParent != null && actionParent.parent == sharedParent)
+            {
+                return actionParent;
+            }
+
+            return battlePrepareActionBar.parent == sharedParent ? battlePrepareActionBar : null;
+        }
+
+        private static void MoveBefore(RectTransform moving, RectTransform anchor)
+        {
+            if (moving == null || anchor == null || moving == anchor || moving.parent != anchor.parent)
+            {
+                return;
+            }
+
+            int targetIndex = anchor.GetSiblingIndex();
+            if (moving.GetSiblingIndex() < targetIndex)
+            {
+                targetIndex--;
+            }
+
+            moving.SetSiblingIndex(Mathf.Max(0, targetIndex));
         }
 
         private void BeginHoldingItem(PreviewItem item, bool showInfoPanel)
@@ -1045,9 +1311,6 @@ namespace TalismanBag.BuildSandbox
             }
 
             mobileInput.TapTrayItem(payload, trayAnchor);
-            hasLockedPreview = false;
-            lockedPreviewResult = null;
-            lockedPreviewItem = null;
             ClearPreviewCells();
             SetSelectedItemInfoVisible(true);
             UpdateSelectedItemInfo(item);
@@ -1081,6 +1344,11 @@ namespace TalismanBag.BuildSandbox
 
         private void UpdateActiveDrag(PointerEventData eventData)
         {
+            itemTrayView?.TryAutoScrollDuringDrag(
+                eventData.position,
+                eventData.pressEventCamera,
+                Time.unscaledDeltaTime);
+
             if (TryPreviewTrayDrag(eventData, out ShapePlacementResult trayResult))
             {
                 lastPreviewResult = trayResult;
@@ -1146,9 +1414,6 @@ namespace TalismanBag.BuildSandbox
 
             if (result == null || !result.IsValid)
             {
-                hasLockedPreview = false;
-                lockedPreviewResult = null;
-                lockedPreviewItem = null;
                 mobileInput?.Cancel(boardReceiver);
                 activeDragItemId = string.Empty;
                 itemTrayView?.SetRotateEnabled(itemId, !placedItemIds.Contains(itemId));
@@ -1182,9 +1447,6 @@ namespace TalismanBag.BuildSandbox
             RedrawBoardPlacedVisuals();
 
             lastPreviewResult = commitResult;
-            hasLockedPreview = false;
-            lockedPreviewResult = null;
-            lockedPreviewItem = null;
             activeDragItemId = string.Empty;
             itemTrayView?.SetRotateEnabled(selectedItem.ItemId, false);
             mobileInput?.Cancel(boardReceiver);
@@ -1236,9 +1498,6 @@ namespace TalismanBag.BuildSandbox
 
             if (result == null || !result.IsValid)
             {
-                hasLockedPreview = false;
-                lockedPreviewResult = null;
-                lockedPreviewItem = null;
                 mobileInput?.Cancel(shapeAwareTrayGrid);
                 activeDragItemId = string.Empty;
                 itemTrayView?.SetRotateEnabled(itemId, !placedItemIds.Contains(itemId));
@@ -1267,9 +1526,6 @@ namespace TalismanBag.BuildSandbox
             }
 
             lastPreviewResult = commitResult;
-            hasLockedPreview = false;
-            lockedPreviewResult = null;
-            lockedPreviewItem = null;
             bool movedFromBoard = placedItemIds.Remove(selectedItem.ItemId);
             if (movedFromBoard)
             {
@@ -1550,7 +1806,7 @@ namespace TalismanBag.BuildSandbox
 
             if (item == null)
             {
-                selectedItemInfoBody.text = "单击道具查看信息；只在信息弹窗点 Rotate 旋转；拖到棋盘松手直接放置。";
+                selectedItemInfoBody.text = "单击道具查看信息；只在信息弹窗点“旋转”按钮；拖到棋盘松手直接放置。";
                 return;
             }
 

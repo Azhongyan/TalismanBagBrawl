@@ -220,6 +220,18 @@ namespace TalismanBag.EditorTools.BuildSandbox
             RunBattleSandboxEnemyCombatFeedbackUiReuse(throwOnFailure: false);
         }
 
+        [MenuItem(BattleSandboxBuildCombatPreviewValidator.QaMenuPath)]
+        public static void RunBattleSandboxBuildCombatPreviewMenu()
+        {
+            RunBattleSandboxBuildCombatPreview(throwOnFailure: false);
+        }
+
+        [MenuItem(BuildSandboxPlayableRegressionValidator.QaMenuPath)]
+        public static void RunBuildSandboxPlayableRegressionMenu()
+        {
+            RunBuildSandboxPlayableRegression(throwOnFailure: false);
+        }
+
         public static void RunGuardBaselineBatch()
         {
             bool passed = RunGuardBaseline(throwOnFailure: true);
@@ -502,6 +514,24 @@ namespace TalismanBag.EditorTools.BuildSandbox
         public static void RunBattleSandboxEnemyCombatFeedbackUiReuseBatch()
         {
             bool passed = RunBattleSandboxEnemyCombatFeedbackUiReuse(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBattleSandboxBuildCombatPreviewBatch()
+        {
+            bool passed = RunBattleSandboxBuildCombatPreview(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBuildSandboxPlayableRegressionBatch()
+        {
+            bool passed = RunBuildSandboxPlayableRegression(throwOnFailure: true);
             if (Application.isBatchMode)
             {
                 EditorApplication.Exit(passed ? 0 : 1);
@@ -1945,6 +1975,50 @@ namespace TalismanBag.EditorTools.BuildSandbox
             }
 
             return errors == 0;
+        }
+
+        public static bool RunBattleSandboxBuildCombatPreview(bool throwOnFailure)
+        {
+            List<BuildSandboxValidationReport> reports =
+                BattleSandboxBuildCombatPreviewValidator.BuildValidationReports();
+            BattleSandboxBuildCombatPreview preview =
+                BattleSandboxBuildCombatPreviewValidator.BuildDefaultPreview();
+            string[] reportPaths =
+                BattleSandboxBuildCombatPreviewReportWriter.WriteReports(reports, preview);
+            int errors = reports.Sum(report => report.ErrorCount);
+            int warnings = reports.Sum(report => report.WarningCount);
+
+            foreach (BuildSandboxValidationIssue issue in reports.SelectMany(report => report.Issues))
+            {
+                switch (issue.Level)
+                {
+                    case BuildSandboxValidationLevel.Error:
+                        Debug.LogError(issue.ToString());
+                        break;
+                    case BuildSandboxValidationLevel.Warning:
+                        Debug.LogWarning(issue.ToString());
+                        break;
+                    default:
+                        Debug.Log(issue.ToString());
+                        break;
+                }
+            }
+
+            Debug.Log(
+                $"[BuildSandbox-BattleSandboxBuildCombatPreview01] completed errors={errors}, warnings={warnings}, reports={string.Join(", ", reportPaths)}");
+
+            if (errors > 0 && throwOnFailure)
+            {
+                throw new InvalidOperationException(
+                    $"BuildSandbox BattleSandboxBuildCombatPreview01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
+            }
+
+            return errors == 0;
+        }
+
+        public static bool RunBuildSandboxPlayableRegression(bool throwOnFailure)
+        {
+            return BuildSandboxPlayableRegressionValidator.Run(throwOnFailure);
         }
     }
 }

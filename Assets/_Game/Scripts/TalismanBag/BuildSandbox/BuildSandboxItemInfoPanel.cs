@@ -20,7 +20,7 @@ namespace TalismanBag.BuildSandbox
         private const string BodyTextObjectName = "BodyText";
         private const string LabelObjectName = "Label";
         public const string CloseButtonLabel = "×";
-        public const string RotateButtonLabel = "Rotate";
+        public const string RotateButtonLabel = "旋转";
         private static readonly string[] LegacyHierarchyNames =
         {
             "\u9762\u677f",
@@ -513,20 +513,20 @@ namespace TalismanBag.BuildSandbox
                 "preview_energy_incense" => new ItemInfoProfile(
                     "消耗道具",
                     "绿",
-                    "供能、消耗、节奏",
-                    "短时间提升能量流动倾向。",
-                    "放入棋盘后随节奏触发。",
+                    "消耗、节奏、占位",
+                    "用于观察消耗类道具的摆放节奏。",
+                    "放入棋盘后只参与预览反馈。",
                     "较快，偏节奏调整。",
-                    "直接数值较低，节奏价值更高。",
-                    "聚能余香、节奏补足",
-                    "偏向能量羁绊，适合补齐供能链。",
+                    "不提供正式数值或供能。",
+                    "余香提示、节奏补足",
+                    "偏向消耗道具占位，适合测试拖拽手感。",
                     "竖向两格，可旋转为横向占位。",
                     "用于观察同形状不同朝向的占格。",
-                    "可能提示供能相关词条。",
-                    "预览中只表现为节奏倾向变化。",
-                    "触发时偏向供能事件。",
-                    "帮助高频道具更稳定地启动。",
-                    "靠近需要供能的道具，比单独放置更容易看懂。"),
+                    "不提示供能词条。",
+                    "预览中只表现为节奏占位变化。",
+                    "触发时偏向消耗占位事件。",
+                    "帮助检查多格消耗道具是否稳定显示。",
+                    "按普通双格道具摆放即可，不需要贴供能位。"),
                 "preview_old_bell" => new ItemInfoProfile(
                     "特殊法器",
                     "蓝",

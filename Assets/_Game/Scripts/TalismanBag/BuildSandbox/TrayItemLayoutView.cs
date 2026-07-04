@@ -282,7 +282,7 @@ namespace TalismanBag.BuildSandbox
             while (layer.childCount < cellRects.Count)
             {
                 GameObject cellObject = new($"TrayLayoutCell_{layer.childCount:00}", typeof(RectTransform), typeof(Image));
-                cellObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                ApplyGeneratedLayoutObjectHideFlags(cellObject);
                 cellObject.transform.SetParent(layer, false);
             }
 
@@ -290,6 +290,7 @@ namespace TalismanBag.BuildSandbox
             for (int i = 0; i < layer.childCount; i++)
             {
                 Transform child = layer.GetChild(i);
+                AllowEditModeLayoutObjectPersistence(child.gameObject);
                 Image image = child.GetComponent<Image>();
                 bool active = i < cellRects.Count;
                 child.gameObject.SetActive(active);
@@ -336,9 +337,13 @@ namespace TalismanBag.BuildSandbox
             if (layer == null)
             {
                 GameObject layerObject = new(LayoutCellLayerName, typeof(RectTransform));
-                layerObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                ApplyGeneratedLayoutObjectHideFlags(layerObject);
                 layerObject.transform.SetParent(cardRect, false);
                 layer = layerObject.GetComponent<RectTransform>();
+            }
+            else
+            {
+                AllowEditModeLayoutObjectPersistence(layer.gameObject);
             }
 
             layer.SetAsFirstSibling();
@@ -348,6 +353,26 @@ namespace TalismanBag.BuildSandbox
             layer.anchoredPosition = Vector2.zero;
             layer.localScale = Vector3.one;
             return layer;
+        }
+
+        private static void ApplyGeneratedLayoutObjectHideFlags(GameObject target)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            target.hideFlags = Application.isPlaying
+                ? HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild
+                : HideFlags.None;
+        }
+
+        private static void AllowEditModeLayoutObjectPersistence(GameObject target)
+        {
+            if (target != null && !Application.isPlaying)
+            {
+                target.hideFlags = HideFlags.None;
+            }
         }
 
         private bool IsNonRectangularPlacement(TrayPlacementViewModel placement)

@@ -1,9 +1,9 @@
 # BattleSandbox Enemy Combat Feedback Leak Check Report
 
 Package: `V0.4-BattleSandboxEnemyCombatFeedbackUiReuse01`
-Generated: `2026-07-03 09:25:19`
-Status: `PASS`
-Errors: `0`
+Generated: `2026-07-03 13:57:39`
+Status: `FAIL`
+Errors: `1`
 Warnings: `0`
 
 ## Leak Counters
@@ -29,13 +29,26 @@ Warnings: `0`
 - Player-facing strings stay as combat feedback short phrases; complete answer fields remain masked in developer data links.
 - Previous player-side topic preview objects are removed or inactive in the target scene.
 
+## VisibilityFix01 Leak Confirmation
+
+Package: `V0.4-BattleSandboxEnemyCombatFeedbackVisibilityFix01`
+Updated: `2026-07-03`
+
+- Visibility fix scope is limited to runtime active-state control in `BuildGridInteractionPreviewController`.
+- `EnemyCombatFeedbackPanel` and `EnemyCombatFeedbackFloatingRoot` are shown only while V04 sandbox battle mode is active.
+- Battle visibility entry restarts the existing `BattleSandboxEnemyCombatFeedbackController` preview from the first cast-bar row; it does not call formal damage, reward, save, or RunFlow code.
+- No layout binder was rerun and no board/item tray RectTransform or GridLayoutGroup values were written by this fix.
+- No formal RunFlow, formal damage settlement, formal rewards, formal drops, save/progress, chapter advance, formal 3-10 / 4-10, or FeatureFlag path was added.
+- No answer panel is shown; complete answer fields remain masked in developer-only data links and reports.
+- The parent report status still contains the pre-existing `BATTLE_SANDBOX_CHILD_MISSING: PlacementFeedback` issue; `VisibilityFix01` does not address or move that UI.
+
 ## Validation Summary
 
 | Check | Status | Errors | Warnings | Info |
 | --- | --- | ---: | ---: | ---: |
 | Config Validation | `PASS` | 0 | 0 | 211 |
 | devOnly Isolation | `PASS` | 0 | 0 | 25 |
-| UI Layout Guard | `PASS` | 0 | 0 | 26 |
+| UI Layout Guard | `PASS` | 0 | 0 | 27 |
 | CoreFlow Smoke Placeholder | `PASS` | 0 | 0 | 1 |
 | ItemShape Occupancy | `PASS` | 0 | 0 | 9 |
 | Synergy Evaluator Core | `PASS` | 0 | 0 | 8 |
@@ -49,7 +62,7 @@ Warnings: `0`
 | Build Problem Seed Data | `PASS` | 0 | 0 | 68 |
 | BuildSandbox Config Panel 01 | `PASS` | 0 | 0 | 31 |
 | BuildSandbox Preview Context 01 | `PASS` | 0 | 0 | 26 |
-| BattleSandbox Preview Scene 01 | `PASS` | 0 | 0 | 45 |
+| BattleSandbox Preview Scene 01 | `FAIL` | 1 | 0 | 44 |
 | Build Tuning Data Panel Preview 01 | `PASS` | 0 | 0 | 5 |
 | Mechanic Hint Feedback Preview 01 | `PASS` | 0 | 0 | 23 |
 | BattleSandbox Enemy Combat Feedback UI Reuse 01 | `PASS` | 0 | 0 | 42 |
@@ -308,6 +321,7 @@ Warnings: `0`
 | `Info` | `INDEPENDENT_PREVIEW_SCENE_AUTHORING_ALLOWED` | Independent V04 BuildSandbox preview packages are allowed to author devOnly preview scene UI inside the sandbox scene. | `Assets/_Game/Scripts/TalismanBag/BuildSandbox/ShapeAwareItemTrayFixtureView.cs` |
 | `Info` | `INDEPENDENT_PREVIEW_SCENE_AUTHORING_ALLOWED` | Independent V04 BuildSandbox preview packages are allowed to author devOnly preview scene UI inside the sandbox scene. | `Assets/_Game/Scripts/TalismanBag/BuildSandbox/TrayGridReservationView.cs` |
 | `Info` | `INDEPENDENT_PREVIEW_SCENE_AUTHORING_ALLOWED` | Independent V04 BuildSandbox preview packages are allowed to author devOnly preview scene UI inside the sandbox scene. | `Assets/_Game/Scripts/TalismanBag/BuildSandbox/TrayItemLayoutView.cs` |
+| `Info` | `INDEPENDENT_PREVIEW_SCENE_AUTHORING_ALLOWED` | Independent V04 BuildSandbox preview packages are allowed to author devOnly preview scene UI inside the sandbox scene. | `Assets/_Game/Scripts/TalismanBag/Editor/BuildSandbox/BattleSandboxCombatInfoHudSceneBinder.cs` |
 | `Info` | `INDEPENDENT_PREVIEW_SCENE_AUTHORING_ALLOWED` | Independent V04 BuildSandbox preview packages are allowed to author devOnly preview scene UI inside the sandbox scene. | `Assets/_Game/Scripts/TalismanBag/Editor/BuildSandbox/BattleSandboxEnemyCombatFeedbackUiReuseSceneBinder.cs` |
 | `Info` | `INDEPENDENT_PREVIEW_SCENE_AUTHORING_ALLOWED` | Independent V04 BuildSandbox preview packages are allowed to author devOnly preview scene UI inside the sandbox scene. | `Assets/_Game/Scripts/TalismanBag/Editor/BuildSandbox/BattleSandboxEnemyCombatFeedbackUiReuseValidator.cs` |
 | `Info` | `INDEPENDENT_PREVIEW_SCENE_AUTHORING_ALLOWED` | Independent V04 BuildSandbox preview packages are allowed to author devOnly preview scene UI inside the sandbox scene. | `Assets/_Game/Scripts/TalismanBag/Editor/BuildSandbox/BattleSandboxEnemyEncounterPreviewSceneBinder.cs` |
@@ -789,11 +803,11 @@ Warnings: `0`
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/BuildSandboxDataPanelDock | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/BuildSandboxDataPanelDock` |
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/DevOnlyControlBar | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/DevOnlyControlBar` |
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/V04BattlePrepareDarkOverlay | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/V04BattlePrepareDarkOverlay` |
-| `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/V04BattlePrepareBottomActions | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/V04BattlePrepareBottomActions` |
+| `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/PopupLayer/V04BattlePrepareBottomActions | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/PopupLayer/V04BattlePrepareBottomActions` |
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/PopupLayer | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/PopupLayer` |
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/BattleLikePreviewArea/BoardGridPreview | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/BattleLikePreviewArea/BoardGridPreview` |
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/BattleLikePreviewArea/ItemTrayPreview | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/BattleLikePreviewArea/ItemTrayPreview` |
-| `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/BattleLikePreviewArea/PlacementFeedback | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/BattleLikePreviewArea/PlacementFeedback` |
+| `Error` | `BATTLE_SANDBOX_CHILD_MISSING` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/BattleLikePreviewArea missing PlacementFeedback. | `PlacementFeedback` |
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/BattleLikePreviewArea/EnemyCombatFeedbackPanel | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/BattleLikePreviewArea/EnemyCombatFeedbackPanel` |
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/ProblemSelectorPanel/MapRuleDropdownSlot | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/ProblemSelectorPanel/MapRuleDropdownSlot` |
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/ProblemSelectorPanel/EnemyProblemDropdownSlot | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/ProblemSelectorPanel/EnemyProblemDropdownSlot` |
@@ -811,9 +825,9 @@ Warnings: `0`
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/DevOnlyControlBar/RunSimulationButtonSlot | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/DevOnlyControlBar/RunSimulationButtonSlot` |
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/DevOnlyControlBar/ResetPreviewButtonSlot | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/DevOnlyControlBar/ResetPreviewButtonSlot` |
 | `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/DevOnlyControlBar/ExportReportButtonSlot | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/DevOnlyControlBar/ExportReportButtonSlot` |
-| `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/V04BattlePrepareBottomActions/V04BattlePrepareBackButton | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/V04BattlePrepareBottomActions/V04BattlePrepareBackButton` |
-| `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/V04BattlePrepareBottomActions/V04BattlePrepareStateButton | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/V04BattlePrepareBottomActions/V04BattlePrepareStateButton` |
-| `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/V04BattlePrepareBottomActions/V04BattlePrepareToggleButton | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/V04BattlePrepareBottomActions/V04BattlePrepareToggleButton` |
+| `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/PopupLayer/V04BattlePrepareBottomActions/V04BattlePrepareBackButton | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/PopupLayer/V04BattlePrepareBottomActions/V04BattlePrepareBackButton` |
+| `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/PopupLayer/V04BattlePrepareBottomActions/V04BattlePrepareStateButton | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/PopupLayer/V04BattlePrepareBottomActions/V04BattlePrepareStateButton` |
+| `Info` | `BATTLE_SANDBOX_CHILD_PRESENT` | BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/PopupLayer/V04BattlePrepareBottomActions/V04BattlePrepareToggleButton | `BuildSandboxPreviewCanvas/MobileSafeAreaRoot/SafeAreaRoot/PopupLayer/V04BattlePrepareBottomActions/V04BattlePrepareToggleButton` |
 | `Info` | `BATTLE_SANDBOX_FEATURE_FLAG_FALSE` | EnableSynergyBuild=false. | `BuildSandboxFeatureFlags` |
 | `Info` | `BATTLE_SANDBOX_FEATURE_FLAG_FALSE` | EnableAffixSystem=false. | `BuildSandboxFeatureFlags` |
 | `Info` | `BATTLE_SANDBOX_FEATURE_FLAG_FALSE` | EnableDevBuildContent=false. | `BuildSandboxFeatureFlags` |

@@ -89,6 +89,7 @@ namespace TalismanBag.BuildSandbox
             InitializeCategoryButtons(controller, categories ?? Array.Empty<string>());
             BindViewAuthorities();
             InitializeCards(controller);
+            EnsureRuntimeMatureScrollArea();
             ApplyFilter(AllCategory);
         }
 
@@ -196,6 +197,12 @@ namespace TalismanBag.BuildSandbox
             out ItemShapeCell cell)
         {
             cell = default;
+            EnsureRuntimeMatureScrollArea();
+            if (!IsScreenPointInTrayViewport(screenPoint, eventCamera))
+            {
+                return false;
+            }
+
             if (!itemLayoutView.TryScreenPointToSlotIndex(screenPoint, eventCamera, out int slotIndex))
             {
                 return false;
@@ -214,6 +221,61 @@ namespace TalismanBag.BuildSandbox
             return itemLayoutView.TryBuildCellVisualLayout(occupiedCells, out layout);
         }
 
+        public bool TryAutoScrollDuringDrag(
+            Vector2 screenPoint,
+            Camera eventCamera,
+            float deltaTime)
+        {
+            EnsureRuntimeMatureScrollArea();
+            RectTransform viewport = ResolveTrayViewport();
+            if (scrollRect == null
+                || contentRoot == null
+                || viewport == null
+                || !scrollRect.vertical
+                || contentRoot.rect.height <= viewport.rect.height + 1f
+                || !RectTransformUtility.RectangleContainsScreenPoint(viewport, screenPoint, eventCamera)
+                || !RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    viewport,
+                    screenPoint,
+                    eventCamera,
+                    out Vector2 localPoint))
+            {
+                return false;
+            }
+
+            Rect viewportRect = viewport.rect;
+            float edgeSize = Mathf.Max(36f, viewportRect.height * 0.12f);
+            float topDistance = viewportRect.yMax - localPoint.y;
+            float bottomDistance = localPoint.y - viewportRect.yMin;
+            float direction = 0f;
+            if (topDistance <= edgeSize)
+            {
+                direction = 1f;
+            }
+            else if (bottomDistance <= edgeSize)
+            {
+                direction = -1f;
+            }
+
+            if (Mathf.Approximately(direction, 0f))
+            {
+                return false;
+            }
+
+            float scrollableHeight = Mathf.Max(1f, contentRoot.rect.height - viewportRect.height);
+            float pixelsPerSecond = Mathf.Max(scrollRect.scrollSensitivity * 12f, viewportRect.height * 0.75f);
+            float normalizedDelta = direction * pixelsPerSecond * Mathf.Max(0f, deltaTime) / scrollableHeight;
+            float previous = scrollRect.verticalNormalizedPosition;
+            scrollRect.verticalNormalizedPosition = Mathf.Clamp01(previous + normalizedDelta);
+            if (Mathf.Approximately(previous, scrollRect.verticalNormalizedPosition))
+            {
+                return false;
+            }
+
+            Canvas.ForceUpdateCanvases();
+            return true;
+        }
+
         private void BindViewAuthorities()
         {
             itemLayoutView.Bind(
@@ -222,6 +284,89 @@ namespace TalismanBag.BuildSandbox
                 traySlotRects,
                 BuildGridInteractionPreviewController.TrayColumns);
             reservationView.Bind(traySlotImages, traySlotOutlines);
+        }
+
+        private void EnsureRuntimeMatureScrollArea()
+        {
+            if (!Application.isPlaying || scrollRect == null || contentRoot == null)
+            {
+                return;
+            }
+
+            RectTransform viewport = ResolveTrayViewport();
+            if (viewport != null && scrollRect.viewport == null)
+            {
+                scrollRect.viewport = viewport;
+            }
+
+            if (scrollRect.content == null)
+            {
+                scrollRect.content = contentRoot;
+            }
+
+            if (EnsureContentHeightFromGrid())
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(contentRoot);
+            }
+        }
+
+        private bool EnsureContentHeightFromGrid()
+        {
+            if (contentRoot == null)
+            {
+                return false;
+            }
+
+            GridLayoutGroup grid = contentRoot.GetComponent<GridLayoutGroup>();
+            if (grid == null)
+            {
+                return false;
+            }
+
+            int columnCount = ResolveGridColumnCount(grid);
+            int slotCount = Mathf.Max(traySlotRects.Count, BuildGridInteractionPreviewController.TrayColumns * BuildGridInteractionPreviewController.TrayRows);
+            int rowCount = Mathf.Max(1, Mathf.CeilToInt(slotCount / (float)Mathf.Max(1, columnCount)));
+            float requiredHeight =
+                grid.padding.top
+                + grid.padding.bottom
+                + rowCount * grid.cellSize.y
+                + Mathf.Max(0, rowCount - 1) * grid.spacing.y;
+            if (contentRoot.rect.height + 0.5f >= requiredHeight)
+            {
+                return false;
+            }
+
+            contentRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, requiredHeight);
+            return true;
+        }
+
+        private static int ResolveGridColumnCount(GridLayoutGroup grid)
+        {
+            if (grid == null)
+            {
+                return BuildGridInteractionPreviewController.TrayColumns;
+            }
+
+            return grid.constraint == GridLayoutGroup.Constraint.FixedColumnCount
+                ? Mathf.Max(1, grid.constraintCount)
+                : BuildGridInteractionPreviewController.TrayColumns;
+        }
+
+        private RectTransform ResolveTrayViewport()
+        {
+            if (scrollRect != null && scrollRect.viewport != null)
+            {
+                return scrollRect.viewport;
+            }
+
+            return contentRoot == null ? null : contentRoot.parent as RectTransform;
+        }
+
+        private bool IsScreenPointInTrayViewport(Vector2 screenPoint, Camera eventCamera)
+        {
+            RectTransform viewport = ResolveTrayViewport();
+            return viewport == null
+                || RectTransformUtility.RectangleContainsScreenPoint(viewport, screenPoint, eventCamera);
         }
 
         private void InitializeCategoryButtons(

@@ -19,12 +19,18 @@ namespace TalismanBag.BuildSandbox
         [SerializeField] private Text categoryText;
         [SerializeField] private Text shapeText;
 
+        private const string LayoutCellLayerName = "TrayLayoutCellLayer";
+        private static readonly Color DefaultNormalColor = new(0.27f, 0.22f, 0.15f, 1f);
+        private const float ColorTolerance = 0.004f;
+
         private BuildGridInteractionPreviewController controller;
         private readonly List<Image> layoutCellImages = new();
-        private Color normalColor = new(0.27f, 0.22f, 0.15f, 1f);
+        private readonly HashSet<Image> manualLayoutCellImageColors = new();
+        private Color normalColor = DefaultNormalColor;
         private string itemId = string.Empty;
         private string category = string.Empty;
         private bool usesLayoutCellVisuals;
+        private bool manualBackgroundImageColor;
 
         public RectTransform RectTransform
         {
@@ -61,6 +67,7 @@ namespace TalismanBag.BuildSandbox
             titleText = title;
             categoryText = categoryLabel;
             shapeText = shapeLabel;
+            manualBackgroundImageColor = HasManualBodyColor(backgroundImage);
         }
 
         public void BindItemDisplayData(
@@ -75,6 +82,7 @@ namespace TalismanBag.BuildSandbox
             itemId = previewItemId ?? string.Empty;
             category = itemCategory ?? string.Empty;
             normalColor = color;
+            manualBackgroundImageColor = manualBackgroundImageColor || HasManualBodyColor(backgroundImage);
             EnsureCardOverlayCanvas();
 
             if (titleText != null)
@@ -117,6 +125,8 @@ namespace TalismanBag.BuildSandbox
                 shapeText.text = string.Empty;
             }
 
+            manualBackgroundImageColor = manualBackgroundImageColor || HasManualBodyColor(backgroundImage);
+            CacheManualLayoutCellColors();
             SetNormalVisual();
             SetVisible(false);
         }
@@ -164,6 +174,7 @@ namespace TalismanBag.BuildSandbox
         public void SetLayoutCellVisuals(IReadOnlyList<Image> cellImages)
         {
             layoutCellImages.Clear();
+            manualLayoutCellImageColors.Clear();
             foreach (Image image in cellImages ?? Array.Empty<Image>())
             {
                 if (image == null)
@@ -172,6 +183,11 @@ namespace TalismanBag.BuildSandbox
                 }
 
                 layoutCellImages.Add(image);
+                if (HasManualBodyColor(image))
+                {
+                    manualLayoutCellImageColors.Add(image);
+                }
+
                 image.raycastTarget = true;
             }
 
@@ -255,18 +271,84 @@ namespace TalismanBag.BuildSandbox
 
         private void ApplyBodyColor(Color color)
         {
-            if (backgroundImage != null)
+            if (backgroundImage != null && !manualBackgroundImageColor)
             {
                 backgroundImage.color = usesLayoutCellVisuals ? Color.clear : color;
             }
 
             foreach (Image image in layoutCellImages)
             {
-                if (image != null)
+                if (image != null && !manualLayoutCellImageColors.Contains(image))
                 {
                     image.color = color;
                 }
             }
+        }
+
+        private void CacheManualLayoutCellColors()
+        {
+            manualLayoutCellImageColors.Clear();
+            foreach (Image image in layoutCellImages)
+            {
+                if (HasManualBodyColor(image))
+                {
+                    manualLayoutCellImageColors.Add(image);
+                }
+            }
+        }
+
+        private bool HasManualBodyColor(Image image)
+        {
+            return image != null
+                && !IsDefaultGeneratedLayoutCellWhite(image)
+                && !IsKnownBodyColor(image.color);
+        }
+
+        private static bool IsDefaultGeneratedLayoutCellWhite(Image image)
+        {
+            return image != null
+                && image.sprite == null
+                && image.overrideSprite == null
+                && image.transform != null
+                && image.transform.parent != null
+                && string.Equals(image.transform.parent.name, LayoutCellLayerName, StringComparison.Ordinal)
+                && Approximately(image.color, Color.white);
+        }
+
+        private bool IsKnownBodyColor(Color color)
+        {
+            if (Approximately(color, Color.clear)
+                || Approximately(color, DefaultNormalColor)
+                || Approximately(color, normalColor)
+                || Approximately(color, Color.Lerp(normalColor, new Color(1f, 0.82f, 0.34f, 1f), 0.22f)))
+            {
+                return true;
+            }
+
+            foreach (BuildGridInteractionPreviewController.PreviewItem item
+                     in BuildGridInteractionPreviewController.CreatePreviewItems())
+            {
+                if (item == null)
+                {
+                    continue;
+                }
+
+                if (Approximately(color, item.CardColor)
+                    || Approximately(color, Color.Lerp(item.CardColor, new Color(1f, 0.82f, 0.34f, 1f), 0.22f)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool Approximately(Color a, Color b)
+        {
+            return Mathf.Abs(a.r - b.r) <= ColorTolerance
+                && Mathf.Abs(a.g - b.g) <= ColorTolerance
+                && Mathf.Abs(a.b - b.b) <= ColorTolerance
+                && Mathf.Abs(a.a - b.a) <= ColorTolerance;
         }
 
         private void Reset()

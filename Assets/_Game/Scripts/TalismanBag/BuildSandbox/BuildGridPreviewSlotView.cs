@@ -20,8 +20,10 @@ namespace TalismanBag.BuildSandbox
         private Color previewInvalidColor = new(0.62f, 0.20f, 0.16f, 0.95f);
         private Color previewLockedColor = new(0.77f, 0.55f, 0.20f, 0.96f);
         private Color placedColor = new(0.44f, 0.35f, 0.18f, 1f);
+        private const float ColorTolerance = 0.004f;
         private BuildGridInteractionPreviewController controller;
         private bool placed;
+        private bool manualBackgroundImageColor;
         private string placedName = string.Empty;
 
         public int X => x;
@@ -35,6 +37,7 @@ namespace TalismanBag.BuildSandbox
             y = cellY;
             backgroundImage = image;
             labelText = label;
+            manualBackgroundImageColor = HasManualBackgroundColor(backgroundImage);
             ClearPlaced();
         }
 
@@ -139,10 +142,33 @@ namespace TalismanBag.BuildSandbox
 
         private void SetColor(Color color)
         {
-            if (backgroundImage != null)
+            if (backgroundImage != null && !manualBackgroundImageColor)
             {
                 backgroundImage.color = color;
             }
+        }
+
+        private bool HasManualBackgroundColor(Image image)
+        {
+            return image != null
+                && !IsKnownRuntimeColor(image.color);
+        }
+
+        private bool IsKnownRuntimeColor(Color color)
+        {
+            return Approximately(color, emptyColor)
+                || Approximately(color, previewValidColor)
+                || Approximately(color, previewInvalidColor)
+                || Approximately(color, previewLockedColor)
+                || Approximately(color, placedColor);
+        }
+
+        private static bool Approximately(Color a, Color b)
+        {
+            return Mathf.Abs(a.r - b.r) <= ColorTolerance
+                && Mathf.Abs(a.g - b.g) <= ColorTolerance
+                && Mathf.Abs(a.b - b.b) <= ColorTolerance
+                && Mathf.Abs(a.a - b.a) <= ColorTolerance;
         }
 
         private static string ShortName(string value)

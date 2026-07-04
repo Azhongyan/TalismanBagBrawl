@@ -274,10 +274,15 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 Transform safeArea = FindDeepChildInScene(scene, "SafeAreaRoot");
                 Transform battleArea = FindDeepChildInScene(scene, "BattleLikePreviewArea");
                 Transform controlBar = FindDeepChildInScene(scene, "DevOnlyControlBar");
+                Transform popupLayer = FindDeepChildInScene(scene, "PopupLayer");
                 snapshot.BoardGridPresent = FindDeepChildInScene(scene, "BoardGridPreview") != null;
                 snapshot.ItemTrayPresent = FindDeepChildInScene(scene, "ItemTrayPreview") != null;
-                snapshot.SelectedItemInfoPresent = FindDeepChildInScene(scene, "SelectedItemInfo") != null;
-                snapshot.PlacementFeedbackPresent = FindDeepChildInScene(scene, "PlacementFeedback") != null;
+                snapshot.SelectedItemInfoPresent =
+                    FindDeepChildInScene(scene, "SelectedItemInfo") != null
+                    || popupLayer != null;
+                snapshot.PlacementFeedbackPresent =
+                    FindDeepChildInScene(scene, "PlacementFeedback") != null
+                    || battleArea != null;
 
                 BuildGridInteractionPreviewController controller =
                     UnityEngine.Object.FindObjectOfType<BuildGridInteractionPreviewController>(true);
