@@ -306,14 +306,16 @@ namespace TalismanBag.BuildSandbox
             string providerTag = condition?.requiredProviderTag ?? string.Empty;
             HashSet<string> providerIds = new(
                 FilterByTag(placedItems, providerTag)
+                    .Where(FormationEnergyContractResolver.IsEnergyStoneItem)
                     .Select(item => item.itemId)
                     .Where(id => !string.IsNullOrWhiteSpace(id)),
                 StringComparer.Ordinal);
 
             List<BuildSandboxPlacedItemSnapshot> poweredItems = sourceItems
-                .Where(item => item.isPowered)
+                .Where(FormationEnergyContractResolver.IsPowered)
                 .Where(item => string.IsNullOrWhiteSpace(providerTag)
-                    || HasTag(item, providerTag)
+                    || (FormationEnergyContractResolver.IsEnergyStoneItem(item) && HasTag(item, providerTag))
+                    || providerIds.Contains(item.formalEnergySourceItemId ?? string.Empty)
                     || providerIds.Contains(item.energySourceId ?? string.Empty))
                 .ToList();
 

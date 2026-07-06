@@ -256,6 +256,12 @@ namespace TalismanBag.EditorTools.BuildSandbox
             RunBattleSandboxRuntimeLoop(throwOnFailure: false);
         }
 
+        [MenuItem(BattleSandboxItemEffectRuntimePreviewValidator.QaMenuPath)]
+        public static void RunBattleSandboxItemEffectRuntimePreviewMenu()
+        {
+            RunBattleSandboxItemEffectRuntimePreview(throwOnFailure: false);
+        }
+
         [MenuItem(FormationCorePowerRangeValidator.QaMenuPath)]
         public static void RunFormationCorePowerRangeMenu()
         {
@@ -622,6 +628,15 @@ namespace TalismanBag.EditorTools.BuildSandbox
         public static void RunBattleSandboxRuntimeLoopBatch()
         {
             bool passed = RunBattleSandboxRuntimeLoop(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBattleSandboxItemEffectRuntimePreviewBatch()
+        {
+            bool passed = RunBattleSandboxItemEffectRuntimePreview(throwOnFailure: true);
             if (Application.isBatchMode)
             {
                 EditorApplication.Exit(passed ? 0 : 1);
@@ -2385,6 +2400,11 @@ namespace TalismanBag.EditorTools.BuildSandbox
             }
 
             return errors == 0;
+        }
+
+        public static bool RunBattleSandboxItemEffectRuntimePreview(bool throwOnFailure)
+        {
+            return BattleSandboxItemEffectRuntimePreviewValidator.Run(throwOnFailure);
         }
 
         public static bool RunBattleSandboxPlayableLoop(bool throwOnFailure)

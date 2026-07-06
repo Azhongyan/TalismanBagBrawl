@@ -123,7 +123,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
         private static string BuildRowsCsv(BattleSandboxRuntimeLoopPreview preview)
         {
             StringBuilder csv = new();
-            csv.AppendLine("rowId,rowKind,itemId,statProfileId,elapsedSeconds,manaBefore,manaAfter,manaDelta,cooldownSeconds,enemyHpBefore,enemyHpAfter,enemyShieldBefore,enemyShieldAfter,playerHpBefore,playerHpAfter,playerShieldBefore,playerShieldAfter,bossCastRemainingSeconds,bossCastFillAmount,enemyAttackTimerBeforeSeconds,enemyAttackTimerAfterSeconds,enemyAttackDamage,playerShieldDamageAbsorbed,playerHpDamageApplied,enemyAttackTimerAdvanced,enemyAttackFromDevOnlyProfile,playerShieldDamageResolvedFirst,stateLineChinese,castSkillLineChinese,combatLogLineChinese,floatingTextChinese,sourceDataPath,developerDataPanelFieldKey,formalFlowLeak,playerSideAnswerLeak,uiLayoutWrite,hasVictorySettlement,hasDefeatSettlement,hasSandboxVictoryResult,hasSandboxDefeatResult,locksRuntimeLoop,resultTitleChinese,restartHintChinese");
+            csv.AppendLine("rowId,rowKind,itemId,statProfileId,itemEffectKey,itemEffectFamilyChinese,itemEffectRoleChinese,elapsedSeconds,manaBefore,manaAfter,manaDelta,cooldownSeconds,enemyHpBefore,enemyHpAfter,enemyShieldBefore,enemyShieldAfter,playerHpBefore,playerHpAfter,playerShieldBefore,playerShieldAfter,bossCastRemainingSeconds,bossCastFillAmount,enemyAttackTimerBeforeSeconds,enemyAttackTimerAfterSeconds,enemyAttackDamage,playerShieldDamageAbsorbed,playerHpDamageApplied,enemyAttackTimerAdvanced,enemyAttackFromDevOnlyProfile,playerShieldDamageResolvedFirst,stateLineChinese,castSkillLineChinese,combatLogLineChinese,floatingTextChinese,sourceDataPath,developerDataPanelFieldKey,formalFlowLeak,playerSideAnswerLeak,uiLayoutWrite,hasVictorySettlement,hasDefeatSettlement,hasSandboxVictoryResult,hasSandboxDefeatResult,locksRuntimeLoop,resultTitleChinese,restartHintChinese");
             foreach (BattleSandboxRuntimeLoopRow row in BattleSandboxRuntimeLoopValidator.Rows(preview))
             {
                 csv.AppendLine(Csv(
@@ -131,6 +131,9 @@ namespace TalismanBag.EditorTools.BuildSandbox
                     row.rowKind,
                     row.itemId,
                     row.statProfileId,
+                    row.itemEffectKey,
+                    row.itemEffectFamilyChinese,
+                    row.itemEffectRoleChinese,
                     row.elapsedSeconds.ToString("0.###"),
                     row.manaBefore.ToString(),
                     row.manaAfter.ToString(),

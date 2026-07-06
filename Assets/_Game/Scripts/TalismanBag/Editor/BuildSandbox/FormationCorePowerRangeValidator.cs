@@ -111,6 +111,30 @@ namespace TalismanBag.EditorTools.BuildSandbox
                     nameof(FormationCorePowerRangePreview));
             }
 
+            if (!powerPreview.EyeCellExists)
+            {
+                report.AddError(
+                    "FORMATION_EYE_CELL_MISSING",
+                    "V04 sandbox eye cell must exist inside the board.",
+                    nameof(FormationCorePowerRangePreview));
+            }
+
+            if (powerPreview.EyeCellOccupiedCount != 0)
+            {
+                report.AddError(
+                    "FORMATION_EYE_CELL_OCCUPIED",
+                    $"Default preview must keep the fixed eye cell visible and empty. occupied={powerPreview.EyeCellOccupiedCount}.",
+                    nameof(FormationCorePowerRangePreview));
+            }
+
+            if (powerPreview.WeakPulseCellCount < 4)
+            {
+                report.AddError(
+                    "FORMATION_WEAK_PULSE_RANGE_MISSING",
+                    $"Eye WeakPulse range must be report-visible. weakPulseCells={powerPreview.WeakPulseCellCount}.",
+                    nameof(FormationCorePowerRangePreview));
+            }
+
             if (powerPreview.ProviderCount < 1)
             {
                 report.AddError(
@@ -164,10 +188,101 @@ namespace TalismanBag.EditorTools.BuildSandbox
                     nameof(BuildSandboxPlacedItemSnapshot));
             }
 
+            foreach (FormationCorePowerRangeRow row in powerPreview.rows ?? new List<FormationCorePowerRangeRow>())
+            {
+                if (row == null)
+                {
+                    continue;
+                }
+
+                bool derivedPowered = row.energyState == EnergyState.Powered;
+                if (row.isPowered != derivedPowered)
+                {
+                    report.AddError(
+                        "FORMATION_OLD_ISPOWERED_MAIN_JUDGMENT",
+                        $"isPowered must remain derived from EnergyState only. itemId={row.itemId}, state={row.energyState}, isPowered={row.isPowered}.",
+                        nameof(FormationCorePowerRangeRow));
+                }
+
+                if (row.energyState == EnergyState.WeakPulse && row.isPowered)
+                {
+                    report.AddError(
+                        "FORMATION_WEAKPULSE_MARKED_POWERED",
+                        $"WeakPulse must not display or resolve as Powered. itemId={row.itemId}.",
+                        nameof(FormationCorePowerRangeRow));
+                }
+
+                if (row.isPowerProvider && !row.isEnergyStoneSource)
+                {
+                    report.AddError(
+                        "FORMATION_NONSTONE_PROVIDER",
+                        $"Only spirit/energy stone family can be Powered providers. itemId={row.itemId}.",
+                        nameof(FormationCorePowerRangeRow));
+                }
+
+                if (row.hasEnergyRoleViolation && row.isPowerProvider)
+                {
+                    report.AddError(
+                        "FORMATION_FORBIDDEN_PROVIDER_MISIDENTIFIED",
+                        $"Forbidden provider candidate was promoted to provider. itemId={row.itemId}.",
+                        nameof(FormationCorePowerRangeRow));
+                }
+
+                if (row.isPowerProvider
+                    && (row.energyDiagnostics ?? new List<string>())
+                        .Contains(FormationEnergyDiagnosticCodes.TagProviderViolation))
+                {
+                    report.AddError(
+                        "FORMATION_TAG_AUTO_POWER",
+                        $"Provider-like tags must not auto-promote a provider. itemId={row.itemId}.",
+                        nameof(FormationCorePowerRangeRow));
+                }
+            }
+
+            ValidateSampleItem(report, powerPreview, "spirit_stone_basic", EnergyState.Powered, expectedProvider: true);
+            ValidateSampleItem(report, powerPreview, "preview_energy_incense", EnergyState.WeakPulse, expectedProvider: false);
+            ValidateSampleItem(report, powerPreview, "preview_stone_core", EnergyState.Powered, expectedProvider: false);
+            ValidateSampleItem(report, powerPreview, "preview_taomu_sword", EnergyState.None, expectedProvider: false);
+
             report.AddInfo(
                 "FORMATION_POWER_COUNTS",
-                $"providers={powerPreview.ProviderCount}, powered={powerPreview.PoweredItemCount}, coreTouch={powerPreview.CoreTouchCount}, rangeCells={powerPreview.PowerRangeCellCount}.",
+                $"eyeCellExists={powerPreview.EyeCellExists}, eyeCellOccupied={powerPreview.EyeCellOccupiedCount}, weakPulseCells={powerPreview.WeakPulseCellCount}, providers={powerPreview.ProviderCount}, powered={powerPreview.PoweredItemCount}, rangeCells={powerPreview.PowerRangeCellCount}, forbiddenProviderMisidentified={powerPreview.ForbiddenProviderMisidentifiedCount}, tagAutoPowerProvider={powerPreview.TagAutoPowerProviderCount}.",
                 nameof(FormationCorePowerRangePreview));
+        }
+
+        private static void ValidateSampleItem(
+            BuildSandboxValidationReport report,
+            FormationCorePowerRangePreview powerPreview,
+            string itemId,
+            EnergyState expectedState,
+            bool expectedProvider)
+        {
+            FormationCorePowerRangeRow row = powerPreview?.rows?.FirstOrDefault(candidate =>
+                candidate != null && string.Equals(candidate.itemId, itemId, StringComparison.Ordinal));
+            if (row == null)
+            {
+                report.AddError(
+                    "FORMATION_SAMPLE_ITEM_MISSING",
+                    $"Default preview must keep sample item for report coverage. itemId={itemId}.",
+                    nameof(FormationCorePowerRangeRow));
+                return;
+            }
+
+            if (row.energyState != expectedState)
+            {
+                report.AddError(
+                    "FORMATION_SAMPLE_ENERGY_STATE_MISMATCH",
+                    $"Sample item energy state mismatch. itemId={itemId}, expected={expectedState}, actual={row.energyState}.",
+                    nameof(FormationCorePowerRangeRow));
+            }
+
+            if (row.isPowerProvider != expectedProvider)
+            {
+                report.AddError(
+                    "FORMATION_SAMPLE_PROVIDER_MISMATCH",
+                    $"Sample item provider flag mismatch. itemId={itemId}, expected={expectedProvider}, actual={row.isPowerProvider}.",
+                    nameof(FormationCorePowerRangeRow));
+            }
         }
 
         private static void ValidateFeedbackConnection(

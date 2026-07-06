@@ -391,8 +391,10 @@ namespace TalismanBag.EditorTools.BuildSandbox
                     .Where(tag => !string.IsNullOrWhiteSpace(tag))
                     .Distinct(StringComparer.Ordinal)
                     .ToList(),
+                energyState = EnergyState.Powered,
                 isPowered = true,
                 energySourceId = "seed_affix_source",
+                formalEnergySourceItemId = "seed_affix_source",
                 rarity = rarity,
                 affixList = (affixList ?? Enumerable.Empty<string>())
                     .Where(affix => !string.IsNullOrWhiteSpace(affix))

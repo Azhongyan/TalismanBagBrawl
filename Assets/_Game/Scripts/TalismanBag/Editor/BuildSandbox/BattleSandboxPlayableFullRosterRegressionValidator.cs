@@ -435,12 +435,12 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 "preview_fire_talisman",
                 "Single1",
                 ItemShapeRotation.Rotation0,
-                new[] { new ItemShapeCell(0, 0) }));
+                new[] { new ItemShapeCell(3, 1) }));
             snapshot.placedItems.Add(BattleSandboxBuildCombatPreviewBuilder.CreatePlacedItemSnapshot(
-                "preview_energy_incense",
-                "Vertical2",
+                "spirit_stone_basic",
+                "Single1",
                 ItemShapeRotation.Rotation0,
-                new[] { new ItemShapeCell(1, 0), new ItemShapeCell(1, 1) }));
+                new[] { new ItemShapeCell(3, 2) }));
             BattleSandboxBuildCombatPreviewBuilder.ApplyPreviewEnergyLinks(snapshot);
             return snapshot;
         }
@@ -454,10 +454,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
             IReadOnlyList<ItemShapeCell> cells = Array.Empty<ItemShapeCell>();
             if (shapeById != null && shapeById.TryGetValue(rosterRow.ShapeId, out ItemShapeConfig shape))
             {
-                cells = ItemShapePlacementValidator.CalculateOccupiedCells(
-                    shape,
-                    new ItemShapeCell(0, 0),
-                    ItemShapeRotation.Rotation0);
+                cells = new[] { new ItemShapeCell(3, 1) };
             }
 
             BuildSandboxLayoutSnapshot snapshot = new();
@@ -466,6 +463,15 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 rosterRow.ShapeId,
                 ItemShapeRotation.Rotation0,
                 cells));
+            if (!string.Equals(rosterRow.ItemId, "spirit_stone_basic", StringComparison.Ordinal))
+            {
+                snapshot.placedItems.Add(BattleSandboxBuildCombatPreviewBuilder.CreatePlacedItemSnapshot(
+                    "spirit_stone_basic",
+                    "Single1",
+                    ItemShapeRotation.Rotation0,
+                    new[] { new ItemShapeCell(3, 2) }));
+            }
+
             BattleSandboxBuildCombatPreviewBuilder.ApplyPreviewEnergyLinks(snapshot);
             return snapshot;
         }

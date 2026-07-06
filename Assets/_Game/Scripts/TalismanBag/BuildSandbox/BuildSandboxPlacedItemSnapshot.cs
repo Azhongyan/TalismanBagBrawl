@@ -13,8 +13,17 @@ namespace TalismanBag.BuildSandbox
         public List<ItemShapeCell> occupiedCells = new();
         public ItemShapeRotation rotation = ItemShapeRotation.Rotation0;
         public List<string> tags = new();
+        public EnergyState energyState = EnergyState.None;
         public bool isPowered;
         public string energySourceId = string.Empty;
+        public string connectedEyeId = string.Empty;
+        public string formalEnergySourceItemId = string.Empty;
+        public string energyStateReason = string.Empty;
+        public bool isInBasePulseRange;
+        public bool isEyeAdjacent;
+        public bool isEnergyStoneSource;
+        public bool hasEnergyRoleViolation;
+        public List<string> energyDiagnostics = new();
         public List<string> affixList = new();
         public string rarity = "sandbox";
         public string itemFamily = string.Empty;
@@ -40,8 +49,12 @@ namespace TalismanBag.BuildSandbox
             snapshot.shapeId = result.ShapeId;
             snapshot.anchorCell = result.AnchorCell;
             snapshot.occupiedCells = new List<ItemShapeCell>(result.OccupiedCells);
-            snapshot.isPowered = result.EnergyConnected;
+            snapshot.energyState = result.EnergyConnected ? EnergyState.Powered : EnergyState.None;
+            snapshot.isPowered = snapshot.energyState == EnergyState.Powered;
             snapshot.energySourceId = result.EnergyConnectionNote;
+            snapshot.energyStateReason = result.EnergyConnected
+                ? "placement_result_energy_connected"
+                : "placement_result_energy_none";
             snapshot.itemStat = BuildSandboxItemStatCatalog.Resolve(result.ItemId);
             BuildSandboxItemIdentityFamilyCatalog.ApplyTo(snapshot);
             return snapshot;
@@ -197,11 +210,11 @@ namespace TalismanBag.BuildSandbox
             V04(
                 "preview_soul_seal",
                 "镇魂法印",
-                "soul_suppress_seal",
-                "seal_basic",
-                TierCore,
+                "soul_suppress_talisman",
+                "soul_suppress_talisman_basic",
+                TierAdvanced,
                 RelationshipAdvancedVariant,
-                "V0.4 soul-control seal; seal_basic and soul_suppress_talisman_basic remain separate basic items."),
+                "V0.4 soul-control seal variant; soul_suppress_talisman_basic remains the basic control item."),
             V04(
                 "preview_taomu_sword",
                 "桃木剑",
@@ -382,12 +395,11 @@ namespace TalismanBag.BuildSandbox
 
         private static readonly string[] CategoryDisplayRows =
         {
-            "基础",
-            "进阶",
-            "核心",
-            "辅助",
-            "法器",
-            "测试"
+            "\u5168\u90e8",
+            "\u8fdb\u9636",
+            "\u6838\u5fc3",
+            "\u8f85\u52a9",
+            "\u6cd5\u5668"
         };
 
         private static readonly BuildSandboxLegacyAndAdvancedItemRosterRow[] RosterRows =
@@ -496,6 +508,8 @@ namespace TalismanBag.BuildSandbox
         {
             switch (NormalizeCategoryId(categoryId))
             {
+                case CategoryAll:
+                    return "\u5168\u90e8";
                 case CategoryBasic:
                     return "基础";
                 case CategoryAdvanced:

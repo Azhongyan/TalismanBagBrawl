@@ -154,7 +154,7 @@ namespace TalismanBag.BuildSandbox
         public Vector2Int eyeCrossCell = new(3, 2);
         public Vector2Int eyeDiagonalCell = new(3, 3);
         public Vector2Int spiritNineGridCell = new(3, 4);
-        public BattleSandboxKernelPowerState eyeCrossState = BattleSandboxKernelPowerState.FullPowered;
+        public BattleSandboxKernelPowerState eyeCrossState = BattleSandboxKernelPowerState.WeakPowered;
         public BattleSandboxKernelPowerState eyeDiagonalState = BattleSandboxKernelPowerState.WeakPowered;
         public BattleSandboxKernelPowerState spiritNineGridState = BattleSandboxKernelPowerState.FullPowered;
         public float weakPoweredCooldownMultiplier = 1.35f;
@@ -348,12 +348,12 @@ namespace TalismanBag.BuildSandbox
             int eyeDy = Mathf.Abs(cell.y - eyeCell.y);
             if (upgradedEyeNineGridUnlocked && eyeDx <= 1 && eyeDy <= 1)
             {
-                return BattleSandboxKernelPowerState.FullPowered;
+                return BattleSandboxKernelPowerState.WeakPowered;
             }
 
             if (eyeCrossPower && eyeDx + eyeDy == 1)
             {
-                return BattleSandboxKernelPowerState.FullPowered;
+                return BattleSandboxKernelPowerState.WeakPowered;
             }
 
             if (eyeDiagonalWeakPower && eyeDx == 1 && eyeDy == 1)

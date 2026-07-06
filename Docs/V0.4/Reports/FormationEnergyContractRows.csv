@@ -1,0 +1,10 @@
+itemId,shapeId,energyState,isPowered,energySourceId,connectedEyeId,formalEnergySourceItemId,isEnergyStoneSource,isInBasePulseRange,isEyeAdjacent,touchesEyeCell,hasEnergyRoleViolation,powerRangeRadius,occupiedCells,powerRangeCells,powerConnectionState,energyStateReason,playerFeedbackChinese,devOnly,isEnabled
+preview_taomu_sword,vertical_3,None,False,,,,False,False,False,False,True,0,"0,0;0,1;0,2",,,,未接入正式供能,True,False
+preview_energy_incense,Vertical2,WeakPulse,False,v04_center_eye,v04_center_eye,,False,True,True,False,True,0,"2,3;2,4",,eye_weak_pulse_only,eye_weak_pulse_only,"阵脉弱激活，尚不是正式供能",True,False
+preview_fire_talisman,Single1,None,False,,,,False,False,False,False,False,0,"1,1",,,,未接入正式供能,True,False
+preview_thunder_sword,Single1,None,False,,,,False,False,False,False,False,0,"1,0",,,,未接入正式供能,True,False
+preview_x2_wood_talisman,Vertical2,None,False,,,,False,False,False,False,False,0,"4,0;4,1",,,,未接入正式供能,True,False
+preview_guard_wood,Vertical2,WeakPulse,False,v04_center_eye,v04_center_eye,,False,True,True,False,False,0,"1,2;1,3",,eye_weak_pulse_only,eye_weak_pulse_only,"阵脉弱激活，尚不是正式供能",True,False
+preview_cleanse_corner,Corner3,WeakPulse,False,v04_center_eye,v04_center_eye,,False,True,True,False,False,0,"2,0;3,0;2,1",,eye_weak_pulse_only,eye_weak_pulse_only,"阵脉弱激活，尚不是正式供能",True,False
+spirit_stone_basic,Single1,Powered,True,spirit_stone_basic,v04_center_eye,spirit_stone_basic,True,True,True,False,False,1,"3,2","3,1;2,2;3,2;4,2;3,3",energy_stone_connected_to_eye,energy_stone_connected_to_eye,"聚灵石已接入阵眼，正式供能",True,False
+preview_stone_core,Square4,Powered,True,spirit_stone_basic,v04_center_eye,spirit_stone_basic,False,False,False,False,True,0,"3,3;4,3;3,4;4,4",,powered_by_energy_stone_range,powered_by_energy_stone_range,这件道具接上了聚灵石的灵力,True,False

@@ -132,7 +132,7 @@ namespace TalismanBag.BuildSandbox
             selectedItemId = item.ItemId;
             SetText(titleText, item.DisplayName);
             SetText(bodyText, BuildPlayerBodyText(item, context));
-            SetRotateButtonState(true, rotateEnabled);
+            SetRotateButtonState(rotateEnabled, rotateEnabled);
             SetVisible(true);
 
             if (scrollRect != null)

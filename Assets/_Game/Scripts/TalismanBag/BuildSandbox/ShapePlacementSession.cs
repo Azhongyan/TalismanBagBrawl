@@ -248,21 +248,35 @@ namespace TalismanBag.BuildSandbox
 
         public bool RotateClockwise()
         {
-            if (!currentPayload.IsValid)
-            {
-                return false;
-            }
-
-            ItemShapeRotation next = Rotation switch
+            return RotateTo(Rotation switch
             {
                 ItemShapeRotation.Rotation0 => ItemShapeRotation.Rotation90,
                 ItemShapeRotation.Rotation90 => ItemShapeRotation.Rotation180,
                 ItemShapeRotation.Rotation180 => ItemShapeRotation.Rotation270,
                 _ => ItemShapeRotation.Rotation0
-            };
+            });
+        }
 
-            currentPayload = currentPayload.WithRotation(next);
-            Rotation = next;
+        public bool RotateCounterClockwise()
+        {
+            return RotateTo(Rotation switch
+            {
+                ItemShapeRotation.Rotation0 => ItemShapeRotation.Rotation270,
+                ItemShapeRotation.Rotation270 => ItemShapeRotation.Rotation180,
+                ItemShapeRotation.Rotation180 => ItemShapeRotation.Rotation90,
+                _ => ItemShapeRotation.Rotation0
+            });
+        }
+
+        public bool RotateTo(ItemShapeRotation rotation)
+        {
+            if (!currentPayload.IsValid)
+            {
+                return false;
+            }
+
+            currentPayload = currentPayload.WithRotation(rotation);
+            Rotation = rotation;
             CurrentState = ShapePlacementState.HoldingItem;
             IsPreviewLocked = false;
             PreviewResult = null;

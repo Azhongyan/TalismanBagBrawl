@@ -14,7 +14,7 @@ namespace TalismanBag.BuildSandbox
     public sealed class BuildItemTrayPreviewView : MonoBehaviour
     {
         public const bool SupportsShapeAwareCellSpans = true;
-        private const string AllCategory = "\u5168\u90e8";
+        public const string AllCategory = "\u5168\u90e8";
         private const string BasicCategory = "基础";
         private const string AdvancedCategory = "进阶";
         private const string CoreCategory = "核心";
@@ -403,7 +403,32 @@ namespace TalismanBag.BuildSandbox
             {
                 Button button = categoryButtons[i];
                 Text label = categoryLabels[i];
-                string category = NormalizeCategory(i < categories.Count ? categories[i] : label.text, i);
+                if (i >= categories.Count)
+                {
+                    if (button != null)
+                    {
+                        button.gameObject.SetActive(false);
+                    }
+
+                    if (label != null)
+                    {
+                        label.gameObject.SetActive(false);
+                    }
+
+                    continue;
+                }
+
+                if (button != null)
+                {
+                    button.gameObject.SetActive(true);
+                }
+
+                if (label != null)
+                {
+                    label.gameObject.SetActive(true);
+                }
+
+                string category = NormalizeCategory(categories[i], i);
 
                 label.text = category;
                 buttonsByCategory[category] = button;

@@ -1,0 +1,16 @@
+itemFamily,baseItemId,baseChineseName,englishStableKey,v04AdvancedItemId,v04AdvancedChineseName,advancedRelationshipChinese,behaviorSummaryChinese,baseItemPresentInRoster,advancedItemPresentInRoster,formalEnergyProvider,auxiliaryNonProvider,devOnly,isEnabled
+awakening_incense,,醒符香,support_energy_incense,,,辅助 / 节奏件，不是正式供能源,醒符香只提供节奏辅助反馈，不作为 Powered provider。,True,True,False,True,True,False
+chain_thunder_talisman,chain_thunder_talisman_basic,连锁雷符,legacy_chain_thunder_talisman,preview_thunder_sword,雷引剑符,雷符 family 的连锁旧件 / 分支参考,连锁雷符保留雷击扩散与破盾倾向。,True,True,False,False,True,False
+exorcism_bell,exorcism_bell_basic,驱邪铃,legacy_exorcism_bell,preview_old_bell,镇邪铃,驱邪铃 family 的进阶 / 分支,对邪祟、污染和负面机制有克制反馈。,True,True,False,False,True,False
+fire_talisman,fire_talisman_basic,火符,legacy_fire_talisman,preview_fire_talisman,炽火符,火符 family 的进阶 / 分支,基础火伤，并保留持续灼烧倾向。,True,True,False,False,True,False
+furnace_core,,炉芯石,support_stone_core,,,辅助 / 核心机制件，不是正式供能源,炉芯石只做核心机制反馈，不作为 Powered provider。,True,True,False,True,True,False
+guardian_ward,shield_talisman_basic,护身符,legacy_shield_talisman,preview_x2_wood_talisman,护阵木牌,护身符 / 护阵 family 的支援扩展,基础护盾与防御反馈。,True,True,False,False,True,False
+peach_wood,peach_wood_basic,桃木牌,legacy_peach_wood,preview_taomu_sword,桃木剑,桃木牌 family 的进阶 / 分支,基础防护、护盾与抗邪反馈。,True,True,False,False,True,False
+pill,qi_pill_basic,丹药,legacy_qi_pill,,,旧版恢复类基础件,回气调息与轻度恢复反馈。,True,True,False,False,True,False
+purify_talisman,purify_talisman_basic,净化符,legacy_purify_talisman,preview_cleanse_corner,净化折符,净化符 family 的进阶 / 分支,清除或降低负面状态。,True,True,False,False,True,False
+seal,seal_basic,法印,legacy_seal,,,旧版法印基础件，和镇魂符 family 分开保留,法印维持阵面联动，不改为供能 provider。,True,True,False,False,True,False
+soul_suppress_talisman,soul_suppress_talisman_basic,镇魂符,legacy_soul_suppress_talisman,preview_soul_seal,镇魂法印,镇魂符 family 的进阶 / 分支,控制、稳定并压制敌方行动倾向。,True,True,False,False,True,False
+spirit_stone,spirit_stone_basic,聚灵石,legacy_spirit_stone,,,聚灵石 / 聚能石家族为正式供能 provider,正式供能 provider，只负责灵力回流，不承担主要输出。,True,True,True,False,True,False
+sword_pill,sword_pill_basic,剑丸,legacy_sword_pill,,,旧版攻击参考件,飞剑攻击与轻度破势反馈。,True,True,False,False,True,False
+thunder_talisman,thunder_talisman_basic,雷符,legacy_thunder_talisman,preview_thunder_sword,雷引剑符,雷符 family 的进阶 / 分支,雷击、短促爆发，并带破盾倾向。,True,True,False,False,True,False
+water_talisman,water_talisman_basic,水符,legacy_water_talisman,,,旧版水系净化参考件,水气流转与净化恢复反馈。,True,True,False,False,True,False

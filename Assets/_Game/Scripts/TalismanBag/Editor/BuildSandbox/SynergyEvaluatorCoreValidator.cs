@@ -44,8 +44,17 @@ namespace TalismanBag.EditorTools.BuildSandbox
             SynergyConfig corruption = FindSynergy(synergies, "corruption");
 
             List<string> lihuotags = BuildTags(lihuotag, includeEnergyProviderTags: true);
+            List<string> energyProviderTags = BuildEnergyProviderTags(lihuotag);
             List<string> guardTags = BuildTags(guardian, includeEnergyProviderTags: false);
             List<string> corruptionTags = BuildTags(corruption, includeEnergyProviderTags: false);
+
+            snapshot.placedItems.Add(CreateItem(
+                "spirit_stone_basic",
+                "Single1",
+                new ItemShapeCell(5, 0),
+                energyProviderTags,
+                isPowered: true,
+                energySourceId: "spirit_stone_basic"));
 
             for (int i = 0; i < 4; i++)
             {
@@ -55,7 +64,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                     new ItemShapeCell(i, 0),
                     lihuotags,
                     isPowered: true,
-                    energySourceId: "seed_shared_lihuo_source"));
+                    energySourceId: "spirit_stone_basic"));
             }
 
             snapshot.placedItems.Add(CreateItem(
@@ -64,7 +73,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 new ItemShapeCell(0, 1),
                 guardTags,
                 isPowered: true,
-                energySourceId: "seed_lihuo_1"));
+                energySourceId: "spirit_stone_basic"));
 
             snapshot.placedItems.Add(CreateItem(
                 "seed_guardian_2",
@@ -72,7 +81,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 new ItemShapeCell(1, 1),
                 guardTags,
                 isPowered: true,
-                energySourceId: "seed_lihuo_1"));
+                energySourceId: "spirit_stone_basic"));
 
             snapshot.placedItems.Add(CreateItem(
                 "seed_corruption_1",
@@ -196,6 +205,14 @@ namespace TalismanBag.EditorTools.BuildSandbox
 
             BuildSandboxLayoutSnapshot snapshot = new();
             List<string> tags = BuildTags(lihuotag, includeEnergyProviderTags: true);
+            List<string> energyProviderTags = BuildEnergyProviderTags(lihuotag);
+            snapshot.placedItems.Add(CreateItem(
+                "spirit_stone_basic",
+                "Single1",
+                new ItemShapeCell(8, 0),
+                energyProviderTags,
+                isPowered: true,
+                energySourceId: "spirit_stone_basic"));
             for (int i = 0; i < 8; i++)
             {
                 snapshot.placedItems.Add(CreateItem(
@@ -204,7 +221,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                     new ItemShapeCell(i, 0),
                     tags,
                     isPowered: true,
-                    energySourceId: "seed_lihuo_8piece_shared_source"));
+                    energySourceId: "spirit_stone_basic"));
             }
 
             BuildEvaluationResult result = SynergyEvaluator.Evaluate(snapshot, new[] { lihuotag });
@@ -316,6 +333,25 @@ namespace TalismanBag.EditorTools.BuildSandbox
             return tags.OrderBy(tag => tag, StringComparer.Ordinal).ToList();
         }
 
+        private static List<string> BuildEnergyProviderTags(SynergyConfig synergy)
+        {
+            HashSet<string> tags = new(StringComparer.Ordinal);
+            foreach (EnergyConditionConfig condition in synergy?.energyConditions ?? Enumerable.Empty<EnergyConditionConfig>())
+            {
+                if (!string.IsNullOrWhiteSpace(condition.requiredProviderTag))
+                {
+                    tags.Add(condition.requiredProviderTag);
+                }
+            }
+
+            if (tags.Count == 0)
+            {
+                tags.Add("energy_source");
+            }
+
+            return tags.OrderBy(tag => tag, StringComparer.Ordinal).ToList();
+        }
+
         private static BuildSandboxPlacedItemSnapshot CreateItem(
             string itemId,
             string shapeId,
@@ -335,8 +371,11 @@ namespace TalismanBag.EditorTools.BuildSandbox
                     .Where(tag => !string.IsNullOrWhiteSpace(tag))
                     .Distinct(StringComparer.Ordinal)
                     .ToList(),
+                energyState = isPowered ? EnergyState.Powered : EnergyState.None,
                 isPowered = isPowered,
                 energySourceId = energySourceId ?? string.Empty,
+                formalEnergySourceItemId = isPowered ? energySourceId ?? string.Empty : string.Empty,
+                isEnergyStoneSource = isPowered && string.Equals(itemId, "spirit_stone_basic", StringComparison.Ordinal),
                 affixList = new List<string>(),
                 rarity = "sandbox_seed"
             };

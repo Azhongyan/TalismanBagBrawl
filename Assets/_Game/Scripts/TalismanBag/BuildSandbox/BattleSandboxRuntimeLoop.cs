@@ -169,6 +169,9 @@ namespace TalismanBag.BuildSandbox
         public string rowKind = string.Empty;
         public string itemId = string.Empty;
         public string statProfileId = string.Empty;
+        public string itemEffectKey = string.Empty;
+        public string itemEffectFamilyChinese = string.Empty;
+        public string itemEffectRoleChinese = string.Empty;
         public float elapsedSeconds;
         public int manaBefore;
         public int manaAfter;
@@ -457,6 +460,7 @@ namespace TalismanBag.BuildSandbox
             AddOpeningRow(preview, safeScenario, currentMana, playerHp, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration);
 
             int spendIndex = 0;
+            int passiveEffectIndex = 0;
             for (int step = 0; step < PreviewStepCount; step++)
             {
                 float elapsed = (step + 1) * StepSeconds;
@@ -465,6 +469,16 @@ namespace TalismanBag.BuildSandbox
                 currentMana = Mathf.Clamp(currentMana + manaGain, 0, maxMana);
                 preview.generatedManaTotal += Mathf.Max(0, currentMana - manaBefore);
                 preview.rows.Add(CreateManaRow(step, elapsed, manaBefore, currentMana, playerHp, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration));
+
+                BuildSandboxPlacedItemSnapshot passiveItem =
+                    FindNextPassiveEffectItem(placedItems, ref passiveEffectIndex);
+                if (passiveItem != null)
+                {
+                    BuildSandboxItemStat passiveStat = ResolveStat(passiveItem);
+                    LegacyItemBehaviorResult passiveBehavior =
+                        LegacyItemBehaviorIntegrationCatalog.Evaluate(passiveItem, passiveStat);
+                    preview.rows.Add(CreatePassiveEffectRow(step, elapsed, passiveItem, passiveStat, passiveBehavior, manaBefore, currentMana, playerHp, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration));
+                }
 
                 BuildSandboxPlacedItemSnapshot item =
                     BattleSandboxManaLoopPreviewBuilder.FindNextSpendItem(placedItems, ref spendIndex, out int manaCost);
@@ -477,17 +491,23 @@ namespace TalismanBag.BuildSandbox
                 if (item != null)
                 {
                     BuildSandboxItemStat stat = ResolveStat(item);
+                    LegacyItemBehaviorResult behavior =
+                        LegacyItemBehaviorIntegrationCatalog.Evaluate(item, stat);
                     float cooldown = ResolveRuntimeCooldown(item, stat);
                     preview.rows.Add(CreateCooldownRow(step, elapsed, item, stat, cooldown, currentMana, playerHp, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration));
 
-                    if (manaCost <= 0 || currentMana >= manaCost)
+                    if (!behavior.triggers || manaCost <= 0 || currentMana >= manaCost)
                     {
                         int beforeSpend = currentMana;
-                        currentMana = Mathf.Max(0, currentMana - manaCost);
-                        preview.spentManaTotal += Mathf.Max(0, beforeSpend - currentMana);
-                        preview.rows.Add(CreateItemTriggerRow(step, elapsed, item, stat, manaCost, beforeSpend, currentMana, playerHp, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration));
+                        if (behavior.triggers)
+                        {
+                            currentMana = Mathf.Max(0, currentMana - manaCost);
+                        }
 
-                        int incomingDamage = ResolveItemEnemyDamage(item, stat);
+                        preview.spentManaTotal += Mathf.Max(0, beforeSpend - currentMana);
+                        preview.rows.Add(CreateItemTriggerRow(step, elapsed, item, stat, behavior, manaCost, beforeSpend, currentMana, playerHp, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration));
+
+                        int incomingDamage = behavior.enemyHpDamage;
                         if (incomingDamage > 0)
                         {
                             int enemyHpBefore = enemyHp;
@@ -507,25 +527,32 @@ namespace TalismanBag.BuildSandbox
                             }
                         }
 
-                        if (stat.guard > 0)
+                        if (behavior.playerShieldGain > 0)
                         {
                             int shieldBefore = playerShield;
                             BattleSandboxKernelShieldSample shield =
                                 BattleSandboxCombatKernelAdapterBuilder.ApplyPlayerShield(
                                     playerShield,
-                                    stat.guard * 2 + (item.isPowered ? stat.spirit : 0),
+                                    behavior.playerShieldGain,
                                     BattleSandboxCombatKernelAdapterBuilder.PlayerShieldCap);
                             playerShield = shield.playerShieldAfter;
                             preview.rows.Add(CreatePlayerShieldRow(step, elapsed, item, stat, currentMana, playerHp, shieldBefore, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration));
                         }
 
-                        if (stat.cleanse > 0 && playerHp < playerMaxHp)
+                        if (behavior.cleanseValue > 0 && playerHp < playerMaxHp)
                         {
                             int hpBefore = playerHp;
                             BattleSandboxKernelHealingSample healing =
-                                BattleSandboxCombatKernelAdapterBuilder.ApplyHealing(playerHp, stat.cleanse, playerMaxHp);
+                                BattleSandboxCombatKernelAdapterBuilder.ApplyHealing(playerHp, behavior.cleanseValue, playerMaxHp);
                             playerHp = healing.playerHpAfter;
                             preview.rows.Add(CreatePlayerHealRow(step, elapsed, item, stat, currentMana, hpBefore, playerHp, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration));
+                        }
+
+                        if (behavior.controlValue > 0)
+                        {
+                            bossCastRemaining = Mathf.Min(
+                                bossCastDuration,
+                                bossCastRemaining + behavior.controlValue * 0.05f);
                         }
                     }
                     else
@@ -775,17 +802,42 @@ namespace TalismanBag.BuildSandbox
             return BuildSandboxItemStatCatalog.ResolveFrom(item?.itemStat, item?.itemId);
         }
 
+        private static BuildSandboxPlacedItemSnapshot FindNextPassiveEffectItem(
+            IReadOnlyList<BuildSandboxPlacedItemSnapshot> placedItems,
+            ref int passiveEffectIndex)
+        {
+            if (placedItems == null || placedItems.Count == 0)
+            {
+                return null;
+            }
+
+            for (int scanned = 0; scanned < placedItems.Count; scanned++)
+            {
+                int index = Mathf.Abs(passiveEffectIndex + scanned) % placedItems.Count;
+                BuildSandboxPlacedItemSnapshot item = placedItems[index];
+                BuildSandboxItemStat stat = ResolveStat(item);
+                if (BattleSandboxItemEffectRuntimePreviewCatalog.IsPassiveRuntimeEffect(item, stat))
+                {
+                    passiveEffectIndex = index + 1;
+                    return item;
+                }
+            }
+
+            return null;
+        }
+
         private static float ResolveRuntimeCooldown(
             BuildSandboxPlacedItemSnapshot item,
             BuildSandboxItemStat stat)
         {
             BuildSandboxItemStat safeStat = stat ?? BuildSandboxItemStatCatalog.Resolve(item?.itemId);
+            bool isFormallyPowered = IsFormallyPowered(item);
             bool fireAdjacentSpirit = (item?.itemId ?? string.Empty).IndexOf("fire", StringComparison.OrdinalIgnoreCase) >= 0
-                && item?.isPowered == true;
+                && isFormallyPowered;
             bool qiPillAdjacentWater = (safeStat.statTag ?? string.Empty).IndexOf("cleanse", StringComparison.OrdinalIgnoreCase) >= 0
-                && item?.isPowered == true;
-            bool weakPowered = item != null && !item.isPowered && safeStat.spirit > safeStat.attack;
-            float computedCooldown = item?.isPowered == true
+                && isFormallyPowered;
+            bool weakPowered = item != null && item.energyState == EnergyState.WeakPulse && safeStat.spirit > safeStat.attack;
+            float computedCooldown = isFormallyPowered
                 ? Mathf.Max(BattleSandboxCombatKernelAdapterBuilder.MinCooldown, safeStat.castIntervalSeconds - 0.2f)
                 : safeStat.castIntervalSeconds;
             return BattleSandboxCombatKernelAdapterBuilder.ResolveEffectiveCooldown(
@@ -816,27 +868,19 @@ namespace TalismanBag.BuildSandbox
             BuildSandboxPlacedItemSnapshot item,
             BuildSandboxItemStat stat)
         {
-            BuildSandboxItemStat safeStat = stat ?? BuildSandboxItemStatCatalog.Resolve(item?.itemId);
-            if (!CanItemDealEnemyDamage(item, safeStat))
-            {
-                return 0;
-            }
+            return LegacyItemBehaviorIntegrationCatalog.Evaluate(item, stat).enemyHpDamage;
+        }
 
-            int rawDamage =
-                Mathf.Max(0, safeStat.attack) * 3
-                + Mathf.Max(0, safeStat.shieldBreak)
-                + (item?.isPowered == true ? Mathf.Max(0, safeStat.spirit) : 0);
-            return Mathf.Max(1, rawDamage);
+        private static bool IsFormallyPowered(BuildSandboxPlacedItemSnapshot item)
+        {
+            return item != null && item.energyState == EnergyState.Powered;
         }
 
         private static bool CanItemDealEnemyDamage(
             BuildSandboxPlacedItemSnapshot item,
             BuildSandboxItemStat stat)
         {
-            string itemId = item?.itemId ?? string.Empty;
-            string statTag = stat?.statTag ?? string.Empty;
-            return ContainsAny(itemId, "fire", "thunder", "sword", "exorcism")
-                || ContainsAny(statTag, "damage", "fire", "thunder", "sword", "burst", "chain", "exorcism");
+            return BattleSandboxItemEffectRuntimePreviewCatalog.CanDealEnemyDamage(item, stat);
         }
 
         private static bool ContainsAny(string value, params string[] tokens)
@@ -974,6 +1018,9 @@ namespace TalismanBag.BuildSandbox
             float bossCastRemaining,
             float bossCastDuration)
         {
+            BattleSandboxItemEffectRuntimeProfile profile =
+                BattleSandboxItemEffectRuntimePreviewCatalog.Resolve(item, stat);
+            string displayName = DisplayItem(item, stat);
             BattleSandboxRuntimeLoopRow row = BaseItemRow(
                 "cooldown",
                 step,
@@ -992,11 +1039,11 @@ namespace TalismanBag.BuildSandbox
                 enemyShield,
                 bossCastRemaining,
                 bossCastDuration,
-                "\u51b7\u5374\uff1a\u9053\u5177\u8bfb\u53d6",
+                $"\u51b7\u5374\uff1a{profile.effectFamilyChinese}\u51c6\u5907",
                 $"\u9996\u9886\u84c4\u529b {bossCastRemaining:0.0}\u79d2",
-                $"\u3010\u51b7\u5374\u3011{DisplayItem(item)} {cooldown:0.0}\u79d2",
-                "\u51b7\u5374\u5237\u65b0",
-                SourceCombatKernel + ".ResolveEffectiveCooldown");
+                $"\u3010\u51b7\u5374\u3011{displayName} {cooldown:0.0}\u79d2\uff0c{profile.effectRoleChinese}\u5f85\u53d1",
+                $"{profile.effectFamilyChinese}\u5f85\u53d1",
+                SourceCombatKernel + ".ResolveEffectiveCooldown+" + profile.SourceDataPath);
             row.cooldownSeconds = cooldown;
             return row;
         }
@@ -1006,6 +1053,7 @@ namespace TalismanBag.BuildSandbox
             float elapsed,
             BuildSandboxPlacedItemSnapshot item,
             BuildSandboxItemStat stat,
+            LegacyItemBehaviorResult behavior,
             int manaCost,
             int manaBefore,
             int manaAfter,
@@ -1016,6 +1064,12 @@ namespace TalismanBag.BuildSandbox
             float bossCastRemaining,
             float bossCastDuration)
         {
+            BattleSandboxItemEffectRuntimeProfile profile =
+                BattleSandboxItemEffectRuntimePreviewCatalog.Resolve(item, stat);
+            LegacyItemBehaviorResult safeBehavior =
+                behavior ?? LegacyItemBehaviorIntegrationCatalog.Evaluate(item, stat);
+            string displayName = DisplayItem(item, stat);
+            int displayedManaCost = safeBehavior.triggers ? manaCost : 0;
             BattleSandboxRuntimeLoopRow row = BaseItemRow(
                 "itemTrigger",
                 step,
@@ -1034,14 +1088,100 @@ namespace TalismanBag.BuildSandbox
                 enemyShield,
                 bossCastRemaining,
                 bossCastDuration,
-                "\u9053\u5177\uff1a\u89e6\u53d1",
-                "\u9996\u9886\u84c4\u529b\u672a\u65ad",
-                $"\u3010\u9053\u5177\u3011{DisplayItem(item)} \u8017\u7075 {manaCost}",
-                $"\u89e6\u53d1 {DisplayShortItem(item)}",
-                SourceItemStat + ".manaCostPerCast");
+                safeBehavior.playerFeedbackChinese,
+                profile.triggerCastLineChinese,
+                $"{safeBehavior.combatLogChinese}\uff0c\u8017\u7075 {displayedManaCost}",
+                safeBehavior.triggers ? profile.triggerFloatingTextChinese : safeBehavior.playerFeedbackChinese,
+                SourceItemStat + ".manaCostPerCast+" + safeBehavior.sourceDataPath);
             row.manaDelta = manaAfter - manaBefore;
-            row.itemTriggerChinese = "\u9053\u5177\u5df2\u89e6\u53d1";
+            row.itemTriggerChinese = safeBehavior.triggers
+                ? $"{profile.effectRoleChinese}\u5df2\u751f\u6548"
+                : safeBehavior.playerFeedbackChinese;
             return row;
+        }
+
+        private static BattleSandboxRuntimeLoopRow CreatePassiveEffectRow(
+            int step,
+            float elapsed,
+            BuildSandboxPlacedItemSnapshot item,
+            BuildSandboxItemStat stat,
+            LegacyItemBehaviorResult behavior,
+            int manaBefore,
+            int manaAfter,
+            int playerHp,
+            int playerShield,
+            int enemyHp,
+            int enemyShield,
+            float bossCastRemaining,
+            float bossCastDuration)
+        {
+            BattleSandboxItemEffectRuntimeProfile profile =
+                BattleSandboxItemEffectRuntimePreviewCatalog.Resolve(item, stat);
+            LegacyItemBehaviorResult safeBehavior =
+                behavior ?? LegacyItemBehaviorIntegrationCatalog.Evaluate(item, stat);
+            string displayName = DisplayItem(item, stat);
+            int manaGain = Mathf.Max(0, manaAfter - manaBefore);
+            string log = !safeBehavior.triggers
+                ? safeBehavior.combatLogChinese
+                : profile.restoresMana && manaGain > 0
+                ? $"\u3010{profile.effectFamilyChinese}\u3011{displayName}{profile.triggerVerbChinese}\uff0c\u7075\u6c14 +{manaGain}"
+                : profile.passiveLogChinese;
+            string floating = !safeBehavior.triggers
+                ? safeBehavior.playerFeedbackChinese
+                : profile.restoresMana && manaGain > 0
+                ? FormatManaRestoreFloatingText(profile, manaGain)
+                : profile.passiveFloatingTextChinese;
+            BattleSandboxRuntimeLoopRow row = BaseItemRow(
+                "itemTrigger",
+                step,
+                elapsed,
+                item,
+                stat,
+                manaBefore,
+                manaAfter,
+                playerHp,
+                playerHp,
+                playerShield,
+                playerShield,
+                enemyHp,
+                enemyHp,
+                enemyShield,
+                enemyShield,
+                bossCastRemaining,
+                bossCastDuration,
+                safeBehavior.playerFeedbackChinese,
+                profile.triggerCastLineChinese,
+                log,
+                floating,
+                SourceItemStat + ".manaGainPerTick+" + safeBehavior.sourceDataPath);
+            row.manaDelta = manaAfter - manaBefore;
+            row.itemTriggerChinese = safeBehavior.triggers
+                ? $"{profile.effectRoleChinese}\u5df2\u751f\u6548"
+                : safeBehavior.playerFeedbackChinese;
+            return row;
+        }
+
+        private static string FormatManaRestoreFloatingText(
+            BattleSandboxItemEffectRuntimeProfile profile,
+            int manaGain)
+        {
+            string prefix = (profile?.passiveFloatingTextChinese ?? string.Empty).Trim();
+            if (manaGain <= 0)
+            {
+                return prefix;
+            }
+
+            if (string.IsNullOrWhiteSpace(prefix))
+            {
+                prefix = "\u7075\u6c14";
+            }
+
+            while (prefix.EndsWith("+", StringComparison.Ordinal))
+            {
+                prefix = prefix.Substring(0, prefix.Length - 1).TrimEnd();
+            }
+
+            return $"{prefix} +{manaGain}";
         }
 
         private static BattleSandboxRuntimeLoopRow CreateEnemyHpRow(
@@ -1060,6 +1200,10 @@ namespace TalismanBag.BuildSandbox
             float bossCastRemaining,
             float bossCastDuration)
         {
+            BattleSandboxItemEffectRuntimeProfile profile =
+                BattleSandboxItemEffectRuntimePreviewCatalog.Resolve(item, stat);
+            string displayName = DisplayItem(item, stat);
+            int hpDamage = Mathf.Max(0, enemyHpBefore - enemyHpAfter);
             BattleSandboxRuntimeLoopRow row = BaseItemRow(
                 "enemyHp",
                 step,
@@ -1078,11 +1222,11 @@ namespace TalismanBag.BuildSandbox
                 enemyShieldAfter,
                 bossCastRemaining,
                 bossCastDuration,
-                "\u654c\u4eba\uff1a\u8840\u91cf\u66f4\u65b0",
-                "\u9996\u9886\u62a4\u52bf\u9707\u52a8",
-                $"\u3010\u4f24\u5bb3\u3011{DisplayItem(item)} \u9020\u6210 {incomingDamage}\uff0c\u654c\u65b9 {enemyHpAfter}/{Mathf.Max(1, enemyHpBefore)}",
-                $"-{Mathf.Max(0, enemyHpBefore - enemyHpAfter)}",
-                SourceCombatKernel + ".ApplyEnemyDamage");
+                profile.damageStateLineChinese,
+                profile.damageCastLineChinese,
+                $"\u3010{profile.effectFamilyChinese}\u3011{displayName}\u9020\u6210 {incomingDamage} \u70b9{profile.effectRoleChinese}\u538b\u529b\uff0c\u654c\u65b9 {enemyHpAfter}/{Mathf.Max(1, enemyHpBefore)}",
+                $"{profile.damageFloatingPrefixChinese} -{hpDamage}",
+                SourceCombatKernel + ".ApplyEnemyDamage+" + profile.SourceDataPath);
             return row;
         }
 
@@ -1100,6 +1244,9 @@ namespace TalismanBag.BuildSandbox
             float bossCastRemaining,
             float bossCastDuration)
         {
+            BattleSandboxItemEffectRuntimeProfile profile =
+                BattleSandboxItemEffectRuntimePreviewCatalog.Resolve(item, stat);
+            string displayName = DisplayItem(item, stat);
             return BaseItemRow(
                 "enemyShield",
                 step,
@@ -1118,11 +1265,11 @@ namespace TalismanBag.BuildSandbox
                 enemyShieldAfter,
                 bossCastRemaining,
                 bossCastDuration,
-                "\u654c\u4eba\uff1a\u62a4\u76fe\u56de\u6d41",
+                profile.breaksShield ? "\u654c\u4eba\uff1a\u96f7\u75d5\u903c\u51fa\u62a4\u52bf" : "\u654c\u4eba\uff1a\u62a4\u52bf\u53cd\u5e94",
                 "\u9996\u9886\u91cd\u7ec4\u62a4\u52bf",
-                $"\u3010\u654c\u76fe\u3011{enemyShieldBefore}->{enemyShieldAfter}",
-                $"\u654c\u76fe +{Mathf.Max(0, enemyShieldAfter - enemyShieldBefore)}",
-                SourceCombatKernel + ".ApplyPlayerShield.enemyShieldSample");
+                $"\u3010\u62a4\u52bf\u53cd\u5e94\u3011{displayName}\u89e6\u53d1\u540e\uff0c\u654c\u76fe {enemyShieldBefore}->{enemyShieldAfter}",
+                $"{profile.effectFamilyChinese}\u53cd\u5e94",
+                SourceCombatKernel + ".ApplyPlayerShield.enemyShieldSample+" + profile.SourceDataPath);
         }
 
         private static BattleSandboxRuntimeLoopRow CreatePlayerShieldRow(
@@ -1139,6 +1286,9 @@ namespace TalismanBag.BuildSandbox
             float bossCastRemaining,
             float bossCastDuration)
         {
+            BattleSandboxItemEffectRuntimeProfile profile =
+                BattleSandboxItemEffectRuntimePreviewCatalog.Resolve(item, stat);
+            string displayName = DisplayItem(item, stat);
             return BaseItemRow(
                 "playerShield",
                 step,
@@ -1157,11 +1307,11 @@ namespace TalismanBag.BuildSandbox
                 enemyShield,
                 bossCastRemaining,
                 bossCastDuration,
-                "\u73a9\u5bb6\uff1a\u62a4\u76fe\u66f4\u65b0",
+                profile.shieldStateLineChinese,
                 "\u9996\u9886\u653b\u52bf\u88ab\u9876\u4f4f",
-                $"\u3010\u62a4\u76fe\u3011{DisplayItem(item)} {playerShieldBefore}->{playerShieldAfter}",
-                $"\u62a4\u76fe +{Mathf.Max(0, playerShieldAfter - playerShieldBefore)}",
-                SourceCombatKernel + ".ApplyPlayerShield");
+                $"\u3010{profile.effectFamilyChinese}\u3011{displayName}{profile.triggerVerbChinese}\uff0c\u62a4\u76fe {playerShieldBefore}->{playerShieldAfter}",
+                $"{profile.shieldFloatingPrefixChinese} +{Mathf.Max(0, playerShieldAfter - playerShieldBefore)}",
+                SourceCombatKernel + ".ApplyPlayerShield+" + profile.SourceDataPath);
         }
 
         private static BattleSandboxRuntimeLoopRow CreatePlayerHealRow(
@@ -1178,6 +1328,9 @@ namespace TalismanBag.BuildSandbox
             float bossCastRemaining,
             float bossCastDuration)
         {
+            BattleSandboxItemEffectRuntimeProfile profile =
+                BattleSandboxItemEffectRuntimePreviewCatalog.Resolve(item, stat);
+            string displayName = DisplayItem(item, stat);
             return BaseItemRow(
                 "playerHp",
                 step,
@@ -1196,11 +1349,11 @@ namespace TalismanBag.BuildSandbox
                 enemyShield,
                 bossCastRemaining,
                 bossCastDuration,
-                "\u73a9\u5bb6\uff1a\u6c14\u8840\u56de\u590d",
+                profile.healStateLineChinese,
                 "\u9996\u9886\u84c4\u529b\u4e2d",
-                $"\u3010\u6c14\u8840\u3011{DisplayItem(item)} {playerHpBefore}->{playerHpAfter}",
-                $"\u6c14\u8840 +{Mathf.Max(0, playerHpAfter - playerHpBefore)}",
-                SourceCombatKernel + ".ApplyHealing");
+                $"\u3010{profile.effectFamilyChinese}\u3011{displayName}{profile.triggerVerbChinese}\uff0c\u6c14\u8840 {playerHpBefore}->{playerHpAfter}",
+                $"{profile.healFloatingPrefixChinese} +{Mathf.Max(0, playerHpAfter - playerHpBefore)}",
+                SourceCombatKernel + ".ApplyHealing+" + profile.SourceDataPath);
         }
 
         private static BattleSandboxRuntimeLoopRow CreateItemWaitRow(
@@ -1217,6 +1370,9 @@ namespace TalismanBag.BuildSandbox
             float bossCastRemaining,
             float bossCastDuration)
         {
+            BattleSandboxItemEffectRuntimeProfile profile =
+                BattleSandboxItemEffectRuntimePreviewCatalog.Resolve(item, stat);
+            string displayName = DisplayItem(item, stat);
             BattleSandboxRuntimeLoopRow row = BaseItemRow(
                 "itemTrigger",
                 step,
@@ -1235,11 +1391,11 @@ namespace TalismanBag.BuildSandbox
                 enemyShield,
                 bossCastRemaining,
                 bossCastDuration,
-                "\u9053\u5177\uff1a\u7b49\u5f85\u7075\u529b",
+                $"\u9053\u5177\uff1a{profile.effectRoleChinese}\u7b49\u5f85\u7075\u529b",
                 "\u9996\u9886\u84c4\u529b\u672a\u65ad",
-                $"\u3010\u9053\u5177\u3011{DisplayItem(item)} \u7075\u529b\u4e0d\u8db3 {mana}/{manaCost}",
+                $"\u3010{profile.effectFamilyChinese}\u3011{displayName}\u7075\u529b\u4e0d\u8db3 {mana}/{manaCost}",
                 "\u7075\u529b\u4e0d\u8db3",
-                SourceItemStat + ".manaCostPerCast");
+                SourceItemStat + ".manaCostPerCast+" + profile.SourceDataPath);
             row.itemTriggerChinese = "\u7075\u529b\u4e0d\u8db3";
             return row;
         }
@@ -1384,8 +1540,8 @@ namespace TalismanBag.BuildSandbox
                 victory ? "\u6c99\u76d2\uff1a\u80dc\u5229" : "\u6c99\u76d2\uff1a\u5931\u8d25",
                 "\u7ed3\u679c\u63d0\u793a\uff1a\u4ec5\u9650\u6c99\u76d2",
                 victory
-                    ? $"\u3010\u6c99\u76d2\u7ed3\u679c\u3011{displayLabel}\u5df2\u88ab\u51fb\u7834\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\uff1b\u4e0d\u53d1\u653e\u5956\u52b1\uff0c\u4e0d\u5199\u5165\u5b58\u6863\uff0c\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b"
-                    : $"\u3010\u6c99\u76d2\u7ed3\u679c\u3011{displayLabel}\u538b\u5236\u4e86\u5f53\u524d\u9635\u9762\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\uff1b\u4e0d\u53d1\u653e\u5956\u52b1\uff0c\u4e0d\u5199\u5165\u5b58\u6863\uff0c\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b",
+                    ? $"\u3010\u6c99\u76d2\u7ed3\u679c\u3011{displayLabel}\u5df2\u88ab\u51fb\u7834\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40\u6784\u7b51\u7b80\u8bc4\uff1a{buildBrief}\uff1b\u4e0d\u53d1\u653e\u5956\u52b1\uff0c\u4e0d\u5199\u5165\u5b58\u6863\uff0c\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b"
+                    : $"\u3010\u6c99\u76d2\u7ed3\u679c\u3011{displayLabel}\u538b\u5236\u4e86\u5f53\u524d\u9635\u9762\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40\u6784\u7b51\u7b80\u8bc4\uff1a{buildBrief}\uff1b\u4e0d\u53d1\u653e\u5956\u52b1\uff0c\u4e0d\u5199\u5165\u5b58\u6863\uff0c\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b",
                 victory ? "\u80dc\u5229" : "\u5931\u8d25",
                 SourceDevEnemySelection);
             row.hasSandboxVictoryResult = victory;
@@ -1393,8 +1549,8 @@ namespace TalismanBag.BuildSandbox
             row.locksRuntimeLoop = true;
             row.resultTitleChinese = victory ? "\u6c99\u76d2\u80dc\u5229" : "\u6c99\u76d2\u5931\u8d25";
             row.resultBodyChinese = victory
-                ? $"{displayLabel}\u5df2\u88ab\u51fb\u7834\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\u3002\u672c\u6b21\u4ec5\u5c55\u793a\u6c99\u76d2\u7ed3\u679c\uff0c\u4e0d\u53d1\u653e\u5956\u52b1\u3001\u4e0d\u5199\u5165\u5b58\u6863\u3001\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b\u3002"
-                : $"{displayLabel}\u538b\u5236\u4e86\u5f53\u524d\u9635\u9762\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\u3002\u672c\u6b21\u4ec5\u5c55\u793a\u6c99\u76d2\u7ed3\u679c\uff0c\u4e0d\u53d1\u653e\u5956\u52b1\u3001\u4e0d\u5199\u5165\u5b58\u6863\u3001\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b\u3002";
+                ? $"{displayLabel}\u5df2\u88ab\u51fb\u7834\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40\u6784\u7b51\u7b80\u8bc4\uff1a{buildBrief}\u3002\u672c\u6b21\u4ec5\u5c55\u793a\u6c99\u76d2\u7ed3\u679c\uff0c\u4e0d\u53d1\u653e\u5956\u52b1\u3001\u4e0d\u5199\u5165\u5b58\u6863\u3001\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b\u3002"
+                : $"{displayLabel}\u538b\u5236\u4e86\u5f53\u524d\u9635\u9762\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40\u6784\u7b51\u7b80\u8bc4\uff1a{buildBrief}\u3002\u672c\u6b21\u4ec5\u5c55\u793a\u6c99\u76d2\u7ed3\u679c\uff0c\u4e0d\u53d1\u653e\u5956\u52b1\u3001\u4e0d\u5199\u5165\u5b58\u6863\u3001\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b\u3002";
             row.restartHintChinese = "\u70b9\u51fb\u91cd\u5f00\u672c\u573a\uff0c\u6216\u5207\u6362\u6d4b\u8bd5\u654c\u4eba\u3002";
             preview.rows.Add(row);
         }
@@ -1474,6 +1630,8 @@ namespace TalismanBag.BuildSandbox
             string floating,
             string source)
         {
+            BattleSandboxItemEffectRuntimeProfile profile =
+                BattleSandboxItemEffectRuntimePreviewCatalog.Resolve(item, stat);
             BattleSandboxRuntimeLoopRow row = BaseRow(
                 rowKind,
                 rowKind,
@@ -1498,6 +1656,9 @@ namespace TalismanBag.BuildSandbox
                 source);
             row.itemId = item?.itemId ?? string.Empty;
             row.statProfileId = stat?.statProfileId ?? string.Empty;
+            row.itemEffectKey = profile.itemEffectKey;
+            row.itemEffectFamilyChinese = profile.effectFamilyChinese;
+            row.itemEffectRoleChinese = profile.effectRoleChinese;
             return row;
         }
 
@@ -1559,21 +1720,17 @@ namespace TalismanBag.BuildSandbox
 
         private static string DisplayItem(BuildSandboxPlacedItemSnapshot item)
         {
-            return string.IsNullOrWhiteSpace(item?.itemId)
-                ? "\u672a\u77e5\u9053\u5177"
-                : item.itemId;
+            return DisplayItem(item, ResolveStat(item));
+        }
+
+        private static string DisplayItem(BuildSandboxPlacedItemSnapshot item, BuildSandboxItemStat stat)
+        {
+            return BattleSandboxItemEffectRuntimePreviewCatalog.DisplayItem(item, stat);
         }
 
         private static string DisplayShortItem(BuildSandboxPlacedItemSnapshot item)
         {
-            string id = item?.itemId ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                return "\u9053\u5177";
-            }
-
-            int index = id.LastIndexOf('_');
-            return index >= 0 && index + 1 < id.Length ? id.Substring(index + 1) : id;
+            return BattleSandboxItemEffectRuntimePreviewCatalog.DisplayShortItem(item, ResolveStat(item));
         }
     }
 

@@ -212,12 +212,15 @@ namespace TalismanBag.BuildSandbox
             int gain = 0;
             foreach (BuildSandboxPlacedItemSnapshot item in placedItems ?? Array.Empty<BuildSandboxPlacedItemSnapshot>())
             {
+                if (item == null
+                    || item.energyState != EnergyState.Powered
+                    || !FormationEnergyContractResolver.IsEnergyStoneItem(item))
+                {
+                    continue;
+                }
+
                 BuildSandboxItemStat stat = BuildSandboxItemStatCatalog.ResolveFrom(item?.itemStat, item?.itemId);
                 gain += Mathf.Max(0, stat.manaGainPerTick);
-                if (item?.isPowered == true)
-                {
-                    gain += Mathf.Max(0, stat.spirit / 3);
-                }
             }
 
             return gain;

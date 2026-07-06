@@ -64,7 +64,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 BuildItemTrayPreviewView trayView = BindTray(tray);
                 BuildPlacementFeedbackView feedbackView = BindFeedback(feedback);
                 Text selectedTitle = EnsureText(selectedInfo, "SelectedItemInfoTitle", "道具信息", 18, TextAnchor.UpperCenter);
-                Text selectedBody = EnsureText(selectedInfo, "SelectedItemInfoBody", "单击查看信息；弹窗 Rotate 旋转；松手直接放置。", 15, TextAnchor.MiddleCenter);
+                Text selectedBody = EnsureText(selectedInfo, "SelectedItemInfoBody", "单击查看信息；拖动经过左右热区旋转；松手直接放置。", 15, TextAnchor.MiddleCenter);
                 Button rotateButton = EnsureControlButton(controlBar, "RotatePreviewButtonSlot", "Popup Rotate", new Vector2(0.62f, 0.18f), new Vector2(0.73f, 0.82f));
                 Button resetButton = EnsureControlButton(controlBar, "ResetPreviewButtonSlot", "取消", new Vector2(0.74f, 0.18f), new Vector2(0.85f, 0.82f));
                 EnsureControlButton(controlBar, "RunSimulationButtonSlot", "运行模拟", new Vector2(0.50f, 0.18f), new Vector2(0.61f, 0.82f));
@@ -120,8 +120,8 @@ namespace TalismanBag.EditorTools.BuildSandbox
             SetTextIfPresent(battleArea, "BoardGridTitle", "棋盘预览");
             SetTextIfPresent(tray, "ItemTrayTitle", "道具栏");
             SetTextIfPresent(selectedInfo, "SelectedItemInfoTitle", "道具信息");
-            SetTextIfPresent(selectedInfo, "SelectedItemInfoBody", "单击查看信息；弹窗 Rotate 旋转；松手直接放置。");
-            SetTextIfPresent(feedback, "PlacementFeedbackText", "单击道具查看信息；信息弹窗 Rotate 旋转；合法松手直接放置，非法返回托盘。");
+            SetTextIfPresent(selectedInfo, "SelectedItemInfoBody", "单击查看信息；拖动经过左右热区旋转；松手直接放置。");
+            SetTextIfPresent(feedback, "PlacementFeedbackText", "单击道具查看信息；拖动经过左右热区旋转；合法松手直接放置，非法返回托盘。");
             SetTextIfPresent(controlBar, "Title", "构筑沙盒预览（开发专用）");
 
             SetAnchors(tray, new Vector2(0.09f, 0.07f), new Vector2(0.66f, 0.37f));
@@ -438,7 +438,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
         private static BuildPlacementFeedbackView BindFeedback(RectTransform feedback)
         {
             Image image = EnsureImage(feedback.gameObject, new Color(0.18f, 0.14f, 0.09f, 1f), raycast: false);
-            Text text = EnsureChildText(feedback, "PlacementFeedbackText", "单击道具查看信息；信息弹窗 Rotate 旋转；合法松手直接放置，非法返回托盘。", 16, TextAnchor.MiddleCenter);
+            Text text = EnsureChildText(feedback, "PlacementFeedbackText", "单击道具查看信息；拖动经过左右热区旋转；合法松手直接放置，非法返回托盘。", 16, TextAnchor.MiddleCenter);
             BuildPlacementFeedbackView view = feedback.GetComponent<BuildPlacementFeedbackView>();
             if (view == null)
             {

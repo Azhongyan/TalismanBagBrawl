@@ -20,8 +20,13 @@ namespace TalismanBag.BuildSandbox
         public int boardWidth = 5;
         public int boardHeight = 5;
         public ItemShapeCell coreCell = FormationCorePowerRangeResolver.DefaultCoreCell;
+        public List<ItemShapeCell> weakPulseCells = new();
         public List<FormationCorePowerRangeRow> rows = new();
 
+        public bool EyeCellExists => coreCell.x >= 0 && coreCell.y >= 0 && coreCell.x < boardWidth && coreCell.y < boardHeight;
+        public int EyeCellOccupiedCount => rows?.Count(row => row != null && row.touchesFormationCore) ?? 0;
+        public int WeakPulseCellCount => weakPulseCells?.Distinct().Count() ?? 0;
+        public int WeakPulseItemCount => rows?.Count(row => row != null && row.energyState == EnergyState.WeakPulse) ?? 0;
         public int ProviderCount => rows?.Count(row => row != null && row.isPowerProvider) ?? 0;
         public int PoweredItemCount => rows?.Count(row => row != null && row.isPowered) ?? 0;
         public int UnpoweredItemCount => rows?.Count(row => row != null && !row.isPowered && !row.isPowerProvider) ?? 0;
@@ -30,6 +35,23 @@ namespace TalismanBag.BuildSandbox
             .SelectMany(row => row?.powerRangeCells ?? new List<ItemShapeCell>())
             .Distinct()
             .Count() ?? 0;
+        public int ForbiddenProviderCandidateCount => rows?
+            .Count(row => row != null && row.hasEnergyRoleViolation) ?? 0;
+        public int ForbiddenProviderMisidentifiedCount => rows?
+            .Count(row => row != null && row.hasEnergyRoleViolation && row.isPowerProvider) ?? 0;
+        public int TagProviderViolationCount => rows?
+            .Count(row => row != null
+                && (row.energyDiagnostics ?? new List<string>())
+                    .Contains(FormationEnergyDiagnosticCodes.TagProviderViolation)) ?? 0;
+        public int TagAutoPowerProviderCount => rows?
+            .Count(row => row != null
+                && row.isPowerProvider
+                && (row.energyDiagnostics ?? new List<string>())
+                    .Contains(FormationEnergyDiagnosticCodes.TagProviderViolation)) ?? 0;
+        public int LegacyProviderViolationCount => rows?
+            .Count(row => row != null
+                && (row.energyDiagnostics ?? new List<string>())
+                    .Contains(FormationEnergyDiagnosticCodes.LegacyProviderViolation)) ?? 0;
         public int ScopeLeakCount => CountScopeLeaks();
 
         private int CountScopeLeaks()
@@ -53,14 +75,23 @@ namespace TalismanBag.BuildSandbox
     {
         public string itemId = string.Empty;
         public string shapeId = string.Empty;
+        public EnergyState energyState = EnergyState.None;
         public bool isPowerProvider;
         public bool isPowered;
         public bool touchesFormationCore;
         public string energySourceId = string.Empty;
+        public string connectedEyeId = string.Empty;
+        public string formalEnergySourceItemId = string.Empty;
+        public bool isEnergyStoneSource;
+        public bool isInBasePulseRange;
+        public bool isEyeAdjacent;
+        public bool hasEnergyRoleViolation;
         public int powerRangeRadius;
         public List<ItemShapeCell> occupiedCells = new();
         public List<ItemShapeCell> powerRangeCells = new();
+        public List<string> energyDiagnostics = new();
         public string powerConnectionState = string.Empty;
+        public string energyStateReason = string.Empty;
         public string chineseDisplayName = string.Empty;
         public string englishStableKey = string.Empty;
         public string playerFeedbackChinese = string.Empty;
@@ -91,6 +122,8 @@ namespace TalismanBag.BuildSandbox
 
         public static FormationCorePowerRangePreview Apply(BuildSandboxLayoutSnapshot snapshot)
         {
+            FormationEnergyContractPreview energyPreview =
+                FormationEnergyContractResolver.Apply(snapshot);
             FormationCorePowerRangePreview preview = new()
             {
                 devOnly = true,
@@ -100,63 +133,16 @@ namespace TalismanBag.BuildSandbox
                 writesFormalReward = false,
                 touchesFormalScene = false,
                 opensFeatureFlag = false,
-                boardWidth = BoardWidth,
-                boardHeight = BoardHeight,
-                coreCell = DefaultCoreCell,
+                boardWidth = energyPreview?.layoutConfig?.width ?? BoardWidth,
+                boardHeight = energyPreview?.layoutConfig?.height ?? BoardHeight,
+                coreCell = energyPreview?.eyeConfig?.eyeCell ?? DefaultCoreCell,
+                weakPulseCells = NormalizeCells(energyPreview?.eyeRuntimeData?.basePulseCells),
                 rows = new List<FormationCorePowerRangeRow>()
             };
 
             List<BuildSandboxPlacedItemSnapshot> items = snapshot?.placedItems?
                 .Where(item => item != null)
                 .ToList() ?? new List<BuildSandboxPlacedItemSnapshot>();
-
-            List<PowerProvider> providers = items
-                .Where(IsPowerProvider)
-                .Select(CreatePowerProvider)
-                .ToList();
-
-            foreach (BuildSandboxPlacedItemSnapshot item in items)
-            {
-                ResetPowerFields(item);
-                bool touchesCore = OccupiesCell(item, DefaultCoreCell);
-                item.touchesFormationCore = touchesCore;
-                item.formationCoreId = touchesCore ? FormationCoreId : string.Empty;
-
-                if (IsPowerProvider(item))
-                {
-                    int radius = ResolvePowerRadius(item);
-                    item.isPowered = true;
-                    item.energySourceId = item.itemId ?? string.Empty;
-                    item.powerRangeRadius = radius;
-                    item.powerRangeCells = BuildPowerRangeCells(item, radius);
-                    item.powerConnectionState = touchesCore ? "provider_on_core" : "provider_active";
-                }
-            }
-
-            foreach (BuildSandboxPlacedItemSnapshot item in items)
-            {
-                if (item == null || item.isPowered)
-                {
-                    continue;
-                }
-
-                PowerProvider provider = providers
-                    .Where(candidate => candidate != null && IsInPowerRange(item, candidate))
-                    .OrderBy(candidate => MinDistance(item, candidate.Source))
-                    .ThenBy(candidate => candidate.Source.itemId, StringComparer.Ordinal)
-                    .FirstOrDefault();
-
-                if (provider == null)
-                {
-                    item.powerConnectionState = "unpowered_out_of_range";
-                    continue;
-                }
-
-                item.isPowered = true;
-                item.energySourceId = provider.Source.itemId ?? string.Empty;
-                item.powerRangeRadius = 0;
-                item.powerConnectionState = "powered_by_range";
-            }
 
             foreach (BuildSandboxPlacedItemSnapshot item in items)
             {
@@ -168,33 +154,16 @@ namespace TalismanBag.BuildSandbox
 
         public static bool IsPowerProvider(BuildSandboxPlacedItemSnapshot item)
         {
-            if (item == null)
-            {
-                return false;
-            }
-
-            string itemId = (item.itemId ?? string.Empty).Trim().ToLowerInvariant();
-            if (itemId.Contains("spirit_stone")
-                || itemId.Contains("energy_incense")
-                || itemId.Contains("stone_core"))
-            {
-                return true;
-            }
-
-            return (item.tags ?? new List<string>()).Any(tag =>
-                ProviderTags.Any(providerTag =>
-                    string.Equals(tag, providerTag, StringComparison.OrdinalIgnoreCase)));
+            return item != null
+                && item.energyState == EnergyState.Powered
+                && FormationEnergyContractResolver.IsEnergyStoneItem(item);
         }
 
         public static int ResolvePowerRadius(BuildSandboxPlacedItemSnapshot item)
         {
-            string itemId = (item?.itemId ?? string.Empty).Trim().ToLowerInvariant();
-            if (itemId.Contains("stone_core") || HasTag(item, "core_preview") || HasTag(item, "orange_core_preview"))
-            {
-                return CoreProviderRadius;
-            }
-
-            return DefaultProviderRadius;
+            return FormationEnergyContractResolver.IsEnergyStoneItem(item)
+                ? EnergyStoneConfig.CreateDefault(item?.itemId).supplyRange
+                : 0;
         }
 
         private static FormationCorePowerRangeRow BuildRow(BuildSandboxPlacedItemSnapshot item)
@@ -203,14 +172,23 @@ namespace TalismanBag.BuildSandbox
             {
                 itemId = item?.itemId ?? string.Empty,
                 shapeId = item?.shapeId ?? string.Empty,
+                energyState = item?.energyState ?? EnergyState.None,
                 isPowerProvider = IsPowerProvider(item),
-                isPowered = item?.isPowered ?? false,
+                isPowered = item?.energyState == EnergyState.Powered,
                 touchesFormationCore = item?.touchesFormationCore ?? false,
                 energySourceId = item?.energySourceId ?? string.Empty,
+                connectedEyeId = item?.connectedEyeId ?? string.Empty,
+                formalEnergySourceItemId = item?.formalEnergySourceItemId ?? string.Empty,
+                isEnergyStoneSource = item?.isEnergyStoneSource ?? false,
+                isInBasePulseRange = item?.isInBasePulseRange ?? false,
+                isEyeAdjacent = item?.isEyeAdjacent ?? false,
+                hasEnergyRoleViolation = item?.hasEnergyRoleViolation ?? false,
                 powerRangeRadius = item?.powerRangeRadius ?? 0,
                 occupiedCells = NormalizeCells(item?.occupiedCells),
                 powerRangeCells = NormalizeCells(item?.powerRangeCells),
+                energyDiagnostics = new List<string>(item?.energyDiagnostics ?? new List<string>()),
                 powerConnectionState = item?.powerConnectionState ?? string.Empty,
+                energyStateReason = item?.energyStateReason ?? string.Empty,
                 chineseDisplayName = ResolveChineseDisplayName(item),
                 englishStableKey = "formationCorePowerRange." + (item?.itemId ?? string.Empty),
                 playerFeedbackChinese = ResolvePlayerFeedback(item),
@@ -353,15 +331,25 @@ namespace TalismanBag.BuildSandbox
 
             if (IsPowerProvider(item))
             {
-                return "\u4f9b\u80fd\u6e90";
+                return "\u805a\u80fd\u4f9b\u80fd";
             }
 
-            if (item.isPowered)
+            if (item.energyState == EnergyState.Powered)
             {
-                return "\u5df2\u63a5\u7075";
+                return "\u805a\u80fd\u4f9b\u80fd";
             }
 
-            return "\u672a\u63a5\u7075";
+            if (item.energyState == EnergyState.WeakPulse)
+            {
+                return "\u9635\u8109\u5fae\u4eae";
+            }
+
+            if (item.energyState == EnergyState.Suppressed)
+            {
+                return "\u88ab\u538b\u5236";
+            }
+
+            return "\u672a\u4f9b\u80fd";
         }
 
         private static string ResolvePlayerFeedback(BuildSandboxPlacedItemSnapshot item)
@@ -373,20 +361,30 @@ namespace TalismanBag.BuildSandbox
 
             if (IsPowerProvider(item) && item.touchesFormationCore)
             {
-                return "\u9635\u773c\u88ab\u70b9\u4eae\uff0c\u7075\u529b\u5411\u5916\u6269\u6563";
+                return "\u9635\u52bf\u53d7\u538b\uff0c\u7075\u529b\u88ab\u6270\u4e71\u3002";
             }
 
             if (IsPowerProvider(item))
             {
-                return "\u4f9b\u80fd\u7269\u5df2\u5f62\u6210\u7075\u529b\u533a";
+                return "\u805a\u80fd\u77f3\u8fde\u901a\uff0c\u7b26\u9635\u4f9b\u80fd\u7a33\u5b9a\u3002";
             }
 
-            if (item.isPowered)
+            if (item.energyState == EnergyState.Powered)
             {
-                return "\u8fd9\u4ef6\u9053\u5177\u63a5\u4e0a\u4e86\u7075\u529b";
+                return "\u805a\u80fd\u77f3\u8fde\u901a\uff0c\u7b26\u9635\u4f9b\u80fd\u7a33\u5b9a\u3002";
             }
 
-            return "\u8fd9\u4ef6\u9053\u5177\u6682\u672a\u63a5\u4e0a\u7075\u529b";
+            if (item.energyState == EnergyState.WeakPulse)
+            {
+                return "\u9635\u773c\u5fae\u4eae\uff0c\u7b26\u9635\u4ec5\u88ab\u5f31\u6fc0\u6d3b\u3002";
+            }
+
+            if (item.energyState == EnergyState.Suppressed)
+            {
+                return "\u9635\u52bf\u53d7\u538b\uff0c\u7075\u529b\u88ab\u6270\u4e71\u3002";
+            }
+
+            return "\u4f9b\u80fd\u65ad\u5f00\uff0c\u90e8\u5206\u9053\u5177\u6c89\u5bc2\u3002";
         }
 
         private sealed class PowerProvider

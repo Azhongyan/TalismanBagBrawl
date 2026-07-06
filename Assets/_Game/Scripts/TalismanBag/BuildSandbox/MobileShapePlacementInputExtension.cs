@@ -36,11 +36,15 @@ namespace TalismanBag.BuildSandbox
     {
         public const float DefaultTapMoveThresholdPixels = 15f;
         public const float DefaultTapTimeThresholdSeconds = 0.25f;
+        public const float DefaultDragMoveThresholdPixels = 18f;
         public const float DefaultFingerGhostOffsetPixels = 50f;
+        public const float DefaultRotateZoneCooldownSeconds = 0.2f;
 
         public float tapMoveThresholdPixels = DefaultTapMoveThresholdPixels;
         public float tapTimeThresholdSeconds = DefaultTapTimeThresholdSeconds;
+        public float dragMoveThresholdPixels = DefaultDragMoveThresholdPixels;
         public float fingerGhostOffsetPixels = DefaultFingerGhostOffsetPixels;
+        public float rotateZoneCooldownSeconds = DefaultRotateZoneCooldownSeconds;
     }
 
     public sealed class GhostPlacementPreviewSnapshot
@@ -109,6 +113,24 @@ namespace TalismanBag.BuildSandbox
             CurrentState = MobileShapePlacementInputState.HoldingItem;
             LastCommitResult = null;
             LastHint = "已拿起";
+            UpdateGhostSnapshot();
+            return true;
+        }
+
+        public bool TapBoardItem(ShapeItemPayload payload, ItemShapeCell? boardAnchorCell = null)
+        {
+            if (!payload.IsValid)
+            {
+                LastHint = "\u9053\u5177\u5f62\u6001\u6570\u636e\u7f3a\u5931";
+                CurrentState = MobileShapePlacementInputState.Idle;
+                UpdateGhostSnapshot();
+                return false;
+            }
+
+            session.Begin(payload, boardAnchorCell: boardAnchorCell);
+            CurrentState = MobileShapePlacementInputState.HoldingItem;
+            LastCommitResult = null;
+            LastHint = "\u5df2\u62ff\u8d77";
             UpdateGhostSnapshot();
             return true;
         }
@@ -229,11 +251,35 @@ namespace TalismanBag.BuildSandbox
         {
             if (CurrentState != MobileShapePlacementInputState.PreviewLocked || !session.IsPreviewLocked)
             {
-                LastHint = "请先松手锁定虚影";
+                LastHint = "当前预览未提交";
                 UpdateGhostSnapshot();
                 return BuildInvalidResult(
                     session.PreviewResult?.AnchorCell ?? default,
                     ShapePlacementInvalidReason.CommitDisabled);
+            }
+
+            ShapePlacementResult result = session.Commit(receiver);
+            LastCommitResult = result;
+            CurrentState = result != null && result.IsValid
+                ? MobileShapePlacementInputState.Placed
+                : MobileShapePlacementInputState.InvalidPreview;
+            LastHint = result != null && result.IsValid
+                ? "已放下"
+                : "当前位置无法放置";
+            UpdateGhostSnapshot(result);
+            return result;
+        }
+
+        public ShapePlacementResult CommitCurrentPreview(ShapeGridReceiver receiver)
+        {
+            if (receiver == null || !session.HasActivePayload)
+            {
+                LastHint = "当前位置无法放置";
+                CurrentState = MobileShapePlacementInputState.InvalidPreview;
+                UpdateGhostSnapshot();
+                return BuildInvalidResult(
+                    session.PreviewResult?.AnchorCell ?? default,
+                    ShapePlacementInvalidReason.ShapeInvalid);
             }
 
             ShapePlacementResult result = session.Commit(receiver);
@@ -434,7 +480,7 @@ namespace TalismanBag.BuildSandbox
             MobileShapePlacementInputExtension input,
             ShapeGridReceiver receiver)
         {
-            return input?.TapGhostToConfirm(receiver);
+            return input?.CommitCurrentPreview(receiver);
         }
     }
 

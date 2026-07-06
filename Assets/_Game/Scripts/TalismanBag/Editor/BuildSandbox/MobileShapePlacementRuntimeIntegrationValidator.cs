@@ -336,8 +336,8 @@ namespace TalismanBag.EditorTools.BuildSandbox
             ValidateTrue(report, "MOBILE_RUNTIME_SOURCE_HAS_RECEIVER", plan.runtimePlaytestSourceHasBoardReceiver, "RuntimePlaytest owns runtime board receiver.");
             ValidateTrue(report, "MOBILE_RUNTIME_SOURCE_HAS_GHOST_TARGET", plan.runtimePlaytestSourceHasGhostTarget, "RuntimePlaytest ghost target handles drop/click.");
             ValidateTrue(report, "MOBILE_RUNTIME_SOURCE_HAS_TAP_TRAY", plan.runtimePlaytestSourceHasTapTrayItem, "RuntimePlaytest calls TapTrayItem.");
-            ValidateTrue(report, "MOBILE_RUNTIME_SOURCE_HAS_RELEASE_LOCK", plan.runtimePlaytestSourceHasReleaseLock, "RuntimePlaytest calls ReleaseDragLockPreview.");
-            ValidateTrue(report, "MOBILE_RUNTIME_SOURCE_HAS_TAP_GHOST", plan.runtimePlaytestSourceHasTapGhostConfirm, "RuntimePlaytest calls TapGhostToConfirm.");
+            ValidateFalse(report, "MOBILE_RUNTIME_SOURCE_HAS_RELEASE_LOCK", plan.runtimePlaytestSourceHasReleaseLock);
+            ValidateFalse(report, "MOBILE_RUNTIME_SOURCE_HAS_TAP_GHOST", plan.runtimePlaytestSourceHasTapGhostConfirm);
             ValidateTrue(report, "MOBILE_RUNTIME_SOURCE_HAS_CANCEL", plan.runtimePlaytestSourceHasCancel, "RuntimePlaytest calls Cancel.");
             ValidateTrue(report, "MOBILE_RUNTIME_SOURCE_USES_BATTLEPREPARE_SEAM", plan.usesBattlePrepareShapePlacementSeamAdapter, "RuntimePlaytest injects BattlePrepareShapePlacementSeamAdapter.");
             ValidateTrue(report, "MOBILE_RUNTIME_SOURCE_BINDS_SEAM_CALLBACKS", plan.bindsBattlePrepareShapePlacementSeamCallbacks, "RuntimePlaytest binds seam callback handlers.");

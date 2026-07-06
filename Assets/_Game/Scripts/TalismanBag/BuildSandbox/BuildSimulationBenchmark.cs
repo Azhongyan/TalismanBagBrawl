@@ -338,7 +338,7 @@ namespace TalismanBag.BuildSandbox
                 return 0f;
             }
 
-            return Clamp01(items.Count(item => item.isPowered) / (float)items.Count);
+            return Clamp01(items.Count(item => item.energyState == EnergyState.Powered) / (float)items.Count);
         }
 
         private static string ResolveFailureReason(BuildSimulationScenario scenario, float winRate)

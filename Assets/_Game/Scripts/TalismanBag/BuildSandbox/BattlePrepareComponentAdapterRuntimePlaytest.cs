@@ -627,7 +627,6 @@ namespace TalismanBag.BuildSandbox
         private Text statusText;
         private Text feedbackText;
         private Text itemInfoText;
-        private Button rotateButton;
         private Button nextShapeButton;
         private Button cancelButton;
         private DraggableTalismanItemView selectedItem;
@@ -1078,10 +1077,6 @@ namespace TalismanBag.BuildSandbox
             nextShapeButton = CreateButton("NextShapeButton", panel.transform, "切换形状");
             SetRect((RectTransform)nextShapeButton.transform, new Vector2(0f, 0f), new Vector2(0.33f, 0f), new Vector2(0.5f, 0f), new Vector2(78f, 22f), new Vector2(128f, 42f));
             nextShapeButton.onClick.AddListener(SelectNextShape);
-
-            rotateButton = CreateButton("RotateShapeButton", panel.transform, "旋转形状");
-            SetRect((RectTransform)rotateButton.transform, new Vector2(0.33f, 0f), new Vector2(0.66f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 22f), new Vector2(128f, 42f));
-            rotateButton.onClick.AddListener(RotateSelectedShape);
 
             cancelButton = CreateButton("CancelShapePlacementButton", panel.transform, "取消");
             SetRect((RectTransform)cancelButton.transform, new Vector2(0.66f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), new Vector2(-78f, 22f), new Vector2(128f, 42f));
@@ -1661,7 +1656,8 @@ namespace TalismanBag.BuildSandbox
                 StringComparison.OrdinalIgnoreCase);
             if (!fromDrag && selectedItem == view && IsLiveMobilePlacementSession())
             {
-                RotateSelectedShape();
+                SetFeedback("本包改为拖动热区旋转；请按住拖动道具，经过左右热区旋转。", false);
+                UpdateSelectedItemInfo();
                 return;
             }
 
@@ -1727,7 +1723,7 @@ namespace TalismanBag.BuildSandbox
                 return false;
             }
 
-            string gestureHint = fromDrag ? "拖到棋盘后松手锁定虚影，再点击确认。" : "移动到棋盘预览，点击已选道具可旋转。";
+            string gestureHint = fromDrag ? "拖到棋盘合法位置后松手直接放置。" : "单击只查看信息；按住拖动摆放，经过左右热区旋转。";
             SetFeedback($"已拿起「{ResolveItemName(view)}」：V0.4 {shape.shapeName}。{gestureHint}", false);
             UpdateSelectedItemInfo();
             return true;
@@ -1884,45 +1880,7 @@ namespace TalismanBag.BuildSandbox
 
         private void RotateSelectedShape()
         {
-            if (selectedItem == null)
-            {
-                SetFeedback("请先选择一个道具。", true);
-                return;
-            }
-
-            InitializeMobileShapePlacementRuntime();
-            if (!IsLiveMobilePlacementSession())
-            {
-                BeginMobileShapePlacement(selectedItem, fromDrag: false, keepCurrentShape: true);
-            }
-
-            ItemShapeConfig shape = CurrentShape();
-            ItemShapeCell? anchorCell =
-                mobilePlacementIntegration.Session.BoardAnchorCell
-                ?? mobilePlacementIntegration.Session.LastLegalBoardAnchor
-                ?? mobilePlacementIntegration.Session.PreviewResult?.AnchorCell;
-            bool rotated = mobilePlacementIntegration.Input.TapSelectedItemToRotate(
-                boardShapeReceiver,
-                anchorCell);
-            selectedRotation = mobilePlacementIntegration.Session.Rotation;
-            lastGhostResult = mobilePlacementIntegration.Session.PreviewResult ?? lastGhostResult;
-
-            if (!rotated)
-            {
-                SetFeedback(mobilePlacementIntegration.Input.LastHint, false);
-                UpdateSelectedItemInfo();
-                return;
-            }
-
-            if (lastGhostResult != null)
-            {
-                ShowHighlights(
-                    lastGhostResult,
-                    mobilePlacementIntegration.Input.LastGhostPreview.outlineStyle,
-                    acceptsPointer: true);
-            }
-
-            SetFeedback($"旋转：{FormatRotation(selectedRotation)}。{(shape != null ? shape.shapeName : "当前形状")} 的 ghost 已刷新。", false);
+            SetFeedback("本包改为拖动热区旋转；请按住拖动道具，经过左右热区旋转。", false);
             UpdateSelectedItemInfo();
         }
 
@@ -1997,7 +1955,7 @@ namespace TalismanBag.BuildSandbox
 
             if (result.IsValid)
             {
-                SetFeedback($"可以放置：{CurrentShape().shapeName}，占用 {result.OccupiedCells.Count} 格。松手锁定虚影，再点击确认。", false);
+                SetFeedback($"可以放置：{CurrentShape().shapeName}，占用 {result.OccupiedCells.Count} 格。松手直接放置。", false);
                 return;
             }
 
@@ -2055,12 +2013,24 @@ namespace TalismanBag.BuildSandbox
                 eventData != null ? eventData.position : (Vector2)Input.mousePosition,
                 GetEventCamera());
             lastGhostResult = result;
-            bool locked = mobilePlacementIntegration.Input.ReleaseDragLockPreview();
-            GhostPlacementOutlineStyle style = locked
-                ? GhostPlacementOutlineStyle.Locked
-                : GhostPlacementOutlineStyle.Invalid;
-            ShowHighlights(lastGhostResult, style, acceptsPointer: true);
-            SetFeedback(mobilePlacementIntegration.Input.LastHint, !locked);
+            if (result != null && result.IsValid)
+            {
+                result = mobilePlacementIntegration.Input.CommitCurrentPreview(boardShapeReceiver);
+                lastGhostResult = result;
+                selectedRotation = mobilePlacementIntegration.Session.Rotation;
+                ShowHighlights(result, GhostPlacementOutlineStyle.Confirmed, acceptsPointer: false);
+                SetFeedback(result != null && result.IsValid
+                    ? $"已放下：{ResolveItemName(selectedItem)}，占用 {result.OccupiedCells.Count} 格。"
+                    : FormatInvalid(result?.InvalidReason ?? ShapePlacementInvalidReason.ShapeInvalid),
+                    result == null || !result.IsValid);
+            }
+            else
+            {
+                mobilePlacementIntegration.Input.Cancel(boardShapeReceiver);
+                ShowHighlights(result, GhostPlacementOutlineStyle.Invalid, acceptsPointer: false);
+                SetFeedback(FormatInvalid(result?.InvalidReason ?? ShapePlacementInvalidReason.OutOfGrid), true);
+            }
+
             UpdateSelectedItemInfo();
             eventData?.Use();
         }
@@ -2072,25 +2042,7 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
-            if (mobilePlacementIntegration.Input.CurrentState != MobileShapePlacementInputState.PreviewLocked)
-            {
-                HandleGhostDropped(eventData);
-                return;
-            }
-
-            ShapePlacementResult result = mobilePlacementIntegration.Input.TapGhostToConfirm(boardShapeReceiver);
-            lastGhostResult = result;
-            selectedRotation = mobilePlacementIntegration.Session.Rotation;
-            ShowHighlights(result, GhostPlacementOutlineStyle.Confirmed, acceptsPointer: false);
-            if (result != null && result.IsValid)
-            {
-                SetFeedback($"已放下：{ResolveItemName(selectedItem)}，占用 {result.OccupiedCells.Count} 格。", false);
-            }
-            else
-            {
-                SetFeedback(FormatInvalid(result?.InvalidReason ?? ShapePlacementInvalidReason.ShapeInvalid), true);
-            }
-
+            SetFeedback("本包无需点击 ghost 确认；合法位置松手会直接放置。", false);
             UpdateSelectedItemInfo();
             eventData?.Use();
         }
@@ -2102,7 +2054,7 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
-            ShapePlacementResult result = mobilePlacementIntegration.Input.DragLockedGhostToReceiver(
+            ShapePlacementResult result = mobilePlacementIntegration.Input.DragToReceiver(
                 boardShapeReceiver,
                 eventData != null ? eventData.position : (Vector2)Input.mousePosition,
                 GetEventCamera());

@@ -27,6 +27,7 @@ namespace TalismanBag.BuildSandbox
         private const float ColorTolerance = 0.004f;
         private const float ScrollAxisBias = 1.15f;
         private const float ItemDragHoldSeconds = 0.22f;
+        private const float ItemDragMoveThresholdPixels = MobileShapePlacementInputSettings.DefaultDragMoveThresholdPixels;
         private const float ViewportExitMarginPixels = 28f;
 
         private BuildGridInteractionPreviewController controller;
@@ -420,7 +421,9 @@ namespace TalismanBag.BuildSandbox
             }
 
             Vector2 dragDelta = ResolveDragDelta(eventData);
-            return Mathf.Abs(dragDelta.x) > Mathf.Abs(dragDelta.y);
+            float horizontalDistance = Mathf.Abs(dragDelta.x);
+            return horizontalDistance >= ItemDragMoveThresholdPixels
+                && horizontalDistance > Mathf.Abs(dragDelta.y);
         }
 
         private bool ShouldStartScroll(PointerEventData eventData)

@@ -339,7 +339,12 @@ namespace TalismanBag.BuildSandbox
                 "preview_cleanse_corner",
                 "Corner3",
                 ItemShapeRotation.Rotation0,
-                new[] { new ItemShapeCell(2, 1), new ItemShapeCell(3, 1), new ItemShapeCell(2, 2) }));
+                new[] { new ItemShapeCell(2, 0), new ItemShapeCell(3, 0), new ItemShapeCell(2, 1) }));
+            snapshot.placedItems.Add(CreatePlacedItemSnapshot(
+                "spirit_stone_basic",
+                "Single1",
+                ItemShapeRotation.Rotation0,
+                new[] { new ItemShapeCell(3, 2) }));
             snapshot.placedItems.Add(CreatePlacedItemSnapshot(
                 "preview_stone_core",
                 "Square4",
@@ -374,6 +379,7 @@ namespace TalismanBag.BuildSandbox
                 occupiedCells = cells,
                 rotation = rotation,
                 tags = ResolvePreviewTags(itemId, shapeId).ToList(),
+                energyState = EnergyState.None,
                 isPowered = false,
                 energySourceId = string.Empty,
                 affixList = ResolvePreviewAffixes(itemId).ToList(),
@@ -386,7 +392,7 @@ namespace TalismanBag.BuildSandbox
 
         public static void ApplyPreviewEnergyLinks(BuildSandboxLayoutSnapshot snapshot)
         {
-            FormationCorePowerRangeResolver.Apply(snapshot);
+            FormationEnergyContractResolver.Apply(snapshot);
         }
 
         public static int CountPlayerTextLeaks(BattleSandboxBuildCombatPreview preview)
@@ -414,8 +420,17 @@ namespace TalismanBag.BuildSandbox
                     occupiedCells = NormalizeCells(item.occupiedCells),
                     rotation = item.rotation,
                     tags = ResolveMergedTags(item).ToList(),
+                    energyState = item.energyState,
                     isPowered = item.isPowered,
                     energySourceId = item.energySourceId ?? string.Empty,
+                    connectedEyeId = item.connectedEyeId ?? string.Empty,
+                    formalEnergySourceItemId = item.formalEnergySourceItemId ?? string.Empty,
+                    energyStateReason = item.energyStateReason ?? string.Empty,
+                    isInBasePulseRange = item.isInBasePulseRange,
+                    isEyeAdjacent = item.isEyeAdjacent,
+                    isEnergyStoneSource = item.isEnergyStoneSource,
+                    hasEnergyRoleViolation = item.hasEnergyRoleViolation,
+                    energyDiagnostics = new List<string>(item.energyDiagnostics ?? new List<string>()),
                     affixList = ResolveMergedAffixes(item).ToList(),
                     rarity = string.IsNullOrWhiteSpace(item.rarity)
                         ? ResolvePreviewRarity(item.itemId)
@@ -482,31 +497,61 @@ namespace TalismanBag.BuildSandbox
         private static IReadOnlyList<BattleSandboxEnemyCombatFeedbackRow> BuildFormationCorePowerFeedbackRows(
             BuildSandboxPreviewContext context)
         {
-            FormationCorePowerRangePreview powerPreview =
-                FormationCorePowerRangeResolver.Apply(context?.layoutSnapshot);
-            if (powerPreview == null || (powerPreview.rows?.Count ?? 0) == 0)
+            FormationEnergyContractPreview energyPreview =
+                FormationEnergyContractResolver.Apply(context?.layoutSnapshot);
+            if (energyPreview == null || (energyPreview.rows?.Count ?? 0) == 0)
             {
                 return Array.Empty<BattleSandboxEnemyCombatFeedbackRow>();
             }
 
-            int providers = powerPreview.ProviderCount;
-            int poweredItems = powerPreview.PoweredItemCount;
-            int unpoweredItems = powerPreview.UnpoweredItemCount;
-            int coreTouches = powerPreview.CoreTouchCount;
+            int providers = energyPreview.EnergyStoneProviderCount;
+            int poweredItems = energyPreview.PoweredItemCount;
+            int weakPulseItems = energyPreview.WeakPulseItemCount;
+            int suppressedItems = Math.Max(energyPreview.SuppressedItemCount, energyPreview.EyeCellOccupiedCount);
 
             List<BattleSandboxEnemyCombatFeedbackRow> rows = new();
-            if (providers <= 0)
+            if (suppressedItems > 0)
             {
                 rows.Add(CreateFeedbackRow(
-                    "formationPower.noProvider",
-                    BattleSandboxEnemyCombatFeedbackKinds.FailureFeedback,
-                    "\u673a\u5236\u53cd\u9988\uff1a\u9635\u773c\u5c1a\u672a\u63a5\u7075",
-                    "\u7075\u529b\u672a\u8d77",
-                    "\u7075\u529b\u672a\u63a5",
-                    "\u3010\u4f9b\u80fd\u3011\u573a\u4e0a\u8fd8\u6ca1\u6709\u5f62\u6210\u4f9b\u80fd\u533a",
+                    "formationPower.suppressed",
+                    BattleSandboxEnemyCombatFeedbackKinds.BossState,
+                    "\u673a\u5236\u53cd\u9988\uff1a\u9635\u52bf\u53d7\u538b",
+                    "\u9635\u52bf\u53d7\u538b",
+                    "\u7075\u529b\u88ab\u6270\u4e71",
+                    "\u3010\u4f9b\u80fd\u3011\u9635\u52bf\u53d7\u538b\uff0c\u7075\u529b\u88ab\u6270\u4e71\u3002",
+                    "BossInfoPanel",
+                    "Formation eye occupation or suppression is shown as masked battle feedback",
+                    SourceDataPath + ".formationCorePowerRange.suppressed",
+                    "formationCorePowerRange",
+                    usesCastBar: false,
+                    usesBossInfo: true,
+                    2.5f));
+                return rows;
+            }
+
+            if (providers <= 0)
+            {
+                bool weakOnly = weakPulseItems > 0;
+                rows.Add(CreateFeedbackRow(
+                    weakOnly ? "formationPower.weakPulse" : "formationPower.disconnected",
+                    weakOnly
+                        ? BattleSandboxEnemyCombatFeedbackKinds.MechanicFeedback
+                        : BattleSandboxEnemyCombatFeedbackKinds.FailureFeedback,
+                    weakOnly
+                        ? "\u673a\u5236\u53cd\u9988\uff1a\u9635\u773c\u5fae\u4eae"
+                        : "\u673a\u5236\u53cd\u9988\uff1a\u4f9b\u80fd\u65ad\u5f00",
+                    weakOnly ? "\u9635\u773c\u5fae\u4eae" : "\u7075\u529b\u672a\u8d77",
+                    weakOnly ? "\u7b26\u9635\u5f31\u6fc0\u6d3b" : "\u9053\u5177\u6c89\u5bc2",
+                    weakOnly
+                        ? "\u3010\u4f9b\u80fd\u3011\u9635\u773c\u5fae\u4eae\uff0c\u7b26\u9635\u4ec5\u88ab\u5f31\u6fc0\u6d3b\u3002"
+                        : "\u3010\u4f9b\u80fd\u3011\u4f9b\u80fd\u65ad\u5f00\uff0c\u90e8\u5206\u9053\u5177\u6c89\u5bc2\u3002",
                     "BattleHint",
-                    "Formation power missing is shown as masked battle feedback",
-                    SourceDataPath + ".formationCorePowerRange.noProvider",
+                    weakOnly
+                        ? "Formation weak pulse is shown as masked battle feedback"
+                        : "Formation power missing is shown as masked battle feedback",
+                    SourceDataPath + (weakOnly
+                        ? ".formationCorePowerRange.weakPulse"
+                        : ".formationCorePowerRange.disconnected"),
                     "formationCorePowerRange",
                     usesCastBar: false,
                     usesBossInfo: false,
@@ -517,14 +562,10 @@ namespace TalismanBag.BuildSandbox
             rows.Add(CreateFeedbackRow(
                 "formationPower.connected",
                 BattleSandboxEnemyCombatFeedbackKinds.MechanicFeedback,
-                poweredItems > providers
-                    ? "\u673a\u5236\u53cd\u9988\uff1a\u7075\u529b\u6cbf\u9635\u52bf\u6269\u6563"
-                    : "\u673a\u5236\u53cd\u9988\uff1a\u4f9b\u80fd\u533a\u521a\u521a\u5f62\u6210",
-                "\u9635\u773c\u56de\u54cd",
-                poweredItems > providers ? "\u4f9b\u80fd\u8fde\u4e0a" : "\u7075\u529b\u6d41\u52a8",
-                unpoweredItems > 0
-                    ? "\u3010\u4f9b\u80fd\u3011\u90e8\u5206\u9053\u5177\u5c1a\u672a\u63a5\u4e0a\u7075\u529b"
-                    : "\u3010\u4f9b\u80fd\u3011\u573a\u4e0a\u9053\u5177\u5df2\u8fde\u4e0a\u7075\u529b",
+                "\u673a\u5236\u53cd\u9988\uff1a\u805a\u80fd\u77f3\u8fde\u901a",
+                "\u7b26\u9635\u4f9b\u80fd\u7a33\u5b9a",
+                poweredItems > providers ? "\u7075\u529b\u6269\u6563" : "\u4f9b\u80fd\u521d\u6210",
+                "\u3010\u4f9b\u80fd\u3011\u805a\u80fd\u77f3\u8fde\u901a\uff0c\u7b26\u9635\u4f9b\u80fd\u7a33\u5b9a\u3002",
                 "FloatingCombatText",
                 "Formation power result is masked as visible battle phenomena",
                 SourceDataPath + ".formationCorePowerRange.connected",
@@ -532,24 +573,6 @@ namespace TalismanBag.BuildSandbox
                 usesCastBar: false,
                 usesBossInfo: false,
                 2.3f));
-
-            if (coreTouches > 0)
-            {
-                rows.Add(CreateFeedbackRow(
-                    "formationPower.coreLit",
-                    BattleSandboxEnemyCombatFeedbackKinds.BossState,
-                    "\u9996\u9886\uff1a\u9635\u773c\u7075\u5149\u4eae\u8d77",
-                    "\u9635\u773c\u4eae\u8d77",
-                    "\u9635\u773c\u56de\u54cd",
-                    "\u3010\u9635\u773c\u3011\u7075\u529b\u5728\u9635\u4e2d\u56de\u65cb",
-                    "BossInfoPanel",
-                    "Formation core contact is shown as boss-state feedback",
-                    SourceDataPath + ".formationCorePowerRange.coreCell",
-                    "formationCorePowerRange",
-                    usesCastBar: false,
-                    usesBossInfo: true,
-                    2.5f));
-            }
 
             return rows;
         }
