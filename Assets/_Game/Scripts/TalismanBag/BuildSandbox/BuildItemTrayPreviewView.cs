@@ -22,6 +22,10 @@ namespace TalismanBag.BuildSandbox
         private const string ArtifactCategory = "\u6cd5\u5668";
         private const string TestDevOnlyCategory = "测试";
 
+        private const string ItemCardLayerName = "ItemCardLayer";
+        private const float TrayScrollSensitivity = 18f;
+        private const float TrayScrollDecelerationRate = 0.16f;
+
         [SerializeField] private ScrollRect scrollRect;
         [SerializeField] private RectTransform contentRoot;
         [SerializeField] private RectTransform itemCardLayer;
@@ -63,6 +67,7 @@ namespace TalismanBag.BuildSandbox
             IReadOnlyList<BuildItemPreviewCardView> cardViews)
         {
             scrollRect = trayScrollRect;
+            ConfigureTrayScrollMomentum(scrollRect);
             contentRoot = trayContentRoot;
             itemCardLayer = trayItemCardLayer;
             categoryButtons = (buttons ?? Array.Empty<Button>()).Where(button => button != null).ToList();
@@ -294,6 +299,7 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
+            ConfigureTrayScrollMomentum(scrollRect);
             RectTransform viewport = ResolveTrayViewport();
             if (viewport != null && scrollRect.viewport == null)
             {
@@ -339,6 +345,21 @@ namespace TalismanBag.BuildSandbox
 
             contentRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, requiredHeight);
             return true;
+        }
+
+        private static void ConfigureTrayScrollMomentum(ScrollRect target)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            target.horizontal = false;
+            target.vertical = true;
+            target.inertia = true;
+            target.decelerationRate = TrayScrollDecelerationRate;
+            target.movementType = ScrollRect.MovementType.Clamped;
+            target.scrollSensitivity = TrayScrollSensitivity;
         }
 
         private static int ResolveGridColumnCount(GridLayoutGroup grid)
@@ -502,7 +523,7 @@ namespace TalismanBag.BuildSandbox
 
             if (itemCardLayer == null)
             {
-                itemCardLayer = contentRoot.Find("ItemCardLayer") as RectTransform;
+                itemCardLayer = contentRoot.Find(ItemCardLayerName) as RectTransform;
             }
 
             int expectedSlotCount = BuildGridInteractionPreviewController.TrayColumns
@@ -609,42 +630,23 @@ namespace TalismanBag.BuildSandbox
 
         private RectTransform EnsureDetachedCardLayer()
         {
-            const string cardLayerName = "ItemCardLayer";
             RectTransform cardLayer = itemCardLayer;
             if (cardLayer == null)
             {
-                cardLayer = contentRoot.Find(cardLayerName) as RectTransform;
+                cardLayer = contentRoot.Find(ItemCardLayerName) as RectTransform;
             }
 
             bool changed = false;
             if (cardLayer == null)
             {
-                GameObject layer = new(cardLayerName, typeof(RectTransform), typeof(LayoutElement));
+                GameObject layer = new(ItemCardLayerName, typeof(RectTransform), typeof(LayoutElement));
                 layer.transform.SetParent(contentRoot, worldPositionStays: false);
                 cardLayer = layer.GetComponent<RectTransform>();
                 changed = true;
             }
 
             itemCardLayer = cardLayer;
-            cardLayer.anchorMin = Vector2.zero;
-            cardLayer.anchorMax = Vector2.one;
-            cardLayer.offsetMin = Vector2.zero;
-            cardLayer.offsetMax = Vector2.zero;
-            cardLayer.localScale = Vector3.one;
-            cardLayer.SetAsLastSibling();
-
-            LayoutElement layoutElement = cardLayer.GetComponent<LayoutElement>();
-            if (layoutElement == null)
-            {
-                layoutElement = cardLayer.gameObject.AddComponent<LayoutElement>();
-                changed = true;
-            }
-
-            if (!layoutElement.ignoreLayout)
-            {
-                layoutElement.ignoreLayout = true;
-                changed = true;
-            }
+            changed |= ConfigureItemCardLayer(cardLayer);
 
             if (changed)
             {
@@ -657,17 +659,16 @@ namespace TalismanBag.BuildSandbox
 
         private int ResolvePreviewItemCardCount()
         {
+            int previewItemCount = currentItems.Count > 0
+                ? currentItems.Count
+                : BuildGridInteractionPreviewController.CreatePreviewItems().Count;
+
             if (!Application.isPlaying && cards != null && cards.Count > 0)
             {
-                return cards.Count;
+                return Math.Max(cards.Count, previewItemCount);
             }
 
-            if (currentItems.Count > 0)
-            {
-                return currentItems.Count;
-            }
-
-            return BuildGridInteractionPreviewController.CreatePreviewItems().Count;
+            return previewItemCount;
         }
 
         private List<BuildItemPreviewCardView> CollectExistingItemCardCandidates(RectTransform cardLayer)
@@ -714,8 +715,6 @@ namespace TalismanBag.BuildSandbox
                 typeof(CanvasRenderer),
                 typeof(Image),
                 typeof(CanvasGroup),
-                typeof(Canvas),
-                typeof(GraphicRaycaster),
                 typeof(BuildItemPreviewCardView));
             cardObject.transform.SetParent(cardLayer, worldPositionStays: false);
 
@@ -727,10 +726,6 @@ namespace TalismanBag.BuildSandbox
             CanvasGroup group = cardObject.GetComponent<CanvasGroup>();
             group.blocksRaycasts = true;
             group.interactable = true;
-
-            Canvas canvas = cardObject.GetComponent<Canvas>();
-            canvas.overrideSorting = true;
-            canvas.sortingOrder = 30;
 
             Text title = CreateCardText(rect, "Title", 11, TextAnchor.UpperCenter);
             Text category = CreateCardText(rect, "Category", 10, TextAnchor.MiddleCenter);
@@ -853,6 +848,86 @@ namespace TalismanBag.BuildSandbox
                 : contentRoot.Find($"TrayGridSlot_{index + 1:00}");
         }
 
+        private RectTransform ResolveItemCardLayer()
+        {
+            if (itemCardLayer != null)
+            {
+                return itemCardLayer;
+            }
+
+            if (contentRoot == null)
+            {
+                return null;
+            }
+
+            itemCardLayer = contentRoot.Find(ItemCardLayerName) as RectTransform;
+            if (itemCardLayer != null)
+            {
+                ConfigureItemCardLayer(itemCardLayer);
+                return itemCardLayer;
+            }
+
+            GameObject layer = new(ItemCardLayerName, typeof(RectTransform), typeof(LayoutElement));
+            layer.transform.SetParent(contentRoot, worldPositionStays: false);
+            itemCardLayer = layer.GetComponent<RectTransform>();
+            ConfigureItemCardLayer(itemCardLayer);
+            return itemCardLayer;
+        }
+
+        private static bool ConfigureItemCardLayer(RectTransform cardLayer)
+        {
+            if (cardLayer == null)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            if (cardLayer.anchorMin != Vector2.zero)
+            {
+                cardLayer.anchorMin = Vector2.zero;
+                changed = true;
+            }
+
+            if (cardLayer.anchorMax != Vector2.one)
+            {
+                cardLayer.anchorMax = Vector2.one;
+                changed = true;
+            }
+
+            if (cardLayer.offsetMin != Vector2.zero)
+            {
+                cardLayer.offsetMin = Vector2.zero;
+                changed = true;
+            }
+
+            if (cardLayer.offsetMax != Vector2.zero)
+            {
+                cardLayer.offsetMax = Vector2.zero;
+                changed = true;
+            }
+
+            if (cardLayer.localScale != Vector3.one)
+            {
+                cardLayer.localScale = Vector3.one;
+                changed = true;
+            }
+
+            LayoutElement layoutElement = cardLayer.GetComponent<LayoutElement>();
+            if (layoutElement == null)
+            {
+                layoutElement = cardLayer.gameObject.AddComponent<LayoutElement>();
+                changed = true;
+            }
+
+            if (!layoutElement.ignoreLayout)
+            {
+                layoutElement.ignoreLayout = true;
+                changed = true;
+            }
+
+            return changed;
+        }
+
         private void EnsureRuntimeCardCapacity(int requiredCount)
         {
             if (!Application.isPlaying || requiredCount <= cards.Count)
@@ -860,7 +935,7 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
-            RectTransform cardLayer = itemCardLayer != null ? itemCardLayer : contentRoot;
+            RectTransform cardLayer = ResolveItemCardLayer();
             if (cardLayer == null)
             {
                 return;
@@ -886,8 +961,6 @@ namespace TalismanBag.BuildSandbox
                 typeof(CanvasRenderer),
                 typeof(Image),
                 typeof(CanvasGroup),
-                typeof(Canvas),
-                typeof(GraphicRaycaster),
                 typeof(BuildItemPreviewCardView));
             cardObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
             cardObject.transform.SetParent(cardLayer, worldPositionStays: false);
@@ -906,10 +979,6 @@ namespace TalismanBag.BuildSandbox
             CanvasGroup group = cardObject.GetComponent<CanvasGroup>();
             group.blocksRaycasts = true;
             group.interactable = true;
-
-            Canvas canvas = cardObject.GetComponent<Canvas>();
-            canvas.overrideSorting = true;
-            canvas.sortingOrder = 30;
 
             Text title = CreateRuntimeCardText(rect, "Title", 11, TextAnchor.UpperCenter);
             Text category = CreateRuntimeCardText(rect, "Category", 10, TextAnchor.MiddleCenter);

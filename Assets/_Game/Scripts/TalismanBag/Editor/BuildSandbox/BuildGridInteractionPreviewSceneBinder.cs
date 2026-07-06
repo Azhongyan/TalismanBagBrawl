@@ -17,6 +17,8 @@ namespace TalismanBag.EditorTools.BuildSandbox
         private static readonly Color TraySlotColor = new(0.17f, 0.18f, 0.15f, 1f);
         private static readonly Color CardColor = new(0.27f, 0.22f, 0.15f, 1f);
         private static readonly Color TextColor = new(0.90f, 0.87f, 0.76f, 1f);
+        private const float TrayScrollSensitivity = 18f;
+        private const float TrayScrollDecelerationRate = 0.16f;
 
         [MenuItem("Tools/Talisman Bag/V0.4/BuildSandbox/BuildGridInteractionPreview01/[Writes Scene][Manual Only] Bind Grid Interaction Preview")]
         public static void BindGridInteractionPreviewMenu()
@@ -196,8 +198,10 @@ namespace TalismanBag.EditorTools.BuildSandbox
             scrollRect.content = content;
             scrollRect.horizontal = false;
             scrollRect.vertical = true;
+            scrollRect.inertia = true;
+            scrollRect.decelerationRate = TrayScrollDecelerationRate;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
-            scrollRect.scrollSensitivity = 18f;
+            scrollRect.scrollSensitivity = TrayScrollSensitivity;
 
             List<Button> categoryButtons = BuildCategoryButtons(categoryRoot);
             List<Text> categoryLabels = categoryButtons
@@ -269,7 +273,6 @@ namespace TalismanBag.EditorTools.BuildSandbox
             cardLayer.offsetMin = Vector2.zero;
             cardLayer.offsetMax = Vector2.zero;
             cardLayer.localScale = Vector3.one;
-            cardLayer.SetAsLastSibling();
 
             LayoutElement layoutElement = cardLayer.GetComponent<LayoutElement>();
             if (layoutElement == null)
@@ -326,7 +329,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 RectTransform card = EnsureDetachedItemCard(content, cardLayer, i);
                 RemoveLegacyItemCardChildren(card);
                 Image cardImage = EnsureImage(card.gameObject, CardColor, raycast: true);
-                EnsureCardOverlayCanvas(card);
+                UseParentLayerSorting(card);
                 CanvasGroup group = card.GetComponent<CanvasGroup>();
                 if (group == null)
                 {
@@ -359,7 +362,6 @@ namespace TalismanBag.EditorTools.BuildSandbox
             }
 
             RemoveExtraDetachedItemCards(cardLayer, cards);
-            cardLayer.SetAsLastSibling();
             return cards;
         }
 
@@ -420,21 +422,17 @@ namespace TalismanBag.EditorTools.BuildSandbox
             }
         }
 
-        private static void EnsureCardOverlayCanvas(RectTransform card)
+        private static void UseParentLayerSorting(RectTransform card)
         {
             Canvas canvas = card.GetComponent<Canvas>();
             if (canvas == null)
             {
-                canvas = card.gameObject.AddComponent<Canvas>();
+                return;
             }
 
-            canvas.overrideSorting = true;
-            canvas.sortingOrder = 30;
-
-            if (card.GetComponent<GraphicRaycaster>() == null)
-            {
-                card.gameObject.AddComponent<GraphicRaycaster>();
-            }
+            canvas.overrideSorting = false;
+            canvas.sortingOrder = 0;
+            EditorUtility.SetDirty(canvas);
         }
 
         private static BuildPlacementFeedbackView BindFeedback(RectTransform feedback)
@@ -521,8 +519,6 @@ namespace TalismanBag.EditorTools.BuildSandbox
                 "\u6574\u5907",
                 new Color(0.50f, 0.32f, 0.16f, 1f));
 
-            overlay.SetAsLastSibling();
-            actionBar.SetAsLastSibling();
         }
 
         private static Button EnsureBattlePrepareButton(RectTransform actionBar, string name, string label, Color color)

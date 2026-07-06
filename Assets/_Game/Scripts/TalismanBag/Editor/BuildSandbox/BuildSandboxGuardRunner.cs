@@ -256,6 +256,12 @@ namespace TalismanBag.EditorTools.BuildSandbox
             RunBattleSandboxRuntimeLoop(throwOnFailure: false);
         }
 
+        [MenuItem(FormationCorePowerRangeValidator.QaMenuPath)]
+        public static void RunFormationCorePowerRangeMenu()
+        {
+            RunFormationCorePowerRange(throwOnFailure: false);
+        }
+
         [MenuItem(BattleSandboxPlayableLoopValidator.QaMenuPath)]
         public static void RunBattleSandboxPlayableLoopMenu()
         {
@@ -266,6 +272,18 @@ namespace TalismanBag.EditorTools.BuildSandbox
         public static void RunBuildSandboxPlayableRegressionMenu()
         {
             RunBuildSandboxPlayableRegression(throwOnFailure: false);
+        }
+
+        [MenuItem(BattleSandboxPlayableFullRosterRegressionValidator.QaMenuPath)]
+        public static void RunBattleSandboxPlayableFullRosterRegressionMenu()
+        {
+            RunBattleSandboxPlayableFullRosterRegression(throwOnFailure: false);
+        }
+
+        [MenuItem(BattleSandboxDevChapterPlayableValidator.QaMenuPath)]
+        public static void RunBattleSandboxDevChapterPlayableMenu()
+        {
+            RunBattleSandboxDevChapterPlayable(throwOnFailure: false);
         }
 
         public static void RunGuardBaselineBatch()
@@ -610,6 +628,15 @@ namespace TalismanBag.EditorTools.BuildSandbox
             }
         }
 
+        public static void RunFormationCorePowerRangeBatch()
+        {
+            bool passed = RunFormationCorePowerRange(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
         public static void RunBattleSandboxPlayableLoopBatch()
         {
             bool passed = RunBattleSandboxPlayableLoop(throwOnFailure: true);
@@ -622,6 +649,24 @@ namespace TalismanBag.EditorTools.BuildSandbox
         public static void RunBuildSandboxPlayableRegressionBatch()
         {
             bool passed = RunBuildSandboxPlayableRegression(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBattleSandboxPlayableFullRosterRegressionBatch()
+        {
+            bool passed = RunBattleSandboxPlayableFullRosterRegression(throwOnFailure: true);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(passed ? 0 : 1);
+            }
+        }
+
+        public static void RunBattleSandboxDevChapterPlayableBatch()
+        {
+            bool passed = RunBattleSandboxDevChapterPlayable(throwOnFailure: true);
             if (Application.isBatchMode)
             {
                 EditorApplication.Exit(passed ? 0 : 1);
@@ -2262,6 +2307,47 @@ namespace TalismanBag.EditorTools.BuildSandbox
             return errors == 0;
         }
 
+        public static bool RunFormationCorePowerRange(bool throwOnFailure)
+        {
+            List<BuildSandboxValidationReport> reports =
+                FormationCorePowerRangeValidator.BuildValidationReports();
+            BattleSandboxBuildCombatPreview combatPreview =
+                FormationCorePowerRangeValidator.BuildDefaultPreview();
+            FormationCorePowerRangePreview powerPreview =
+                FormationCorePowerRangeResolver.Apply(combatPreview?.context?.layoutSnapshot);
+            string[] reportPaths =
+                FormationCorePowerRangeReportWriter.WriteReports(reports, powerPreview, combatPreview);
+            int errors = reports.Sum(report => report.ErrorCount);
+            int warnings = reports.Sum(report => report.WarningCount);
+
+            foreach (BuildSandboxValidationIssue issue in reports.SelectMany(report => report.Issues))
+            {
+                switch (issue.Level)
+                {
+                    case BuildSandboxValidationLevel.Error:
+                        Debug.LogError(issue.ToString());
+                        break;
+                    case BuildSandboxValidationLevel.Warning:
+                        Debug.LogWarning(issue.ToString());
+                        break;
+                    default:
+                        Debug.Log(issue.ToString());
+                        break;
+                }
+            }
+
+            Debug.Log(
+                $"[BuildSandbox-FormationCoreAndPowerRange01] completed errors={errors}, warnings={warnings}, reports={string.Join(", ", reportPaths)}");
+
+            if (errors > 0 && throwOnFailure)
+            {
+                throw new InvalidOperationException(
+                    $"BuildSandbox FormationCoreAndPowerRange01 failed with {errors} error(s). See {string.Join(", ", reportPaths)}");
+            }
+
+            return errors == 0;
+        }
+
         public static bool RunBattleSandboxRuntimeLoop(bool throwOnFailure)
         {
             List<BuildSandboxValidationReport> reports =
@@ -2343,6 +2429,16 @@ namespace TalismanBag.EditorTools.BuildSandbox
         public static bool RunBuildSandboxPlayableRegression(bool throwOnFailure)
         {
             return BuildSandboxPlayableRegressionValidator.Run(throwOnFailure);
+        }
+
+        public static bool RunBattleSandboxPlayableFullRosterRegression(bool throwOnFailure)
+        {
+            return BattleSandboxPlayableFullRosterRegressionValidator.Run(throwOnFailure);
+        }
+
+        public static bool RunBattleSandboxDevChapterPlayable(bool throwOnFailure)
+        {
+            return BattleSandboxDevChapterPlayableValidator.Run(throwOnFailure);
         }
     }
 }

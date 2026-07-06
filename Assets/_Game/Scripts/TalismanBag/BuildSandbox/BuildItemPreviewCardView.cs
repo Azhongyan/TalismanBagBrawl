@@ -7,6 +7,9 @@ using UnityEngine.UI;
 namespace TalismanBag.BuildSandbox
 {
     public sealed class BuildItemPreviewCardView : MonoBehaviour,
+        IInitializePotentialDragHandler,
+        IPointerDownHandler,
+        IPointerUpHandler,
         IBeginDragHandler,
         IDragHandler,
         IEndDragHandler,
@@ -22,15 +25,32 @@ namespace TalismanBag.BuildSandbox
         private const string LayoutCellLayerName = "TrayLayoutCellLayer";
         private static readonly Color DefaultNormalColor = new(0.27f, 0.22f, 0.15f, 1f);
         private const float ColorTolerance = 0.004f;
+        private const float ScrollAxisBias = 1.15f;
+        private const float ItemDragHoldSeconds = 0.22f;
+        private const float ViewportExitMarginPixels = 28f;
 
         private BuildGridInteractionPreviewController controller;
         private readonly List<Image> layoutCellImages = new();
         private readonly HashSet<Image> manualLayoutCellImageColors = new();
+        private DragGestureMode dragGestureMode;
+        private ScrollRect gestureScrollRect;
+        private RectTransform gestureScrollViewport;
         private Color normalColor = DefaultNormalColor;
         private string itemId = string.Empty;
         private string category = string.Empty;
         private bool usesLayoutCellVisuals;
         private bool manualBackgroundImageColor;
+        private bool forwardedScrollBegin;
+        private bool suppressClick;
+        private float pointerDownTime;
+
+        private enum DragGestureMode
+        {
+            None,
+            Pending,
+            Scrolling,
+            ItemDragging
+        }
 
         public RectTransform RectTransform
         {
@@ -83,7 +103,7 @@ namespace TalismanBag.BuildSandbox
             category = itemCategory ?? string.Empty;
             normalColor = color;
             manualBackgroundImageColor = manualBackgroundImageColor || HasManualBodyColor(backgroundImage);
-            EnsureCardOverlayCanvas();
+            UseParentLayerSorting();
 
             if (titleText != null)
             {
@@ -200,26 +220,300 @@ namespace TalismanBag.BuildSandbox
             SetNormalVisual();
         }
 
+        public void OnInitializePotentialDrag(PointerEventData eventData)
+        {
+            dragGestureMode = DragGestureMode.None;
+            forwardedScrollBegin = false;
+            gestureScrollRect = ResolveScrollRect();
+            gestureScrollViewport = ResolveScrollViewport(gestureScrollRect);
+            if (CanRouteToScroll())
+            {
+                ExecuteEvents.Execute(
+                    gestureScrollRect.gameObject,
+                    eventData,
+                    ExecuteEvents.initializePotentialDrag);
+            }
+        }
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            pointerDownTime = Time.unscaledTime;
+            suppressClick = false;
+            dragGestureMode = DragGestureMode.None;
+            gestureScrollRect = ResolveScrollRect();
+            gestureScrollViewport = ResolveScrollViewport(gestureScrollRect);
+        }
+
+        public void OnPointerUp(PointerEventData eventData)
+        {
+            if (dragGestureMode == DragGestureMode.None || dragGestureMode == DragGestureMode.Pending)
+            {
+                ResetGestureRouting(clearClickSuppression: false);
+            }
+        }
+
         public void OnBeginDrag(PointerEventData eventData)
         {
-            controller?.BeginDrag(this, eventData);
-            SetDraggingVisual();
+            suppressClick = true;
+            dragGestureMode = DragGestureMode.Pending;
+            gestureScrollRect = ResolveScrollRect();
+            gestureScrollViewport = ResolveScrollViewport(gestureScrollRect);
+            ResolvePendingDragRoute(eventData);
         }
 
         public void OnDrag(PointerEventData eventData)
         {
-            controller?.UpdateDrag(this, eventData);
+            if (dragGestureMode == DragGestureMode.None)
+            {
+                dragGestureMode = DragGestureMode.Pending;
+                gestureScrollRect = ResolveScrollRect();
+                gestureScrollViewport = ResolveScrollViewport(gestureScrollRect);
+            }
+
+            if (dragGestureMode == DragGestureMode.Pending)
+            {
+                ResolvePendingDragRoute(eventData);
+            }
+
+            if (dragGestureMode == DragGestureMode.Scrolling)
+            {
+                if (ShouldSwitchFromScrollToItemDrag(eventData))
+                {
+                    EndScrollDrag(eventData);
+                    StopScrollMomentum();
+                    BeginItemDrag(eventData);
+                    controller?.UpdateDrag(this, eventData);
+                    return;
+                }
+
+                ForwardScrollDrag(eventData);
+                return;
+            }
+
+            if (dragGestureMode == DragGestureMode.ItemDragging)
+            {
+                controller?.UpdateDrag(this, eventData);
+            }
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            controller?.EndDrag(this, eventData);
-            SetNormalVisual();
+            if (dragGestureMode == DragGestureMode.Scrolling)
+            {
+                EndScrollDrag(eventData);
+                ResetGestureRouting(clearClickSuppression: false);
+                return;
+            }
+
+            if (dragGestureMode == DragGestureMode.ItemDragging)
+            {
+                controller?.EndDrag(this, eventData);
+                SetNormalVisual();
+            }
+
+            ResetGestureRouting(clearClickSuppression: false);
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
+            if (suppressClick)
+            {
+                suppressClick = false;
+                return;
+            }
+
             controller?.SelectItem(this);
+        }
+
+        private void ResolvePendingDragRoute(PointerEventData eventData)
+        {
+            if (!CanRouteToScroll()
+                || ShouldStartItemDrag(eventData)
+                || !ShouldStartScroll(eventData))
+            {
+                BeginItemDrag(eventData);
+                return;
+            }
+
+            BeginScrollDrag(eventData);
+        }
+
+        private void BeginItemDrag(PointerEventData eventData)
+        {
+            dragGestureMode = DragGestureMode.ItemDragging;
+            controller?.BeginDrag(this, eventData);
+            SetDraggingVisual();
+        }
+
+        private void BeginScrollDrag(PointerEventData eventData)
+        {
+            if (!CanRouteToScroll())
+            {
+                BeginItemDrag(eventData);
+                return;
+            }
+
+            dragGestureMode = DragGestureMode.Scrolling;
+            ExecuteEvents.Execute(
+                gestureScrollRect.gameObject,
+                eventData,
+                ExecuteEvents.beginDragHandler);
+            forwardedScrollBegin = true;
+        }
+
+        private void ForwardScrollDrag(PointerEventData eventData)
+        {
+            if (!CanRouteToScroll())
+            {
+                return;
+            }
+
+            if (!forwardedScrollBegin)
+            {
+                BeginScrollDrag(eventData);
+            }
+
+            ExecuteEvents.Execute(
+                gestureScrollRect.gameObject,
+                eventData,
+                ExecuteEvents.dragHandler);
+        }
+
+        private void EndScrollDrag(PointerEventData eventData)
+        {
+            if (!forwardedScrollBegin || !CanRouteToScroll())
+            {
+                forwardedScrollBegin = false;
+                return;
+            }
+
+            ExecuteEvents.Execute(
+                gestureScrollRect.gameObject,
+                eventData,
+                ExecuteEvents.endDragHandler);
+            forwardedScrollBegin = false;
+        }
+
+        private void StopScrollMomentum()
+        {
+            if (gestureScrollRect != null)
+            {
+                gestureScrollRect.velocity = Vector2.zero;
+            }
+        }
+
+        private bool ShouldStartItemDrag(PointerEventData eventData)
+        {
+            if (!CanRouteToScroll())
+            {
+                return true;
+            }
+
+            if (Time.unscaledTime - pointerDownTime >= ItemDragHoldSeconds)
+            {
+                return true;
+            }
+
+            if (IsPointerOutsideViewport(eventData, ViewportExitMarginPixels))
+            {
+                return true;
+            }
+
+            Vector2 dragDelta = ResolveDragDelta(eventData);
+            return Mathf.Abs(dragDelta.x) > Mathf.Abs(dragDelta.y);
+        }
+
+        private bool ShouldStartScroll(PointerEventData eventData)
+        {
+            if (!CanRouteToScroll() || IsPointerOutsideViewport(eventData, 0f))
+            {
+                return false;
+            }
+
+            Vector2 dragDelta = ResolveDragDelta(eventData);
+            return Mathf.Abs(dragDelta.y) >= Mathf.Abs(dragDelta.x) * ScrollAxisBias;
+        }
+
+        private bool ShouldSwitchFromScrollToItemDrag(PointerEventData eventData)
+        {
+            return IsPointerOutsideViewport(eventData, ViewportExitMarginPixels);
+        }
+
+        private Vector2 ResolveDragDelta(PointerEventData eventData)
+        {
+            return eventData == null
+                ? Vector2.zero
+                : eventData.position - eventData.pressPosition;
+        }
+
+        private bool IsPointerOutsideViewport(PointerEventData eventData, float marginPixels)
+        {
+            if (gestureScrollViewport == null || eventData == null)
+            {
+                return false;
+            }
+
+            Camera eventCamera = eventData.pressEventCamera ?? eventData.enterEventCamera;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                gestureScrollViewport,
+                eventData.position,
+                eventCamera,
+                out Vector2 localPoint))
+            {
+                return false;
+            }
+
+            Rect rect = gestureScrollViewport.rect;
+            rect.xMin -= marginPixels;
+            rect.xMax += marginPixels;
+            rect.yMin -= marginPixels;
+            rect.yMax += marginPixels;
+            return !rect.Contains(localPoint);
+        }
+
+        private ScrollRect ResolveScrollRect()
+        {
+            return gestureScrollRect != null
+                ? gestureScrollRect
+                : GetComponentInParent<ScrollRect>();
+        }
+
+        private static RectTransform ResolveScrollViewport(ScrollRect scrollRect)
+        {
+            if (scrollRect == null)
+            {
+                return null;
+            }
+
+            if (scrollRect.viewport != null)
+            {
+                return scrollRect.viewport;
+            }
+
+            return scrollRect.content == null
+                ? null
+                : scrollRect.content.parent as RectTransform;
+        }
+
+        private bool CanRouteToScroll()
+        {
+            return gestureScrollRect != null
+                && gestureScrollRect.isActiveAndEnabled
+                && gestureScrollRect.vertical
+                && gestureScrollRect.content != null;
+        }
+
+        private void ResetGestureRouting(bool clearClickSuppression)
+        {
+            dragGestureMode = DragGestureMode.None;
+            forwardedScrollBegin = false;
+            gestureScrollRect = null;
+            gestureScrollViewport = null;
+            pointerDownTime = 0f;
+            if (clearClickSuppression)
+            {
+                suppressClick = false;
+            }
         }
 
         private void ConfigureTextLayout()
@@ -252,21 +546,16 @@ namespace TalismanBag.BuildSandbox
             textRect.localScale = Vector3.one;
         }
 
-        private void EnsureCardOverlayCanvas()
+        private void UseParentLayerSorting()
         {
             Canvas canvas = GetComponent<Canvas>();
             if (canvas == null)
             {
-                canvas = gameObject.AddComponent<Canvas>();
+                return;
             }
 
-            canvas.overrideSorting = true;
-            canvas.sortingOrder = 30;
-
-            if (GetComponent<GraphicRaycaster>() == null)
-            {
-                gameObject.AddComponent<GraphicRaycaster>();
-            }
+            canvas.overrideSorting = false;
+            canvas.sortingOrder = 0;
         }
 
         private void ApplyBodyColor(Color color)

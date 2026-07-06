@@ -21,6 +21,11 @@ namespace TalismanBag.BuildSandbox
         public string baseItemId = string.Empty;
         public string tier = BuildSandboxItemIdentityFamilyCatalog.TierTestOnly;
         public string relationshipToBase = BuildSandboxItemIdentityFamilyCatalog.RelationshipTestOnly;
+        public bool touchesFormationCore;
+        public string formationCoreId = string.Empty;
+        public int powerRangeRadius;
+        public List<ItemShapeCell> powerRangeCells = new();
+        public string powerConnectionState = string.Empty;
         public BuildSandboxItemStat itemStat = new();
 
         public static BuildSandboxPlacedItemSnapshot FromPlacementResult(ShapePlacementResult result)

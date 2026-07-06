@@ -1,0 +1,12 @@
+id,area,check,method,result,evidence,userHandtestRequired,notes
+FR-01,Tray,All 23 current roster items appear in the V04 tray.,Roster catalog + preview tray creation + ShapeAwareItemTrayGrid pack scan.,PASS,roster=23; tray=23; packed=23; missing=0,True,User should visually page/filter the tray once in Play mode.
+FR-02,Basic Items,Basic items default to 1x1 and can be dragged to legal board cells.,Roster shape scan + board placement validator.,PASS,basic=13; single1=13; placed=13,True,Try at least two basic items manually.
+FR-03,Multi Shape,"x2, x3, x4, and vertical_3 items place stably.",Board placement validator over full roster.,PASS,x2=3; x3=3; x4=2; vertical_3=1; multiFails=0,True,Manual pass should include each listed footprint.
+FR-04,Empty Board,"Empty board battle leaves enemy HP unchanged, damages player HP, and ends in defeat.",Runtime loop preview built from an empty layout.,PASS,enemy=132->132; player=100->0; defeatRows=1,True,
+FR-05,Attack Item,An attack item battle reduces enemy HP.,Runtime loop preview with attack item + energy support.,PASS,attackCandidates=8; attackDamageRows=3; totalDamage=53,True,Use an obvious attack item such as preview_fire_talisman or preview_thunder_sword.
+FR-06,Shield,Enemy attack consumes shield before HP.,Shield-item runtime loop enemy attack rows.,PASS,attackRows=3; shieldFirstRows=1,True,
+FR-07,Support Damage,"Heal, cleanse, control, aura, shield, and rhythm support rows do not damage enemy HP.",Per-item runtime loop previews for expected non-damage support IDs.,PASS,supportCandidates=15; damageLeaks=0,True,Manual pass should include at least one heal/cleanse/control/energy item.
+FR-08,Result Flow,"Sandbox victory, defeat, and restart result surfaces are present.",Runtime loop victory and empty-board defeat previews.,PASS,victoryRows=1; defeatRows=1,True,
+FR-09,Switch Target,Switching test target can produce another playable preview.,Dev enemy scenario scan + restart/switch source scan.,PASS,scenarios=4; playableSwitchPreviews=2,True,
+FR-10,Player Leak,"Player side does not show complete answers, DropBias weights, or Boss six-key answers.",Scene text scan + runtime/player leak counters.,PASS,playerLeaks=0,True,
+FR-11,Formal Scope,"No SaveData, Reward, Chapter, or formal RunFlow is written or advanced.",Runtime formal leak counters + scene/layout write scan.,PASS,formalLeaks=0; featureFlagDefaultTrue=0; devOnlyFalse=0; isEnabledTrue=0,False,This package does not run scene binders.

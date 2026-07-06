@@ -56,6 +56,10 @@ namespace TalismanBag.BuildSandbox
             row != null
             && !string.IsNullOrWhiteSpace(row.sourceDataPath)
             && row.sourceDataPath.IndexOf(".itemStat", StringComparison.OrdinalIgnoreCase) >= 0) ?? 0;
+        public int FormationPowerFeedbackRowCount => rows?.Count(row =>
+            row != null
+            && !string.IsNullOrWhiteSpace(row.sourceDataPath)
+            && row.sourceDataPath.IndexOf("formationCorePowerRange", StringComparison.OrdinalIgnoreCase) >= 0) ?? 0;
         public int BossReadinessCount => context?.viewModel?.problemReadiness?.bossReadinessCount ?? 0;
         public int ReadyBossCount => context?.viewModel?.problemReadiness?.readyBossCount ?? 0;
         public int PlayerSideAnswerLeakCount => rows?.Count(row => row != null && row.playerSideAnswerLeak) ?? 1;
@@ -217,9 +221,12 @@ namespace TalismanBag.BuildSandbox
                 BattleSandboxShapeBuildRulePreviewBuilder.BuildFeedbackRows(shapeBuildRulePreview);
             IReadOnlyList<BattleSandboxEnemyCombatFeedbackRow> itemStatRows =
                 BuildItemStatCombatFeedbackRows(context);
+            IReadOnlyList<BattleSandboxEnemyCombatFeedbackRow> formationPowerRows =
+                BuildFormationCorePowerFeedbackRows(context);
             IReadOnlyList<BattleSandboxEnemyCombatFeedbackRow> buildRows = BuildBuildAwareFeedbackRows(context);
             feedbackPreview.rows.InsertRange(0, buildRows);
             feedbackPreview.rows.InsertRange(0, itemStatRows);
+            feedbackPreview.rows.InsertRange(0, formationPowerRows);
             feedbackPreview.rows.InsertRange(0, shapeBuildRows);
             feedbackPreview.sourcePreviewBuildId = context.previewBuildId;
 
@@ -379,36 +386,7 @@ namespace TalismanBag.BuildSandbox
 
         public static void ApplyPreviewEnergyLinks(BuildSandboxLayoutSnapshot snapshot)
         {
-            List<BuildSandboxPlacedItemSnapshot> items = snapshot?.placedItems?
-                .Where(item => item != null)
-                .ToList() ?? new List<BuildSandboxPlacedItemSnapshot>();
-            List<BuildSandboxPlacedItemSnapshot> providers = items
-                .Where(item => HasAnyTag(item, "energy_preview", "ju_neng", "energy"))
-                .ToList();
-
-            foreach (BuildSandboxPlacedItemSnapshot item in items)
-            {
-                item.isPowered = HasAnyTag(item, "energy_preview", "ju_neng", "energy");
-                item.energySourceId = item.isPowered ? item.itemId : string.Empty;
-            }
-
-            foreach (BuildSandboxPlacedItemSnapshot item in items)
-            {
-                if (item.isPowered)
-                {
-                    continue;
-                }
-
-                BuildSandboxPlacedItemSnapshot provider = providers
-                    .FirstOrDefault(candidate => AreAdjacent(item, candidate));
-                if (provider == null)
-                {
-                    continue;
-                }
-
-                item.isPowered = true;
-                item.energySourceId = provider.itemId ?? string.Empty;
-            }
+            FormationCorePowerRangeResolver.Apply(snapshot);
         }
 
         public static int CountPlayerTextLeaks(BattleSandboxBuildCombatPreview preview)
@@ -450,6 +428,11 @@ namespace TalismanBag.BuildSandbox
                     relationshipToBase = string.IsNullOrWhiteSpace(item.relationshipToBase)
                         ? BuildSandboxItemIdentityFamilyCatalog.RelationshipTestOnly
                         : item.relationshipToBase,
+                    touchesFormationCore = item.touchesFormationCore,
+                    formationCoreId = item.formationCoreId ?? string.Empty,
+                    powerRangeRadius = item.powerRangeRadius,
+                    powerRangeCells = NormalizeCells(item.powerRangeCells),
+                    powerConnectionState = item.powerConnectionState ?? string.Empty,
                     itemStat = BuildSandboxItemStatCatalog.ResolveFrom(item.itemStat, item.itemId)
                 };
                 BuildSandboxItemIdentityFamilyCatalog.ApplyTo(copy);
@@ -494,6 +477,81 @@ namespace TalismanBag.BuildSandbox
             return explicitAffixes.Count > 0
                 ? explicitAffixes
                 : ResolvePreviewAffixes(item?.itemId);
+        }
+
+        private static IReadOnlyList<BattleSandboxEnemyCombatFeedbackRow> BuildFormationCorePowerFeedbackRows(
+            BuildSandboxPreviewContext context)
+        {
+            FormationCorePowerRangePreview powerPreview =
+                FormationCorePowerRangeResolver.Apply(context?.layoutSnapshot);
+            if (powerPreview == null || (powerPreview.rows?.Count ?? 0) == 0)
+            {
+                return Array.Empty<BattleSandboxEnemyCombatFeedbackRow>();
+            }
+
+            int providers = powerPreview.ProviderCount;
+            int poweredItems = powerPreview.PoweredItemCount;
+            int unpoweredItems = powerPreview.UnpoweredItemCount;
+            int coreTouches = powerPreview.CoreTouchCount;
+
+            List<BattleSandboxEnemyCombatFeedbackRow> rows = new();
+            if (providers <= 0)
+            {
+                rows.Add(CreateFeedbackRow(
+                    "formationPower.noProvider",
+                    BattleSandboxEnemyCombatFeedbackKinds.FailureFeedback,
+                    "\u673a\u5236\u53cd\u9988\uff1a\u9635\u773c\u5c1a\u672a\u63a5\u7075",
+                    "\u7075\u529b\u672a\u8d77",
+                    "\u7075\u529b\u672a\u63a5",
+                    "\u3010\u4f9b\u80fd\u3011\u573a\u4e0a\u8fd8\u6ca1\u6709\u5f62\u6210\u4f9b\u80fd\u533a",
+                    "BattleHint",
+                    "Formation power missing is shown as masked battle feedback",
+                    SourceDataPath + ".formationCorePowerRange.noProvider",
+                    "formationCorePowerRange",
+                    usesCastBar: false,
+                    usesBossInfo: false,
+                    2.1f));
+                return rows;
+            }
+
+            rows.Add(CreateFeedbackRow(
+                "formationPower.connected",
+                BattleSandboxEnemyCombatFeedbackKinds.MechanicFeedback,
+                poweredItems > providers
+                    ? "\u673a\u5236\u53cd\u9988\uff1a\u7075\u529b\u6cbf\u9635\u52bf\u6269\u6563"
+                    : "\u673a\u5236\u53cd\u9988\uff1a\u4f9b\u80fd\u533a\u521a\u521a\u5f62\u6210",
+                "\u9635\u773c\u56de\u54cd",
+                poweredItems > providers ? "\u4f9b\u80fd\u8fde\u4e0a" : "\u7075\u529b\u6d41\u52a8",
+                unpoweredItems > 0
+                    ? "\u3010\u4f9b\u80fd\u3011\u90e8\u5206\u9053\u5177\u5c1a\u672a\u63a5\u4e0a\u7075\u529b"
+                    : "\u3010\u4f9b\u80fd\u3011\u573a\u4e0a\u9053\u5177\u5df2\u8fde\u4e0a\u7075\u529b",
+                "FloatingCombatText",
+                "Formation power result is masked as visible battle phenomena",
+                SourceDataPath + ".formationCorePowerRange.connected",
+                "formationCorePowerRange",
+                usesCastBar: false,
+                usesBossInfo: false,
+                2.3f));
+
+            if (coreTouches > 0)
+            {
+                rows.Add(CreateFeedbackRow(
+                    "formationPower.coreLit",
+                    BattleSandboxEnemyCombatFeedbackKinds.BossState,
+                    "\u9996\u9886\uff1a\u9635\u773c\u7075\u5149\u4eae\u8d77",
+                    "\u9635\u773c\u4eae\u8d77",
+                    "\u9635\u773c\u56de\u54cd",
+                    "\u3010\u9635\u773c\u3011\u7075\u529b\u5728\u9635\u4e2d\u56de\u65cb",
+                    "BossInfoPanel",
+                    "Formation core contact is shown as boss-state feedback",
+                    SourceDataPath + ".formationCorePowerRange.coreCell",
+                    "formationCorePowerRange",
+                    usesCastBar: false,
+                    usesBossInfo: true,
+                    2.5f));
+            }
+
+            return rows;
         }
 
         private static IReadOnlyList<BattleSandboxEnemyCombatFeedbackRow> BuildItemStatCombatFeedbackRows(

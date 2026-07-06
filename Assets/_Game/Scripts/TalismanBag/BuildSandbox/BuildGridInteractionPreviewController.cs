@@ -23,6 +23,7 @@ namespace TalismanBag.BuildSandbox
         private const string ItemTrayLockedOverlayName = "ItemTrayBattleLockedOverlay";
         private const string EnemyCombatFeedbackPanelName = "EnemyCombatFeedbackPanel";
         private const string EnemyCombatFeedbackFloatingRootName = "EnemyCombatFeedbackFloatingRoot";
+        private const string DevChapterDropdownSlotName = "DevChapterDropdownSlot";
         private const string DragGhostCellLayerName = "DragGhostCellLayer";
         private const string DragGhostCellNamePrefix = "DragGhostCell_";
 
@@ -61,6 +62,9 @@ namespace TalismanBag.BuildSandbox
         [SerializeField] private RectTransform enemyCombatFeedbackPanel;
         [SerializeField] private RectTransform enemyCombatFeedbackFloatingRoot;
         [SerializeField] private BattleSandboxEnemyCombatFeedbackController enemyCombatFeedbackController;
+        [SerializeField] private RectTransform devChapterDropdownSlot;
+        [SerializeField] private Button devChapterDropdownButton;
+        [SerializeField] private Text devChapterDropdownLabelText;
         [SerializeField] private BattleSandboxManaLoopRuntime manaLoopRuntime;
         [SerializeField] private BattleSandboxRuntimeLoopRuntime runtimeLoopRuntime;
 
@@ -915,6 +919,7 @@ namespace TalismanBag.BuildSandbox
             EnsureBattlePrepareTrayCanvasGroup();
             EnsureItemTrayLockedOverlay();
             CaptureBattlePreparePositions();
+            EnsureDevChapterSelectorBinding();
             WireBattlePrepareButtons();
             RefreshBattlePrepareChrome(snapMotion: true);
         }
@@ -1025,7 +1030,6 @@ namespace TalismanBag.BuildSandbox
                 battlePrepareToggleButtonText = battlePrepareToggleButton.GetComponentInChildren<Text>(true);
             }
 
-            battlePrepareActionBar.SetAsLastSibling();
         }
 
         private void EnsureBattlePrepareTrayCanvasGroup()
@@ -1134,6 +1138,12 @@ namespace TalismanBag.BuildSandbox
             {
                 battlePrepareToggleButton.onClick.RemoveListener(HandleBattlePrepareToggleClicked);
                 battlePrepareToggleButton.onClick.AddListener(HandleBattlePrepareToggleClicked);
+            }
+
+            if (devChapterDropdownButton != null)
+            {
+                devChapterDropdownButton.onClick.RemoveListener(HandleDevChapterSelectorClicked);
+                devChapterDropdownButton.onClick.AddListener(HandleDevChapterSelectorClicked);
             }
         }
 
@@ -1254,7 +1264,6 @@ namespace TalismanBag.BuildSandbox
             {
                 battlePrepareDarkOverlay.gameObject.SetActive(prepareOrContinue);
                 battlePrepareDarkOverlay.color = new Color(0f, 0f, 0f, battlePrepareStateActive ? 0.42f : 0.24f);
-                RefreshBattlePrepareOverlayLayer();
             }
 
             if (itemTrayLockedOverlay != null)
@@ -1293,6 +1302,8 @@ namespace TalismanBag.BuildSandbox
                     : "\u6574\u5907";
             }
 
+            RefreshDevChapterSelectorLabel();
+
             if (battlePrepareStateButton != null)
             {
                 battlePrepareStateButton.interactable = !battlePrepareContinueStateActive;
@@ -1303,13 +1314,94 @@ namespace TalismanBag.BuildSandbox
                 battlePrepareToggleButton.interactable = !battlePrepareStateActive && !battlePrepareContinueStateActive;
             }
 
+            if (devChapterDropdownButton != null)
+            {
+                devChapterDropdownButton.interactable = !battlePrepareContinueStateActive;
+            }
+
             RefreshEnemyCombatFeedbackVisibility();
 
             if (battlePrepareActionBar != null)
             {
                 battlePrepareActionBar.gameObject.SetActive(true);
-                battlePrepareActionBar.SetAsLastSibling();
             }
+        }
+
+        private void EnsureDevChapterSelectorBinding()
+        {
+            if (devChapterDropdownSlot == null)
+            {
+                devChapterDropdownSlot = FindRectTransform(DevChapterDropdownSlotName);
+            }
+
+            if (devChapterDropdownSlot == null)
+            {
+                return;
+            }
+
+            if (devChapterDropdownButton == null)
+            {
+                devChapterDropdownButton = devChapterDropdownSlot.GetComponent<Button>();
+            }
+
+            Image slotImage = devChapterDropdownSlot.GetComponent<Image>();
+            if (slotImage != null)
+            {
+                slotImage.raycastTarget = true;
+            }
+
+            if (devChapterDropdownButton == null)
+            {
+                devChapterDropdownButton = devChapterDropdownSlot.gameObject.AddComponent<Button>();
+                devChapterDropdownButton.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                Color baseColor = slotImage == null ? new Color(0.22f, 0.235f, 0.22f, 0.92f) : slotImage.color;
+                ColorBlock colors = devChapterDropdownButton.colors;
+                colors.normalColor = baseColor;
+                colors.highlightedColor = Color.Lerp(baseColor, Color.white, 0.12f);
+                colors.pressedColor = Color.Lerp(baseColor, Color.black, 0.22f);
+                colors.selectedColor = colors.highlightedColor;
+                colors.disabledColor = new Color(baseColor.r * 0.55f, baseColor.g * 0.55f, baseColor.b * 0.55f, 0.72f);
+                devChapterDropdownButton.colors = colors;
+            }
+
+            if (devChapterDropdownLabelText == null)
+            {
+                devChapterDropdownLabelText = devChapterDropdownSlot.GetComponentInChildren<Text>(true);
+            }
+
+            WireBattlePrepareButtons();
+            RefreshDevChapterSelectorLabel();
+        }
+
+        private void HandleDevChapterSelectorClicked()
+        {
+            EnsureRuntimeLoopRuntime();
+            string targetLabel = runtimeLoopRuntime == null
+                ? string.Empty
+                : runtimeLoopRuntime.SelectNextDevChapter();
+            RefreshBattlePrepareChrome(snapMotion: false);
+            placementFeedbackView?.ShowInfo(string.IsNullOrWhiteSpace(targetLabel)
+                ? "V0.4 沙盒：已切换验证关卡。"
+                : $"V0.4 沙盒：已切换到 {targetLabel}。");
+        }
+
+        private void RefreshDevChapterSelectorLabel()
+        {
+            EnsureRuntimeLoopRuntime();
+            if (devChapterDropdownLabelText == null)
+            {
+                return;
+            }
+
+            string chapter = runtimeLoopRuntime == null
+                ? "3-10"
+                : runtimeLoopRuntime.CurrentDevChapterLabel;
+            string target = runtimeLoopRuntime == null
+                ? string.Empty
+                : runtimeLoopRuntime.CurrentDevEnemyLabel;
+            devChapterDropdownLabelText.text = string.IsNullOrWhiteSpace(target)
+                ? $"\u9a8c\u8bc1\u5173\u5361 {chapter}"
+                : $"\u9a8c\u8bc1\u5173\u5361 {target}";
         }
 
         private void EnsureEnemyCombatFeedbackVisibilityReferences()
@@ -1352,65 +1444,6 @@ namespace TalismanBag.BuildSandbox
             {
                 component.gameObject.SetActive(active);
             }
-        }
-
-        private void RefreshBattlePrepareOverlayLayer()
-        {
-            if (battlePrepareDarkOverlay == null || battlePrepareMotionRoot == null)
-            {
-                return;
-            }
-
-            RectTransform overlayRect = battlePrepareDarkOverlay.rectTransform;
-            if (overlayRect == null || overlayRect.parent != battlePrepareMotionRoot.parent)
-            {
-                return;
-            }
-
-            RectTransform topLayer = ResolveBattlePrepareTopLayer(overlayRect.parent);
-            if (topLayer != null && topLayer != battlePrepareMotionRoot)
-            {
-                topLayer.SetAsLastSibling();
-                MoveBefore(battlePrepareMotionRoot, topLayer);
-            }
-            else
-            {
-                battlePrepareMotionRoot.SetAsLastSibling();
-            }
-
-            MoveBefore(overlayRect, battlePrepareMotionRoot);
-        }
-
-        private RectTransform ResolveBattlePrepareTopLayer(Transform sharedParent)
-        {
-            if (sharedParent == null || battlePrepareActionBar == null)
-            {
-                return null;
-            }
-
-            RectTransform actionParent = battlePrepareActionBar.parent as RectTransform;
-            if (actionParent != null && actionParent.parent == sharedParent)
-            {
-                return actionParent;
-            }
-
-            return battlePrepareActionBar.parent == sharedParent ? battlePrepareActionBar : null;
-        }
-
-        private static void MoveBefore(RectTransform moving, RectTransform anchor)
-        {
-            if (moving == null || anchor == null || moving == anchor || moving.parent != anchor.parent)
-            {
-                return;
-            }
-
-            int targetIndex = anchor.GetSiblingIndex();
-            if (moving.GetSiblingIndex() < targetIndex)
-            {
-                targetIndex--;
-            }
-
-            moving.SetSiblingIndex(Mathf.Max(0, targetIndex));
         }
 
         private void BeginHoldingItem(PreviewItem item, bool showInfoPanel)

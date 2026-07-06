@@ -1,0 +1,18 @@
+id,area,check,method,result,evidence,userHandtestRequired,notes
+ACC-01,Roster,23 items are visible and placeable.,FullRoster tray/catalog/pack scan plus placement rows,PASS,"roster=23; tray=23; packed=23; missing=0; packFailures=0",TRUE,Visually page/filter the tray once in Play mode.
+ACC-02,Roster,Basic items and V0.4 advanced items coexist.,FullRoster item row scan,PASS,"basic=13; advanced/preview=10; total=23",TRUE,Confirm basic and preview items appear in the same sandbox tray.
+ACC-03,Placement,Multi-cell x2 / x3 / x4 / vertical_3 are stable.,FullRoster board placement validator and regression shape checks,PASS,"x2=3; x3=3; x4=2; vertical_3=1; multiFails=0",TRUE,Try at least one item from each footprint.
+ACC-04,Runtime,Empty board does not damage enemy.,Empty-board runtime preview,PASS,"enemy=132->132; enemyHpRows=0; playerItemDamage=0; player=100->0; defeatRows=1",TRUE,Start battle with no placed items.
+ACC-05,Runtime,Enemy can attack player.,RuntimeLoop enemy attack and player HP row checks,PASS,"enemyAttackRows>=1; attackTimerAdvanceRows>=1; playerHpRows>=1",TRUE,Let the sandbox loop run until an enemy hit appears.
+ACC-06,Runtime,Shield is consumed before HP.,RuntimeLoop shield-first rows and FullRoster shield sample,PASS,"attackRows=3; shieldFirstRows=1",TRUE,Use shield_talisman_basic or another guard item.
+ACC-07,Runtime,Attack items can damage enemy.,FullRoster attack-item preview and RuntimeLoop enemy HP rows,PASS,"attackCandidates=8; damagingSingleRows=3; totalDamage=53",TRUE,Use preview_fire_talisman or preview_thunder_sword.
+ACC-08,Runtime,Support / aura / rhythm items do not accidentally damage.,FullRoster per-item support validation,PASS,"supportCandidates=15; damageLeaks=0",TRUE,Try one heal/cleanse/control/energy/support item.
+ACC-09,Result Flow,Victory / failure / restart are normal.,PlayableLoop result and restart validation,PASS,"victoryRows=2; defeatRows=2; restartRetainsBuild=True; resetRuntimeState=True",TRUE,Run one victory or defeat, then restart.
+ACC-10,Targets,3-10 / 4-10 can switch and show different feedback.,PlayableLoop target switch plus DevChapterBalanceRun feedback rows,PASS,"3-10=2; 4-10=2; distinct feedback/difficulty rows present",TRUE,Switch target and compare 3-10 vs 4-10 text/result.
+ACC-11,Leak,Player side does not leak full answers / DropBias weights / Boss six-key answers.,Leak counters and forbidden-token scans,PASS,"FullRoster playerLeaks=0; PlayableLoop leaks=0; Regression leaks=0; BalanceRun playerLeaks=0",TRUE,Read visible player-facing text during result and target feedback.
+ACC-12,Isolation,No SaveData write.,Runtime/formal leak counters,PASS,"formalLeaks=0; writesFormalSaveData=False",FALSE,
+ACC-13,Isolation,No Reward grant.,Runtime/formal leak counters,PASS,"formalLeaks=0; grantsReward=False",FALSE,
+ACC-14,Isolation,No Chapter progress.,Runtime/formal leak counters,PASS,"formalLeaks=0; advancesChapter=False",FALSE,
+ACC-15,Isolation,No formal RunFlow connection.,PlayableLoop and RuntimeLoop isolation checks,PASS,"formalRunFlowConnected=False; formalLeakCount=0",FALSE,
+ACC-16,Isolation,V0.2/V0.3 are not modified.,PlayableLoop V0.2/V0.3 touch check and CombatKernel adapter scope,PASS,"touchesV02OrV03=False; adapter/read-only mouthfeel reuse",FALSE,
+ACC-17,UI,V04 UI is not rearranged.,UI layout guard and RuntimeLoop UI layout write counters,PASS,"uiLayoutWriteCount=0; formal UI layout touch False; report-only package",FALSE,

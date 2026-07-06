@@ -37,6 +37,8 @@ namespace TalismanBag.BuildSandbox
         public string selectedDevEnemyStageId = string.Empty;
         public string selectedDevEnemyLabel = string.Empty;
         public string selectedDevEnemyDisplayNameChinese = string.Empty;
+        public string selectedDevEnemyMechanicFeedbackChinese = string.Empty;
+        public string selectedDevEnemyBuildPressureChinese = string.Empty;
         public bool usesDefaultLayoutFallbackWhenBoardEmpty;
         public bool runtimeUsesDefaultLayoutAsCombatInput;
         public int currentBoardPlacedItemCount;
@@ -321,6 +323,8 @@ namespace TalismanBag.BuildSandbox
         public int attackDamage = 8;
         public float attackIntervalSeconds = 2.4f;
         public bool attackFromDevOnlyProfile;
+        public string playerMechanicFeedbackChinese = string.Empty;
+        public string playerBuildPressureChinese = string.Empty;
 
         public string DisplayLabel =>
             string.IsNullOrWhiteSpace(devChapterLabel)
@@ -383,7 +387,9 @@ namespace TalismanBag.BuildSandbox
                     attackSourcePath = SourceDevEnemyProfileAttack,
                     attackDamage = 55,
                     attackIntervalSeconds = 1.5f,
-                    attackFromDevOnlyProfile = true
+                    attackFromDevOnlyProfile = true,
+                    playerMechanicFeedbackChinese = "\u9996\u9886\u6b63\u5728\u8bd5\u63a2\u9635\u9762\u627f\u538b\u70b9\u3002",
+                    playerBuildPressureChinese = "\u5efa\u8bae\u89c2\u5bdf\u62a4\u76fe\u3001\u4f9b\u80fd\u548c\u6301\u7eed\u538b\u5236\u662f\u5426\u8ddf\u5f97\u4e0a\u3002"
                 };
             BattleSandboxCombatKernelAdapterPreview adapter =
                 BattleSandboxCombatKernelAdapterBuilder.BuildDefaultPreview();
@@ -423,6 +429,8 @@ namespace TalismanBag.BuildSandbox
                 selectedDevEnemyStageId = safeScenario.stageId,
                 selectedDevEnemyLabel = safeScenario.devChapterLabel,
                 selectedDevEnemyDisplayNameChinese = safeScenario.enemyDisplayNameChinese,
+                selectedDevEnemyMechanicFeedbackChinese = safeScenario.playerMechanicFeedbackChinese,
+                selectedDevEnemyBuildPressureChinese = safeScenario.playerBuildPressureChinese,
                 usesDefaultLayoutFallbackWhenBoardEmpty = usedFallback,
                 runtimeUsesDefaultLayoutAsCombatInput = usedFallback,
                 currentBoardPlacedItemCount = placedItems.Count,
@@ -446,7 +454,7 @@ namespace TalismanBag.BuildSandbox
                 sourceBuildCombatPreviewRowCount = buildCombatPreview?.rows?.Count ?? 0
             };
 
-            AddOpeningRow(preview, currentMana, playerHp, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration);
+            AddOpeningRow(preview, safeScenario, currentMana, playerHp, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration);
 
             int spendIndex = 0;
             for (int step = 0; step < PreviewStepCount; step++)
@@ -479,21 +487,24 @@ namespace TalismanBag.BuildSandbox
                         preview.spentManaTotal += Mathf.Max(0, beforeSpend - currentMana);
                         preview.rows.Add(CreateItemTriggerRow(step, elapsed, item, stat, manaCost, beforeSpend, currentMana, playerHp, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration));
 
-                        int enemyHpBefore = enemyHp;
-                        int enemyShieldBefore = enemyShield;
-                        int incomingDamage = Mathf.Max(1, stat.attack * 3 + stat.shieldBreak + (item.isPowered ? stat.spirit : 0));
-                        BattleSandboxKernelDamageSample damage =
-                            BattleSandboxCombatKernelAdapterBuilder.ApplyEnemyDamage(enemyHp, enemyShield, incomingDamage);
-                        enemyShield = damage.enemyShieldAfter;
-                        enemyHp = Mathf.Max(0, damage.enemyHpAfter);
-                        preview.playerItemEnemyHpDamageTotal += Mathf.Max(0, enemyHpBefore - enemyHp);
-                        preview.rows.Add(CreateEnemyHpRow(step, elapsed, item, stat, incomingDamage, currentMana, playerHp, playerShield, enemyHpBefore, enemyHp, enemyShieldBefore, enemyShield, bossCastRemaining, bossCastDuration));
-
-                        if (step == 0 || step == 4)
+                        int incomingDamage = ResolveItemEnemyDamage(item, stat);
+                        if (incomingDamage > 0)
                         {
-                            int shieldBefore = enemyShield;
-                            enemyShield += Mathf.Max(4, stat.shieldBreak + 6);
-                            preview.rows.Add(CreateEnemyShieldRow(step, elapsed, item, stat, currentMana, playerHp, playerShield, enemyHp, shieldBefore, enemyShield, bossCastRemaining, bossCastDuration));
+                            int enemyHpBefore = enemyHp;
+                            int enemyShieldBefore = enemyShield;
+                            BattleSandboxKernelDamageSample damage =
+                                BattleSandboxCombatKernelAdapterBuilder.ApplyEnemyDamage(enemyHp, enemyShield, incomingDamage);
+                            enemyShield = damage.enemyShieldAfter;
+                            enemyHp = Mathf.Max(0, damage.enemyHpAfter);
+                            preview.playerItemEnemyHpDamageTotal += Mathf.Max(0, enemyHpBefore - enemyHp);
+                            preview.rows.Add(CreateEnemyHpRow(step, elapsed, item, stat, incomingDamage, currentMana, playerHp, playerShield, enemyHpBefore, enemyHp, enemyShieldBefore, enemyShield, bossCastRemaining, bossCastDuration));
+
+                            if (step == 0 || step == 4)
+                            {
+                                int shieldBefore = enemyShield;
+                                enemyShield += Mathf.Max(4, stat.shieldBreak + 6);
+                                preview.rows.Add(CreateEnemyShieldRow(step, elapsed, item, stat, currentMana, playerHp, playerShield, enemyHp, shieldBefore, enemyShield, bossCastRemaining, bossCastDuration));
+                            }
                         }
 
                         if (stat.guard > 0)
@@ -667,7 +678,11 @@ namespace TalismanBag.BuildSandbox
                 attackSourcePath = SourceDevEnemyProfileAttack,
                 attackDamage = Mathf.Max(1, bossProfile?.attackDamage ?? 8),
                 attackIntervalSeconds = Mathf.Max(0.5f, bossProfile?.attackIntervalSeconds ?? 2.4f),
-                attackFromDevOnlyProfile = fromDevOnlyProfile
+                attackFromDevOnlyProfile = fromDevOnlyProfile,
+                playerMechanicFeedbackChinese = SafePlayerFeedback(
+                    stage?.bossMechanicFeedbackChinese,
+                    "\u9996\u9886\u673a\u5236\u5df2\u5207\u6362\uff0c\u7559\u610f\u72b6\u6001\u4e0e\u65bd\u6cd5\u8282\u594f\u3002"),
+                playerBuildPressureChinese = BuildPlayerPressureFeedback(stage)
             };
         }
 
@@ -697,8 +712,26 @@ namespace TalismanBag.BuildSandbox
                     && !bossProfile.isEnabled
                     && !bossProfile.entersFormalFlow
                     && !bossProfile.referencesFormalBossPool
-                    && !bossProfile.referencesFormalEnemyPool
+                    && !bossProfile.referencesFormalEnemyPool,
+                playerMechanicFeedbackChinese = "\u9996\u9886\u673a\u5236\u5df2\u5207\u6362\uff0c\u7559\u610f\u72b6\u6001\u4e0e\u65bd\u6cd5\u8282\u594f\u3002",
+                playerBuildPressureChinese = "\u5efa\u8bae\u89c2\u5bdf\u4f9b\u80fd\u3001\u62a4\u76fe\u548c\u6301\u7eed\u538b\u5236\u7684\u7a33\u5b9a\u6027\u3002"
             };
+        }
+
+        private static string BuildPlayerPressureFeedback(DevChapterBalanceRunStage stage)
+        {
+            string difficulty = string.IsNullOrWhiteSpace(stage?.difficultyTendencyChinese)
+                ? "\u672a\u5b9a"
+                : stage.difficultyTendencyChinese;
+            string playerFeedback = SafePlayerFeedback(
+                stage?.playerBattleFeedbackChinese,
+                "\u5efa\u8bae\u89c2\u5bdf\u4f9b\u80fd\u3001\u62a4\u76fe\u548c\u6301\u7eed\u538b\u5236\u7684\u7a33\u5b9a\u6027\u3002");
+            return $"{difficulty}\u3002{playerFeedback}";
+        }
+
+        private static string SafePlayerFeedback(string value, string fallback)
+        {
+            return string.IsNullOrWhiteSpace(value) ? fallback : value;
         }
 
         private static BuildSandboxLayoutSnapshot NormalizeSnapshot(
@@ -779,6 +812,48 @@ namespace TalismanBag.BuildSandbox
             return Mathf.Max(0.5f, interval);
         }
 
+        private static int ResolveItemEnemyDamage(
+            BuildSandboxPlacedItemSnapshot item,
+            BuildSandboxItemStat stat)
+        {
+            BuildSandboxItemStat safeStat = stat ?? BuildSandboxItemStatCatalog.Resolve(item?.itemId);
+            if (!CanItemDealEnemyDamage(item, safeStat))
+            {
+                return 0;
+            }
+
+            int rawDamage =
+                Mathf.Max(0, safeStat.attack) * 3
+                + Mathf.Max(0, safeStat.shieldBreak)
+                + (item?.isPowered == true ? Mathf.Max(0, safeStat.spirit) : 0);
+            return Mathf.Max(1, rawDamage);
+        }
+
+        private static bool CanItemDealEnemyDamage(
+            BuildSandboxPlacedItemSnapshot item,
+            BuildSandboxItemStat stat)
+        {
+            string itemId = item?.itemId ?? string.Empty;
+            string statTag = stat?.statTag ?? string.Empty;
+            return ContainsAny(itemId, "fire", "thunder", "sword", "exorcism")
+                || ContainsAny(statTag, "damage", "fire", "thunder", "sword", "burst", "chain", "exorcism");
+        }
+
+        private static bool ContainsAny(string value, params string[] tokens)
+        {
+            string safeValue = value ?? string.Empty;
+            foreach (string token in tokens ?? Array.Empty<string>())
+            {
+                if (!string.IsNullOrWhiteSpace(token)
+                    && safeValue.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static int ResolveEnemyMaxHp(
             BattleSandboxCombatKernelAdapterPreview adapter,
             int placedItemCount,
@@ -813,6 +888,7 @@ namespace TalismanBag.BuildSandbox
 
         private static void AddOpeningRow(
             BattleSandboxRuntimeLoopPreview preview,
+            BattleSandboxRuntimeLoopScenario scenario,
             int mana,
             int playerHp,
             int playerShield,
@@ -840,8 +916,8 @@ namespace TalismanBag.BuildSandbox
                 bossCastDuration,
                 "\u6c99\u76d2\u5faa\u73af\uff1a\u6218\u6597\u6001\u542f\u52a8",
                 "\u9996\u9886\u6b63\u5728\u84c4\u529b",
-                "\u3010\u6c99\u76d2\u3011\u4ec5\u5237\u65b0\u5f00\u53d1\u9884\u89c8\uff0c\u4e0d\u63a5\u80dc\u8d1f\u7ed3\u7b97",
-                "\u6218\u6597\u9884\u89c8\u5f00\u59cb",
+                $"\u3010\u6c99\u76d2\u3011{FormatMechanicFeedback(scenario)}\uff1b\u6784\u7b51\u538b\u529b\uff1a{FormatBuildPressureFeedback(scenario)}",
+                "\u673a\u5236\u53cd\u9988",
                 SourceRuntimeLoop));
         }
 
@@ -1286,6 +1362,8 @@ namespace TalismanBag.BuildSandbox
                 ? "\u6d4b\u8bd5\u654c\u4eba"
                 : scenario.DisplayLabel;
             string buildBrief = BuildResultBrief(buildCombatPreview, victory);
+            string mechanicFeedback = FormatMechanicFeedback(scenario);
+            string buildPressureFeedback = FormatBuildPressureFeedback(scenario);
             BattleSandboxRuntimeLoopRow row = BaseRow(
                 victory ? "sandboxVictory" : "sandboxDefeat",
                 victory ? "sandboxVictory" : "sandboxDefeat",
@@ -1306,8 +1384,8 @@ namespace TalismanBag.BuildSandbox
                 victory ? "\u6c99\u76d2\uff1a\u80dc\u5229" : "\u6c99\u76d2\uff1a\u5931\u8d25",
                 "\u7ed3\u679c\u63d0\u793a\uff1a\u4ec5\u9650\u6c99\u76d2",
                 victory
-                    ? $"\u3010\u6c99\u76d2\u7ed3\u679c\u3011{displayLabel}\u5df2\u88ab\u51fb\u7834\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\uff1b\u4e0d\u53d1\u653e\u5956\u52b1\uff0c\u4e0d\u5199\u5165\u5b58\u6863\uff0c\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b"
-                    : $"\u3010\u6c99\u76d2\u7ed3\u679c\u3011{displayLabel}\u538b\u5236\u4e86\u5f53\u524d\u9635\u9762\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\uff1b\u4e0d\u53d1\u653e\u5956\u52b1\uff0c\u4e0d\u5199\u5165\u5b58\u6863\uff0c\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b",
+                    ? $"\u3010\u6c99\u76d2\u7ed3\u679c\u3011{displayLabel}\u5df2\u88ab\u51fb\u7834\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\uff1b\u4e0d\u53d1\u653e\u5956\u52b1\uff0c\u4e0d\u5199\u5165\u5b58\u6863\uff0c\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b"
+                    : $"\u3010\u6c99\u76d2\u7ed3\u679c\u3011{displayLabel}\u538b\u5236\u4e86\u5f53\u524d\u9635\u9762\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\uff1b\u4e0d\u53d1\u653e\u5956\u52b1\uff0c\u4e0d\u5199\u5165\u5b58\u6863\uff0c\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b",
                 victory ? "\u80dc\u5229" : "\u5931\u8d25",
                 SourceDevEnemySelection);
             row.hasSandboxVictoryResult = victory;
@@ -1315,10 +1393,24 @@ namespace TalismanBag.BuildSandbox
             row.locksRuntimeLoop = true;
             row.resultTitleChinese = victory ? "\u6c99\u76d2\u80dc\u5229" : "\u6c99\u76d2\u5931\u8d25";
             row.resultBodyChinese = victory
-                ? $"{displayLabel}\u5df2\u88ab\u51fb\u7834\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\u3002\u672c\u6b21\u4ec5\u5c55\u793a\u6c99\u76d2\u7ed3\u679c\uff0c\u4e0d\u53d1\u653e\u5956\u52b1\u3001\u4e0d\u5199\u5165\u5b58\u6863\u3001\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b\u3002"
-                : $"{displayLabel}\u538b\u5236\u4e86\u5f53\u524d\u9635\u9762\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\u3002\u672c\u6b21\u4ec5\u5c55\u793a\u6c99\u76d2\u7ed3\u679c\uff0c\u4e0d\u53d1\u653e\u5956\u52b1\u3001\u4e0d\u5199\u5165\u5b58\u6863\u3001\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b\u3002";
+                ? $"{displayLabel}\u5df2\u88ab\u51fb\u7834\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\u3002\u672c\u6b21\u4ec5\u5c55\u793a\u6c99\u76d2\u7ed3\u679c\uff0c\u4e0d\u53d1\u653e\u5956\u52b1\u3001\u4e0d\u5199\u5165\u5b58\u6863\u3001\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b\u3002"
+                : $"{displayLabel}\u538b\u5236\u4e86\u5f53\u524d\u9635\u9762\uff1b\u673a\u5236\u53cd\u9988\uff1a{mechanicFeedback}\uff1b\u6784\u7b51\u538b\u529b\uff1a{buildPressureFeedback}\uff1b\u672c\u5c40 Build \u7b80\u8bc4\uff1a{buildBrief}\u3002\u672c\u6b21\u4ec5\u5c55\u793a\u6c99\u76d2\u7ed3\u679c\uff0c\u4e0d\u53d1\u653e\u5956\u52b1\u3001\u4e0d\u5199\u5165\u5b58\u6863\u3001\u4e0d\u63a8\u8fdb\u6b63\u5f0f\u6d41\u7a0b\u3002";
             row.restartHintChinese = "\u70b9\u51fb\u91cd\u5f00\u672c\u573a\uff0c\u6216\u5207\u6362\u6d4b\u8bd5\u654c\u4eba\u3002";
             preview.rows.Add(row);
+        }
+
+        private static string FormatMechanicFeedback(BattleSandboxRuntimeLoopScenario scenario)
+        {
+            return string.IsNullOrWhiteSpace(scenario?.playerMechanicFeedbackChinese)
+                ? "\u9996\u9886\u673a\u5236\u5df2\u5207\u6362\uff0c\u7559\u610f\u72b6\u6001\u4e0e\u65bd\u6cd5\u8282\u594f\u3002"
+                : scenario.playerMechanicFeedbackChinese;
+        }
+
+        private static string FormatBuildPressureFeedback(BattleSandboxRuntimeLoopScenario scenario)
+        {
+            return string.IsNullOrWhiteSpace(scenario?.playerBuildPressureChinese)
+                ? "\u5efa\u8bae\u89c2\u5bdf\u4f9b\u80fd\u3001\u62a4\u76fe\u548c\u6301\u7eed\u538b\u5236\u7684\u7a33\u5b9a\u6027\u3002"
+                : scenario.playerBuildPressureChinese;
         }
 
         private static string BuildResultBrief(
@@ -1546,6 +1638,7 @@ namespace TalismanBag.BuildSandbox
         public bool HasSandboxResult => resultLocked;
         public bool IsRunning => activePreview != null && wasBattleActive && !resultLocked;
         public string CurrentDevEnemyLabel => ResolveCurrentDevEnemyLabel();
+        public string CurrentDevChapterLabel => ResolveCurrentDevChapterLabel();
         public string CurrentSandboxResultTitle => CurrentRow()?.resultTitleChinese ?? string.Empty;
 
         public void Bind(
@@ -1597,6 +1690,57 @@ namespace TalismanBag.BuildSandbox
                 BattleSandboxRuntimeLoopPreviewBuilder.BuildDevEnemyScenarios();
             int count = Mathf.Max(1, scenarios.Count);
             selectedDevEnemyIndex = (selectedDevEnemyIndex + 1) % count;
+            RestartLoop();
+            return ResolveCurrentDevEnemyLabel();
+        }
+
+        public string SelectNextDevChapter()
+        {
+            string current = ResolveCurrentDevChapterLabel();
+            string next = string.Equals(current, "3-10", StringComparison.Ordinal)
+                ? "4-10"
+                : "3-10";
+            return SelectDevChapter(next);
+        }
+
+        public string SelectDevChapter(string devChapterLabel)
+        {
+            IReadOnlyList<BattleSandboxRuntimeLoopScenario> scenarios =
+                BattleSandboxRuntimeLoopPreviewBuilder.BuildDevEnemyScenarios();
+            if (scenarios.Count <= 0)
+            {
+                RestartLoop();
+                return ResolveCurrentDevEnemyLabel();
+            }
+
+            int normalizedIndex = Mathf.Abs(selectedDevEnemyIndex) % scenarios.Count;
+            int targetIndex = -1;
+            for (int index = 0; index < scenarios.Count; index++)
+            {
+                BattleSandboxRuntimeLoopScenario scenario = scenarios[index];
+                if (scenario == null
+                    || !string.Equals(scenario.devChapterLabel, devChapterLabel, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (index != normalizedIndex)
+                {
+                    targetIndex = index;
+                    break;
+                }
+
+                if (targetIndex < 0)
+                {
+                    targetIndex = index;
+                }
+            }
+
+            if (targetIndex >= 0)
+            {
+                selectedDevEnemyIndex = targetIndex;
+            }
+
             RestartLoop();
             return ResolveCurrentDevEnemyLabel();
         }
@@ -1735,6 +1879,20 @@ namespace TalismanBag.BuildSandbox
             return string.IsNullOrWhiteSpace(scenario?.DisplayLabel)
                 ? "\u6c99\u76d2\u9884\u89c8"
                 : scenario.DisplayLabel;
+        }
+
+        private string ResolveCurrentDevChapterLabel()
+        {
+            if (activePreview != null && !string.IsNullOrWhiteSpace(activePreview.selectedDevEnemyLabel))
+            {
+                return activePreview.selectedDevEnemyLabel;
+            }
+
+            BattleSandboxRuntimeLoopScenario scenario =
+                BattleSandboxRuntimeLoopPreviewBuilder.ResolveDevEnemyScenario(selectedDevEnemyIndex);
+            return string.IsNullOrWhiteSpace(scenario?.devChapterLabel)
+                ? "3-10"
+                : scenario.devChapterLabel;
         }
 
         private void UpdateHud(BattleSandboxRuntimeLoopFrame frame)
