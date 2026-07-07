@@ -12,8 +12,11 @@ It does not connect to V0.3 formal chapter flow, RunFlow, PageState, FormationSt
 Allowed code surfaces touched:
 
 - `Assets/_Game/Scripts/TalismanBag/BuildSandbox/BuildGridInteractionPreviewController.cs`
+- `Assets/_Game/Scripts/TalismanBag/BuildSandbox/BuildGridPreviewSlotView.cs`
 - `Assets/_Game/Scripts/TalismanBag/BuildSandbox/BuildSandboxItemInfoPanel.cs`
 - `Assets/_Game/Scripts/TalismanBag/BuildSandbox/BuildItemPreviewCardView.cs`
+- `Assets/_Game/Scripts/TalismanBag/BuildSandbox/BuildItemTrayPreviewView.cs`
+- `Assets/_Game/Scripts/TalismanBag/BuildSandbox/TrayItemLayoutView.cs`
 - `Assets/_Game/Scripts/TalismanBag/BuildSandbox/MobileShapePlacementInputExtension.cs`
 - `Assets/_Game/Scripts/TalismanBag/BuildSandbox/ShapePlacementSession.cs`
 - `Assets/_Game/Scripts/TalismanBag/BuildSandbox/BattlePrepareComponentAdapterRuntimePlaytest.cs`
@@ -37,17 +40,18 @@ The previous info-panel/card rotation path is removed from the current package s
 Drag rotation is handled by `BuildGridInteractionPreviewController` while the authoritative data remains in `ShapeItemPayload` and `ShapePlacementSession`.
 
 - Runtime rotate-button UI is created with `DontSave` flags and does not write back to scenes.
-- Rotate buttons are attached around the drag ghost and follow the floating item: left button on the item-left side, right button on the item-right side.
-- Button placement uses the current ghost footprint width, so the button center sits at `ghostHalfWidth + 44px gap + 36px halfButton` from the ghost center. This keeps the controls away from the item instead of sticking to the item edge.
-- Buttons stay visible for the whole active drag of a rotatable x2/x3 item, including tray/board/outside-board hover, until release/cancel.
-- x1 and x4 shapes do not show rotate buttons.
-- Rotation requires a `RotateSeek` intent before hit testing: within `0.28s`, horizontal movement must be at least `20px`, horizontal speed at least `300px/s`, and vertical drift no more than `76px`.
-- Once `RotateSeekLeft` or `RotateSeekRight` starts, the target activation rect is frozen briefly so the moving finger can actually reach the button instead of chasing a button that moves away at the same speed.
+- A single clockwise rotate button is attached inside the drag ghost's right-bottom frame and follows the snapped board-preview item.
+- Button placement uses the current ghost footprint, so the button center is pulled inside the right-bottom frame by the visual half-size plus `6px` when there is room; small footprints clamp the inset to `36%` of the ghost width/height. This keeps the control reachable while preserving the down-right visual target.
+- After the board-snap trial, the button stays hidden during free/tray drag and appears only while a rotatable x2/x3 item has an active board preview, until release/cancel.
+- x1 and x4 shapes do not show the rotate button.
+- Rotation requires a right/down-biased `RotateSeek` intent before hit testing: within `0.28s`, right movement must be at least `20px`, rightward speed at least `300px/s`, and upward drift no more than `44px`. Down-right movement is intentionally favored over moving the item.
+- Once `RotateSeekRight` starts, the target activation rect is frozen briefly so the finger can reach the button instead of chasing a button that moves away at the same speed.
 - Visual button size is `72px`; activation rect is `136px x 180px` to account for the finger offset below the ghost.
-- Left button rotates counterclockwise; right button rotates clockwise.
-- Moving away from both buttons is required before the same button can trigger again, with `1.0s` trigger cooldown.
-- Rotate-button entry changes the floating payload orientation first. If a board preview anchor exists, the rotated payload is previewed at that anchor only to redraw red/green cells; `ShapeGridReceiver.CanPlace` no longer blocks rotation before `ShapePlacementSession.RotateTo`.
+- The left/counterclockwise rotate zone is disabled for this handfeel pass; the right-bottom button rotates clockwise only.
+- Moving away from the button is required before the same button can trigger again, with `1.0s` trigger cooldown.
+- Rotate-button entry changes the floating payload orientation first. If a board preview anchor exists, the rotated payload is previewed at that anchor to refresh the visual footprint; `ShapeGridReceiver.CanPlace` no longer blocks rotation before `ShapePlacementSession.RotateTo`.
 - Invalid rotation keeps the previous rotation without writing warning text during drag.
+- Tray artwork is now the runtime visual source for ghost, board preview, and placed board cells. `BuildItemPreviewCardView` first captures a real child Sprite Image from the card artwork slot, preserves that Image's source rotation, and marks it as a whole-item artwork source, then falls back to layout-cell Images with Sprite/manual style and finally the card background. Whole-item artwork is rendered once through runtime-only `DragGhostArtwork` / `BoardItemArtworkLayer` overlays spanning the occupied-cell bounds. When whole-item artwork exists, board/ghost cells suppress item color blocks entirely and the image itself follows `ItemShapeRotation`; when no artwork exists, the previous color-block rendering remains the fallback. `BuildItemTrayPreviewView` still falls back to occupied tray-slot Images by item id when no card artwork exists, and `BuildGridPreviewSlotView` restores its default empty-cell template when cleared.
 
 Legal release still commits through the existing `ShapePlacementSession.Commit` route. Illegal release or release outside board/tray cancels and returns to the source behavior already used by the placement controller.
 
@@ -61,11 +65,19 @@ Battle lock behavior:
 - Drag preview no longer writes per-frame valid/invalid placement text; board/tray visuals remain the feedback surface during movement.
 - Rotation failure now stays silent during drag. Rotation is blocked only by non-rotatable payload/session state, not by current placement legality; release validation remains the authority for whether the item can be placed.
 - Invalid drag-preview results are no longer used to size the drag ghost, so edge/out-of-bounds previews do not move the ghost-following rotate buttons while the player is chasing a rotate button.
-- Invalid board previews may still be used as redraw anchors after rotation, but only for red/green preview rendering and never as a pre-rotation blocker.
+- Invalid board previews may still be used as redraw anchors after rotation, but only for visual refresh and release validation, never as a pre-rotation blocker.
 - The board receiver accepts a soft pointer boundary of `0.45` cell outside the visual board and clamps to the nearest edge cell. Final placement remains strict through `CanPlace` and `Commit`; impossible drops still return to source.
-- `2026-07-07` small-screen tuning: rotate seek was softened to `20px`, `300px/s`, `0.28s`, with `76px` vertical drift tolerance; rotate buttons were enlarged to `72px` visual and `136px x 180px` activation.
+- `2026-07-07` small-screen tuning: rotate seek was softened to `20px`, `300px/s`, `0.28s`; the current single-button pass allows down-right drift and caps only upward drift at `44px`. The rotate button remains `72px` visual and `136px x 180px` activation.
 - `2026-07-07` drag smoothness tuning: `RotateSeek` candidate/cooldown states no longer consume drag frames. Normal board/tray preview continues while seeking or waiting to leave a button; only the frame that actually triggers rotation is consumed.
-- `2026-07-07` rotate-intent visual tuning: idle rotate buttons are lower alpha; the current seek target button brightens and scales up while the opposite button dims. A short non-raycast guide band appears between the dragged item and the target button only during rotate intent/cooldown, making rotate intent visually distinct from normal movement.
+- `2026-07-07` rotate-intent visual tuning: idle rotate buttons are lower alpha; candidate seek shows only a weak non-raycast guide band. A button brightens/scales up only for `0.18s` after a successful rotation trigger; cooldown and leave-to-rearm state no longer light the button.
+- `2026-07-07` board-snap trial: rotate controls are hidden during free/tray drag and appear only after an active board preview exists. The drag ghost snaps to the board occupied-cell bounds while hovering the board, so rotation is adjusted from a board-attached preview state rather than a fully free-floating state.
+- `2026-07-07` board-snap hold tuning: while chasing a rotate button from a board preview, the controller reuses the previous board anchor instead of letting tray/out-of-board pointer checks steal the preview. The hold applies during rotate seek, leave-to-rearm, the short successful-trigger flash, or inside the rotate button activation rect plus `36px` padding.
+- `2026-07-07` single-button tuning: the left rotate zone is hidden and non-interactive. The remaining clockwise button sits inside the snapped item's right-bottom frame, and down-right drag intent is treated as rotate seek before normal placement movement.
+- `2026-07-07` tray-board art sync fix: item art configured on a card child Image/art slot is preferred over generated layout cells, so runtime `TrayLayoutCell_*` color blocks no longer mask the real Sprite source. Whole-item art now renders as one overlay across the full multi-cell footprint instead of being copied into every occupied grid cell. Whole-item artwork direction is tunable in the `BuildGridInteractionPreviewController` Inspector under `V0.4 Artwork Direction Calibration`, with separate Tray / DragGhost / BoardPlaced rotation offsets. The visible tray Image can be offset first, then ghost and placed-board overlays add their own offsets on top of the captured source Image rotation and current `Rotation90/180/270`. Defaults keep the current pass behavior: the 3-cell triangle/corner shape uses `+90` for DragGhost/BoardPlaced and other whole-item artwork uses `-90`; Tray defaults to `0`. If no card artwork Sprite exists, the capture falls back to layout-cell/manual styles, then occupied tray-slot Sprites, then the previous color-only fallback.
+- `2026-07-07` triangle physical rotation fix: physical cell rotation now treats `Rotation90` as clockwise in screen/board coordinates, matching the artwork rotation path. Corner3 / 3-cell corner therefore remains 3 occupied cells across `Rotation0/90/180/270` and no longer rotates physical cells opposite to the image.
+- `2026-07-07` rotate-anchor clamp fix: after a rotate-button trigger from a board-snapped preview, the preview anchor is clamped against the rotated payload footprint before redraw. This prevents a rotated Corner3 footprint from showing only the in-board two cells when the previous anchor would push the third occupied cell outside the board.
+- `2026-07-07` image-first visual fix: when a whole-item image exists, drag ghost, board preview, and placed board visuals suppress the old valid/invalid/placed item color blocks. The cells still own interaction and occupancy state, but the visible item body is the image only.
+- `2026-07-07` rotate-after-art fix: rotation-trigger redraw no longer requires `result.IsValid` before using the whole-item artwork overlay. Invalid/overlap rotation previews still render the rotated occupied-cell layout and keep the item art visible without falling back to item color blocks.
 
 ## Notes
 

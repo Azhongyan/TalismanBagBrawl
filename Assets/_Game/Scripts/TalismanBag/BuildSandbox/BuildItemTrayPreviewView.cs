@@ -191,6 +191,81 @@ namespace TalismanBag.BuildSandbox
             card.SetRotateButtonInteractable(enabled);
         }
 
+        public void ApplyItemArtworkRotationOffset(string itemId, float rotationOffsetDegrees)
+        {
+            if (string.IsNullOrWhiteSpace(itemId)
+                || !cardsByItemId.TryGetValue(itemId, out BuildItemPreviewCardView card)
+                || card == null)
+            {
+                return;
+            }
+
+            card.ApplyArtworkImageRotationOffset(rotationOffsetDegrees);
+        }
+
+        public bool TryCaptureItemVisualStyles(string itemId, List<ShapeCellVisualStyle> styles)
+        {
+            if (styles == null)
+            {
+                return false;
+            }
+
+            styles.Clear();
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                return false;
+            }
+
+            if (cardsByItemId.TryGetValue(itemId, out BuildItemPreviewCardView card)
+                && card != null
+                && card.TryCaptureCellVisualStyles(styles))
+            {
+                return true;
+            }
+
+            return TryCaptureTraySlotVisualStyles(itemId, styles);
+        }
+
+        private bool TryCaptureTraySlotVisualStyles(string itemId, List<ShapeCellVisualStyle> styles)
+        {
+            if (styles == null || string.IsNullOrWhiteSpace(itemId))
+            {
+                return false;
+            }
+
+            styles.Clear();
+            TrayPlacementViewModel placement = placementModels.FirstOrDefault(model =>
+                model != null
+                && model.isValid
+                && string.Equals(model.itemId, itemId, StringComparison.Ordinal));
+            if (placement == null)
+            {
+                return false;
+            }
+
+            foreach (int slotIndex in placement.occupiedSlotIndexes ?? Array.Empty<int>())
+            {
+                if (slotIndex < 0 || slotIndex >= traySlotImages.Count)
+                {
+                    continue;
+                }
+
+                Image image = traySlotImages[slotIndex];
+                if (image == null || (image.sprite == null && image.overrideSprite == null))
+                {
+                    continue;
+                }
+
+                ShapeCellVisualStyle style = ShapeCellVisualStyle.FromImage(image);
+                if (style != null)
+                {
+                    styles.Add(style);
+                }
+            }
+
+            return styles.Count > 0;
+        }
+
         private void RemoveItemPlacement(string itemId)
         {
             placementModels.RemoveAll(model =>

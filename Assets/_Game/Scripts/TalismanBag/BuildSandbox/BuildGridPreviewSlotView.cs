@@ -22,9 +22,20 @@ namespace TalismanBag.BuildSandbox
         private Color placedColor = new(0.44f, 0.35f, 0.18f, 1f);
         private const float ColorTolerance = 0.004f;
         private BuildGridInteractionPreviewController controller;
+        private Sprite defaultSprite;
+        private Sprite defaultOverrideSprite;
+        private Image.Type defaultImageType = Image.Type.Simple;
+        private bool defaultPreserveAspect;
+        private bool defaultFillCenter = true;
+        private Material defaultMaterial;
+        private float defaultPixelsPerUnitMultiplier = 1f;
+        private bool hasDefaultImageState;
         private bool placed;
         private bool manualBackgroundImageColor;
+        private bool placedSuppressLabel;
+        private bool placedSuppressBlock;
         private string placedName = string.Empty;
+        private ShapeCellVisualStyle placedVisualStyle;
 
         public int X => x;
         public int Y => y;
@@ -37,6 +48,7 @@ namespace TalismanBag.BuildSandbox
             y = cellY;
             backgroundImage = image;
             labelText = label;
+            CacheDefaultImageState();
             manualBackgroundImageColor = HasManualBackgroundColor(backgroundImage);
             ClearPlaced();
         }
@@ -62,10 +74,32 @@ namespace TalismanBag.BuildSandbox
 
         public void SetPreview(bool valid, Color validColor)
         {
-            SetColor(valid ? validColor : previewInvalidColor);
+            SetPreview(valid, validColor, null);
+        }
+
+        public void SetPreview(bool valid, Color validColor, ShapeCellVisualStyle visualStyle)
+        {
+            SetPreview(valid, validColor, visualStyle, suppressBlock: false);
+        }
+
+        public void SetPreview(bool valid, Color validColor, ShapeCellVisualStyle visualStyle, bool suppressBlock)
+        {
+            if (suppressBlock)
+            {
+                SetColor(emptyColor);
+            }
+            else if (valid && visualStyle != null)
+            {
+                ApplyVisualStyle(visualStyle, validColor);
+            }
+            else
+            {
+                SetColor(valid ? validColor : previewInvalidColor);
+            }
+
             if (labelText != null && !placed)
             {
-                labelText.text = valid ? string.Empty : "×";
+                labelText.text = suppressBlock || valid ? string.Empty : "×";
             }
         }
 
@@ -80,7 +114,19 @@ namespace TalismanBag.BuildSandbox
 
         public void ClearPreview()
         {
-            SetColor(placed ? placedColor : emptyColor);
+            if (placed && placedSuppressBlock)
+            {
+                SetColor(emptyColor);
+            }
+            else if (placed && placedVisualStyle != null)
+            {
+                ApplyVisualStyle(placedVisualStyle, placedColor);
+            }
+            else
+            {
+                SetColor(placed ? placedColor : emptyColor);
+            }
+
             if (labelText != null && !placed)
             {
                 labelText.text = string.Empty;
@@ -94,13 +140,50 @@ namespace TalismanBag.BuildSandbox
 
         public void SetPlaced(string itemName, Color itemColor)
         {
+            SetPlaced(itemName, itemColor, null, suppressLabel: false);
+        }
+
+        public void SetPlaced(string itemName, Color itemColor, ShapeCellVisualStyle visualStyle)
+        {
+            SetPlaced(itemName, itemColor, visualStyle, suppressLabel: false);
+        }
+
+        public void SetPlaced(string itemName, Color itemColor, ShapeCellVisualStyle visualStyle, bool suppressLabel)
+        {
+            SetPlaced(itemName, itemColor, visualStyle, suppressLabel, suppressBlock: false);
+        }
+
+        public void SetPlaced(
+            string itemName,
+            Color itemColor,
+            ShapeCellVisualStyle visualStyle,
+            bool suppressLabel,
+            bool suppressBlock)
+        {
             placed = true;
             placedName = itemName ?? string.Empty;
             placedColor = itemColor;
-            SetColor(placedColor);
+            placedSuppressLabel = suppressLabel;
+            placedSuppressBlock = suppressBlock;
+            placedVisualStyle = visualStyle != null && !visualStyle.SpansWholeItem ? visualStyle : null;
+            if (placedSuppressBlock)
+            {
+                SetColor(emptyColor);
+            }
+            else if (placedVisualStyle != null)
+            {
+                ApplyVisualStyle(placedVisualStyle, placedColor);
+            }
+            else
+            {
+                SetColor(placedColor);
+            }
+
             if (labelText != null)
             {
-                labelText.text = ShortName(placedName);
+                labelText.text = placedSuppressLabel || (placedVisualStyle != null && placedVisualStyle.Sprite != null)
+                    ? string.Empty
+                    : ShortName(placedName);
             }
         }
 
@@ -108,6 +191,9 @@ namespace TalismanBag.BuildSandbox
         {
             placed = false;
             placedName = string.Empty;
+            placedSuppressLabel = false;
+            placedSuppressBlock = false;
+            placedVisualStyle = null;
             SetColor(emptyColor);
             if (labelText != null)
             {
@@ -142,10 +228,62 @@ namespace TalismanBag.BuildSandbox
 
         private void SetColor(Color color)
         {
+            RestoreDefaultImageTemplate();
             if (backgroundImage != null && !manualBackgroundImageColor)
             {
                 backgroundImage.color = color;
             }
+        }
+
+        private void ApplyVisualStyle(ShapeCellVisualStyle visualStyle, Color fallbackColor)
+        {
+            if (visualStyle == null)
+            {
+                SetColor(fallbackColor);
+                return;
+            }
+
+            if (visualStyle.SpansWholeItem)
+            {
+                SetColor(fallbackColor);
+                return;
+            }
+
+            visualStyle.ApplyTo(backgroundImage, fallbackColor);
+        }
+
+        private void CacheDefaultImageState()
+        {
+            if (backgroundImage == null || hasDefaultImageState)
+            {
+                return;
+            }
+
+            defaultSprite = backgroundImage.sprite;
+            defaultOverrideSprite = backgroundImage.overrideSprite;
+            defaultImageType = backgroundImage.type;
+            defaultPreserveAspect = backgroundImage.preserveAspect;
+            defaultFillCenter = backgroundImage.fillCenter;
+            defaultMaterial = backgroundImage.material;
+            defaultPixelsPerUnitMultiplier = backgroundImage.pixelsPerUnitMultiplier;
+            hasDefaultImageState = true;
+        }
+
+        private void RestoreDefaultImageTemplate()
+        {
+            if (backgroundImage == null)
+            {
+                return;
+            }
+
+            CacheDefaultImageState();
+            backgroundImage.sprite = defaultSprite;
+            backgroundImage.overrideSprite = defaultOverrideSprite;
+            backgroundImage.type = defaultImageType;
+            backgroundImage.preserveAspect = defaultPreserveAspect;
+            backgroundImage.fillCenter = defaultFillCenter;
+            backgroundImage.material = defaultMaterial;
+            backgroundImage.pixelsPerUnitMultiplier = defaultPixelsPerUnitMultiplier;
         }
 
         private bool HasManualBackgroundColor(Image image)

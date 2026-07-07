@@ -6,6 +6,112 @@ using UnityEngine.UI;
 
 namespace TalismanBag.BuildSandbox
 {
+    public sealed class ShapeCellVisualStyle
+    {
+        public ShapeCellVisualStyle(
+            Sprite sprite,
+            Color color,
+            Image.Type imageType,
+            bool preserveAspect,
+            bool fillCenter,
+            Material material,
+            float pixelsPerUnitMultiplier,
+            float sourceRotationDegrees,
+            bool spansWholeItem)
+        {
+            Sprite = sprite;
+            Color = color;
+            ImageType = imageType;
+            PreserveAspect = preserveAspect;
+            FillCenter = fillCenter;
+            Material = material;
+            PixelsPerUnitMultiplier = pixelsPerUnitMultiplier;
+            SourceRotationDegrees = sourceRotationDegrees;
+            SpansWholeItem = spansWholeItem;
+        }
+
+        public Sprite Sprite { get; }
+        public Color Color { get; }
+        public Image.Type ImageType { get; }
+        public bool PreserveAspect { get; }
+        public bool FillCenter { get; }
+        public Material Material { get; }
+        public float PixelsPerUnitMultiplier { get; }
+        public float SourceRotationDegrees { get; }
+        public bool SpansWholeItem { get; }
+
+        public static ShapeCellVisualStyle FromImage(Image image, bool spansWholeItem = false)
+        {
+            if (image == null)
+            {
+                return null;
+            }
+
+            Sprite sprite = image.overrideSprite != null ? image.overrideSprite : image.sprite;
+            return new ShapeCellVisualStyle(
+                sprite,
+                image.color,
+                image.type,
+                image.preserveAspect,
+                image.fillCenter,
+                image.material,
+                image.pixelsPerUnitMultiplier,
+                ResolveSourceRotationDegrees(image),
+                spansWholeItem);
+        }
+
+        public void ApplyTo(Image image, Color fallbackColor, float maxAlpha = 1f)
+        {
+            if (image == null)
+            {
+                return;
+            }
+
+            image.overrideSprite = null;
+            image.sprite = Sprite;
+            image.type = Sprite == null ? Image.Type.Simple : ImageType;
+            image.preserveAspect = PreserveAspect;
+            image.fillCenter = FillCenter;
+            image.material = Material;
+            image.pixelsPerUnitMultiplier = PixelsPerUnitMultiplier;
+
+            Color targetColor = Color;
+            if (Sprite == null && Mathf.Approximately(targetColor.a, 0f))
+            {
+                targetColor = fallbackColor;
+            }
+
+            if (maxAlpha < 1f)
+            {
+                targetColor.a = Mathf.Min(targetColor.a, maxAlpha);
+            }
+
+            image.color = targetColor;
+        }
+
+        private static float ResolveSourceRotationDegrees(Image image)
+        {
+            return image != null && image.rectTransform != null
+                ? NormalizeRotationDegrees(image.rectTransform.localEulerAngles.z)
+                : 0f;
+        }
+
+        private static float NormalizeRotationDegrees(float degrees)
+        {
+            while (degrees > 180f)
+            {
+                degrees -= 360f;
+            }
+
+            while (degrees <= -180f)
+            {
+                degrees += 360f;
+            }
+
+            return degrees;
+        }
+    }
+
     public sealed class BuildItemPreviewCardView : MonoBehaviour,
         IInitializePotentialDragHandler,
         IPointerDownHandler,
@@ -33,6 +139,7 @@ namespace TalismanBag.BuildSandbox
         private BuildGridInteractionPreviewController controller;
         private readonly List<Image> layoutCellImages = new();
         private readonly HashSet<Image> manualLayoutCellImageColors = new();
+        private readonly Dictionary<Image, float> originalArtworkImageRotationByImage = new();
         private DragGestureMode dragGestureMode;
         private ScrollRect gestureScrollRect;
         private RectTransform gestureScrollViewport;
@@ -219,6 +326,119 @@ namespace TalismanBag.BuildSandbox
             }
 
             SetNormalVisual();
+        }
+
+        public void ApplyArtworkImageRotationOffset(float rotationOffsetDegrees)
+        {
+            Image image = FindBestArtworkImage();
+            if (image == null || image.rectTransform == null)
+            {
+                return;
+            }
+
+            if (!originalArtworkImageRotationByImage.TryGetValue(image, out float originalRotationDegrees))
+            {
+                originalRotationDegrees = image.rectTransform.localEulerAngles.z;
+                originalArtworkImageRotationByImage[image] = originalRotationDegrees;
+            }
+
+            Vector3 eulerAngles = image.rectTransform.localEulerAngles;
+            eulerAngles.z = originalRotationDegrees + rotationOffsetDegrees;
+            image.rectTransform.localEulerAngles = eulerAngles;
+        }
+
+        public bool TryCaptureCellVisualStyles(List<ShapeCellVisualStyle> styles)
+        {
+            if (styles == null)
+            {
+                return false;
+            }
+
+            styles.Clear();
+            if (TryCaptureArtworkImageVisualStyle(styles))
+            {
+                return true;
+            }
+
+            foreach (Image image in layoutCellImages)
+            {
+                if (image == null
+                    || !image.gameObject.activeSelf
+                    || !HasCaptureableImageSource(image))
+                {
+                    continue;
+                }
+
+                ShapeCellVisualStyle style = ShapeCellVisualStyle.FromImage(image);
+                if (style != null)
+                {
+                    styles.Add(style);
+                }
+            }
+
+            if (styles.Count > 0)
+            {
+                return true;
+            }
+
+            if (backgroundImage == null
+                || (backgroundImage.sprite == null
+                    && backgroundImage.overrideSprite == null
+                    && !manualBackgroundImageColor))
+            {
+                return false;
+            }
+
+            bool backgroundSpriteArtwork = backgroundImage.sprite != null || backgroundImage.overrideSprite != null;
+            ShapeCellVisualStyle backgroundStyle = ShapeCellVisualStyle.FromImage(
+                backgroundImage,
+                spansWholeItem: backgroundSpriteArtwork);
+            if (backgroundStyle == null)
+            {
+                return false;
+            }
+
+            styles.Add(backgroundStyle);
+            return true;
+        }
+
+        private bool TryCaptureArtworkImageVisualStyle(List<ShapeCellVisualStyle> styles)
+        {
+            if (styles == null)
+            {
+                return false;
+            }
+
+            ShapeCellVisualStyle style = ShapeCellVisualStyle.FromImage(FindBestArtworkImage(), spansWholeItem: true);
+            if (style == null)
+            {
+                return false;
+            }
+
+            styles.Add(style);
+            return true;
+        }
+
+        private Image FindBestArtworkImage()
+        {
+            Image bestImage = null;
+            float bestScore = float.NegativeInfinity;
+            foreach (Image image in GetComponentsInChildren<Image>(true))
+            {
+                if (!IsArtworkImageCandidate(image))
+                {
+                    continue;
+                }
+
+                float score = ScoreArtworkImageCandidate(image);
+                if (bestImage == null || score > bestScore)
+                {
+                    bestImage = image;
+                    bestScore = score;
+                }
+            }
+
+            return bestImage;
         }
 
         public void OnInitializePotentialDrag(PointerEventData eventData)
@@ -594,6 +814,96 @@ namespace TalismanBag.BuildSandbox
             return image != null
                 && !IsDefaultGeneratedLayoutCellWhite(image)
                 && !IsKnownBodyColor(image.color);
+        }
+
+        private bool HasCaptureableImageSource(Image image)
+        {
+            return image != null
+                && (image.sprite != null
+                    || image.overrideSprite != null
+                    || HasManualBodyColor(image));
+        }
+
+        private bool IsArtworkImageCandidate(Image image)
+        {
+            return image != null
+                && image != backgroundImage
+                && !layoutCellImages.Contains(image)
+                && !IsGeneratedLayoutCellImage(image)
+                && image.color.a > ColorTolerance
+                && (image.sprite != null || image.overrideSprite != null);
+        }
+
+        private static bool IsGeneratedLayoutCellImage(Image image)
+        {
+            return image != null
+                && image.transform != null
+                && image.transform.parent != null
+                && string.Equals(image.transform.parent.name, LayoutCellLayerName, StringComparison.Ordinal);
+        }
+
+        private static float ScoreArtworkImageCandidate(Image image)
+        {
+            if (image == null)
+            {
+                return float.NegativeInfinity;
+            }
+
+            float score = 0f;
+            if (image.gameObject.activeInHierarchy)
+            {
+                score += 1000f;
+            }
+            else if (image.gameObject.activeSelf)
+            {
+                score += 500f;
+            }
+
+            string name = image.name ?? string.Empty;
+            if (ContainsNameHint(name, "art", "artwork", "icon", "image", "picture", "sprite", "visual", "slot"))
+            {
+                score += 200f;
+            }
+
+            if (ContainsNameHint(name, "background", "bg", "frame", "mask", "outline", "border"))
+            {
+                score -= 160f;
+            }
+
+            RectTransform rect = image.rectTransform;
+            if (rect != null)
+            {
+                float area = Mathf.Max(0f, rect.rect.width) * Mathf.Max(0f, rect.rect.height);
+                score += Mathf.Min(area * 0.001f, 80f);
+            }
+
+            Transform cursor = image.transform;
+            while (cursor != null)
+            {
+                score += 1f;
+                cursor = cursor.parent;
+            }
+
+            return score;
+        }
+
+        private static bool ContainsNameHint(string name, params string[] hints)
+        {
+            if (string.IsNullOrWhiteSpace(name) || hints == null)
+            {
+                return false;
+            }
+
+            foreach (string hint in hints)
+            {
+                if (!string.IsNullOrWhiteSpace(hint)
+                    && name.IndexOf(hint, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool IsDefaultGeneratedLayoutCellWhite(Image image)

@@ -130,11 +130,11 @@ namespace TalismanBag.BuildSandbox
             switch (rotation)
             {
                 case ItemShapeRotation.Rotation90:
-                    return new ItemShapeCell(offset.y, -offset.x);
+                    return new ItemShapeCell(-offset.y, offset.x);
                 case ItemShapeRotation.Rotation180:
                     return new ItemShapeCell(-offset.x, -offset.y);
                 case ItemShapeRotation.Rotation270:
-                    return new ItemShapeCell(-offset.y, offset.x);
+                    return new ItemShapeCell(offset.y, -offset.x);
                 default:
                     return offset;
             }

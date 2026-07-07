@@ -27,6 +27,10 @@ namespace TalismanBag.BuildSandbox
         private const string DevChapterDropdownSlotName = "DevChapterDropdownSlot";
         private const string DragGhostCellLayerName = "DragGhostCellLayer";
         private const string DragGhostCellNamePrefix = "DragGhostCell_";
+        private const string DragGhostArtworkName = "DragGhostArtwork";
+        private const string BoardArtworkLayerName = "BoardItemArtworkLayer";
+        private const string BoardPreviewArtworkName = "BoardPreviewArtwork";
+        private const string BoardPlacedArtworkNamePrefix = "BoardPlacedArtwork_";
         private const string FormationPowerOverlayName = "FormationCorePowerRangeOverlay";
         private const string RotateZoneLayerName = "MobileRotateZoneLayer";
         private const string RotateZoneLeftName = "MobileRotateZoneLeft";
@@ -35,14 +39,16 @@ namespace TalismanBag.BuildSandbox
         private const float RotateButtonVisualSizePixels = 72f;
         private const float RotateButtonActivationWidthPixels = 136f;
         private const float RotateButtonActivationHeightPixels = 180f;
-        private const float RotateButtonGapFromItemPixels = 44f;
+        private const float RotateButtonInsideEdgeInsetPixels = 6f;
         private const float RotateButtonExitPaddingPixels = 18f;
         private const float RotateSeekWindowSeconds = 0.28f;
         private const float RotateSeekMinAgeSeconds = 0.02f;
         private const float RotateSeekMinDeltaXPixels = 20f;
-        private const float RotateSeekMaxDeltaYPixels = 76f;
+        private const float RotateSeekMaxUpwardDriftPixels = 44f;
         private const float RotateSeekMinVelocityXPixelsPerSecond = 300f;
         private const float RotateButtonTriggerCooldownSeconds = 1f;
+        private const float RotateButtonConfirmVisualSeconds = 0.18f;
+        private const float BoardSnapRotateHoldPaddingPixels = 36f;
         private const float BoardSoftBoundaryCellPadding = 0.45f;
 
         private enum MobileRotateZoneSide
@@ -62,6 +68,20 @@ namespace TalismanBag.BuildSandbox
         [SerializeField] private bool writesFormalUi;
         [SerializeField] private bool touchesFormalScene;
         [SerializeField] private bool showsCompleteAnswers;
+
+        [Header("V0.4 Artwork Direction Calibration")]
+        [Tooltip("3-cell triangle/corner artwork in tray. Positive rotates left, negative rotates right.")]
+        [SerializeField] private float triangleTrayArtworkRotationOffsetDegrees;
+        [Tooltip("3-cell triangle/corner artwork while dragging or board-previewing. Positive rotates left, negative rotates right.")]
+        [SerializeField] private float triangleDragGhostArtworkRotationOffsetDegrees = 90f;
+        [Tooltip("3-cell triangle/corner artwork after being placed on the board. Positive rotates left, negative rotates right.")]
+        [SerializeField] private float triangleBoardPlacedArtworkRotationOffsetDegrees = 90f;
+        [Tooltip("All non-triangle artwork in tray. Positive rotates left, negative rotates right.")]
+        [SerializeField] private float defaultTrayArtworkRotationOffsetDegrees;
+        [Tooltip("All non-triangle artwork while dragging or board-previewing. Positive rotates left, negative rotates right.")]
+        [SerializeField] private float defaultDragGhostArtworkRotationOffsetDegrees = -90f;
+        [Tooltip("All non-triangle artwork after being placed on the board. Positive rotates left, negative rotates right.")]
+        [SerializeField] private float defaultBoardPlacedArtworkRotationOffsetDegrees = -90f;
 
         [SerializeField] private RectTransform boardGridPreview;
         [SerializeField] private BuildGridPreviewSlotView[] boardSlots = Array.Empty<BuildGridPreviewSlotView>();
@@ -95,6 +115,7 @@ namespace TalismanBag.BuildSandbox
 
         private readonly Dictionary<ItemShapeCell, BuildGridPreviewSlotView> boardSlotByCell = new();
         private readonly Dictionary<string, PreviewItem> itemById = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, List<ShapeCellVisualStyle>> visualStylesByItemId = new(StringComparer.Ordinal);
         private readonly Dictionary<string, ItemShapeConfig> shapeById = new(StringComparer.Ordinal);
         private readonly List<ItemShapeConfig> runtimeShapeConfigs = new();
         private ShapePlacementSession placementSession;
@@ -120,6 +141,12 @@ namespace TalismanBag.BuildSandbox
         private Image itemTrayLockedOverlay;
         private CanvasGroup itemTrayLockedOverlayCanvasGroup;
         private RectTransform dragGhostCellLayer;
+        private RectTransform dragGhostArtwork;
+        private Image dragGhostArtworkImage;
+        private RectTransform boardArtworkLayer;
+        private RectTransform boardPreviewArtwork;
+        private Image boardPreviewArtworkImage;
+        private readonly Dictionary<string, RectTransform> boardPlacedArtworkByItemId = new(StringComparer.Ordinal);
         private Image dragGhostBackgroundImage;
         private Vector2 dragGhostDefaultSize;
         private Color dragGhostDefaultBackgroundColor;
@@ -141,6 +168,8 @@ namespace TalismanBag.BuildSandbox
         private float rotateSeekAnchorTime = -999f;
         private bool hasRotateSeekAnchor;
         private float lastRotateZoneTime = -999f;
+        private MobileRotateZoneSide confirmedRotateZoneSide;
+        private float rotateZoneConfirmUntilTime = -999f;
         private readonly Dictionary<ItemShapeCell, FormationPowerCellOverlay> formationPowerOverlayByCell = new();
 
         public bool DevOnly => devOnly;
@@ -433,12 +462,12 @@ namespace TalismanBag.BuildSandbox
 
             placementFeedbackView?.ShowInfo(IsBattleInteractionLocked()
                 ? $"已查看“{item.DisplayName}”。阵势已启，当前仅可查看道具详情。"
-                : $"已查看“{item.DisplayName}”。单击只打开详情；拖动摆放，经过左右热区旋转。");
+                : $"已查看“{item.DisplayName}”。单击只打开详情；拖到棋盘后向右下角按钮顺时针旋转。");
         }
 
         public void RotateSelectedItem()
         {
-            placementFeedbackView?.ShowInfo("本包改为拖动热区旋转；请按住拖动道具，经过左右热区旋转。");
+            placementFeedbackView?.ShowInfo("本包改为拖动热区旋转；请拖到棋盘后向右下角按钮顺时针旋转。");
         }
 
         public void RotateTrayItem(BuildItemPreviewCardView card)
@@ -448,12 +477,12 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
-            placementFeedbackView?.ShowInfo("本包改为拖动热区旋转；请按住拖动道具，经过左右热区旋转。");
+            placementFeedbackView?.ShowInfo("本包改为拖动热区旋转；请拖到棋盘后向右下角按钮顺时针旋转。");
         }
 
         private void RotateTrayItem(string itemId)
         {
-            placementFeedbackView?.ShowInfo("本包改为拖动热区旋转；请按住拖动道具，经过左右热区旋转。");
+            placementFeedbackView?.ShowInfo("本包改为拖动热区旋转；请拖到棋盘后向右下角按钮顺时针旋转。");
         }
 
         public void BeginDrag(BuildItemPreviewCardView card, PointerEventData eventData)
@@ -474,6 +503,7 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
+            CacheItemVisualStyles(item);
             BeginHoldingItem(item, showInfoPanel: false);
             activeDragItemId = item.ItemId;
             itemTrayView?.SetRotateEnabled(item.ItemId, false);
@@ -481,16 +511,7 @@ namespace TalismanBag.BuildSandbox
             ClearPreviewCells();
             ShowDragGhost(selectedItem, eventData, "拖动中");
             ResetRotateZoneEntry();
-            bool canUseRotateZones = CanActiveDragUseRotateZones();
-            SetRotateZonesVisible(canUseRotateZones);
-            if (canUseRotateZones)
-            {
-                UpdateRotateZoneViewRects(eventData);
-                if (eventData != null)
-                {
-                    PrimeRotateSeekAnchor(eventData.position);
-                }
-            }
+            SetRotateZonesVisible(false);
         }
 
         public void UpdateDrag(BuildItemPreviewCardView card, PointerEventData eventData)
@@ -544,16 +565,7 @@ namespace TalismanBag.BuildSandbox
             ClearPreviewCells();
             ShowDragGhost(selectedItem, eventData, "拖动中");
             ResetRotateZoneEntry();
-            bool canUseRotateZones = CanActiveDragUseRotateZones();
-            SetRotateZonesVisible(canUseRotateZones);
-            if (canUseRotateZones)
-            {
-                UpdateRotateZoneViewRects(eventData);
-                if (eventData != null)
-                {
-                    PrimeRotateSeekAnchor(eventData.position);
-                }
-            }
+            SetRotateZonesVisible(false);
         }
 
         public void UpdateBoardSlotDrag(BuildGridPreviewSlotView slot, PointerEventData eventData)
@@ -620,7 +632,7 @@ namespace TalismanBag.BuildSandbox
             manaLoopRuntime?.ResetLoop();
             runtimeLoopRuntime?.ResetLoop();
             RefreshBattlePrepareChrome(snapMotion: true);
-            placementFeedbackView?.ShowNeutral("已取消。单击道具查看信息；拖动道具摆放，经过左右热区旋转；拖到棋盘松手直接放置。");
+            placementFeedbackView?.ShowNeutral("已取消。单击查看信息；拖动摆放，棋盘上可向右下角按钮顺时针旋转。");
         }
 
         private void Awake()
@@ -635,6 +647,7 @@ namespace TalismanBag.BuildSandbox
             EnsureManaLoopRuntime();
             EnsureRuntimeLoopRuntime();
             itemTrayView?.Initialize(this, itemById.Values.ToList(), CategoryLabels);
+            CacheAllItemVisualStyles();
             ResetPreview();
         }
 
@@ -1507,7 +1520,7 @@ namespace TalismanBag.BuildSandbox
             }
 
             RefreshTrayPlacement(item);
-            placementFeedbackView?.ShowInfo($"正在拖动“{item.DisplayName}”。经过左右热区旋转，合法位置松手直接放置。");
+            placementFeedbackView?.ShowInfo($"正在拖动“{item.DisplayName}”。棋盘上向右下角按钮顺时针旋转，合法位置松手放置。");
         }
 
         private bool CanDragCard(BuildItemPreviewCardView card)
@@ -1558,7 +1571,7 @@ namespace TalismanBag.BuildSandbox
 
         private bool UpdateRotateZoneDuringDrag(PointerEventData eventData)
         {
-            bool canUseRotateZones = CanActiveDragUseRotateZones();
+            bool canUseRotateZones = CanActiveDragUseRotateZones() && HasActiveBoardRotatePreview();
             SetRotateZonesVisible(canUseRotateZones);
             if (!canUseRotateZones || eventData == null)
             {
@@ -1569,7 +1582,7 @@ namespace TalismanBag.BuildSandbox
             UpdateRotateZoneViewRects(eventData);
             if (currentRotateZoneSide != MobileRotateZoneSide.None)
             {
-                SetRotateZoneHighlight(currentRotateZoneSide);
+                SetRotateZoneHighlight(ResolveRotateZoneHighlightSide());
                 if (activeRotateSeekExitRect.Contains(eventData.position))
                 {
                     return false;
@@ -1591,15 +1604,12 @@ namespace TalismanBag.BuildSandbox
                     return false;
                 }
 
-                SetRotateZoneHighlight(activeRotateSeekSide);
                 if (activeRotateSeekTargetRect.Contains(eventData.position))
                 {
                     currentRotateZoneSide = activeRotateSeekSide;
                     activeRotateSeekSide = MobileRotateZoneSide.None;
-                    if (CanTriggerRotateButtonNow())
+                    if (TryTriggerRotateZone(currentRotateZoneSide, eventData))
                     {
-                        lastRotateZoneTime = Time.unscaledTime;
-                        TryRotateActiveDragFromZone(currentRotateZoneSide);
                         HoldRotateInteractionVisuals(eventData);
                         return true;
                     }
@@ -1610,9 +1620,9 @@ namespace TalismanBag.BuildSandbox
                 return false;
             }
 
-            if (TryBeginRotateSeek(eventData))
+            if (TryBeginRotateSeek(eventData, out bool didTriggerRotate))
             {
-                if (currentRotateZoneSide != MobileRotateZoneSide.None)
+                if (didTriggerRotate)
                 {
                     HoldRotateInteractionVisuals(eventData);
                     return true;
@@ -1635,8 +1645,9 @@ namespace TalismanBag.BuildSandbox
             UpdateRotateZoneViewRects(eventData);
         }
 
-        private bool TryBeginRotateSeek(PointerEventData eventData)
+        private bool TryBeginRotateSeek(PointerEventData eventData, out bool didTriggerRotate)
         {
+            didTriggerRotate = false;
             if (eventData == null)
             {
                 return false;
@@ -1655,10 +1666,9 @@ namespace TalismanBag.BuildSandbox
             }
 
             Vector2 delta = eventData.position - rotateSeekAnchorPosition;
-            float absDx = Mathf.Abs(delta.x);
-            if (absDx < RotateSeekMinDeltaXPixels
-                || Mathf.Abs(delta.y) > RotateSeekMaxDeltaYPixels
-                || absDx / Mathf.Max(age, 0.001f) < RotateSeekMinVelocityXPixelsPerSecond)
+            if (delta.x < RotateSeekMinDeltaXPixels
+                || delta.y > RotateSeekMaxUpwardDriftPixels
+                || delta.x / Mathf.Max(age, 0.001f) < RotateSeekMinVelocityXPixelsPerSecond)
             {
                 if (age > RotateSeekWindowSeconds)
                 {
@@ -1668,44 +1678,47 @@ namespace TalismanBag.BuildSandbox
                 return false;
             }
 
-            MobileRotateZoneSide side = delta.x > 0f
-                ? MobileRotateZoneSide.Right
-                : MobileRotateZoneSide.Left;
-            if (!TryGetRotateButtonActivationScreenRects(
+            MobileRotateZoneSide side = MobileRotateZoneSide.Right;
+            if (!TryGetRotateButtonActivationScreenRect(
                     eventData,
-                    out Rect leftRect,
                     out Rect rightRect))
             {
                 PrimeRotateSeekAnchor(eventData.position);
                 return false;
             }
 
-            Rect targetRect = side == MobileRotateZoneSide.Right ? rightRect : leftRect;
+            Rect targetRect = rightRect;
             activeRotateSeekSide = side;
             activeRotateSeekTargetRect = targetRect;
             activeRotateSeekExitRect = ExpandRect(targetRect, RotateButtonExitPaddingPixels);
             rotateSeekAnchorPosition = eventData.position;
             rotateSeekAnchorTime = Time.unscaledTime;
             hasRotateSeekAnchor = true;
-            SetRotateZoneHighlight(side);
+            SetRotateZoneHighlight(MobileRotateZoneSide.None);
 
             if (targetRect.Contains(eventData.position))
             {
                 currentRotateZoneSide = side;
                 activeRotateSeekSide = MobileRotateZoneSide.None;
-                if (CanTriggerRotateButtonNow())
-                {
-                    lastRotateZoneTime = Time.unscaledTime;
-                    TryRotateActiveDragFromZone(side);
-                }
+                didTriggerRotate = TryTriggerRotateZone(side, eventData);
             }
 
             return true;
         }
 
-        private bool CanTriggerRotateButtonNow()
+        private bool TryTriggerRotateZone(MobileRotateZoneSide zoneSide, PointerEventData eventData)
         {
-            return Time.unscaledTime - lastRotateZoneTime >= RotateButtonTriggerCooldownSeconds;
+            float now = Time.unscaledTime;
+            if (now - lastRotateZoneTime < RotateButtonTriggerCooldownSeconds
+                || !TryRotateActiveDragFromZone(zoneSide, eventData))
+            {
+                return false;
+            }
+
+            lastRotateZoneTime = now;
+            confirmedRotateZoneSide = zoneSide;
+            rotateZoneConfirmUntilTime = now + RotateButtonConfirmVisualSeconds;
+            return true;
         }
 
         private void PrimeRotateSeekAnchorIfNeeded(Vector2 position)
@@ -1724,7 +1737,7 @@ namespace TalismanBag.BuildSandbox
             hasRotateSeekAnchor = true;
         }
 
-        private bool TryRotateActiveDragFromZone(MobileRotateZoneSide zoneSide)
+        private bool TryRotateActiveDragFromZone(MobileRotateZoneSide zoneSide, PointerEventData eventData)
         {
             if (!CanActiveDragUseRotateZones()
                 || placementSession == null
@@ -1734,7 +1747,7 @@ namespace TalismanBag.BuildSandbox
                 return false;
             }
 
-            ItemShapeRotation nextRotation = ResolveZoneRotation(selectedItem.Rotation, zoneSide);
+            ItemShapeRotation nextRotation = ResolveClockwiseRotation(selectedItem.Rotation);
             bool hasBoardAnchor = TryResolveRotateAnchor(out ItemShapeCell anchorCell);
             if (!placementSession.RotateTo(nextRotation))
             {
@@ -1744,13 +1757,16 @@ namespace TalismanBag.BuildSandbox
             selectedItem.Rotation = nextRotation;
             if (hasBoardAnchor)
             {
-                ShapePlacementResult preview = placementSession.Preview(boardReceiver, anchorCell);
+                ItemShapeCell previewAnchor = ClampBoardAnchorForPayload(
+                    placementSession.CurrentPayload,
+                    anchorCell);
+                ShapePlacementResult preview = placementSession.Preview(boardReceiver, previewAnchor);
                 lastPreviewResult = preview;
                 hasLastPreviewAnchor = preview != null;
-                lastPreviewAnchor = anchorCell;
+                lastPreviewAnchor = previewAnchor;
                 lastPreviewSource = ShapePlacementSource.Board;
                 DrawPreviewResult(preview, locked: false);
-                RefreshDragGhostLayoutAtCurrentPosition(preview, ShapePlacementSource.Board);
+                ShowDragGhost(selectedItem, eventData, "Dragging", preview, ShapePlacementSource.Board);
             }
             else
             {
@@ -1758,14 +1774,12 @@ namespace TalismanBag.BuildSandbox
                 lastPreviewResult = null;
                 hasLastPreviewAnchor = false;
                 lastPreviewSource = ShapePlacementSource.Unknown;
-                RefreshDragGhostLayoutAtCurrentPosition(null, ShapePlacementSource.Board);
+                ShowDragGhost(selectedItem, eventData, "Dragging", null, ShapePlacementSource.Board);
             }
 
             UpdateSelectedItemInfo(selectedItem);
             RefreshItemInfoPanel(selectedItem);
-            placementFeedbackView?.ShowValid(zoneSide == MobileRotateZoneSide.Left
-                ? $"已逆时针旋转“{selectedItem.DisplayName}”：{FormatRotation(selectedItem.Rotation)}。"
-                : $"已顺时针旋转“{selectedItem.DisplayName}”：{FormatRotation(selectedItem.Rotation)}。");
+            placementFeedbackView?.ShowValid($"已顺时针旋转“{selectedItem.DisplayName}”：{FormatRotation(selectedItem.Rotation)}。");
             return true;
         }
 
@@ -1783,51 +1797,51 @@ namespace TalismanBag.BuildSandbox
             return false;
         }
 
-        private bool TryGetRotateButtonVisualScreenRects(
+        private bool HasActiveBoardRotatePreview()
+        {
+            return lastPreviewSource == ShapePlacementSource.Board
+                && lastPreviewResult != null
+                && lastPreviewResult.OccupiedCells.Count > 0;
+        }
+
+        private bool TryGetRotateButtonVisualScreenRect(
             PointerEventData eventData,
-            out Rect leftRect,
             out Rect rightRect)
         {
-            return TryBuildRotateButtonScreenRects(
+            return TryBuildRotateButtonScreenRect(
                 eventData,
                 Vector2.one * RotateButtonVisualSizePixels,
-                out leftRect,
                 out rightRect);
         }
 
-        private bool TryGetRotateButtonActivationScreenRects(
+        private bool TryGetRotateButtonActivationScreenRect(
             PointerEventData eventData,
-            out Rect leftRect,
             out Rect rightRect)
         {
-            return TryBuildRotateButtonScreenRects(
+            return TryBuildRotateButtonScreenRect(
                 eventData,
                 new Vector2(RotateButtonActivationWidthPixels, RotateButtonActivationHeightPixels),
-                out leftRect,
                 out rightRect);
         }
 
-        private bool TryBuildRotateButtonScreenRects(
+        private bool TryBuildRotateButtonScreenRect(
             PointerEventData eventData,
             Vector2 buttonSize,
-            out Rect leftRect,
             out Rect rightRect)
         {
-            leftRect = default;
             rightRect = default;
             if (!TryGetDragGhostScreenRect(eventData, out Rect ghostRect))
             {
                 return false;
             }
 
-            float buttonCenterOffset = ghostRect.width * 0.5f
-                + RotateButtonGapFromItemPixels
-                + RotateButtonVisualSizePixels * 0.5f;
-            leftRect = BuildCenteredScreenRect(
-                ghostRect.center + new Vector2(-buttonCenterOffset, 0f),
-                buttonSize);
+            float visualInset = RotateButtonVisualSizePixels * 0.5f
+                + RotateButtonInsideEdgeInsetPixels;
+            float xInset = Mathf.Min(visualInset, ghostRect.width * 0.36f);
+            float yInset = Mathf.Min(visualInset, ghostRect.height * 0.36f);
+            Vector2 rightBottomCenter = new(ghostRect.xMax - xInset, ghostRect.yMin + yInset);
             rightRect = BuildCenteredScreenRect(
-                ghostRect.center + new Vector2(buttonCenterOffset, 0f),
+                rightBottomCenter,
                 buttonSize);
             return true;
         }
@@ -1901,23 +1915,12 @@ namespace TalismanBag.BuildSandbox
             activeRotateSeekExitRect = default;
             hasRotateSeekAnchor = false;
             rotateSeekAnchorTime = -999f;
+            confirmedRotateZoneSide = MobileRotateZoneSide.None;
+            rotateZoneConfirmUntilTime = -999f;
         }
 
-        private static ItemShapeRotation ResolveZoneRotation(
-            ItemShapeRotation rotation,
-            MobileRotateZoneSide zoneSide)
+        private static ItemShapeRotation ResolveClockwiseRotation(ItemShapeRotation rotation)
         {
-            if (zoneSide == MobileRotateZoneSide.Left)
-            {
-                return rotation switch
-                {
-                    ItemShapeRotation.Rotation0 => ItemShapeRotation.Rotation270,
-                    ItemShapeRotation.Rotation270 => ItemShapeRotation.Rotation180,
-                    ItemShapeRotation.Rotation180 => ItemShapeRotation.Rotation90,
-                    _ => ItemShapeRotation.Rotation0
-                };
-            }
-
             return rotation switch
             {
                 ItemShapeRotation.Rotation0 => ItemShapeRotation.Rotation90,
@@ -1939,6 +1942,12 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
+            if (TryPreviewBoardSnapHold(eventData, out ShapePlacementResult heldBoardResult))
+            {
+                ApplyBoardDragPreview(eventData, heldBoardResult);
+                return;
+            }
+
             if (TryPreviewTrayDrag(eventData, out ShapePlacementResult trayResult))
             {
                 lastPreviewResult = trayResult;
@@ -1951,10 +1960,8 @@ namespace TalismanBag.BuildSandbox
 
                 ClearPreviewCells();
                 ShowDragGhost(selectedItem, eventData, "拖动中", trayResult, ShapePlacementSource.Tray);
-                if (CanActiveDragUseRotateZones())
-                {
-                    UpdateRotateZoneViewRects(eventData);
-                }
+                SetRotateZonesVisible(false);
+                ResetRotateZoneEntry();
 
                 return;
             }
@@ -1963,6 +1970,80 @@ namespace TalismanBag.BuildSandbox
                 boardReceiver,
                 eventData.position,
                 eventData.pressEventCamera);
+            ApplyBoardDragPreview(eventData, result);
+        }
+
+        private bool TryPreviewBoardSnapHold(PointerEventData eventData, out ShapePlacementResult result)
+        {
+            result = null;
+            if (!ShouldHoldBoardSnapPreview(eventData))
+            {
+                return false;
+            }
+
+            placementSession.UpdatePointer(eventData.position);
+            ItemShapeCell previewAnchor = ClampBoardAnchorForPayload(
+                placementSession.CurrentPayload,
+                lastPreviewAnchor);
+            result = placementSession.Preview(boardReceiver, previewAnchor);
+            return true;
+        }
+
+        private ItemShapeCell ClampBoardAnchorForPayload(
+            ShapeItemPayload payload,
+            ItemShapeCell anchorCell)
+        {
+            if (boardReceiver == null || !payload.IsValid)
+            {
+                return anchorCell;
+            }
+
+            IReadOnlyList<ItemShapeCell> offsets = payload.BuildNormalizedOffsets();
+            if (offsets == null || offsets.Count == 0)
+            {
+                return anchorCell;
+            }
+
+            int maxOffsetX = offsets.Max(cell => cell.x);
+            int maxOffsetY = offsets.Max(cell => cell.y);
+            int maxAnchorX = Mathf.Max(0, boardReceiver.Width - 1 - maxOffsetX);
+            int maxAnchorY = Mathf.Max(0, boardReceiver.Height - 1 - maxOffsetY);
+            return new ItemShapeCell(
+                Mathf.Clamp(anchorCell.x, 0, maxAnchorX),
+                Mathf.Clamp(anchorCell.y, 0, maxAnchorY));
+        }
+
+        private bool ShouldHoldBoardSnapPreview(PointerEventData eventData)
+        {
+            if (eventData == null
+                || placementSession == null
+                || boardReceiver == null
+                || !hasLastPreviewAnchor
+                || lastPreviewSource != ShapePlacementSource.Board
+                || !CanActiveDragUseRotateZones()
+                || !HasActiveBoardRotatePreview())
+            {
+                return false;
+            }
+
+            if (activeRotateSeekSide != MobileRotateZoneSide.None
+                || currentRotateZoneSide != MobileRotateZoneSide.None
+                || ResolveRotateZoneHighlightSide() != MobileRotateZoneSide.None)
+            {
+                return true;
+            }
+
+            if (!TryGetRotateButtonActivationScreenRect(eventData, out Rect rightRect))
+            {
+                return false;
+            }
+
+            Rect rightHoldRect = ExpandRect(rightRect, BoardSnapRotateHoldPaddingPixels);
+            return rightHoldRect.Contains(eventData.position);
+        }
+
+        private void ApplyBoardDragPreview(PointerEventData eventData, ShapePlacementResult result)
+        {
             lastPreviewResult = result;
             hasLastPreviewAnchor = result != null;
             lastPreviewSource = ShapePlacementSource.Board;
@@ -1973,9 +2054,15 @@ namespace TalismanBag.BuildSandbox
 
             DrawPreviewResult(result, locked: false);
             ShowDragGhost(selectedItem, eventData, "拖动中", result, ShapePlacementSource.Board);
-            if (CanActiveDragUseRotateZones())
+            if (CanActiveDragUseRotateZones() && HasActiveBoardRotatePreview())
             {
+                SetRotateZonesVisible(true);
                 UpdateRotateZoneViewRects(eventData);
+            }
+            else
+            {
+                SetRotateZonesVisible(false);
+                ResetRotateZoneEntry();
             }
 
             if (result != null && result.IsValid)
@@ -2327,9 +2414,15 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
+            CacheItemVisualStyles(result.ItemId);
             Color itemColor = ResolvePreviewItemColor(result.ItemId);
-            foreach (ItemShapeCell cell in result.OccupiedCells)
+            ShapeCellVisualStyle wholeItemStyle = !locked
+                ? ResolveWholeItemVisualStyle(result.ItemId)
+                : null;
+            bool suppressCellBlocks = wholeItemStyle != null;
+            for (int i = 0; i < result.OccupiedCells.Count; i++)
             {
+                ItemShapeCell cell = result.OccupiedCells[i];
                 if (boardSlotByCell.TryGetValue(cell, out BuildGridPreviewSlotView slot))
                 {
                     if (locked && result.IsValid)
@@ -2338,14 +2431,29 @@ namespace TalismanBag.BuildSandbox
                     }
                     else
                     {
-                        slot.SetPreview(result.IsValid, itemColor);
+                        slot.SetPreview(
+                            result.IsValid,
+                            itemColor,
+                            suppressCellBlocks || !result.IsValid ? null : ResolveItemVisualStyle(result.ItemId, i),
+                            suppressCellBlocks);
                     }
                 }
+            }
+
+            if (wholeItemStyle != null)
+            {
+                DrawBoardPreviewArtwork(
+                    result,
+                    wholeItemStyle,
+                    itemColor,
+                    ResolveItemRotation(result.ItemId),
+                    ResolveWholeItemArtworkDragGhostRotationOffsetDegrees(result.ItemId));
             }
         }
 
         private void ClearPreviewCells()
         {
+            ClearBoardPreviewArtwork();
             foreach (BuildGridPreviewSlotView slot in boardSlots ?? Array.Empty<BuildGridPreviewSlotView>())
             {
                 slot?.ClearPreview();
@@ -2354,10 +2462,12 @@ namespace TalismanBag.BuildSandbox
 
         private void RedrawBoardPlacedVisuals()
         {
+            ClearBoardPreviewArtwork();
             foreach (BuildGridPreviewSlotView slot in boardSlots ?? Array.Empty<BuildGridPreviewSlotView>())
             {
                 slot?.ClearPlaced();
             }
+            ClearBoardPlacedArtwork();
 
             if (boardReceiver == null)
             {
@@ -2365,25 +2475,259 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
-            foreach (KeyValuePair<ItemShapeCell, string> occupied in boardReceiver.OccupiedCells)
+            Dictionary<string, int> visualIndexByItemId = new(StringComparer.Ordinal);
+            Dictionary<string, List<ItemShapeCell>> occupiedCellsByItemId = new(StringComparer.Ordinal);
+            foreach (KeyValuePair<ItemShapeCell, string> occupied in boardReceiver.OccupiedCells
+                         .OrderBy(pair => pair.Value, StringComparer.Ordinal)
+                         .ThenBy(pair => pair.Key.y)
+                         .ThenBy(pair => pair.Key.x))
             {
+                if (!occupiedCellsByItemId.TryGetValue(occupied.Value, out List<ItemShapeCell> itemCells))
+                {
+                    itemCells = new List<ItemShapeCell>();
+                    occupiedCellsByItemId[occupied.Value] = itemCells;
+                }
+
+                itemCells.Add(occupied.Key);
                 if (!boardSlotByCell.TryGetValue(occupied.Key, out BuildGridPreviewSlotView slot)
                     || slot == null)
                 {
                     continue;
                 }
 
+                ShapeCellVisualStyle wholeItemStyle = ResolveWholeItemVisualStyle(occupied.Value);
+                visualIndexByItemId.TryGetValue(occupied.Value, out int visualIndex);
+                ShapeCellVisualStyle visualStyle = wholeItemStyle == null
+                    ? ResolveItemVisualStyle(occupied.Value, visualIndex)
+                    : null;
+                visualIndexByItemId[occupied.Value] = visualIndex + 1;
                 if (itemById.TryGetValue(occupied.Value, out PreviewItem item))
                 {
-                    slot.SetPlaced(item.DisplayName, item.CardColor);
+                    slot.SetPlaced(
+                        item.DisplayName,
+                        item.CardColor,
+                        visualStyle,
+                        wholeItemStyle != null,
+                        wholeItemStyle != null);
                 }
                 else
                 {
-                    slot.SetPlaced(occupied.Value);
+                    slot.SetPlaced(
+                        occupied.Value,
+                        ResolvePreviewItemColor(occupied.Value),
+                        visualStyle,
+                        wholeItemStyle != null,
+                        wholeItemStyle != null);
+                }
+            }
+
+            foreach (KeyValuePair<string, List<ItemShapeCell>> pair in occupiedCellsByItemId)
+            {
+                ShapeCellVisualStyle wholeItemStyle = ResolveWholeItemVisualStyle(pair.Key);
+                if (wholeItemStyle != null)
+                {
+                    DrawBoardPlacedArtwork(
+                        pair.Key,
+                        pair.Value,
+                        wholeItemStyle,
+                        ResolvePreviewItemColor(pair.Key),
+                        ResolveItemRotation(pair.Key),
+                        ResolveWholeItemArtworkBoardPlacedRotationOffsetDegrees(pair.Key));
                 }
             }
 
             RefreshFormationPowerVisuals();
+        }
+
+        private void DrawBoardPreviewArtwork(
+            ShapePlacementResult result,
+            ShapeCellVisualStyle style,
+            Color fallbackColor,
+            ItemShapeRotation rotation,
+            float stateRotationOffsetDegrees)
+        {
+            if (result == null
+                || style == null
+                || !style.SpansWholeItem
+                || style.Sprite == null
+                || !TryBuildBoardCellVisualLayout(result.OccupiedCells, out ShapeCellVisualLayout layout)
+                || !EnsureBoardArtworkView(
+                    BoardPreviewArtworkName,
+                    out boardPreviewArtwork,
+                    out boardPreviewArtworkImage))
+            {
+                ClearBoardPreviewArtwork();
+                return;
+            }
+
+            ApplyBoardArtwork(
+                boardPreviewArtwork,
+                boardPreviewArtworkImage,
+                layout,
+                style,
+                fallbackColor,
+                0.96f,
+                rotation,
+                stateRotationOffsetDegrees);
+        }
+
+        private void DrawBoardPlacedArtwork(
+            string itemId,
+            IReadOnlyList<ItemShapeCell> occupiedCells,
+            ShapeCellVisualStyle style,
+            Color fallbackColor,
+            ItemShapeRotation rotation,
+            float stateRotationOffsetDegrees)
+        {
+            if (string.IsNullOrWhiteSpace(itemId)
+                || occupiedCells == null
+                || occupiedCells.Count == 0
+                || style == null
+                || !style.SpansWholeItem
+                || style.Sprite == null
+                || !TryBuildBoardCellVisualLayout(occupiedCells, out ShapeCellVisualLayout layout)
+                || !EnsureBoardArtworkView(
+                    BoardPlacedArtworkNamePrefix + SanitizeRuntimeObjectName(itemId),
+                    out RectTransform artworkRect,
+                    out Image artworkImage))
+            {
+                return;
+            }
+
+            boardPlacedArtworkByItemId[itemId] = artworkRect;
+            ApplyBoardArtwork(artworkRect, artworkImage, layout, style, fallbackColor, 1f, rotation, stateRotationOffsetDegrees);
+        }
+
+        private void ApplyBoardArtwork(
+            RectTransform artworkRect,
+            Image artworkImage,
+            ShapeCellVisualLayout layout,
+            ShapeCellVisualStyle style,
+            Color fallbackColor,
+            float maxAlpha,
+            ItemShapeRotation rotation,
+            float stateRotationOffsetDegrees)
+        {
+            if (artworkRect == null || artworkImage == null || layout == null || style == null)
+            {
+                return;
+            }
+
+            artworkRect.gameObject.SetActive(true);
+            ApplyWholeItemArtworkTransform(
+                artworkRect,
+                layout.AnchoredPosition,
+                layout.SizeDelta,
+                rotation,
+                style.SourceRotationDegrees + stateRotationOffsetDegrees);
+            artworkRect.SetAsLastSibling();
+            artworkImage.raycastTarget = false;
+            style.ApplyTo(artworkImage, fallbackColor, maxAlpha);
+        }
+
+        private void ClearBoardPreviewArtwork()
+        {
+            if (boardPreviewArtwork != null)
+            {
+                boardPreviewArtwork.gameObject.SetActive(false);
+            }
+        }
+
+        private void ClearBoardPlacedArtwork()
+        {
+            foreach (RectTransform artwork in boardPlacedArtworkByItemId.Values)
+            {
+                if (artwork != null)
+                {
+                    artwork.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private bool EnsureBoardArtworkView(
+            string objectName,
+            out RectTransform artworkRect,
+            out Image artworkImage)
+        {
+            artworkRect = null;
+            artworkImage = null;
+            RectTransform layer = EnsureBoardArtworkLayer();
+            if (layer == null || string.IsNullOrWhiteSpace(objectName))
+            {
+                return false;
+            }
+
+            Transform existing = layer.Find(objectName);
+            GameObject target = existing == null
+                ? new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(LayoutElement))
+                : existing.gameObject;
+            target.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            target.transform.SetParent(layer, false);
+            LayoutElement layoutElement = target.GetComponent<LayoutElement>();
+            if (layoutElement != null)
+            {
+                layoutElement.ignoreLayout = true;
+            }
+
+            artworkRect = target.GetComponent<RectTransform>();
+            artworkImage = target.GetComponent<Image>();
+            if (artworkImage == null)
+            {
+                artworkImage = target.AddComponent<Image>();
+            }
+
+            artworkImage.raycastTarget = false;
+            return true;
+        }
+
+        private RectTransform EnsureBoardArtworkLayer()
+        {
+            if (boardGridPreview == null)
+            {
+                return null;
+            }
+
+            if (boardArtworkLayer != null && boardArtworkLayer.parent == boardGridPreview)
+            {
+                boardArtworkLayer.SetAsLastSibling();
+                return boardArtworkLayer;
+            }
+
+            Transform existing = boardGridPreview.Find(BoardArtworkLayerName);
+            GameObject layerObject = existing == null
+                ? new GameObject(BoardArtworkLayerName, typeof(RectTransform), typeof(LayoutElement))
+                : existing.gameObject;
+            layerObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            layerObject.transform.SetParent(boardGridPreview, false);
+            boardArtworkLayer = layerObject.GetComponent<RectTransform>();
+            LayoutElement layoutElement = layerObject.GetComponent<LayoutElement>();
+            if (layoutElement != null)
+            {
+                layoutElement.ignoreLayout = true;
+            }
+
+            StretchToParent(boardArtworkLayer);
+            boardArtworkLayer.SetAsLastSibling();
+            return boardArtworkLayer;
+        }
+
+        private static string SanitizeRuntimeObjectName(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return "Unknown";
+            }
+
+            char[] chars = value.ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (!char.IsLetterOrDigit(chars[i]) && chars[i] != '_' && chars[i] != '-')
+                {
+                    chars[i] = '_';
+                }
+            }
+
+            return new string(chars);
         }
 
         private Color ResolvePreviewItemColor(string itemId)
@@ -2544,7 +2888,7 @@ namespace TalismanBag.BuildSandbox
 
             if (item == null)
             {
-                selectedItemInfoBody.text = "单击道具查看信息；按住拖动道具摆放，经过左右热区旋转；拖到棋盘松手直接放置。";
+                selectedItemInfoBody.text = "单击查看信息；按住拖动摆放；棋盘上可向右下角按钮顺时针旋转。";
                 return;
             }
 
@@ -2658,7 +3002,7 @@ namespace TalismanBag.BuildSandbox
 
         private void RotateInfoPanelItem(string itemId)
         {
-            placementFeedbackView?.ShowInfo("本包改为拖动热区旋转；请按住拖动道具，经过左右热区旋转。");
+            placementFeedbackView?.ShowInfo("本包改为拖动热区旋转；请拖到棋盘后向右下角按钮顺时针旋转。");
         }
 
         private bool CanRotateItemFromInfoPanel(PreviewItem item)
@@ -2752,7 +3096,7 @@ namespace TalismanBag.BuildSandbox
             rotateZoneLayer.SetAsLastSibling();
             if (rotateZoneLeft != null)
             {
-                rotateZoneLeft.gameObject.SetActive(true);
+                rotateZoneLeft.gameObject.SetActive(false);
             }
 
             if (rotateZoneRight != null)
@@ -2766,26 +3110,30 @@ namespace TalismanBag.BuildSandbox
             EnsureRotateZoneViews();
             if (rotateZoneLayer == null
                 || !TryGetDragGhostScreenRect(eventData, out Rect ghostRect)
-                || !TryGetRotateButtonVisualScreenRects(eventData, out Rect leftRect, out Rect rightRect))
+                || !TryGetRotateButtonVisualScreenRect(eventData, out Rect rightRect))
             {
                 return;
             }
 
-            SetRotateZoneRect(rotateZoneLeft, leftRect, eventData);
+            if (rotateZoneLeft != null)
+            {
+                rotateZoneLeft.gameObject.SetActive(false);
+            }
+
             SetRotateZoneRect(rotateZoneRight, rightRect, eventData);
-            MobileRotateZoneSide visualSide = ResolveRotateZoneVisualSide();
-            SetRotateZoneHighlight(visualSide);
-            UpdateRotateZoneGuideRect(eventData, ghostRect, leftRect, rightRect, visualSide);
+            MobileRotateZoneSide highlightSide = ResolveRotateZoneHighlightSide();
+            MobileRotateZoneSide guideSide = ResolveRotateZoneGuideSide();
+            SetRotateZoneHighlight(highlightSide);
+            UpdateRotateZoneGuideRect(eventData, ghostRect, rightRect, guideSide);
         }
 
         private void SetRotateZoneHighlight(MobileRotateZoneSide side)
         {
-            SetRotateZoneButtonVisual(
-                MobileRotateZoneSide.Left,
-                rotateZoneLeft,
-                rotateZoneLeftImage,
-                rotateZoneLeftText,
-                side);
+            if (rotateZoneLeft != null)
+            {
+                rotateZoneLeft.gameObject.SetActive(false);
+            }
+
             SetRotateZoneButtonVisual(
                 MobileRotateZoneSide.Right,
                 rotateZoneRight,
@@ -2832,20 +3180,38 @@ namespace TalismanBag.BuildSandbox
             }
         }
 
-        private MobileRotateZoneSide ResolveRotateZoneVisualSide()
+        private MobileRotateZoneSide ResolveRotateZoneHighlightSide()
         {
+            if (confirmedRotateZoneSide != MobileRotateZoneSide.None
+                && Time.unscaledTime <= rotateZoneConfirmUntilTime)
+            {
+                return confirmedRotateZoneSide;
+            }
+
+            return MobileRotateZoneSide.None;
+        }
+
+        private MobileRotateZoneSide ResolveRotateZoneGuideSide()
+        {
+            MobileRotateZoneSide highlightSide = ResolveRotateZoneHighlightSide();
+            if (highlightSide != MobileRotateZoneSide.None)
+            {
+                return highlightSide;
+            }
+
             if (activeRotateSeekSide != MobileRotateZoneSide.None)
             {
                 return activeRotateSeekSide;
             }
 
-            return currentRotateZoneSide;
+            return currentRotateZoneSide == MobileRotateZoneSide.Right
+                ? currentRotateZoneSide
+                : MobileRotateZoneSide.None;
         }
 
         private void UpdateRotateZoneGuideRect(
             PointerEventData eventData,
             Rect ghostRect,
-            Rect leftRect,
             Rect rightRect,
             MobileRotateZoneSide side)
         {
@@ -2862,14 +3228,21 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
-            Rect targetRect = side == MobileRotateZoneSide.Right ? rightRect : leftRect;
+            Rect targetRect = rightRect;
             float y = Mathf.Lerp(ghostRect.center.y, targetRect.center.y, 0.5f);
-            Vector2 startScreen = side == MobileRotateZoneSide.Right
-                ? new Vector2(ghostRect.xMax + 8f, y)
-                : new Vector2(ghostRect.xMin - 8f, y);
-            Vector2 endScreen = side == MobileRotateZoneSide.Right
-                ? new Vector2(targetRect.xMin - 8f, y)
-                : new Vector2(targetRect.xMax + 8f, y);
+            Vector2 startScreen;
+            Vector2 endScreen;
+            if (ghostRect.Contains(targetRect.center))
+            {
+                startScreen = ghostRect.center;
+                endScreen = targetRect.center;
+            }
+            else
+            {
+                startScreen = new Vector2(ghostRect.xMax + 8f, y);
+                endScreen = new Vector2(targetRect.xMin - 8f, y);
+            }
+
             if (Vector2.Distance(startScreen, endScreen) < 8f)
             {
                 startScreen = ghostRect.center;
@@ -2906,10 +3279,13 @@ namespace TalismanBag.BuildSandbox
             rotateZoneGuide.anchorMax = new Vector2(0.5f, 0.5f);
             rotateZoneGuide.pivot = new Vector2(0.5f, 0.5f);
             rotateZoneGuide.anchoredPosition = (startLocal + endLocal) * 0.5f;
-            rotateZoneGuide.sizeDelta = new Vector2(distance, 6f);
+            bool triggered = ResolveRotateZoneHighlightSide() == side;
+            rotateZoneGuide.sizeDelta = new Vector2(distance, triggered ? 6f : 4f);
             rotateZoneGuide.localScale = Vector3.one;
             rotateZoneGuide.localEulerAngles = new Vector3(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
-            rotateZoneGuideImage.color = new Color(0.42f, 0.88f, 0.66f, 0.40f);
+            rotateZoneGuideImage.color = triggered
+                ? new Color(0.42f, 0.88f, 0.66f, 0.40f)
+                : new Color(0.42f, 0.88f, 0.66f, 0.22f);
         }
 
         private void EnsureRotateZoneViews()
@@ -3023,7 +3399,7 @@ namespace TalismanBag.BuildSandbox
             text.alignment = TextAnchor.MiddleCenter;
             text.raycastTarget = false;
             StretchToParent(text.rectTransform);
-            SetRotateZoneHighlight(currentRotateZoneSide);
+            SetRotateZoneHighlight(ResolveRotateZoneHighlightSide());
         }
 
         private void SetRotateZoneRect(
@@ -3082,8 +3458,11 @@ namespace TalismanBag.BuildSandbox
 
             CacheDragGhostDefaults();
             dragGhostRoot.gameObject.SetActive(true);
-            dragGhostRoot.position = eventData.position
-                + new Vector2(0f, MobileShapePlacementInputSettings.DefaultFingerGhostOffsetPixels);
+            if (!TrySnapDragGhostToBoardPreview(result, source, eventData))
+            {
+                dragGhostRoot.position = eventData.position
+                    + new Vector2(0f, MobileShapePlacementInputSettings.DefaultFingerGhostOffsetPixels);
+            }
             if (dragGhostText != null)
             {
                 dragGhostText.text = $"{item.DisplayName}\n{state}";
@@ -3125,6 +3504,80 @@ namespace TalismanBag.BuildSandbox
             }
         }
 
+        private bool TrySnapDragGhostToBoardPreview(
+            ShapePlacementResult result,
+            ShapePlacementSource source,
+            PointerEventData eventData)
+        {
+            if (dragGhostRoot == null
+                || source != ShapePlacementSource.Board
+                || result == null
+                || result.OccupiedCells.Count == 0
+                || !TryBuildBoardCellsScreenBounds(
+                    result.OccupiedCells,
+                    eventData?.pressEventCamera ?? eventData?.enterEventCamera,
+                    out Rect bounds))
+            {
+                return false;
+            }
+
+            dragGhostRoot.position = bounds.center;
+            return true;
+        }
+
+        private bool TryBuildBoardCellsScreenBounds(
+            IReadOnlyList<ItemShapeCell> cells,
+            Camera eventCamera,
+            out Rect bounds)
+        {
+            bounds = default;
+            if (cells == null || cells.Count == 0)
+            {
+                return false;
+            }
+
+            float minX = float.PositiveInfinity;
+            float maxX = float.NegativeInfinity;
+            float minY = float.PositiveInfinity;
+            float maxY = float.NegativeInfinity;
+            Vector3[] corners = new Vector3[4];
+            foreach (ItemShapeCell cell in cells.Distinct())
+            {
+                RectTransform rect = ResolveBoardSlotRect(cell);
+                if (rect == null)
+                {
+                    return false;
+                }
+
+                rect.GetWorldCorners(corners);
+                for (int i = 0; i < corners.Length; i++)
+                {
+                    Vector2 point = RectTransformUtility.WorldToScreenPoint(eventCamera, corners[i]);
+                    minX = Mathf.Min(minX, point.x);
+                    maxX = Mathf.Max(maxX, point.x);
+                    minY = Mathf.Min(minY, point.y);
+                    maxY = Mathf.Max(maxY, point.y);
+                }
+            }
+
+            if (float.IsNaN(minX)
+                || float.IsInfinity(minX)
+                || float.IsNaN(maxX)
+                || float.IsInfinity(maxX)
+                || float.IsNaN(minY)
+                || float.IsInfinity(minY)
+                || float.IsNaN(maxY)
+                || float.IsInfinity(maxY)
+                || maxX <= minX
+                || maxY <= minY)
+            {
+                return false;
+            }
+
+            bounds = Rect.MinMaxRect(minX, minY, maxX, maxY);
+            return true;
+        }
+
         private void HideDragGhost()
         {
             SetRotateZonesVisible(false);
@@ -3138,6 +3591,8 @@ namespace TalismanBag.BuildSandbox
             {
                 dragGhostCellLayer.gameObject.SetActive(false);
             }
+
+            HideDragGhostArtwork();
         }
 
         private bool TryResolveDragGhostLayout(
@@ -3147,7 +3602,7 @@ namespace TalismanBag.BuildSandbox
             out ShapeCellVisualLayout layout)
         {
             layout = null;
-            if (result != null && result.IsValid && result.OccupiedCells.Count > 0)
+            if (result != null && result.OccupiedCells.Count > 0)
             {
                 if (source == ShapePlacementSource.Board
                     && TryBuildBoardCellVisualLayout(result.OccupiedCells, out layout))
@@ -3216,9 +3671,28 @@ namespace TalismanBag.BuildSandbox
                 dragGhostBackgroundImage.color = Color.clear;
             }
 
+            ShapeCellVisualStyle wholeItemStyle = ResolveWholeItemVisualStyle(item?.ItemId);
             RectTransform layer = EnsureDragGhostCellLayer();
             if (layer == null)
             {
+                return;
+            }
+
+            Color color = ResolveDragGhostCellColor(item, result);
+            if (wholeItemStyle != null)
+            {
+                layer.gameObject.SetActive(false);
+                ApplyDragGhostArtwork(
+                    layout,
+                    wholeItemStyle,
+                    color,
+                    item == null ? ItemShapeRotation.Rotation0 : item.Rotation,
+                    ResolveWholeItemArtworkDragGhostRotationOffsetDegrees(item));
+                if (dragGhostText != null)
+                {
+                    dragGhostText.transform.SetAsLastSibling();
+                }
+
                 return;
             }
 
@@ -3242,7 +3716,6 @@ namespace TalismanBag.BuildSandbox
                 cellObject.transform.SetParent(layer, false);
             }
 
-            Color color = ResolveDragGhostCellColor(item, result);
             for (int i = 0; i < layer.childCount; i++)
             {
                 Transform child = layer.GetChild(i);
@@ -3268,10 +3741,215 @@ namespace TalismanBag.BuildSandbox
                 Image image = child.GetComponent<Image>();
                 if (image != null)
                 {
-                    image.color = color;
+                    ShapeCellVisualStyle visualStyle = wholeItemStyle != null || (result != null && !result.IsValid)
+                        ? null
+                        : ResolveItemVisualStyle(item?.ItemId, i);
+                    if (visualStyle != null)
+                    {
+                        visualStyle.ApplyTo(image, color, 0.82f);
+                    }
+                    else
+                    {
+                        image.overrideSprite = null;
+                        image.sprite = null;
+                        image.type = Image.Type.Simple;
+                        image.preserveAspect = false;
+                        image.fillCenter = true;
+                        image.material = null;
+                        image.pixelsPerUnitMultiplier = 1f;
+                        image.color = wholeItemStyle == null
+                            ? color
+                            : new Color(color.r, color.g, color.b, Mathf.Min(color.a, 0.30f));
+                    }
+
                     image.raycastTarget = false;
                 }
             }
+
+            HideDragGhostArtwork();
+
+            if (dragGhostText != null)
+            {
+                dragGhostText.transform.SetAsLastSibling();
+            }
+        }
+
+        private void CacheAllItemVisualStyles()
+        {
+            foreach (PreviewItem item in itemById.Values)
+            {
+                CacheItemVisualStyles(item);
+            }
+        }
+
+        private void CacheItemVisualStyles(PreviewItem item)
+        {
+            if (item != null)
+            {
+                CacheItemVisualStyles(item.ItemId);
+            }
+        }
+
+        private void CacheItemVisualStyles(string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemId) || itemTrayView == null)
+            {
+                return;
+            }
+
+            PreviewItem item = ResolvePreviewItem(itemId);
+            itemTrayView.ApplyItemArtworkRotationOffset(
+                itemId,
+                ResolveWholeItemArtworkTrayRotationOffsetDegrees(item));
+
+            List<ShapeCellVisualStyle> styles = new();
+            if (!itemTrayView.TryCaptureItemVisualStyles(itemId, styles) || styles.Count == 0)
+            {
+                visualStylesByItemId.Remove(itemId);
+                return;
+            }
+
+            visualStylesByItemId[itemId] = styles;
+        }
+
+        private ShapeCellVisualStyle ResolveItemVisualStyle(string itemId, int cellIndex)
+        {
+            if (string.IsNullOrWhiteSpace(itemId)
+                || !visualStylesByItemId.TryGetValue(itemId, out List<ShapeCellVisualStyle> styles)
+                || styles == null
+                || styles.Count == 0)
+            {
+                return null;
+            }
+
+            List<ShapeCellVisualStyle> cellStyles = styles
+                .Where(style => style != null && !style.SpansWholeItem)
+                .ToList();
+            if (cellStyles.Count == 0)
+            {
+                return null;
+            }
+
+            if (cellStyles.Count == 1)
+            {
+                return cellStyles[0];
+            }
+
+            int safeIndex = Mathf.Abs(cellIndex) % cellStyles.Count;
+            return cellStyles[safeIndex];
+        }
+
+        private ShapeCellVisualStyle ResolveWholeItemVisualStyle(string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemId)
+                || !visualStylesByItemId.TryGetValue(itemId, out List<ShapeCellVisualStyle> styles)
+                || styles == null)
+            {
+                return null;
+            }
+
+            return styles.FirstOrDefault(style =>
+                style != null
+                && style.SpansWholeItem
+                && style.Sprite != null);
+        }
+
+        private ItemShapeRotation ResolveItemRotation(string itemId)
+        {
+            if (!string.IsNullOrWhiteSpace(itemId)
+                && selectedItem != null
+                && string.Equals(selectedItem.ItemId, itemId, StringComparison.Ordinal))
+            {
+                return selectedItem.Rotation;
+            }
+
+            return !string.IsNullOrWhiteSpace(itemId)
+                && itemById.TryGetValue(itemId, out PreviewItem item)
+                && item != null
+                ? item.Rotation
+                : ItemShapeRotation.Rotation0;
+        }
+
+        private PreviewItem ResolvePreviewItem(string itemId)
+        {
+            return !string.IsNullOrWhiteSpace(itemId)
+                && itemById.TryGetValue(itemId, out PreviewItem item)
+                ? item
+                : null;
+        }
+
+        private float ResolveWholeItemArtworkTrayRotationOffsetDegrees(PreviewItem item)
+        {
+            return IsThreeCellTriangleArtwork(item)
+                ? triangleTrayArtworkRotationOffsetDegrees
+                : defaultTrayArtworkRotationOffsetDegrees;
+        }
+
+        private float ResolveWholeItemArtworkDragGhostRotationOffsetDegrees(string itemId)
+        {
+            return ResolveWholeItemArtworkDragGhostRotationOffsetDegrees(ResolvePreviewItem(itemId));
+        }
+
+        private float ResolveWholeItemArtworkDragGhostRotationOffsetDegrees(PreviewItem item)
+        {
+            return IsThreeCellTriangleArtwork(item)
+                ? triangleDragGhostArtworkRotationOffsetDegrees
+                : defaultDragGhostArtworkRotationOffsetDegrees;
+        }
+
+        private float ResolveWholeItemArtworkBoardPlacedRotationOffsetDegrees(string itemId)
+        {
+            return ResolveWholeItemArtworkBoardPlacedRotationOffsetDegrees(ResolvePreviewItem(itemId));
+        }
+
+        private float ResolveWholeItemArtworkBoardPlacedRotationOffsetDegrees(PreviewItem item)
+        {
+            return IsThreeCellTriangleArtwork(item)
+                ? triangleBoardPlacedArtworkRotationOffsetDegrees
+                : defaultBoardPlacedArtworkRotationOffsetDegrees;
+        }
+
+        private bool IsThreeCellTriangleArtwork(PreviewItem item)
+        {
+            if (item == null)
+            {
+                return false;
+            }
+
+            bool hasTriangleHint = ContainsShapeHint(item.ShapeId, "Corner", "Triangle")
+                || ContainsShapeHint(item.ShapeDisplayName, "三角", "拐角");
+            if (!hasTriangleHint)
+            {
+                return false;
+            }
+
+            if (shapeById.TryGetValue(item.ShapeId ?? string.Empty, out ItemShapeConfig shapeConfig)
+                && shapeConfig != null)
+            {
+                return shapeConfig.cellCount == 3;
+            }
+
+            return ContainsShapeHint(item.ShapeId, "3")
+                || ContainsShapeHint(item.ShapeDisplayName, "三格", "3");
+        }
+
+        private static bool ContainsShapeHint(string value, params string[] hints)
+        {
+            if (string.IsNullOrWhiteSpace(value) || hints == null)
+            {
+                return false;
+            }
+
+            foreach (string hint in hints)
+            {
+                if (!string.IsNullOrWhiteSpace(hint)
+                    && value.IndexOf(hint, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private RectTransform EnsureDragGhostCellLayer()
@@ -3296,6 +3974,120 @@ namespace TalismanBag.BuildSandbox
             }
 
             return dragGhostCellLayer;
+        }
+
+        private void ApplyDragGhostArtwork(
+            ShapeCellVisualLayout layout,
+            ShapeCellVisualStyle style,
+            Color fallbackColor,
+            ItemShapeRotation rotation,
+            float stateRotationOffsetDegrees)
+        {
+            if (layout == null
+                || style == null
+                || !style.SpansWholeItem
+                || style.Sprite == null
+                || !EnsureDragGhostArtworkView())
+            {
+                HideDragGhostArtwork();
+                return;
+            }
+
+            dragGhostArtwork.gameObject.SetActive(true);
+            ApplyWholeItemArtworkTransform(
+                dragGhostArtwork,
+                Vector2.zero,
+                layout.SizeDelta,
+                rotation,
+                style.SourceRotationDegrees + stateRotationOffsetDegrees);
+            dragGhostArtwork.SetAsLastSibling();
+            dragGhostArtworkImage.raycastTarget = false;
+            style.ApplyTo(dragGhostArtworkImage, fallbackColor, 0.88f);
+        }
+
+        private void HideDragGhostArtwork()
+        {
+            if (dragGhostArtwork != null)
+            {
+                dragGhostArtwork.gameObject.SetActive(false);
+            }
+        }
+
+        private bool EnsureDragGhostArtworkView()
+        {
+            if (dragGhostRoot == null)
+            {
+                return false;
+            }
+
+            if (dragGhostArtwork == null || dragGhostArtwork.parent != dragGhostRoot)
+            {
+                Transform existing = dragGhostRoot.Find(DragGhostArtworkName);
+                GameObject artworkObject = existing == null
+                    ? new GameObject(DragGhostArtworkName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(LayoutElement))
+                    : existing.gameObject;
+                artworkObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                artworkObject.transform.SetParent(dragGhostRoot, false);
+                dragGhostArtwork = artworkObject.GetComponent<RectTransform>();
+                LayoutElement layoutElement = artworkObject.GetComponent<LayoutElement>();
+                if (layoutElement != null)
+                {
+                    layoutElement.ignoreLayout = true;
+                }
+            }
+
+            dragGhostArtworkImage = dragGhostArtwork.GetComponent<Image>();
+            if (dragGhostArtworkImage == null)
+            {
+                dragGhostArtworkImage = dragGhostArtwork.gameObject.AddComponent<Image>();
+            }
+
+            dragGhostArtworkImage.raycastTarget = false;
+            return true;
+        }
+
+        private static void ApplyWholeItemArtworkTransform(
+            RectTransform artworkRect,
+            Vector2 boundsTopLeft,
+            Vector2 boundsSize,
+            ItemShapeRotation rotation,
+            float baseRotationDegrees)
+        {
+            if (artworkRect == null)
+            {
+                return;
+            }
+
+            Vector2 safeSize = new(Mathf.Max(1f, boundsSize.x), Mathf.Max(1f, boundsSize.y));
+            Vector2 drawSize = IsQuarterTurn(rotation)
+                ? new Vector2(safeSize.y, safeSize.x)
+                : safeSize;
+
+            artworkRect.anchorMin = new Vector2(0f, 1f);
+            artworkRect.anchorMax = new Vector2(0f, 1f);
+            artworkRect.pivot = new Vector2(0.5f, 0.5f);
+            artworkRect.anchoredPosition = boundsTopLeft + new Vector2(safeSize.x * 0.5f, -safeSize.y * 0.5f);
+            artworkRect.sizeDelta = drawSize;
+            artworkRect.localScale = Vector3.one;
+            artworkRect.localEulerAngles = new Vector3(0f, 0f, ResolveArtworkRotationDegrees(rotation, baseRotationDegrees));
+        }
+
+        private static bool IsQuarterTurn(ItemShapeRotation rotation)
+        {
+            return rotation == ItemShapeRotation.Rotation90
+                || rotation == ItemShapeRotation.Rotation270;
+        }
+
+        private static float ResolveArtworkRotationDegrees(ItemShapeRotation rotation, float baseRotationDegrees)
+        {
+            float rotationDegrees = rotation switch
+            {
+                ItemShapeRotation.Rotation90 => -90f,
+                ItemShapeRotation.Rotation180 => -180f,
+                ItemShapeRotation.Rotation270 => -270f,
+                _ => 0f
+            };
+            return baseRotationDegrees + rotationDegrees;
         }
 
         private Color ResolveDragGhostCellColor(PreviewItem item, ShapePlacementResult result)
@@ -3328,6 +4120,8 @@ namespace TalismanBag.BuildSandbox
             {
                 dragGhostCellLayer.gameObject.SetActive(false);
             }
+
+            HideDragGhostArtwork();
         }
 
         private void CacheDragGhostDefaults()
@@ -3379,9 +4173,9 @@ namespace TalismanBag.BuildSandbox
         {
             return rotation switch
             {
-                ItemShapeRotation.Rotation90 => new ItemShapeCell(offset.y, -offset.x),
+                ItemShapeRotation.Rotation90 => new ItemShapeCell(-offset.y, offset.x),
                 ItemShapeRotation.Rotation180 => new ItemShapeCell(-offset.x, -offset.y),
-                ItemShapeRotation.Rotation270 => new ItemShapeCell(-offset.y, offset.x),
+                ItemShapeRotation.Rotation270 => new ItemShapeCell(offset.y, -offset.x),
                 _ => offset
             };
         }

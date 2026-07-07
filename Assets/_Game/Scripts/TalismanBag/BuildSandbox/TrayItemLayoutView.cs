@@ -511,11 +511,21 @@ namespace TalismanBag.BuildSandbox
     internal sealed class ShapeCellVisualLayout
     {
         public ShapeCellVisualLayout(Vector2 sizeDelta, IReadOnlyList<ShapeCellVisualRect> cellRects)
+            : this(Vector2.zero, sizeDelta, cellRects)
         {
+        }
+
+        public ShapeCellVisualLayout(
+            Vector2 anchoredPosition,
+            Vector2 sizeDelta,
+            IReadOnlyList<ShapeCellVisualRect> cellRects)
+        {
+            AnchoredPosition = anchoredPosition;
             SizeDelta = sizeDelta;
             CellRects = (cellRects ?? Array.Empty<ShapeCellVisualRect>()).ToArray();
         }
 
+        public Vector2 AnchoredPosition { get; }
         public Vector2 SizeDelta { get; }
         public IReadOnlyList<ShapeCellVisualRect> CellRects { get; }
     }
@@ -590,7 +600,14 @@ namespace TalismanBag.BuildSandbox
                     new Vector2(slotRect.MaxX - slotRect.MinX, slotRect.MaxY - slotRect.MinY)));
             }
 
-            layout = new ShapeCellVisualLayout(new Vector2(maxX - minX, maxY - minY), cellRects);
+            Vector2 referenceTopLeft = new(
+                -referenceRect.rect.width * referenceRect.pivot.x,
+                referenceRect.rect.height * (1f - referenceRect.pivot.y));
+            Vector2 anchoredPosition = new(minX - referenceTopLeft.x, maxY - referenceTopLeft.y);
+            layout = new ShapeCellVisualLayout(
+                anchoredPosition,
+                new Vector2(maxX - minX, maxY - minY),
+                cellRects);
             return true;
         }
 
