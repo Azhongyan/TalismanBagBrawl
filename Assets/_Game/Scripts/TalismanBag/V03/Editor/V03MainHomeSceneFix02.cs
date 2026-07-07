@@ -139,6 +139,73 @@ namespace TalismanBag.V03.EditorTools
             VerifyStaticScene();
         }
 
+        [MenuItem("Tools/Talisman Bag/V0.3/Fix02/[Writes Scene][Manual Only] Repair Full Background Underlay")]
+        public static void RepairFullBackgroundUnderlayBatch()
+        {
+            Require(!EditorApplication.isPlaying,
+                "Cannot repair MainHome underlay while PlayMode is running.");
+            Require(File.Exists(ScenePath), $"Scene asset is missing: {ScenePath}");
+
+            Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            GameObject canvasObject = FindSceneObject(scene, "Canvas");
+            GameObject safeAreaRoot = FindSceneObject(scene, MobileSafeAreaRootName);
+            GameObject backgroundSlot = FindSceneObject(scene, FullBackgroundSlotName);
+            Transform contentRoot = safeAreaRoot != null ? safeAreaRoot.transform : canvasObject?.transform;
+
+            Require(canvasObject != null, "Canvas is missing.");
+            Require(contentRoot != null, "Main home content root is missing.");
+            Require(backgroundSlot != null, "FullBackgroundImageSlot is missing.");
+            Require(backgroundSlot.transform.parent == contentRoot,
+                "FullBackgroundImageSlot must stay under the main home content root.");
+
+            GameObject[] underlays = FindAllSceneObjects(scene, FullBackgroundUnderlayName);
+            Require(underlays.Length <= 1,
+                $"Scene contains duplicate {FullBackgroundUnderlayName} objects.");
+
+            bool createdUnderlay = underlays.Length == 0;
+            GameObject underlayObject = createdUnderlay
+                ? new GameObject(FullBackgroundUnderlayName, typeof(RectTransform), typeof(Image))
+                : underlays[0];
+            underlayObject.transform.SetParent(contentRoot, false);
+            underlayObject.transform.SetAsFirstSibling();
+            underlayObject.SetActive(true);
+
+            RectTransform underlayRect = underlayObject.GetComponent<RectTransform>();
+            Require(underlayRect != null,
+                $"{FullBackgroundUnderlayName} must have a RectTransform.");
+            underlayRect.anchorMin = Vector2.zero;
+            underlayRect.anchorMax = Vector2.one;
+            underlayRect.pivot = new Vector2(0.5f, 0.5f);
+            underlayRect.anchoredPosition = Vector2.zero;
+            underlayRect.sizeDelta = Vector2.zero;
+
+            Image underlayImage = underlayObject.GetComponent<Image>();
+            if (underlayImage == null)
+            {
+                underlayImage = underlayObject.AddComponent<Image>();
+            }
+
+            underlayImage.enabled = true;
+            underlayImage.sprite = null;
+            underlayImage.color = Color.black;
+            underlayImage.raycastTarget = false;
+
+            EditorUtility.SetDirty(underlayObject);
+            EditorSceneManager.MarkSceneDirty(scene);
+            Require(EditorSceneManager.SaveScene(scene),
+                $"Could not save {ScenePath}.");
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            VerifyStaticScene();
+
+            Debug.Log(
+                "[V0.3-MainHomeFullBackgroundUnderlayFix01] REPAIR_SUCCESS " +
+                $"createdUnderlay={createdUnderlay}, " +
+                "scene=Scene_TalismanBag_V03_MainHome");
+        }
+
         public static void VerifyStaticScene()
         {
             Require(File.Exists(ScenePath), $"Scene asset is missing: {ScenePath}");

@@ -1,36 +1,18 @@
 contract,field,playerVisible,developerOnly,source,notes
 BattleStartRequest,requestId,false,false,adapter,Correlation id only.
 BattleStartRequest,chapterId / stageId / roundId,false,false,V0.3 route / round config,Read-only stage identity.
-BattleStartRequest,isBossStage,false,false,V0.3 round config,Read-only stage classification.
 BattleStartRequest,enemyProfileId / bossProfileId,false,true,V0.3 round config,Raw profile ids are not player-facing.
-BattleStartRequest,entrySource / allowedItemRosterId,false,true,adapter,Boundary routing/provenance.
 BattleStartRequest,formalFlow / devOnly,false,true,adapter,Boundary flags.
-BattleStartRequest,sourceRoute / sourceScene / sourceController / seedId / validationWarnings,false,true,adapter,Developer diagnostics.
-BattleLayoutSnapshot,snapshotId / boardId / gridWidth / gridHeight,false,false,V0.3 or V0.4 layout source,Neutral board identity.
+BattleLayoutSnapshot,boardId / gridWidth / gridHeight,false,false,V0.3 or V0.4 layout source,Neutral board identity.
 BattleLayoutSnapshot,placedItems,true,false,V0.3 loadout / V0.4 layout,Player may inspect placed item visuals.
-BattleLayoutSnapshot,formationEyes / energySources,true,false,FormationEnergyContract compatible state,Player may inspect readable energy state.
-BattleLayoutSnapshot,blockedCells / lockedCells,true,false,layout source,Visible board restrictions.
-BattleLayoutSnapshot,currentEnergyState,true,false,layout source,Readable or masked energy state.
-BattleLayoutSnapshot,sourceAdapter / legacySingleCell / energyDiagnostics / validationWarnings,false,true,adapter validator,Diagnostics only.
-BattleItemSnapshot,itemInstanceId / itemId,false,false,source snapshot,Stable item identity for contract transfer.
-BattleItemSnapshot,displayName / familyId / baseItemId,true,false,source snapshot,Player-readable item identity.
-BattleItemSnapshot,shapeId / rotationIndex / anchorCell / occupiedCells,true,false,V0.3 single-cell mapping or V0.4 shape snapshot,Visual placement result.
+BattleLayoutSnapshot,formationEyes / energySources,true,false,FormationEnergyContract,Player may inspect readable energy state.
+BattleLayoutSnapshot,energyDiagnostics / validationWarnings,false,true,adapter validator,Diagnostics only.
+BattleItemSnapshot,displayName / shapeId / occupiedCells,true,false,loadout or BuildSandbox snapshot,Visual item result.
 BattleItemSnapshot,itemStats,true,false,V0.3 computed stats / V0.4 itemStat,Readable combat stat summary.
-BattleItemSnapshot,affixes / rarity,true,false,V0.4 BuildSandbox snapshot,Player-visible summary only.
-BattleItemSnapshot,energyState / connectedEyeId / sourceContainer / synergyTags,true,false,layout and build snapshot,Player-safe state summary.
-BattleItemSnapshot,runtimeId / sourceDataPath / fullRolls / energyRoleViolation / developerOnlyDiagnostics / validationWarnings,false,true,source snapshots,Internal provenance and answer-layer data.
-BattleEnemySnapshot,enemyId / bossId,false,true,enemy source,Raw ids are diagnostics unless mapped to display text.
-BattleEnemySnapshot,hp / shield / attackDamage / attackInterval / castSkillId / castProgress,true,false,enemy runtime or sandbox preview,Readable enemy state.
-BattleEnemySnapshot,mechanicTags / weaknessHints,true,false,enemy runtime or sandbox preview,Masked/player-facing mechanic summary.
-BattleEnemySnapshot,devOnlyProfileId / validationTargetBuilds / exactWeaknessTiming / bossKeyRequirements / developerOnlyDiagnostics,false,true,devOnly pools,Answer-layer diagnostics.
+BattleItemSnapshot,runtimeId / sourceDataPath / fullRolls,false,true,source snapshots,Internal provenance and answer-layer data.
+BattleEnemySnapshot,hp / shield / attackDamage / castProgress,true,false,enemy runtime or sandbox preview,Readable enemy state.
+BattleEnemySnapshot,validationTargetBuilds / exactWeaknessTiming,false,true,devOnly pools,Answer-layer diagnostics.
 BuildEvaluationSnapshot,activeSynergies / readinessSummary,true,false,BuildEvaluationResult,Player-safe build summary.
-BuildEvaluationSnapshot,modifierBundleSummary / eventBundleSummary,true,false,ModifierEventBridge,Type-level summary only.
-BuildEvaluationSnapshot,playerVisibleHints / recommendedAction,true,false,BuildEvaluationResult,Guidance without full answers.
-BuildEvaluationSnapshot,shapeBuildRules / problemReadinessFullAnswer / bossSixKeyFullAnswer,false,true,BuildSandbox problem data,Dev-only answer layer.
-BuildEvaluationSnapshot,hardSolutionTags / requiredSynergy / requiredAffix / requiredStats / dropBiasWeights,false,true,BuildSandbox problem data,Dev-only tuning/answer data.
-BuildEvaluationSnapshot,sourceDataPath / developerOnlyDiagnostics,false,true,adapter/context,Developer diagnostics.
-BattleResultSnapshot,resultType / win / lose / abandon / roundId / bossDefeated / durationSeconds,true,false,runtime loop preview,Result presentation data.
-BattleResultSnapshot,chapterProgressDelta / rewardPreview / itemDrops / rewardClaimToken,false,true,result mapper,Commit/reward data must stay formal-flow owned.
-BattleResultSnapshot,buildPerformanceSummary / eventSummary / nextRouteHint,true,false,runtime loop preview,Player-facing summary/hint text.
-BattleResultSnapshot,devOnly / shouldWriteSave / shouldGrantReward,false,true,result mapper,Sandbox defaults prevent formal writes.
-BattleContractDiagnostics,leakCount / validationWarnings / developerOnlyDiagnostics / sourceDataPaths,false,true,validator,Report-only diagnostics.
+BuildEvaluationSnapshot,hardSolutionTags / required* / dropBiasWeights,false,true,BuildSandbox problem data,Dev-only answer layer.
+BattleResultSnapshot,resultType / win / lose / nextRouteHint,true,false,runtime loop preview,Result presentation data.
+BattleResultSnapshot,shouldWriteSave / shouldGrantReward / rewardClaimToken,false,true,result mapper,Commit policy stays formal-flow owned.

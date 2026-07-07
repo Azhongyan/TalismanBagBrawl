@@ -1,6 +1,6 @@
 # V0.4-UnifiedBattlePageShell01 Assignment
 
-Status: `GUARD_PASS_UNIFIED_BATTLE_PAGE_SHELL01 / READY_FOR_DEV`
+Status: `UNITY_ASSET_STATIC_PASS_CANDIDATE / GUARD_READY_FOR_UNIFIED_BATTLE_REGRESSION01_ASSIGNMENT`
 
 Maintainer: Codex Guard / boundary window
 
@@ -348,3 +348,153 @@ TASK_STATUS_SYNC_TO_GUARD_REPOOPS is sent or a manual forward package is generat
 ```
 
 Even after this package passes, the next package is regression only. It must still not start `LegacyChapterBattleAdapter01` or `BattleRouteBridge01` work until Guard opens those packages.
+
+## 11. Guard Completion Intake
+
+Intake date: `2026-07-07`
+
+Source of completion:
+
+```text
+User forwarded completion report for V0.4-UnifiedBattlePageShell01.
+```
+
+Guard intake status:
+
+```text
+SOURCE_STATIC_CODE_DEFINED_CANDIDATE
+GUARD_STATIC_PASS_UNIFIED_BATTLE_PAGE_SHELL01
+GUARD_HOLD_UNITY_SCENE_PREFAB_QA
+UNITY_COMPILE_NOT_VERIFIED_BY_GUARD_SHELL
+PHYSICAL_SCENE_NOT_GENERATED_IN_GUARD_SHELL
+PHYSICAL_PREFAB_NOT_GENERATED_IN_GUARD_SHELL
+NO_FORMAL_ROUTE_CONNECTED
+NO_STABLE_BASELINE
+NO_TAG_ALLOWED
+```
+
+Received completion summary:
+
+```text
+Runtime shell scripts were added under Assets/_Game/Scripts/TalismanBag/UnifiedBattle.
+Editor builder, verifier, and report writer were added under Assets/_Game/Scripts/TalismanBag/Editor/UnifiedBattle.
+Required static reports were generated under Docs/V0.4/Reports.
+No physical .unity scene or .prefab was generated because Unity CLI was unavailable.
+Manual Unity menu entries were provided for scene/prefab generation and QA report rerun.
+No formal route was connected.
+No V02/V03 formal scene, Scene_TalismanBag_V04_BattleSandboxPreview, BuildSettings, ProjectSettings, RunFlow, SaveData, RewardService, BossInfoPanel, or chapter progression change was reported.
+```
+
+Guard verification performed in this window:
+
+```text
+Confirmed Runtime shell files exist.
+Confirmed Editor builder / verifier / report writer files exist.
+Read UnifiedBattlePageShellReport.md, UnifiedBattlePageShellHierarchyMap.csv, UnifiedBattlePageShellAdapterSlotMap.csv, UnifiedBattlePageShellLeakCheckReport.md, and UnifiedBattlePageShellManualTest.md.
+Confirmed reports state SOURCE_STATIC_CODE_DEFINED and leak count 0.
+Confirmed required 11 shell slots are code-defined.
+Confirmed reports explicitly warn that physical scene / prefab was not generated.
+Scanned UnifiedBattle runtime/editor directories for forbidden formal-flow, save, reward, boss, scene loading, and BuildSettings references.
+Confirmed runtime shell code does not call formal flow / save / reward / boss APIs.
+Confirmed BuildSettings references are Editor verifier/report checks, not BuildSettings writes.
+Confirmed BattleContract field references used by runtime sample binding match current contract DTOs.
+```
+
+Observed repo state:
+
+```text
+Guard observed current branch wip/v0.3-forge-first-upgrade-guide01-clean-rollback-snapshot.
+Guard observed HEAD 6952ce8 with message: checkpoint: upload current v0.4 workspace snapshot.
+Guard observed git status clean at intake time.
+This differs from the forwarded task report saying files were untracked and no commit/tag/push was performed.
+This Guard window did not commit, tag, or push.
+RepoOps ownership of commit / upload state remains separate.
+```
+
+Current Guard decision:
+
+```text
+V0.4-UnifiedBattlePageShell01 is accepted only as source-static code-defined candidate.
+It is not Unity-verified.
+It is not a stable baseline.
+It is not a formal route integration.
+It may not unlock LegacyChapterBattleAdapter01 or BattleRouteBridge01.
+Before UnifiedBattleRegression01 can be meaningful, the shell scene/prefab should be generated and verified in Unity.
+```
+
+Recommended next gate:
+
+```text
+V0.4-UnifiedBattlePageShell01-UnityBuildQA01
+```
+
+Purpose:
+
+```text
+Run the manual Unity build menu.
+Generate Scene_TalismanBag_V04_UnifiedBattlePageShell.unity.
+Generate UnifiedBattlePageShell.prefab.
+Run QA reports from Unity.
+Confirm shell opens, required slots exist physically, scene is not in BuildSettings, and leak count remains 0.
+```
+
+## 12. UnityBuildQA01 Intake
+
+Intake date: `2026-07-07`
+
+Source of completion:
+
+```text
+User reported V0.4-UnifiedBattlePageShell01-UnityBuildQA01 complete.
+```
+
+Guard intake status:
+
+```text
+USER_REPORTED_UNITY_ASSET_STATIC_PASS_CANDIDATE
+GUARD_ACCEPTED_UNIFIED_BATTLE_PAGE_SHELL01_UNITY_BUILD_QA01
+UNITY_ASSET_STATIC_PASS_CANDIDATE
+READY_FOR_UNIFIED_BATTLE_REGRESSION01_ASSIGNMENT
+NOT_STABLE_BASELINE
+NO_FORMAL_ROUTE_CONNECTED
+NO_TAG_ALLOWED
+```
+
+Received Unity QA result:
+
+```text
+Unity batchmode exited successfully for shell build and report QA.
+No error CS, Script compilation failed, Exception, or Fatal Error was reported.
+Scene_TalismanBag_V04_UnifiedBattlePageShell.unity was generated.
+UnifiedBattlePageShell.prefab was generated.
+Validation source is UNITY_EDITOR_MENU.
+Validation mode is UNITY_ASSET_STATIC.
+Status is PASS.
+Asset slots present = 11.
+Warning count = 0.
+Leak count = 0.
+Shell scene is not in BuildSettings.
+```
+
+Guard verification performed in this window:
+
+```text
+Confirmed physical shell scene exists.
+Confirmed physical shell prefab exists.
+Read refreshed UnifiedBattlePageShellReport.md, UnifiedBattlePageShellHierarchyMap.csv, UnifiedBattlePageShellAdapterSlotMap.csv, UnifiedBattlePageShellLeakCheckReport.md, and UnifiedBattlePageShellManualTest.md.
+Confirmed required 11 slots are present in refreshed reports.
+Confirmed marker isolation is reported for scene and prefab.
+Confirmed leak count remains 0.
+Searched ProjectSettings and did not find Scene_TalismanBag_V04_UnifiedBattlePageShell.
+```
+
+Current Guard decision:
+
+```text
+V0.4-UnifiedBattlePageShell01 is accepted as Unity asset-static pass candidate.
+Package 3 V0.4-UnifiedBattleRegression01 may now receive Guard assignment.
+This still does not authorize Package 4 LegacyChapterBattleAdapter01.
+This still does not authorize Package 5 BattleRouteBridge01.
+This still does not authorize formal route, save, reward, boss, or chapter integration.
+This is not a stable baseline and must not be tagged without explicit RepoOps / user approval.
+```

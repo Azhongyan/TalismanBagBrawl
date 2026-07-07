@@ -2,14 +2,11 @@ fieldGroup,field,allowedLayer,forbiddenLayer,reason
 player,displayName,player UI / report,developer answer layer only,Human-readable item/enemy/build label.
 player,shapeId / occupiedCells,player UI / report,developer answer layer only,Visual placement result; no solution answer required.
 player,energyState,player UI as readable or masked state,exact source diagnostics,Player can see powered/suppressed style state.
-player,activeSynergies / readinessSummary,player UI / report,full solution requirements,Summary is allowed; exact answer lists are not.
+player,activeSynergies / readinessSummary,player UI / report,full solution requirements,"Summary is allowed, exact answer lists are not."
 player,playerVisibleHints / recommendedAction / nextRouteHint,player UI / report,exact boss answer data,Guidance text must not expose answer-layer data.
-player,buildPerformanceSummary / eventSummary,player UI / report,raw modifier/event provenance,Player-facing summary only.
 developer,hardSolutionTags,dev panel / report only,player UI,Exact solution tags.
 developer,requiredSynergy / requiredAffix / requiredStats,dev panel / report only,player UI,Exact build requirements.
 developer,dropBiasWeights,dev panel / report only,player UI / formal reward UI,Drop tuning data must not leak.
 developer,bossSixKeyFullAnswer / problemReadinessFullAnswer,dev panel / report only,player UI / BossInfoPanel,Full answer layer.
 developer,exactWeaknessTiming / validationTargetBuilds,dev panel / report only,player UI,Precise validation answer data.
-developer,sourceDataPath / raw config id,dev panel / report only,player UI,Implementation provenance; not player-facing text.
-developer,runtimeId / fullRolls / energyRoleViolation,dev panel / report only,player UI,Internal state and roll/diagnostic data.
-developer,shouldWriteSave / shouldGrantReward / rewardClaimToken,formal flow owner only,V0.4 sandbox,Commit authority must not belong to sandbox.
+developer,sourceDataPath / raw config id,dev panel / report only,player UI,"Implementation provenance, not player-facing text."

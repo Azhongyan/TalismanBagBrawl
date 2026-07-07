@@ -1,52 +1,85 @@
 # Battle Snapshot Adapter Report
 
 Package: `V0.4-BattleSnapshotAdapter01`
-Generated: `2026-07-07`
+Generated: `2026-07-07 15:51:55`
 Status: `PASS`
-Validation mode: `SOURCE_STATIC`
-Unity menu execution: `NOT_RUN_UNITY_CLI_NOT_FOUND`
+Errors: `0`
+Warnings: `0`
+Leak Count: `0`
 
 ## Scope
 
-- Added neutral `TalismanBag.Contracts.Battle` DTOs and read-only adapters.
-- Did not create or modify UnifiedBattlePage, scenes, prefabs, UI layout, BuildSettings, RunFlow, SaveData, rewards, Boss, or chapter progression.
-- V0.4 sandbox result mapping is data-only and defaults to `devOnly=true`, `shouldWriteSave=false`, `shouldGrantReward=false`.
+- Adds neutral `TalismanBag.Contracts.Battle` data contracts and read-only adapters.
+- Does not create or modify UnifiedBattlePage, scenes, prefabs, UI layout, BuildSettings, RunFlow, SaveData, rewards, Boss, or chapter progression.
+- V0.4 sandbox results stay devOnly and cannot grant reward or write save through this contract layer.
 
 ## Contract Types
 
-| Type | Path | Purpose |
+| Type | Layer | Purpose |
 | --- | --- | --- |
-| `BattleStartRequest` | `Assets/_Game/Scripts/TalismanBag/Contracts/Battle/BattleStartRequest.cs` | Read-only battle request data. |
-| `BattleLayoutSnapshot` | `Assets/_Game/Scripts/TalismanBag/Contracts/Battle/BattleLayoutSnapshot.cs` | Neutral board/layout state. |
-| `BattleItemSnapshot` | `Assets/_Game/Scripts/TalismanBag/Contracts/Battle/BattleItemSnapshot.cs` | Neutral item placement and stat state. |
-| `BattleEnemySnapshot` | `Assets/_Game/Scripts/TalismanBag/Contracts/Battle/BattleEnemySnapshot.cs` | Neutral enemy/boss readable state. |
-| `BuildEvaluationSnapshot` | `Assets/_Game/Scripts/TalismanBag/Contracts/Battle/BuildEvaluationSnapshot.cs` | Player build summary plus dev diagnostics. |
-| `BattleResultSnapshot` | `Assets/_Game/Scripts/TalismanBag/Contracts/Battle/BattleResultSnapshot.cs` | Result data, not a commit command. |
-| `BattleContractDiagnostics` | `Assets/_Game/Scripts/TalismanBag/Contracts/Battle/BattleContractDiagnostics.cs` | Report/dev-only diagnostics. |
+| `BattleStartRequest` | Contracts/Battle | Read-only battle request data. |
+| `BattleLayoutSnapshot` | Contracts/Battle | Neutral board/layout state. |
+| `BattleItemSnapshot` | Contracts/Battle | Neutral item placement and stat state. |
+| `BattleEnemySnapshot` | Contracts/Battle | Neutral enemy/boss readable state. |
+| `BuildEvaluationSnapshot` | Contracts/Battle | Player build summary plus dev diagnostics. |
+| `BattleResultSnapshot` | Contracts/Battle | Result data, not a commit command. |
+| `BattleContractDiagnostics` | Contracts/Battle | Report/dev-only diagnostics. |
 
-## Adapter Types
+## Validation Samples
 
-| Adapter | Source | Output | Write Behavior |
+| Check | Value | Expected |
+| --- | ---: | ---: |
+| V0.3 placed item count | 1 | >= 1 |
+| V0.3 single-cell errors | 0 | 0 |
+| V0.4 placed item count | 9 | >= 1 |
+| V0.4 multi-cell items | 6 | >= 1 |
+| V0.4 multi-cell errors | 0 | 0 |
+| Player/dev field leak count | 0 | 0 |
+| Sandbox result devOnly | True | true |
+| Sandbox result shouldWriteSave | False | false |
+| Sandbox result shouldGrantReward | False | false |
+
+## V0.3 Single Cell Mapping
+
+| Item | Shape | Rotation | Anchor | Occupied | Legacy |
+| --- | --- | ---: | --- | --- | --- |
+| `fire_talisman_basic` | `Single1` | 0 | `1,2` | `1,2` | `True` |
+
+## V0.4 Layout Normalization
+
+| Item | Shape | Rotation | Occupied Count | Energy | Source Container |
+| --- | --- | ---: | ---: | --- | --- |
+| `preview_taomu_sword` | `vertical_3` | 0 | 3 | `None` | `v04_buildsandbox_layout` |
+| `preview_energy_incense` | `Vertical2` | 0 | 2 | `WeakPulse` | `v04_buildsandbox_layout` |
+| `preview_fire_talisman` | `Single1` | 0 | 1 | `None` | `v04_buildsandbox_layout` |
+| `preview_thunder_sword` | `Single1` | 0 | 1 | `None` | `v04_buildsandbox_layout` |
+| `preview_x2_wood_talisman` | `Vertical2` | 0 | 2 | `None` | `v04_buildsandbox_layout` |
+| `preview_guard_wood` | `Vertical2` | 0 | 2 | `WeakPulse` | `v04_buildsandbox_layout` |
+| `preview_cleanse_corner` | `Corner3` | 0 | 3 | `WeakPulse` | `v04_buildsandbox_layout` |
+| `spirit_stone_basic` | `Single1` | 0 | 1 | `Powered` | `v04_buildsandbox_layout` |
+| `preview_stone_core` | `Square4` | 0 | 4 | `Powered` | `v04_buildsandbox_layout` |
+
+## Validation Summary
+
+| Check | Status | Errors | Warnings | Info |
+| --- | --- | ---: | ---: | ---: |
+| BattleSnapshotAdapter01 Field Validator | `PASS` | 0 | 0 | 14 |
+
+## Issues
+
+| Level | Code | Message | Path |
 | --- | --- | --- | --- |
-| `V03BattleStartRequestExporter` | `MainTrialStartupRoute` / `V02RoundConfig` | `BattleStartRequest` | read-only |
-| `V03BattleLayoutSnapshotExporter` | `BattleLoadoutSnapshot` | `BattleLayoutSnapshot` | read-only |
-| `V04BattleLayoutNormalizer` | `BuildSandboxLayoutSnapshot` | `BattleLayoutSnapshot` | read-only |
-| `BuildEvaluationSnapshotExporter` | `BuildEvaluationResult` / modifier/event/context | `BuildEvaluationSnapshot` | read-only |
-| `SandboxBattleResultMapper` | `BattleSandboxRuntimeLoopPreview` | `BattleResultSnapshot` | read-only |
-| `BattleContractFieldValidator` | in-memory samples | validation snapshot | read-only |
-
-## Validation Findings
-
-| Check | Result | Notes |
-| --- | --- | --- |
-| Neutral contract layer exists | `PASS` | All contract DTOs are under `Assets/_Game/Scripts/TalismanBag/Contracts/Battle` and namespace `TalismanBag.Contracts.Battle`. |
-| V0.3 single-cell layout maps to `Single1` | `PASS` | `V03BattleLayoutSnapshotExporter.MapItem` sets `shapeId=Single1`, `rotationIndex=0`, `anchorCell=gridPosition`, `occupiedCells=[gridPosition]`, `legacySingleCell=true`. |
-| V0.3 formal grid is not modified | `PASS` | Exporter reads `BattleLoadoutSnapshot`; no formal grid/controller calls. |
-| V0.4 multi-cell layout normalizes | `PASS` | `V04BattleLayoutNormalizer` maps `shapeId`, `rotationIndex`, `anchorCell`, `occupiedCells`, energy, affixes, rarity, family/base item, and stat fields. |
-| BuildEvaluation player/dev split exists | `PASS` | Player summaries stay in `activeSynergies`, `readinessSummary`, `modifierBundleSummary`, `eventBundleSummary`, `playerVisibleHints`, `recommendedAction`; answer data stays in dev fields. |
-| Sandbox result defaults | `PASS` | Mapper writes `devOnly=true`, `shouldWriteSave=false`, `shouldGrantReward=false`, `chapterProgressDelta=none`, empty reward claim token. |
-| Formal write leak check | `PASS` | Static scan found no SaveData, PlayerPrefs, MainTrialProgressData, RewardService, DropTable, RunFlow, BossInfoPanel, scene, prefab, or BuildSettings writes in the contract/adapter layer. |
-
-## Known Validation Limit
-
-`where Unity` did not find a Unity executable in the current shell, so the editor menu report writer was not executed from CLI. Static source checks, `git diff --check`, and redline string scans were completed.
+| `Info` | `V03_SINGLE_CELL_MAP` | V0.3 sample maps to Single1, rotation 0, one occupied cell. | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `V04_MULTI_CELL_MAP` | V0.4 sample normalizes at least one multi-cell item. | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `PLAYER_DEV_FIELD_SPLIT` | Player fields do not include developer answer-layer tokens. | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `SANDBOX_RESULT_DEFAULTS` | Sandbox result defaults to devOnly/no-save/no-reward. | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `FORMAL_WRITE_LEAKS` | Adapters do not write formal flow, save, reward, scene UI, or settlements. | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `FEATURE_FLAG_DEFAULT_TRUE` | BuildSandbox feature flag defaults remain disabled. | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `DEVONLY_FORMAL_FLOW_LEAKS` | devOnly sandbox preview does not leak into formal flow. | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `BATTLE_SNAPSHOT_SAMPLE` | v03PlacedItems=1 | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `BATTLE_SNAPSHOT_SAMPLE` | v04PlacedItems=9 | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `BATTLE_SNAPSHOT_SAMPLE` | v04MultiCellItems=6 | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `BATTLE_SNAPSHOT_SAMPLE` | activeSynergies=3 | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `BATTLE_SNAPSHOT_SAMPLE` | sandboxResultDevOnly=True | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `BATTLE_SNAPSHOT_SAMPLE` | sandboxShouldWriteSave=False | `V0.4-BattleSnapshotAdapter01` |
+| `Info` | `BATTLE_SNAPSHOT_SAMPLE` | sandboxShouldGrantReward=False | `V0.4-BattleSnapshotAdapter01` |

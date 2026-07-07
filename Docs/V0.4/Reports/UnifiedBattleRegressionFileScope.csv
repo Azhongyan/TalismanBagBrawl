@@ -1,0 +1,40 @@
+path,status,category,allowedScope,notes
+Assets/_Game/Scripts/TalismanBag/Contracts/Battle/,tracked,Package1,BattleSnapshotAdapter01,Neutral contract/adapters from prior package
+Assets/_Game/Scripts/TalismanBag/Editor/BuildSandbox/BattleSnapshotAdapterReportWriter.cs,tracked,Package1,BattleSnapshotAdapter01,Existing report menu used by retry
+Assets/_Game/Scripts/TalismanBag/UnifiedBattle/,tracked,Package2,UnifiedBattlePageShell01,Runtime shell source from prior package
+Assets/_Game/Scripts/TalismanBag/Editor/UnifiedBattle/,tracked,Package2,UnifiedBattlePageShell01,Existing shell builder/verifier/report writer used by retry
+Assets/_Game/Scenes/Scene_TalismanBag_V04_UnifiedBattlePageShell.unity,untracked,Package2,Allowed shell scene,Generated isolated devOnly shell scene from prior UnityBuildQA
+Assets/_Game/Scenes/Scene_TalismanBag_V04_UnifiedBattlePageShell.unity.meta,untracked,Package2,Allowed shell scene meta,Unity meta for isolated shell scene
+Assets/_Game/Prefabs/TalismanBag/UnifiedBattle/,untracked,Package2,Allowed shell prefab,Generated isolated shell prefab and meta from prior UnityBuildQA
+Docs/V0.4/Reports/BattleSnapshotAdapterReport.md,modified,Package1 report,Allowed snapshot report,Refreshed by retry Snapshot Unity menu
+Docs/V0.4/Reports/BattleSnapshotAdapterLeakCheckReport.md,modified,Package1 report,Allowed snapshot report,Refreshed by retry Snapshot Unity menu
+Docs/V0.4/Reports/BattleSnapshotFieldMap.csv,modified,Package1 report,Allowed snapshot report,Refreshed by retry Snapshot Unity menu
+Docs/V0.4/Reports/BattleSnapshotPlayerDevFieldSplit.csv,modified,Package1 report,Allowed snapshot report,Refreshed by retry Snapshot Unity menu
+Docs/V0.4/Reports/UnifiedBattlePageShellReport.md,modified,Package2 report,Allowed shell report,Refreshed by retry Shell Unity menu
+Docs/V0.4/Reports/UnifiedBattlePageShellLeakCheckReport.md,modified,Package2 report,Allowed shell report,Refreshed by retry Shell Unity menu
+Docs/V0.4/Reports/UnifiedBattlePageShellManualTest.md,modified,Package2 report,Allowed shell report,Refreshed by retry Shell Unity menu
+Docs/V0.4/Reports/UnifiedBattleRegressionReport.md,modified,Package3 report,Allowed regression report,Updated with retry blocked result
+Docs/V0.4/Reports/UnifiedBattleRegressionChecklist.csv,modified,Package3 report,Allowed regression report,Updated with retry blocked result
+Docs/V0.4/Reports/UnifiedBattleRegressionLeakCheckReport.md,modified,Package3 report,Allowed regression report,Updated with retry blocked result
+Docs/V0.4/Reports/UnifiedBattleRegressionFileScope.csv,modified,Package3 report,Allowed regression report,Updated with retry blocked result
+Docs/V0.4/Reports/UnifiedBattleRegressionManualTest.md,modified,Package3 report,Allowed regression report,Updated with retry blocked result
+Assets/_Game/Scenes/Scene_TalismanBag_V03_MainHome.unity,modified,MainHome blocker fix,Prior authorized Fix package,Not modified by this retry
+Assets/_Game/Scripts/TalismanBag/V03/Editor/V03MainHomeSceneFix02.cs,modified,MainHome blocker fix,Prior authorized Fix package,Not modified by this retry
+Docs/V0.4/Reports/MainHomeFullBackgroundUnderlayFixReport.md,untracked,MainHome blocker fix report,Prior authorized Fix package,Not modified by this retry
+Assets/_Game/Scripts/TalismanBag/BuildSandbox/BuildGridInteractionPreviewController.cs,modified,Unrelated dirty BuildSandbox file,Out of scope,Blocks old-flow smoke compile with CS0103 ResolveWholeItemVisualStyle
+Assets/_Game/Scripts/TalismanBag/BuildSandbox/BuildGridPreviewSlotView.cs,modified,Unrelated dirty BuildSandbox file,Out of scope,Not touched or reverted
+Assets/_Game/Scripts/TalismanBag/BuildSandbox/BuildItemPreviewCardView.cs,modified,Unrelated dirty BuildSandbox file,Out of scope,Not touched or reverted
+Assets/_Game/Scripts/TalismanBag/BuildSandbox/BuildItemTrayPreviewView.cs,modified,Unrelated dirty BuildSandbox file,Out of scope,Not touched or reverted
+Assets/_Game/Scripts/TalismanBag/BuildSandbox/TrayItemLayoutView.cs,modified,Unrelated dirty BuildSandbox file,Out of scope,Not touched or reverted
+Docs/V0.4/Reports/MobileRotateZoneInteractionLeakCheckReport.md,modified,Unrelated dirty report,Out of scope,Not touched or reverted
+Docs/V0.4/Reports/MobileRotateZoneInteractionOpsRollbackReport.md,modified,Unrelated dirty report,Out of scope,Not touched or reverted
+Docs/V0.4/Reports/MobileRotateZoneInteractionReport.md,modified,Unrelated dirty report,Out of scope,Not touched or reverted
+Docs/V0.4/Reports/MobileRotateZoneInteractionStateReport.csv,modified,Unrelated dirty report,Out of scope,Not touched or reverted
+Docs/V0.4/UnifiedBattlePageShell01_Assignment.md,modified,Guard doc,Pre-existing or Guard-maintained dirty,Not modified by this retry
+Docs/V0.4/UnifiedBattlePageShell01_UnityBuildQA01_Assignment.md,untracked,Guard assignment,Pre-existing Guard intake file,Read only in this retry
+Docs/V0.4/UnifiedBattleRegression01_Assignment.md,untracked,Guard assignment,Current package assignment,Read only in this retry
+Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity,unchanged,Formal scene,Protected,No scoped dirty change from this retry
+Assets/_Game/Scenes/Scene_TalismanBag_V03_TalismanUpgrade.unity,unchanged,Formal scene,Protected,No scoped dirty change from this retry
+Assets/_Game/Scenes/Scene_TalismanBag_V03_BootEntry.unity,unchanged,Formal scene,Protected,No scoped dirty change from this retry
+Assets/_Game/Scenes/Scene_TalismanBag_V04_BattleSandboxPreview.unity,unchanged,Sandbox scene,Protected for this package,No scoped dirty change from this retry
+ProjectSettings/EditorBuildSettings.asset,unchanged,BuildSettings,Protected,Shell scene remains absent from BuildSettings

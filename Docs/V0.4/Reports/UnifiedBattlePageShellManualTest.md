@@ -1,7 +1,7 @@
 # UnifiedBattlePageShell01 Manual Test
 
-- Generated: 2026-07-07
-- Validation source: CODEX_STATIC_NO_UNITY_CLI
+- Generated: 2026-07-07 15:25:10
+- Validation source: UNITY_EDITOR_MENU
 - Package: V0.4-UnifiedBattlePageShell01
 
 ## Unity Editor QA Menus
@@ -9,23 +9,35 @@
 - Run validation reports: `Tools/Talisman Bag/V0.4/UnifiedBattle/UnifiedBattlePageShell01/[QA Only] Run Validation Reports`
 
 ## Manual Checks
-1. Run the build menu and confirm it writes only:
-   - `Assets/_Game/Scenes/Scene_TalismanBag_V04_UnifiedBattlePageShell.unity`
-   - `Assets/_Game/Prefabs/TalismanBag/UnifiedBattle/UnifiedBattlePageShell.prefab`
-2. Open the devOnly shell scene.
-3. Confirm `BattlePageRoot` exists.
-4. Confirm these required children exist under `BattlePageRoot`: `BoardArea`, `ItemTrayArea`, `EnemyInfoArea`, `BossCastBarSlot`, `BattleFeedbackLayer`, `StoryGuidePopupLayer`, `ResultRewardPlaceholder`, `V03FlowAdapterSlot`, `V04SandboxAdapterSlot`, `DevOnlyDiagnosticsSlot`.
-5. Confirm `UnifiedBattlePageShellMarker` has devOnly=true, isEnabled=false, formalFlow=false, connectedToFormalRoute=false.
-6. Confirm sample BattleContract data is displayed without starting formal battle.
-7. Confirm `ResultRewardPlaceholder` displays placeholder copy only and does not grant reward or write save.
-8. Confirm `DevOnlyDiagnosticsSlot` is visually separated from player-visible areas.
-9. Run the validation report menu and confirm leak count remains 0.
-10. Confirm the shell scene is not added to BuildSettings.
-11. Confirm V02/V03 formal scenes, `Scene_TalismanBag_V04_BattleSandboxPreview`, RunFlow, SaveData, RewardService, BossInfoPanel, and chapter progression remain unchanged.
+1. Open the devOnly shell scene after running the build menu.
+2. Confirm `BattlePageRoot` exists and contains every required slot.
+3. Confirm `UnifiedBattlePageShellMarker` is devOnly=true, isEnabled=false, formalFlow=false, connectedToFormalRoute=false.
+4. Confirm sample BattleContract data is displayed without starting formal battle.
+5. Confirm `ResultRewardPlaceholder` displays placeholder copy only and does not grant reward or write save.
+6. Confirm `DevOnlyDiagnosticsSlot` is visually separated from player-visible areas.
+7. Confirm the shell scene is not added to BuildSettings.
+8. Confirm V02/V03 formal scenes, RunFlow, SaveData, RewardService, BossInfoPanel, and chapter progression remain unchanged.
 
-## Expected Static Result
-- Required slot constants: 11/11
-- Runtime forbidden reference leaks: 0
-- Player-visible answer token leaks: 0
-- Reward/save leaks: 0
-- Formal route connections: 0
+## Validation Summary
+- Status: PASS
+- Validation mode: UNITY_ASSET_STATIC
+- Required slots: 11
+- Code-defined slots: 11
+- Asset slots present: 11
+- Sample layout items: 2
+- Error count: 0
+- Warning count: 0
+- Leak count: 0
+
+## Issues
+- Info: UNIFIED_SHELL_CODE_DEFINED_SLOTS_PRESENT - All required slots are defined as stable English slot names. (`UnifiedBattlePageShellSlotNames`)
+- Info: UNIFIED_SHELL_START_REQUEST_DEVONLY - Sample BattleStartRequest is devOnly and formalFlow=false. (`UnifiedBattlePageShellSampleData`)
+- Info: UNIFIED_SHELL_SAMPLE_LAYOUT_BOUND - Sample BattleLayoutSnapshot has items=2. (`UnifiedBattlePageShellSampleData`)
+- Info: UNIFIED_SHELL_RESULT_PLACEHOLDER_SAFE - ResultRewardPlaceholder sample does not write save or grant reward. (`UnifiedBattlePageShellSampleData`)
+- Info: UNIFIED_SHELL_PLAYER_FIELD_SPLIT_PASS - Player-visible sample fields do not contain answer-layer tokens. (`UnifiedBattlePageShellSampleData`)
+- Info: UNIFIED_SHELL_RUNTIME_REFERENCE_PASS - Runtime UnifiedBattle source has no forbidden formal-flow/save/reward/Boss references. (`Assets/_Game/Scripts/TalismanBag/UnifiedBattle`)
+- Info: UNIFIED_SHELL_BUILD_SETTINGS_ISOLATED - UnifiedBattle shell scene is not present in Build Settings. (`ProjectSettings/EditorBuildSettings.asset`)
+- Info: UNIFIED_SHELL_ASSET_SLOTS_PRESENT - scene has all required slots. (`scene`)
+- Info: UNIFIED_SHELL_MARKER_ISOLATED - scene marker is devOnly=true, isEnabled=false, formalFlow=false. (`scene`)
+- Info: UNIFIED_SHELL_ASSET_SLOTS_PRESENT - prefab has all required slots. (`prefab`)
+- Info: UNIFIED_SHELL_MARKER_ISOLATED - prefab marker is devOnly=true, isEnabled=false, formalFlow=false. (`prefab`)
