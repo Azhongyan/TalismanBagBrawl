@@ -1,0 +1,12 @@
+slotName,contractBinding,playerVisible,developerOnly,formalRouteConnected,notes
+BattlePageRoot,UnifiedBattlePageShellMarker;UnifiedBattlePageShell,TRUE,FALSE,FALSE,Root container only; devOnly marker disables formal flow.
+BoardArea,BattleLayoutSnapshot.gridRows/gridColumns/placedItems,TRUE,FALSE,FALSE,Placeholder board display only.
+ItemTrayArea,BattleLayoutSnapshot.placedItems,TRUE,FALSE,FALSE,Placeholder item tray summary only.
+EnemyInfoArea,BattleEnemySnapshot.displayName/health/weaknessHints,TRUE,FALSE,FALSE,Player-safe enemy information only.
+BossCastBarSlot,BattleEnemySnapshot.bossIntentLabel,TRUE,FALSE,FALSE,Placeholder cast label only; does not reference BossInfoPanel.
+BattleFeedbackLayer,BuildEvaluationSnapshot.readinessSummary/recommendedAction,TRUE,FALSE,FALSE,Player-safe feedback text only.
+StoryGuidePopupLayer,BattleStartRequest.chapterId/pageId,TRUE,FALSE,FALSE,Placeholder guide copy only.
+ResultRewardPlaceholder,BattleResultSnapshot.rewardPreview/shouldWriteSave/shouldGrantReward,TRUE,FALSE,FALSE,No save write and no reward grant.
+V03FlowAdapterSlot,none,FALSE,TRUE,FALSE,Empty adapter placeholder for later package; formal route disconnected.
+V04SandboxAdapterSlot,none,FALSE,TRUE,FALSE,Empty adapter placeholder for later package; sandbox route disconnected.
+DevOnlyDiagnosticsSlot,BuildEvaluationSnapshot.developerNotes/devOnlyDiagnostics,FALSE,TRUE,FALSE,Developer-only diagnostics; not player visible.

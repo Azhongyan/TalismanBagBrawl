@@ -31,17 +31,19 @@ namespace TalismanBag.BuildSandbox
         private const string RotateZoneLayerName = "MobileRotateZoneLayer";
         private const string RotateZoneLeftName = "MobileRotateZoneLeft";
         private const string RotateZoneRightName = "MobileRotateZoneRight";
-        private const float RotateButtonVisualSizePixels = 64f;
-        private const float RotateButtonActivationWidthPixels = 116f;
-        private const float RotateButtonActivationHeightPixels = 156f;
+        private const string RotateZoneGuideName = "MobileRotateZoneGuide";
+        private const float RotateButtonVisualSizePixels = 72f;
+        private const float RotateButtonActivationWidthPixels = 136f;
+        private const float RotateButtonActivationHeightPixels = 180f;
         private const float RotateButtonGapFromItemPixels = 44f;
         private const float RotateButtonExitPaddingPixels = 18f;
-        private const float RotateSeekWindowSeconds = 0.22f;
+        private const float RotateSeekWindowSeconds = 0.28f;
         private const float RotateSeekMinAgeSeconds = 0.02f;
-        private const float RotateSeekMinDeltaXPixels = 28f;
-        private const float RotateSeekMaxDeltaYPixels = 64f;
-        private const float RotateSeekMinVelocityXPixelsPerSecond = 420f;
+        private const float RotateSeekMinDeltaXPixels = 20f;
+        private const float RotateSeekMaxDeltaYPixels = 76f;
+        private const float RotateSeekMinVelocityXPixelsPerSecond = 300f;
         private const float RotateButtonTriggerCooldownSeconds = 1f;
+        private const float BoardSoftBoundaryCellPadding = 0.45f;
 
         private enum MobileRotateZoneSide
         {
@@ -129,6 +131,8 @@ namespace TalismanBag.BuildSandbox
         private Text rotateZoneRightText;
         private Image rotateZoneLeftImage;
         private Image rotateZoneRightImage;
+        private RectTransform rotateZoneGuide;
+        private Image rotateZoneGuideImage;
         private MobileRotateZoneSide currentRotateZoneSide;
         private MobileRotateZoneSide activeRotateSeekSide;
         private Rect activeRotateSeekTargetRect;
@@ -1568,8 +1572,7 @@ namespace TalismanBag.BuildSandbox
                 SetRotateZoneHighlight(currentRotateZoneSide);
                 if (activeRotateSeekExitRect.Contains(eventData.position))
                 {
-                    HoldRotateInteractionVisuals(eventData);
-                    return true;
+                    return false;
                 }
 
                 currentRotateZoneSide = MobileRotateZoneSide.None;
@@ -1597,20 +1600,25 @@ namespace TalismanBag.BuildSandbox
                     {
                         lastRotateZoneTime = Time.unscaledTime;
                         TryRotateActiveDragFromZone(currentRotateZoneSide);
+                        HoldRotateInteractionVisuals(eventData);
+                        return true;
                     }
 
-                    HoldRotateInteractionVisuals(eventData);
-                    return true;
+                    return false;
                 }
 
-                HoldRotateInteractionVisuals(eventData);
-                return true;
+                return false;
             }
 
             if (TryBeginRotateSeek(eventData))
             {
-                HoldRotateInteractionVisuals(eventData);
-                return true;
+                if (currentRotateZoneSide != MobileRotateZoneSide.None)
+                {
+                    HoldRotateInteractionVisuals(eventData);
+                    return true;
+                }
+
+                return false;
             }
 
             SetRotateZoneHighlight(MobileRotateZoneSide.None);
@@ -1723,26 +1731,13 @@ namespace TalismanBag.BuildSandbox
                 || boardReceiver == null
                 || selectedItem == null)
             {
-                placementFeedbackView?.ShowInvalid("当前位置无法旋转");
                 return false;
             }
 
             ItemShapeRotation nextRotation = ResolveZoneRotation(selectedItem.Rotation, zoneSide);
-            ShapeItemPayload rotatedPayload = placementSession.CurrentPayload.WithRotation(nextRotation);
             bool hasBoardAnchor = TryResolveRotateAnchor(out ItemShapeCell anchorCell);
-            if (hasBoardAnchor)
-            {
-                ShapePlacementResult validation = boardReceiver.CanPlace(rotatedPayload, anchorCell);
-                if (validation == null || !validation.IsValid)
-                {
-                    placementFeedbackView?.ShowInvalid("当前位置无法旋转");
-                    return false;
-                }
-            }
-
             if (!placementSession.RotateTo(nextRotation))
             {
-                placementFeedbackView?.ShowInvalid("当前位置无法旋转");
                 return false;
             }
 
@@ -1961,14 +1956,6 @@ namespace TalismanBag.BuildSandbox
                     UpdateRotateZoneViewRects(eventData);
                 }
 
-                if (trayResult != null && trayResult.IsValid)
-                {
-                    placementFeedbackView?.ShowValid("松手移动到道具栏空位。");
-                    return;
-                }
-
-                placementFeedbackView?.ShowInvalid(FormatInvalidFeedback(
-                    trayResult?.InvalidReason ?? ShapePlacementInvalidReason.OutOfGrid));
                 return;
             }
 
@@ -1993,12 +1980,8 @@ namespace TalismanBag.BuildSandbox
 
             if (result != null && result.IsValid)
             {
-                placementFeedbackView?.ShowValid($"松手直接放置“{selectedItem.DisplayName}”。");
                 return;
             }
-
-            placementFeedbackView?.ShowInvalid(FormatInvalidFeedback(
-                result?.InvalidReason ?? ShapePlacementInvalidReason.OutOfGrid));
         }
 
         private void EndActiveDrag(string itemId, PointerEventData eventData)
@@ -2028,8 +2011,6 @@ namespace TalismanBag.BuildSandbox
                 RefreshItemInfoPanel(selectedItem);
                 ClearPreviewCells();
                 HideDragGhost();
-                placementFeedbackView?.ShowInvalid(FormatInvalidFeedback(
-                    result?.InvalidReason ?? ShapePlacementInvalidReason.OutOfGrid));
                 return;
             }
 
@@ -2042,8 +2023,6 @@ namespace TalismanBag.BuildSandbox
                 RefreshItemInfoPanel(selectedItem);
                 ClearPreviewCells();
                 HideDragGhost();
-                placementFeedbackView?.ShowInvalid(FormatInvalidFeedback(
-                    commitResult?.InvalidReason ?? ShapePlacementInvalidReason.OutOfGrid));
                 return;
             }
 
@@ -2123,8 +2102,6 @@ namespace TalismanBag.BuildSandbox
                 RefreshItemInfoPanel(selectedItem);
                 ClearPreviewCells();
                 HideDragGhost();
-                placementFeedbackView?.ShowInvalid(FormatInvalidFeedback(
-                    result?.InvalidReason ?? ShapePlacementInvalidReason.OutOfGrid));
                 return true;
             }
 
@@ -2138,8 +2115,6 @@ namespace TalismanBag.BuildSandbox
                 RefreshItemInfoPanel(selectedItem);
                 ClearPreviewCells();
                 HideDragGhost();
-                placementFeedbackView?.ShowInvalid(FormatInvalidFeedback(
-                    commitResult?.InvalidReason ?? ShapePlacementInvalidReason.OutOfGrid));
                 return true;
             }
 
@@ -2790,6 +2765,7 @@ namespace TalismanBag.BuildSandbox
         {
             EnsureRotateZoneViews();
             if (rotateZoneLayer == null
+                || !TryGetDragGhostScreenRect(eventData, out Rect ghostRect)
                 || !TryGetRotateButtonVisualScreenRects(eventData, out Rect leftRect, out Rect rightRect))
             {
                 return;
@@ -2797,35 +2773,143 @@ namespace TalismanBag.BuildSandbox
 
             SetRotateZoneRect(rotateZoneLeft, leftRect, eventData);
             SetRotateZoneRect(rotateZoneRight, rightRect, eventData);
+            MobileRotateZoneSide visualSide = ResolveRotateZoneVisualSide();
+            SetRotateZoneHighlight(visualSide);
+            UpdateRotateZoneGuideRect(eventData, ghostRect, leftRect, rightRect, visualSide);
         }
 
         private void SetRotateZoneHighlight(MobileRotateZoneSide side)
         {
-            Color idle = new(0.10f, 0.12f, 0.11f, 0.34f);
-            Color active = new(0.18f, 0.42f, 0.36f, 0.62f);
-            if (rotateZoneLeftImage != null)
+            SetRotateZoneButtonVisual(
+                MobileRotateZoneSide.Left,
+                rotateZoneLeft,
+                rotateZoneLeftImage,
+                rotateZoneLeftText,
+                side);
+            SetRotateZoneButtonVisual(
+                MobileRotateZoneSide.Right,
+                rotateZoneRight,
+                rotateZoneRightImage,
+                rotateZoneRightText,
+                side);
+            if (side == MobileRotateZoneSide.None && rotateZoneGuide != null)
             {
-                rotateZoneLeftImage.color = side == MobileRotateZoneSide.Left ? active : idle;
+                rotateZoneGuide.gameObject.SetActive(false);
+            }
+        }
+
+        private void SetRotateZoneButtonVisual(
+            MobileRotateZoneSide buttonSide,
+            RectTransform rect,
+            Image image,
+            Text text,
+            MobileRotateZoneSide activeSide)
+        {
+            bool active = activeSide == buttonSide;
+            bool dimmed = activeSide != MobileRotateZoneSide.None && !active;
+            if (image != null)
+            {
+                image.color = active
+                    ? new Color(0.18f, 0.50f, 0.40f, 0.78f)
+                    : dimmed
+                        ? new Color(0.08f, 0.10f, 0.09f, 0.18f)
+                        : new Color(0.10f, 0.12f, 0.11f, 0.28f);
             }
 
-            if (rotateZoneRightImage != null)
+            if (text != null)
             {
-                rotateZoneRightImage.color = side == MobileRotateZoneSide.Right ? active : idle;
-            }
-
-            if (rotateZoneLeftText != null)
-            {
-                rotateZoneLeftText.color = side == MobileRotateZoneSide.Left
+                text.color = active
                     ? new Color(0.92f, 1f, 0.88f, 1f)
-                    : new Color(0.82f, 0.88f, 0.78f, 0.88f);
+                    : dimmed
+                        ? new Color(0.62f, 0.68f, 0.60f, 0.62f)
+                        : new Color(0.78f, 0.84f, 0.74f, 0.78f);
             }
 
-            if (rotateZoneRightText != null)
+            if (rect != null)
             {
-                rotateZoneRightText.color = side == MobileRotateZoneSide.Right
-                    ? new Color(0.92f, 1f, 0.88f, 1f)
-                    : new Color(0.82f, 0.88f, 0.78f, 0.88f);
+                float scale = active ? 1.12f : dimmed ? 0.92f : 1f;
+                rect.localScale = Vector3.one * scale;
             }
+        }
+
+        private MobileRotateZoneSide ResolveRotateZoneVisualSide()
+        {
+            if (activeRotateSeekSide != MobileRotateZoneSide.None)
+            {
+                return activeRotateSeekSide;
+            }
+
+            return currentRotateZoneSide;
+        }
+
+        private void UpdateRotateZoneGuideRect(
+            PointerEventData eventData,
+            Rect ghostRect,
+            Rect leftRect,
+            Rect rightRect,
+            MobileRotateZoneSide side)
+        {
+            if (rotateZoneGuide == null
+                || rotateZoneGuideImage == null
+                || rotateZoneLayer == null
+                || side == MobileRotateZoneSide.None)
+            {
+                if (rotateZoneGuide != null)
+                {
+                    rotateZoneGuide.gameObject.SetActive(false);
+                }
+
+                return;
+            }
+
+            Rect targetRect = side == MobileRotateZoneSide.Right ? rightRect : leftRect;
+            float y = Mathf.Lerp(ghostRect.center.y, targetRect.center.y, 0.5f);
+            Vector2 startScreen = side == MobileRotateZoneSide.Right
+                ? new Vector2(ghostRect.xMax + 8f, y)
+                : new Vector2(ghostRect.xMin - 8f, y);
+            Vector2 endScreen = side == MobileRotateZoneSide.Right
+                ? new Vector2(targetRect.xMin - 8f, y)
+                : new Vector2(targetRect.xMax + 8f, y);
+            if (Vector2.Distance(startScreen, endScreen) < 8f)
+            {
+                startScreen = ghostRect.center;
+                endScreen = targetRect.center;
+            }
+
+            Camera eventCamera = eventData?.pressEventCamera ?? eventData?.enterEventCamera;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    rotateZoneLayer,
+                    startScreen,
+                    eventCamera,
+                    out Vector2 startLocal)
+                || !RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    rotateZoneLayer,
+                    endScreen,
+                    eventCamera,
+                    out Vector2 endLocal))
+            {
+                rotateZoneGuide.gameObject.SetActive(false);
+                return;
+            }
+
+            Vector2 delta = endLocal - startLocal;
+            float distance = delta.magnitude;
+            if (distance <= 1f)
+            {
+                rotateZoneGuide.gameObject.SetActive(false);
+                return;
+            }
+
+            rotateZoneGuide.gameObject.SetActive(true);
+            rotateZoneGuide.SetAsFirstSibling();
+            rotateZoneGuide.anchorMin = new Vector2(0.5f, 0.5f);
+            rotateZoneGuide.anchorMax = new Vector2(0.5f, 0.5f);
+            rotateZoneGuide.pivot = new Vector2(0.5f, 0.5f);
+            rotateZoneGuide.anchoredPosition = (startLocal + endLocal) * 0.5f;
+            rotateZoneGuide.sizeDelta = new Vector2(distance, 6f);
+            rotateZoneGuide.localScale = Vector3.one;
+            rotateZoneGuide.localEulerAngles = new Vector3(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
+            rotateZoneGuideImage.color = new Color(0.42f, 0.88f, 0.66f, 0.40f);
         }
 
         private void EnsureRotateZoneViews()
@@ -2850,6 +2934,7 @@ namespace TalismanBag.BuildSandbox
                 StretchToParent(rotateZoneLayer);
             }
 
+            EnsureRotateZoneGuideView();
             EnsureRotateZoneView(
                 RotateZoneLeftName,
                 "L 90",
@@ -2862,6 +2947,32 @@ namespace TalismanBag.BuildSandbox
                 out rotateZoneRight,
                 out rotateZoneRightImage,
                 out rotateZoneRightText);
+        }
+
+        private void EnsureRotateZoneGuideView()
+        {
+            if (rotateZoneLayer == null)
+            {
+                return;
+            }
+
+            Transform existing = rotateZoneLayer.Find(RotateZoneGuideName);
+            GameObject target = existing == null
+                ? new GameObject(RotateZoneGuideName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image))
+                : existing.gameObject;
+            target.transform.SetParent(rotateZoneLayer, false);
+            target.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            rotateZoneGuide = target.GetComponent<RectTransform>();
+            rotateZoneGuideImage = target.GetComponent<Image>();
+            if (rotateZoneGuideImage == null)
+            {
+                rotateZoneGuideImage = target.AddComponent<Image>();
+            }
+
+            rotateZoneGuideImage.raycastTarget = false;
+            rotateZoneGuideImage.color = new Color(0.42f, 0.88f, 0.66f, 0.40f);
+            rotateZoneGuide.gameObject.SetActive(false);
+            rotateZoneGuide.SetAsFirstSibling();
         }
 
         private void EnsureRotateZoneView(
@@ -3036,7 +3147,7 @@ namespace TalismanBag.BuildSandbox
             out ShapeCellVisualLayout layout)
         {
             layout = null;
-            if (result != null && result.OccupiedCells.Count > 0)
+            if (result != null && result.IsValid && result.OccupiedCells.Count > 0)
             {
                 if (source == ShapePlacementSource.Board
                     && TryBuildBoardCellVisualLayout(result.OccupiedCells, out layout))
@@ -3698,17 +3809,7 @@ namespace TalismanBag.BuildSandbox
                     return false;
                 }
 
-                float normalizedX = (localPoint.x - rect.xMin) / rect.width;
-                float normalizedY = (localPoint.y - rect.yMin) / rect.height;
-                if (normalizedX < 0f || normalizedX >= 1f || normalizedY < 0f || normalizedY >= 1f)
-                {
-                    return false;
-                }
-
-                int x = Mathf.Clamp(Mathf.FloorToInt(normalizedX * Width), 0, Width - 1);
-                int y = Mathf.Clamp(Mathf.FloorToInt((1f - normalizedY) * Height), 0, Height - 1);
-                anchorCell = new ItemShapeCell(x, y);
-                return true;
+                return TryResolveCellFromBounds(rect, localPoint, out anchorCell);
             }
 
             private bool TryScreenPointToAuthoredSlot(
@@ -3755,13 +3856,36 @@ namespace TalismanBag.BuildSandbox
                     return false;
                 }
 
-                float normalizedX = (localPoint.x - bounds.xMin) / bounds.width;
-                float normalizedY = (localPoint.y - bounds.yMin) / bounds.height;
-                if (normalizedX < 0f || normalizedX >= 1f || normalizedY < 0f || normalizedY >= 1f)
+                return TryResolveCellFromBounds(bounds, localPoint, out anchorCell);
+            }
+
+            private bool TryResolveCellFromBounds(
+                Rect bounds,
+                Vector2 localPoint,
+                out ItemShapeCell anchorCell)
+            {
+                anchorCell = default;
+                if (bounds.width <= 0f || bounds.height <= 0f || Width <= 0 || Height <= 0)
                 {
                     return false;
                 }
 
+                float cellWidth = bounds.width / Mathf.Max(1, Width);
+                float cellHeight = bounds.height / Mathf.Max(1, Height);
+                float paddedMinX = bounds.xMin - cellWidth * BoardSoftBoundaryCellPadding;
+                float paddedMaxX = bounds.xMax + cellWidth * BoardSoftBoundaryCellPadding;
+                float paddedMinY = bounds.yMin - cellHeight * BoardSoftBoundaryCellPadding;
+                float paddedMaxY = bounds.yMax + cellHeight * BoardSoftBoundaryCellPadding;
+                if (localPoint.x < paddedMinX
+                    || localPoint.x > paddedMaxX
+                    || localPoint.y < paddedMinY
+                    || localPoint.y > paddedMaxY)
+                {
+                    return false;
+                }
+
+                float normalizedX = Mathf.Clamp01((localPoint.x - bounds.xMin) / bounds.width);
+                float normalizedY = Mathf.Clamp01((localPoint.y - bounds.yMin) / bounds.height);
                 int x = Mathf.Clamp(Mathf.FloorToInt(normalizedX * Width), 0, Width - 1);
                 int y = Mathf.Clamp(Mathf.FloorToInt((1f - normalizedY) * Height), 0, Height - 1);
                 anchorCell = new ItemShapeCell(x, y);

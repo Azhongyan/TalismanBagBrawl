@@ -1,0 +1,12 @@
+path,activeSelf,componentTypes,source
+BattlePageRoot,TRUE,RectTransform;Image;UnifiedBattlePageShellMarker;UnifiedBattlePageShell,code-defined
+BattlePageRoot/BoardArea,TRUE,RectTransform;Image;Outline;Text,code-defined
+BattlePageRoot/ItemTrayArea,TRUE,RectTransform;Image;Outline;Text,code-defined
+BattlePageRoot/EnemyInfoArea,TRUE,RectTransform;Image;Outline;Text,code-defined
+BattlePageRoot/BossCastBarSlot,TRUE,RectTransform;Image;Outline;Text,code-defined
+BattlePageRoot/BattleFeedbackLayer,TRUE,RectTransform;Image;Outline;Text,code-defined
+BattlePageRoot/StoryGuidePopupLayer,TRUE,RectTransform;Image;Outline;Text,code-defined
+BattlePageRoot/ResultRewardPlaceholder,TRUE,RectTransform;Image;Outline;Text,code-defined
+BattlePageRoot/V03FlowAdapterSlot,TRUE,RectTransform;Image;Outline;Text,code-defined
+BattlePageRoot/V04SandboxAdapterSlot,TRUE,RectTransform;Image;Outline;Text,code-defined
+BattlePageRoot/DevOnlyDiagnosticsSlot,TRUE,RectTransform;Image;Outline;Text,code-defined

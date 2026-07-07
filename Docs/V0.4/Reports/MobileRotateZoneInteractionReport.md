@@ -1,8 +1,8 @@
-# Mobile Rotate Zone Interaction Report
+﻿# Mobile Rotate Zone Interaction Report
 
 Package: `V0.4-MobileRotateZoneInteraction01`
 Guard pass: `GUARD_PASS_MOBILE_ROTATE_ZONE_INTERACTION01 / READY_FOR_DEV`
-Date: `2026-07-06`
+Date: `2026-07-07`
 
 ## Scope
 
@@ -38,23 +38,34 @@ Drag rotation is handled by `BuildGridInteractionPreviewController` while the au
 
 - Runtime rotate-button UI is created with `DontSave` flags and does not write back to scenes.
 - Rotate buttons are attached around the drag ghost and follow the floating item: left button on the item-left side, right button on the item-right side.
-- Button placement uses the current ghost footprint width, so the button center sits at `ghostHalfWidth + 44px gap + 32px halfButton` from the ghost center. This keeps the controls away from the item instead of sticking to the item edge.
+- Button placement uses the current ghost footprint width, so the button center sits at `ghostHalfWidth + 44px gap + 36px halfButton` from the ghost center. This keeps the controls away from the item instead of sticking to the item edge.
 - Buttons stay visible for the whole active drag of a rotatable x2/x3 item, including tray/board/outside-board hover, until release/cancel.
 - x1 and x4 shapes do not show rotate buttons.
-- Rotation requires a `RotateSeek` intent before hit testing: within `0.22s`, horizontal movement must be at least `28px`, horizontal speed at least `420px/s`, and vertical drift no more than `64px`.
+- Rotation requires a `RotateSeek` intent before hit testing: within `0.28s`, horizontal movement must be at least `20px`, horizontal speed at least `300px/s`, and vertical drift no more than `76px`.
 - Once `RotateSeekLeft` or `RotateSeekRight` starts, the target activation rect is frozen briefly so the moving finger can actually reach the button instead of chasing a button that moves away at the same speed.
-- Visual button size is `64px`; activation rect is `116px x 156px` to account for the finger offset below the ghost.
+- Visual button size is `72px`; activation rect is `136px x 180px` to account for the finger offset below the ghost.
 - Left button rotates counterclockwise; right button rotates clockwise.
 - Moving away from both buttons is required before the same button can trigger again, with `1.0s` trigger cooldown.
-- If the item currently has a board preview anchor, rotation validates through `ShapeGridReceiver.CanPlace` before changing item/session rotation; if the item is only floating without a board preview, the floating orientation updates first and release validation remains authoritative.
-- Invalid rotation keeps the previous rotation and shows `当前位置无法旋转`.
+- Rotate-button entry changes the floating payload orientation first. If a board preview anchor exists, the rotated payload is previewed at that anchor only to redraw red/green cells; `ShapeGridReceiver.CanPlace` no longer blocks rotation before `ShapePlacementSession.RotateTo`.
+- Invalid rotation keeps the previous rotation without writing warning text during drag.
 
 Legal release still commits through the existing `ShapePlacementSession.Commit` route. Illegal release or release outside board/tray cancels and returns to the source behavior already used by the placement controller.
 
 Battle lock behavior:
 
 - Click in battle mode opens read-only details.
-- Drag in battle mode shows `阵势已启，战后可整备` and does not move the item.
+- Drag in battle mode shows `闃靛娍宸插惎锛屾垬鍚庡彲鏁村` and does not move the item.
+
+## Handfeel Update 2026-07-07
+
+- Drag preview no longer writes per-frame valid/invalid placement text; board/tray visuals remain the feedback surface during movement.
+- Rotation failure now stays silent during drag. Rotation is blocked only by non-rotatable payload/session state, not by current placement legality; release validation remains the authority for whether the item can be placed.
+- Invalid drag-preview results are no longer used to size the drag ghost, so edge/out-of-bounds previews do not move the ghost-following rotate buttons while the player is chasing a rotate button.
+- Invalid board previews may still be used as redraw anchors after rotation, but only for red/green preview rendering and never as a pre-rotation blocker.
+- The board receiver accepts a soft pointer boundary of `0.45` cell outside the visual board and clamps to the nearest edge cell. Final placement remains strict through `CanPlace` and `Commit`; impossible drops still return to source.
+- `2026-07-07` small-screen tuning: rotate seek was softened to `20px`, `300px/s`, `0.28s`, with `76px` vertical drift tolerance; rotate buttons were enlarged to `72px` visual and `136px x 180px` activation.
+- `2026-07-07` drag smoothness tuning: `RotateSeek` candidate/cooldown states no longer consume drag frames. Normal board/tray preview continues while seeking or waiting to leave a button; only the frame that actually triggers rotation is consumed.
+- `2026-07-07` rotate-intent visual tuning: idle rotate buttons are lower alpha; the current seek target button brightens and scales up while the opposite button dims. A short non-raycast guide band appears between the dragged item and the target button only during rotate intent/cooldown, making rotate intent visually distinct from normal movement.
 
 ## Notes
 
