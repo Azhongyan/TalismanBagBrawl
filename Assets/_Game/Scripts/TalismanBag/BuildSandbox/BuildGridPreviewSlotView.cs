@@ -220,7 +220,10 @@ namespace TalismanBag.BuildSandbox
             }
 
             CacheDefaultImageState();
-            style = ShapeCellVisualStyle.FromImage(targetImage)?.WithColor(ResolveUnderlayColor(visible: true));
+            style = ShapeCellVisualStyle.FromImage(
+                    targetImage,
+                    captureRectTransform: cellUnderlayImage != null && targetImage == cellUnderlayImage)
+                ?.WithColor(ResolveUnderlayColor(visible: true));
             return style != null;
         }
 

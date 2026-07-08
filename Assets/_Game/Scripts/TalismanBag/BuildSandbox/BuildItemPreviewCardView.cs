@@ -64,7 +64,10 @@ namespace TalismanBag.BuildSandbox
         public Vector3 LocalScale { get; }
         public Vector3 LocalEulerAngles { get; }
 
-        public static ShapeCellVisualStyle FromImage(Image image, bool spansWholeItem = false)
+        public static ShapeCellVisualStyle FromImage(
+            Image image,
+            bool spansWholeItem = false,
+            bool captureRectTransform = false)
         {
             if (image == null)
             {
@@ -82,14 +85,14 @@ namespace TalismanBag.BuildSandbox
                 image.pixelsPerUnitMultiplier,
                 ResolveSourceRotationDegrees(image),
                 spansWholeItem,
-                hasRectTransformOverride: image.rectTransform != null,
-                anchorMin: image.rectTransform == null ? default : image.rectTransform.anchorMin,
-                anchorMax: image.rectTransform == null ? default : image.rectTransform.anchorMax,
-                pivot: image.rectTransform == null ? default : image.rectTransform.pivot,
-                anchoredPosition: image.rectTransform == null ? default : image.rectTransform.anchoredPosition,
-                sizeDelta: image.rectTransform == null ? default : image.rectTransform.sizeDelta,
-                localScale: image.rectTransform == null ? Vector3.one : image.rectTransform.localScale,
-                localEulerAngles: image.rectTransform == null ? default : image.rectTransform.localEulerAngles);
+                hasRectTransformOverride: captureRectTransform && image.rectTransform != null,
+                anchorMin: !captureRectTransform || image.rectTransform == null ? default : image.rectTransform.anchorMin,
+                anchorMax: !captureRectTransform || image.rectTransform == null ? default : image.rectTransform.anchorMax,
+                pivot: !captureRectTransform || image.rectTransform == null ? default : image.rectTransform.pivot,
+                anchoredPosition: !captureRectTransform || image.rectTransform == null ? default : image.rectTransform.anchoredPosition,
+                sizeDelta: !captureRectTransform || image.rectTransform == null ? default : image.rectTransform.sizeDelta,
+                localScale: !captureRectTransform || image.rectTransform == null ? Vector3.one : image.rectTransform.localScale,
+                localEulerAngles: !captureRectTransform || image.rectTransform == null ? default : image.rectTransform.localEulerAngles);
         }
 
         public ShapeCellVisualStyle WithColor(Color color)
