@@ -348,7 +348,12 @@ namespace TalismanBag.BuildSandbox
             {
                 if (cellUnderlayImage == null)
                 {
-                    cellUnderlayImage = ResolveCellUnderlayImage();
+                    Image resolved = ResolveCellUnderlayImage();
+                    if (resolved != null)
+                    {
+                        cellUnderlayImage = resolved;
+                        hasDefaultImageState = false;
+                    }
                 }
 
                 return cellUnderlayImage == null ? backgroundImage : cellUnderlayImage;
