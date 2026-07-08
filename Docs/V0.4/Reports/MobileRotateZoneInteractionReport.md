@@ -85,6 +85,7 @@ Battle lock behavior:
 - `2026-07-08` cell-image underlay fix: board cells and tray slots now treat their authored `Image` Sprite/Color as an occupancy underlay. Empty cells/slots are alpha-hidden, occupied or board-preview cells restore the authored image, and whole-item drag ghosts keep `DragGhostCellLayer` visible under the item artwork so floating drag also shows the uploaded cell image. Legacy color blocks remain only as the no-art fallback path.
 - `2026-07-08` battle layout authoring fix: `BuildGridInteractionPreviewController` now exposes `Battle State Y Offset` under `V0.4 Battle Layout`, replacing the fixed `320px` battle pull-down. The default remains `-320`, and more negative values move `BattleLikePreviewArea` lower during battle state.
 - `2026-07-08` cell glow material helper: added `UI_CellGlow_Additive.mat` / `UI_CellGlow_Additive.shader` for authored tray/board cell images. The shader uses UI stencil/clip support with additive blending and a `Glow Intensity` slider, so slot Images can be brightened without changing placement logic.
+- `2026-07-08` cell underlay child image authoring: board/tray cells now prefer a child Image named `CellUnderlayImage` / `CellImage` / `UnderlayImage` over the root slot Image for the occupancy underlay. Artists can move/resize that child image inside the slot without moving the parent grid cell or changing hit/placement layout; drag ghosts copy the child image rect when available.
 
 ## Notes
 
