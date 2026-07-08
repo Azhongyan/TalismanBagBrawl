@@ -17,7 +17,15 @@ namespace TalismanBag.BuildSandbox
             Material material,
             float pixelsPerUnitMultiplier,
             float sourceRotationDegrees,
-            bool spansWholeItem)
+            bool spansWholeItem,
+            bool hasRectTransformOverride = false,
+            Vector2 anchorMin = default,
+            Vector2 anchorMax = default,
+            Vector2 pivot = default,
+            Vector2 anchoredPosition = default,
+            Vector2 sizeDelta = default,
+            Vector3 localScale = default,
+            Vector3 localEulerAngles = default)
         {
             Sprite = sprite;
             Color = color;
@@ -28,6 +36,14 @@ namespace TalismanBag.BuildSandbox
             PixelsPerUnitMultiplier = pixelsPerUnitMultiplier;
             SourceRotationDegrees = sourceRotationDegrees;
             SpansWholeItem = spansWholeItem;
+            HasRectTransformOverride = hasRectTransformOverride;
+            AnchorMin = anchorMin;
+            AnchorMax = anchorMax;
+            Pivot = pivot;
+            AnchoredPosition = anchoredPosition;
+            SizeDelta = sizeDelta;
+            LocalScale = localScale == default ? Vector3.one : localScale;
+            LocalEulerAngles = localEulerAngles;
         }
 
         public Sprite Sprite { get; }
@@ -39,6 +55,14 @@ namespace TalismanBag.BuildSandbox
         public float PixelsPerUnitMultiplier { get; }
         public float SourceRotationDegrees { get; }
         public bool SpansWholeItem { get; }
+        public bool HasRectTransformOverride { get; }
+        public Vector2 AnchorMin { get; }
+        public Vector2 AnchorMax { get; }
+        public Vector2 Pivot { get; }
+        public Vector2 AnchoredPosition { get; }
+        public Vector2 SizeDelta { get; }
+        public Vector3 LocalScale { get; }
+        public Vector3 LocalEulerAngles { get; }
 
         public static ShapeCellVisualStyle FromImage(Image image, bool spansWholeItem = false)
         {
@@ -57,7 +81,37 @@ namespace TalismanBag.BuildSandbox
                 image.material,
                 image.pixelsPerUnitMultiplier,
                 ResolveSourceRotationDegrees(image),
-                spansWholeItem);
+                spansWholeItem,
+                hasRectTransformOverride: image.rectTransform != null,
+                anchorMin: image.rectTransform == null ? default : image.rectTransform.anchorMin,
+                anchorMax: image.rectTransform == null ? default : image.rectTransform.anchorMax,
+                pivot: image.rectTransform == null ? default : image.rectTransform.pivot,
+                anchoredPosition: image.rectTransform == null ? default : image.rectTransform.anchoredPosition,
+                sizeDelta: image.rectTransform == null ? default : image.rectTransform.sizeDelta,
+                localScale: image.rectTransform == null ? Vector3.one : image.rectTransform.localScale,
+                localEulerAngles: image.rectTransform == null ? default : image.rectTransform.localEulerAngles);
+        }
+
+        public ShapeCellVisualStyle WithColor(Color color)
+        {
+            return new ShapeCellVisualStyle(
+                Sprite,
+                color,
+                ImageType,
+                PreserveAspect,
+                FillCenter,
+                Material,
+                PixelsPerUnitMultiplier,
+                SourceRotationDegrees,
+                SpansWholeItem,
+                HasRectTransformOverride,
+                AnchorMin,
+                AnchorMax,
+                Pivot,
+                AnchoredPosition,
+                SizeDelta,
+                LocalScale,
+                LocalEulerAngles);
         }
 
         public void ApplyTo(Image image, Color fallbackColor, float maxAlpha = 1f)

@@ -52,6 +52,7 @@ Drag rotation is handled by `BuildGridInteractionPreviewController` while the au
 - Rotate-button entry changes the floating payload orientation first. If a board preview anchor exists, the rotated payload is previewed at that anchor to refresh the visual footprint; `ShapeGridReceiver.CanPlace` no longer blocks rotation before `ShapePlacementSession.RotateTo`.
 - Invalid rotation keeps the previous rotation without writing warning text during drag.
 - Tray artwork is now the runtime visual source for ghost, board preview, and placed board cells. `BuildItemPreviewCardView` first captures a real child Sprite Image from the card artwork slot, preserves that Image's source rotation, and marks it as a whole-item artwork source, then falls back to layout-cell Images with Sprite/manual style and finally the card background. Whole-item artwork is rendered once through runtime-only `DragGhostArtwork` / `BoardItemArtworkLayer` overlays spanning the occupied-cell bounds. When whole-item artwork exists, board/ghost cells suppress item color blocks entirely and the image itself follows `ItemShapeRotation`; when no artwork exists, the previous color-block rendering remains the fallback. `BuildItemTrayPreviewView` still falls back to occupied tray-slot Images by item id when no card artwork exists, and `BuildGridPreviewSlotView` restores its default empty-cell template when cleared.
+- Whole-item artwork now owns invalid/snap feedback too. When a Sprite artwork exists, invalid drag feedback is a red runtime overlay on the same image silhouette instead of a red cell block, and board snap preview draws a slightly larger, downward-offset image shadow under the snapped preview. Color-block invalid feedback remains only as the no-image fallback.
 
 Legal release still commits through the existing `ShapePlacementSession.Commit` route. Illegal release or release outside board/tray cancels and returns to the source behavior already used by the placement controller.
 
@@ -78,6 +79,12 @@ Battle lock behavior:
 - `2026-07-07` rotate-anchor clamp fix: after a rotate-button trigger from a board-snapped preview, the preview anchor is clamped against the rotated payload footprint before redraw. This prevents a rotated Corner3 footprint from showing only the in-board two cells when the previous anchor would push the third occupied cell outside the board.
 - `2026-07-07` image-first visual fix: when a whole-item image exists, drag ghost, board preview, and placed board visuals suppress the old valid/invalid/placed item color blocks. The cells still own interaction and occupancy state, but the visible item body is the image only.
 - `2026-07-07` rotate-after-art fix: rotation-trigger redraw no longer requires `result.IsValid` before using the whole-item artwork overlay. Invalid/overlap rotation previews still render the rotated occupied-cell layout and keep the item art visible without falling back to item color blocks.
+- `2026-07-08` image feedback overlay fix: whole-item invalid feedback is now rendered by `DragGhostInvalidArtwork` / `BoardPreviewInvalidArtwork` as a red tint over the same Sprite mask, while `BoardPreviewShadowArtwork` draws a green, more enlarged, farther downward-offset snap residual under the snapped board preview. This keeps illegal/snap feedback aligned to the image silhouette instead of reintroducing per-cell blocks.
+- `2026-07-08` hierarchy placement feedback helper: `PlacementFeedback_Runtime` is now created/bound as a normal Edit Mode hierarchy object by `BuildGridInteractionPreviewController.OnValidate`, without running the full scene binder. Runtime lookup first reuses this visible scene object and only falls back to a temporary `DontSave` object if no hierarchy feedback exists.
+- `2026-07-08` placement feedback color authoring fix: scene-backed `PlacementFeedback_Runtime` disables state-driven background color writes, so Inspector color edits are preserved after `ShowNeutral` / `ShowValid` / `ShowInvalid` refreshes. Only the temporary runtime fallback keeps the old state-color behavior.
+- `2026-07-08` cell-image underlay fix: board cells and tray slots now treat their authored `Image` Sprite/Color as an occupancy underlay. Empty cells/slots are alpha-hidden, occupied or board-preview cells restore the authored image, and whole-item drag ghosts keep `DragGhostCellLayer` visible under the item artwork so floating drag also shows the uploaded cell image. Legacy color blocks remain only as the no-art fallback path.
+- `2026-07-08` battle layout authoring fix: `BuildGridInteractionPreviewController` now exposes `Battle State Y Offset` under `V0.4 Battle Layout`, replacing the fixed `320px` battle pull-down. The default remains `-320`, and more negative values move `BattleLikePreviewArea` lower during battle state.
+- `2026-07-08` cell glow material helper: added `UI_CellGlow_Additive.mat` / `UI_CellGlow_Additive.shader` for authored tray/board cell images. The shader uses UI stencil/clip support with additive blending and a `Glow Intensity` slider, so slot Images can be brightened without changing placement logic.
 
 ## Notes
 
@@ -88,6 +95,7 @@ The older runtime playtest adapter in BuildSandbox no longer calls the old lock/
 - Targeted `git diff --check` for this package's touched files: PASS.
 - Static old-interaction prompt scan for BuildSandbox/Editor code: PASS.
 - Static current-runtime call scan for old tap-rotate/ghost-confirm methods: PASS.
+- Targeted image-feedback overlay scan for runtime object names: PASS.
 - Full-repo `git diff --check`: BLOCKED by pre-existing scene whitespace in dirty scene files outside this package scope.
 
 Unity playmode/manual Console verification is still required for acceptance item 13.

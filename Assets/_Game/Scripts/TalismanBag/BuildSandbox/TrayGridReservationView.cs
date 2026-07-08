@@ -8,26 +8,29 @@ namespace TalismanBag.BuildSandbox
 {
     public sealed class TrayGridReservationView
     {
-        private static readonly Color IdleTraySlotColor = new(0.17f, 0.18f, 0.15f, 1f);
-        private static readonly Color ReservedTraySlotColor = new(0.29f, 0.23f, 0.14f, 1f);
-        private static readonly Color IdleTraySlotOutlineColor = new(0.42f, 0.36f, 0.18f, 0.75f);
-        private static readonly Color ReservedTraySlotOutlineColor = new(0.74f, 0.55f, 0.22f, 0.95f);
-        private const float ColorTolerance = 0.004f;
+        private const string CellUnderlayImageName = "CellUnderlayImage";
+        private const string CellImageName = "CellImage";
+        private const string UnderlayImageName = "UnderlayImage";
 
+        private List<RectTransform> slotRects = new();
         private List<Image> slotImages = new();
+        private List<Image> slotUnderlayImages = new();
         private List<Outline> slotOutlines = new();
-        private List<bool> manualSlotImageColors = new();
-        private List<bool> manualSlotOutlineColors = new();
+        private List<Color> slotImageAuthoredColors = new();
+        private List<Color> slotOutlineAuthoredColors = new();
 
-        public int SlotCount => Math.Max(slotImages.Count, slotOutlines.Count);
+        public int SlotCount => Math.Max(slotUnderlayImages.Count, slotOutlines.Count);
 
         public void Bind(
+            IReadOnlyList<RectTransform> traySlotRects,
             IReadOnlyList<Image> traySlotImages,
             IReadOnlyList<Outline> traySlotOutlines)
         {
+            slotRects = (traySlotRects ?? Array.Empty<RectTransform>()).ToList();
             slotImages = (traySlotImages ?? Array.Empty<Image>()).ToList();
             slotOutlines = (traySlotOutlines ?? Array.Empty<Outline>()).ToList();
-            CacheManualVisualOverrides();
+            slotUnderlayImages = ResolveUnderlayImages();
+            CacheAuthoredVisuals();
         }
 
         public void Refresh(
@@ -63,7 +66,10 @@ namespace TalismanBag.BuildSandbox
 
         private void SetSlotReserved(int slotIndex, bool reserved)
         {
-            Image slotImage = slotIndex >= 0 && slotIndex < slotImages.Count
+            Image slotImage = slotIndex >= 0 && slotIndex < slotUnderlayImages.Count
+                ? slotUnderlayImages[slotIndex]
+                : null;
+            Image rootImage = slotIndex >= 0 && slotIndex < slotImages.Count
                 ? slotImages[slotIndex]
                 : null;
             Outline slotOutline = slotIndex >= 0 && slotIndex < slotOutlines.Count
@@ -72,57 +78,102 @@ namespace TalismanBag.BuildSandbox
 
             if (slotImage != null)
             {
-                if (!IsManualOverride(manualSlotImageColors, slotIndex))
-                {
-                    slotImage.color = reserved ? ReservedTraySlotColor : IdleTraySlotColor;
-                }
+                slotImage.color = ResolveAuthoredColor(
+                    slotImageAuthoredColors,
+                    slotIndex,
+                    slotImage.color,
+                    reserved);
+            }
+
+            if (rootImage != null && rootImage != slotImage)
+            {
+                Color rootColor = rootImage.color;
+                rootColor.a = 0f;
+                rootImage.color = rootColor;
             }
 
             if (slotOutline != null)
             {
-                if (!IsManualOverride(manualSlotOutlineColors, slotIndex))
-                {
-                    slotOutline.effectColor = reserved ? ReservedTraySlotOutlineColor : IdleTraySlotOutlineColor;
-                }
+                slotOutline.effectColor = ResolveAuthoredColor(
+                    slotOutlineAuthoredColors,
+                    slotIndex,
+                    slotOutline.effectColor,
+                    reserved);
             }
         }
 
-        private void CacheManualVisualOverrides()
+        public bool TryCaptureSlotUnderlayStyle(int slotIndex, out ShapeCellVisualStyle style)
         {
-            manualSlotImageColors = slotImages
-                .Select(image => image != null && !IsKnownTraySlotColor(image.color))
+            style = null;
+            if (slotIndex < 0 || slotIndex >= slotUnderlayImages.Count)
+            {
+                return false;
+            }
+
+            Image image = slotUnderlayImages[slotIndex];
+            if (image == null)
+            {
+                return false;
+            }
+
+            style = ShapeCellVisualStyle.FromImage(image)?.WithColor(ResolveAuthoredColor(
+                slotImageAuthoredColors,
+                slotIndex,
+                image.color,
+                reserved: true));
+            return style != null;
+        }
+
+        private void CacheAuthoredVisuals()
+        {
+            slotImageAuthoredColors = slotUnderlayImages
+                .Select(image => image == null ? Color.white : image.color)
                 .ToList();
-            manualSlotOutlineColors = slotOutlines
-                .Select(outline => outline != null && !IsKnownTraySlotOutlineColor(outline.effectColor))
+            slotOutlineAuthoredColors = slotOutlines
+                .Select(outline => outline == null ? Color.white : outline.effectColor)
                 .ToList();
         }
 
-        private static bool IsManualOverride(IReadOnlyList<bool> overrides, int index)
+        private List<Image> ResolveUnderlayImages()
         {
-            return overrides != null
+            int count = Math.Max(slotRects.Count, slotImages.Count);
+            List<Image> images = new();
+            for (int i = 0; i < count; i++)
+            {
+                RectTransform slotRect = i >= 0 && i < slotRects.Count ? slotRects[i] : null;
+                Image fallback = i >= 0 && i < slotImages.Count ? slotImages[i] : null;
+                images.Add(ResolveUnderlayImage(slotRect) ?? fallback);
+            }
+
+            return images;
+        }
+
+        private static Image ResolveUnderlayImage(RectTransform slotRect)
+        {
+            if (slotRect == null)
+            {
+                return null;
+            }
+
+            Transform direct = slotRect.Find(CellUnderlayImageName)
+                ?? slotRect.Find(CellImageName)
+                ?? slotRect.Find(UnderlayImageName);
+            return direct == null ? null : direct.GetComponent<Image>();
+        }
+
+        private static Color ResolveAuthoredColor(
+            IReadOnlyList<Color> authoredColors,
+            int index,
+            Color fallbackColor,
+            bool reserved)
+        {
+            Color color = authoredColors != null
                 && index >= 0
-                && index < overrides.Count
-                && overrides[index];
-        }
-
-        private static bool IsKnownTraySlotColor(Color color)
-        {
-            return Approximately(color, IdleTraySlotColor)
-                || Approximately(color, ReservedTraySlotColor);
-        }
-
-        private static bool IsKnownTraySlotOutlineColor(Color color)
-        {
-            return Approximately(color, IdleTraySlotOutlineColor)
-                || Approximately(color, ReservedTraySlotOutlineColor);
-        }
-
-        private static bool Approximately(Color a, Color b)
-        {
-            return Mathf.Abs(a.r - b.r) <= ColorTolerance
-                && Mathf.Abs(a.g - b.g) <= ColorTolerance
-                && Mathf.Abs(a.b - b.b) <= ColorTolerance
-                && Mathf.Abs(a.a - b.a) <= ColorTolerance;
+                && index < authoredColors.Count
+                ? authoredColors[index]
+                : fallbackColor;
+            color.a = reserved ? Mathf.Max(color.a, 0.0001f) : 0f;
+            return color;
         }
     }
 }

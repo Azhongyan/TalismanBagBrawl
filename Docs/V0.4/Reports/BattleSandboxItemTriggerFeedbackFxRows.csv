@@ -1,0 +1,15 @@
+feedbackChannel,feedbackKind,sampleItemId,sampleText,colorIntent,triggerSource,boardEffect
+active,damage,fire_talisman_basic,-30 灼热伤害,orange_red,CreateEnemyHpRow,scale_pulse+flash+procedural_vfx+floating_text
+active,damage,thunder_talisman_basic,-30 雷击伤害,orange_red,CreateEnemyHpRow,scale_pulse+flash+procedural_vfx+floating_text
+active,shieldBreak,thunder_talisman_basic,破盾 +17,yellow_white,CreateEnemyShieldRow,scale_pulse+flash+procedural_vfx+floating_text
+active,shield,shield_talisman_basic,+50 护盾,cyan_blue,CreatePlayerShieldRow,scale_pulse+flash+procedural_vfx+floating_text
+active,cleanse,purify_talisman_basic,净化 +8,white_green,CreatePlayerCleanseRow,scale_pulse+flash+procedural_vfx+floating_text
+active,control,soul_suppress_talisman_basic,镇压 +11,purple,CreateControlRow,scale_pulse+flash+procedural_vfx+floating_text
+passive,mana,spirit_stone_basic,+12 回灵,cyan,CreatePassiveEffectRow,light_scale_pulse+light_flash+light_procedural_vfx+floating_text
+passive,manaBoost,source_modifier_item,灵力加速 +6%,green_cyan,CreateBuildPassiveFeedbackRow,throttled_light_scale_pulse+light_flash+light_procedural_vfx+floating_text
+passive,damageBoost,source_modifier_item,伤害强化 +10%,warm_orange,CreateBuildPassiveFeedbackRow,throttled_light_scale_pulse+light_flash+light_procedural_vfx+floating_text
+passive,cooldownBoost,source_modifier_item,冷却加速 +10%,soft_blue,CreateBuildPassiveFeedbackRow,throttled_light_scale_pulse+light_flash+light_procedural_vfx+floating_text
+active,notPowered,fire_talisman_basic,未供能,gray,CreateItemTriggerRow,scale_pulse+flash+procedural_vfx+floating_text
+active,weakPulse,fire_talisman_basic,弱脉冲触发,light_purple,CreateItemTriggerRow,scale_pulse+flash+procedural_vfx+floating_text
+active,suppressed,fire_talisman_basic,被压制,gray,CreateItemTriggerRow,scale_pulse+flash+procedural_vfx+floating_text
+active,manaShortage,fire_talisman_basic,灵力不足,gray,CreateItemWaitRow,scale_pulse+flash+procedural_vfx+floating_text

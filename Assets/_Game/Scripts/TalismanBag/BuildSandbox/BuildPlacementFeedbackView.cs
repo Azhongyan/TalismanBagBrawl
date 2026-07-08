@@ -7,6 +7,7 @@ namespace TalismanBag.BuildSandbox
     {
         [SerializeField] private Text feedbackText;
         [SerializeField] private Image backgroundImage;
+        [SerializeField] private bool useStateBackgroundColors = true;
 
         private static readonly Color NeutralColor = new(0.18f, 0.14f, 0.09f, 1f);
         private static readonly Color ValidColor = new(0.13f, 0.30f, 0.18f, 1f);
@@ -19,6 +20,11 @@ namespace TalismanBag.BuildSandbox
         {
             feedbackText = text;
             backgroundImage = background;
+        }
+
+        public void SetStateBackgroundColorsEnabled(bool enabled)
+        {
+            useStateBackgroundColors = enabled;
         }
 
         public void ShowNeutral(string message)
@@ -48,7 +54,7 @@ namespace TalismanBag.BuildSandbox
                 feedbackText.text = message ?? string.Empty;
             }
 
-            if (backgroundImage != null)
+            if (backgroundImage != null && useStateBackgroundColors)
             {
                 backgroundImage.color = color;
             }

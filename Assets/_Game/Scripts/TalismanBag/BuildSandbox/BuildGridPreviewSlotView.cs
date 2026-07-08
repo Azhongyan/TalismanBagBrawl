@@ -10,17 +10,18 @@ namespace TalismanBag.BuildSandbox
         IDragHandler,
         IEndDragHandler
     {
+        private const string CellUnderlayImageName = "CellUnderlayImage";
+        private const string CellImageName = "CellImage";
+        private const string UnderlayImageName = "UnderlayImage";
+
         [SerializeField] private int x;
         [SerializeField] private int y;
         [SerializeField] private Image backgroundImage;
         [SerializeField] private Text labelText;
 
-        private Color emptyColor = new(0.22f, 0.235f, 0.22f, 0.92f);
         private Color previewValidColor = new(0.27f, 0.54f, 0.31f, 0.95f);
         private Color previewInvalidColor = new(0.62f, 0.20f, 0.16f, 0.95f);
-        private Color previewLockedColor = new(0.77f, 0.55f, 0.20f, 0.96f);
         private Color placedColor = new(0.44f, 0.35f, 0.18f, 1f);
-        private const float ColorTolerance = 0.004f;
         private BuildGridInteractionPreviewController controller;
         private Sprite defaultSprite;
         private Sprite defaultOverrideSprite;
@@ -29,9 +30,10 @@ namespace TalismanBag.BuildSandbox
         private bool defaultFillCenter = true;
         private Material defaultMaterial;
         private float defaultPixelsPerUnitMultiplier = 1f;
+        private Color defaultImageColor = Color.white;
         private bool hasDefaultImageState;
+        private Image cellUnderlayImage;
         private bool placed;
-        private bool manualBackgroundImageColor;
         private bool placedSuppressLabel;
         private bool placedSuppressBlock;
         private string placedName = string.Empty;
@@ -48,8 +50,9 @@ namespace TalismanBag.BuildSandbox
             y = cellY;
             backgroundImage = image;
             labelText = label;
+            cellUnderlayImage = ResolveCellUnderlayImage();
+            hasDefaultImageState = false;
             CacheDefaultImageState();
-            manualBackgroundImageColor = HasManualBackgroundColor(backgroundImage);
             ClearPlaced();
         }
 
@@ -60,10 +63,9 @@ namespace TalismanBag.BuildSandbox
 
         public void SetEmptyColor(Color color)
         {
-            emptyColor = color;
             if (!placed)
             {
-                SetColor(emptyColor);
+                SetCellUnderlayVisible(false);
             }
         }
 
@@ -86,7 +88,7 @@ namespace TalismanBag.BuildSandbox
         {
             if (suppressBlock)
             {
-                SetColor(emptyColor);
+                SetCellUnderlayVisible(true);
             }
             else if (valid && visualStyle != null)
             {
@@ -105,7 +107,7 @@ namespace TalismanBag.BuildSandbox
 
         public void SetLockedPreview()
         {
-            SetColor(previewLockedColor);
+            SetCellUnderlayVisible(true);
             if (labelText != null && !placed)
             {
                 labelText.text = "虚";
@@ -116,7 +118,7 @@ namespace TalismanBag.BuildSandbox
         {
             if (placed && placedSuppressBlock)
             {
-                SetColor(emptyColor);
+                SetCellUnderlayVisible(true);
             }
             else if (placed && placedVisualStyle != null)
             {
@@ -124,7 +126,14 @@ namespace TalismanBag.BuildSandbox
             }
             else
             {
-                SetColor(placed ? placedColor : emptyColor);
+                if (placed)
+                {
+                    SetColor(placedColor);
+                }
+                else
+                {
+                    SetCellUnderlayVisible(false);
+                }
             }
 
             if (labelText != null && !placed)
@@ -168,7 +177,7 @@ namespace TalismanBag.BuildSandbox
             placedVisualStyle = visualStyle != null && !visualStyle.SpansWholeItem ? visualStyle : null;
             if (placedSuppressBlock)
             {
-                SetColor(emptyColor);
+                SetCellUnderlayVisible(true);
             }
             else if (placedVisualStyle != null)
             {
@@ -194,11 +203,25 @@ namespace TalismanBag.BuildSandbox
             placedSuppressLabel = false;
             placedSuppressBlock = false;
             placedVisualStyle = null;
-            SetColor(emptyColor);
+            SetCellUnderlayVisible(false);
             if (labelText != null)
             {
                 labelText.text = string.Empty;
             }
+        }
+
+        public bool TryCaptureCellUnderlayStyle(out ShapeCellVisualStyle style)
+        {
+            style = null;
+            Image targetImage = TargetImage;
+            if (targetImage == null)
+            {
+                return false;
+            }
+
+            CacheDefaultImageState();
+            style = ShapeCellVisualStyle.FromImage(targetImage)?.WithColor(ResolveUnderlayColor(visible: true));
+            return style != null;
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -229,10 +252,37 @@ namespace TalismanBag.BuildSandbox
         private void SetColor(Color color)
         {
             RestoreDefaultImageTemplate();
-            if (backgroundImage != null && !manualBackgroundImageColor)
+            Image targetImage = TargetImage;
+            if (targetImage != null)
             {
-                backgroundImage.color = color;
+                targetImage.color = color;
             }
+        }
+
+        private void SetCellUnderlayVisible(bool visible)
+        {
+            RestoreDefaultImageTemplate();
+            Image targetImage = TargetImage;
+            if (targetImage != null)
+            {
+                targetImage.color = ResolveUnderlayColor(visible);
+            }
+
+            if (cellUnderlayImage != null
+                && backgroundImage != null
+                && backgroundImage != cellUnderlayImage)
+            {
+                Color parentColor = backgroundImage.color;
+                parentColor.a = 0f;
+                backgroundImage.color = parentColor;
+            }
+        }
+
+        private Color ResolveUnderlayColor(bool visible)
+        {
+            Color color = defaultImageColor;
+            color.a = visible ? Mathf.Max(color.a, 0.0001f) : 0f;
+            return color;
         }
 
         private void ApplyVisualStyle(ShapeCellVisualStyle visualStyle, Color fallbackColor)
@@ -245,68 +295,69 @@ namespace TalismanBag.BuildSandbox
 
             if (visualStyle.SpansWholeItem)
             {
-                SetColor(fallbackColor);
+                SetCellUnderlayVisible(true);
                 return;
             }
 
-            visualStyle.ApplyTo(backgroundImage, fallbackColor);
+            visualStyle.ApplyTo(TargetImage, fallbackColor);
         }
 
         private void CacheDefaultImageState()
         {
-            if (backgroundImage == null || hasDefaultImageState)
+            Image targetImage = TargetImage;
+            if (targetImage == null || hasDefaultImageState)
             {
                 return;
             }
 
-            defaultSprite = backgroundImage.sprite;
-            defaultOverrideSprite = backgroundImage.overrideSprite;
-            defaultImageType = backgroundImage.type;
-            defaultPreserveAspect = backgroundImage.preserveAspect;
-            defaultFillCenter = backgroundImage.fillCenter;
-            defaultMaterial = backgroundImage.material;
-            defaultPixelsPerUnitMultiplier = backgroundImage.pixelsPerUnitMultiplier;
+            defaultSprite = targetImage.sprite;
+            defaultOverrideSprite = targetImage.overrideSprite;
+            defaultImageType = targetImage.type;
+            defaultPreserveAspect = targetImage.preserveAspect;
+            defaultFillCenter = targetImage.fillCenter;
+            defaultMaterial = targetImage.material;
+            defaultPixelsPerUnitMultiplier = targetImage.pixelsPerUnitMultiplier;
+            defaultImageColor = targetImage.color;
             hasDefaultImageState = true;
         }
 
         private void RestoreDefaultImageTemplate()
         {
-            if (backgroundImage == null)
+            Image targetImage = TargetImage;
+            if (targetImage == null)
             {
                 return;
             }
 
             CacheDefaultImageState();
-            backgroundImage.sprite = defaultSprite;
-            backgroundImage.overrideSprite = defaultOverrideSprite;
-            backgroundImage.type = defaultImageType;
-            backgroundImage.preserveAspect = defaultPreserveAspect;
-            backgroundImage.fillCenter = defaultFillCenter;
-            backgroundImage.material = defaultMaterial;
-            backgroundImage.pixelsPerUnitMultiplier = defaultPixelsPerUnitMultiplier;
+            targetImage.sprite = defaultSprite;
+            targetImage.overrideSprite = defaultOverrideSprite;
+            targetImage.type = defaultImageType;
+            targetImage.preserveAspect = defaultPreserveAspect;
+            targetImage.fillCenter = defaultFillCenter;
+            targetImage.material = defaultMaterial;
+            targetImage.pixelsPerUnitMultiplier = defaultPixelsPerUnitMultiplier;
         }
 
-        private bool HasManualBackgroundColor(Image image)
+        private Image TargetImage
         {
-            return image != null
-                && !IsKnownRuntimeColor(image.color);
+            get
+            {
+                if (cellUnderlayImage == null)
+                {
+                    cellUnderlayImage = ResolveCellUnderlayImage();
+                }
+
+                return cellUnderlayImage == null ? backgroundImage : cellUnderlayImage;
+            }
         }
 
-        private bool IsKnownRuntimeColor(Color color)
+        private Image ResolveCellUnderlayImage()
         {
-            return Approximately(color, emptyColor)
-                || Approximately(color, previewValidColor)
-                || Approximately(color, previewInvalidColor)
-                || Approximately(color, previewLockedColor)
-                || Approximately(color, placedColor);
-        }
-
-        private static bool Approximately(Color a, Color b)
-        {
-            return Mathf.Abs(a.r - b.r) <= ColorTolerance
-                && Mathf.Abs(a.g - b.g) <= ColorTolerance
-                && Mathf.Abs(a.b - b.b) <= ColorTolerance
-                && Mathf.Abs(a.a - b.a) <= ColorTolerance;
+            Transform direct = transform.Find(CellUnderlayImageName)
+                ?? transform.Find(CellImageName)
+                ?? transform.Find(UnderlayImageName);
+            return direct == null ? null : direct.GetComponent<Image>();
         }
 
         private static string ShortName(string value)

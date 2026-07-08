@@ -18,18 +18,24 @@ namespace TalismanBag.BuildSandbox
         public const int TrayRows = 8;
         public const int TrayVisibleRows = 5;
         private const float BattlePrepareMoveSpeed = 9f;
-        private const float BattlePreparePullOffset = 320f;
+        private const float DefaultBattleStateYOffset = -320f;
         private const string BattlePrepareActionBarName = "V04BattlePrepareBottomActions";
         private const string BattlePrepareOverlayName = "V04BattlePrepareDarkOverlay";
         private const string ItemTrayLockedOverlayName = "ItemTrayBattleLockedOverlay";
         private const string EnemyCombatFeedbackPanelName = "EnemyCombatFeedbackPanel";
         private const string EnemyCombatFeedbackFloatingRootName = "EnemyCombatFeedbackFloatingRoot";
         private const string DevChapterDropdownSlotName = "DevChapterDropdownSlot";
+        private const string PlacementFeedbackRuntimeName = "PlacementFeedback_Runtime";
+        private const string PlacementFeedbackTextName = "PlacementFeedbackText";
+        private const string PlacementFeedbackDefaultText = "单击道具查看信息；合法松手直接放置，非法返回托盘。";
         private const string DragGhostCellLayerName = "DragGhostCellLayer";
         private const string DragGhostCellNamePrefix = "DragGhostCell_";
         private const string DragGhostArtworkName = "DragGhostArtwork";
+        private const string DragGhostInvalidArtworkName = "DragGhostInvalidArtwork";
         private const string BoardArtworkLayerName = "BoardItemArtworkLayer";
         private const string BoardPreviewArtworkName = "BoardPreviewArtwork";
+        private const string BoardPreviewShadowArtworkName = "BoardPreviewShadowArtwork";
+        private const string BoardPreviewInvalidArtworkName = "BoardPreviewInvalidArtwork";
         private const string BoardPlacedArtworkNamePrefix = "BoardPlacedArtwork_";
         private const string FormationPowerOverlayName = "FormationCorePowerRangeOverlay";
         private const string RotateZoneLayerName = "MobileRotateZoneLayer";
@@ -50,6 +56,11 @@ namespace TalismanBag.BuildSandbox
         private const float RotateButtonConfirmVisualSeconds = 0.18f;
         private const float BoardSnapRotateHoldPaddingPixels = 36f;
         private const float BoardSoftBoundaryCellPadding = 0.45f;
+        private const float BoardPreviewShadowScale = 1.08f;
+        private static readonly Vector2 BoardPreviewShadowOffset = new(0f, -18f);
+        private static readonly Color BoardPreviewShadowTint = new(0.22f, 1f, 0.42f, 0.44f);
+        private static readonly Color BoardPreviewInvalidTint = new(1f, 0.18f, 0.12f, 0.52f);
+        private static readonly Color DragGhostInvalidTint = new(1f, 0.16f, 0.10f, 0.58f);
 
         private enum MobileRotateZoneSide
         {
@@ -68,6 +79,10 @@ namespace TalismanBag.BuildSandbox
         [SerializeField] private bool writesFormalUi;
         [SerializeField] private bool touchesFormalScene;
         [SerializeField] private bool showsCompleteAnswers;
+
+        [Header("V0.4 Battle Layout")]
+        [Tooltip("Battle-state Y offset from the authored BattleLikePreviewArea position. Negative moves the battle view down.")]
+        [SerializeField] private float battleStateYOffset = DefaultBattleStateYOffset;
 
         [Header("V0.4 Artwork Direction Calibration")]
         [Tooltip("3-cell triangle/corner artwork in tray. Positive rotates left, negative rotates right.")]
@@ -143,9 +158,15 @@ namespace TalismanBag.BuildSandbox
         private RectTransform dragGhostCellLayer;
         private RectTransform dragGhostArtwork;
         private Image dragGhostArtworkImage;
+        private RectTransform dragGhostInvalidArtwork;
+        private Image dragGhostInvalidArtworkImage;
         private RectTransform boardArtworkLayer;
         private RectTransform boardPreviewArtwork;
         private Image boardPreviewArtworkImage;
+        private RectTransform boardPreviewShadowArtwork;
+        private Image boardPreviewShadowArtworkImage;
+        private RectTransform boardPreviewInvalidArtwork;
+        private Image boardPreviewInvalidArtworkImage;
         private readonly Dictionary<string, RectTransform> boardPlacedArtworkByItemId = new(StringComparer.Ordinal);
         private Image dragGhostBackgroundImage;
         private Vector2 dragGhostDefaultSize;
@@ -635,6 +656,16 @@ namespace TalismanBag.BuildSandbox
             placementFeedbackView?.ShowNeutral("已取消。单击查看信息；拖动摆放，棋盘上可向右下角按钮顺时针旋转。");
         }
 
+        private void OnValidate()
+        {
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
+            EnsureEditablePlacementFeedbackInHierarchy();
+        }
+
         private void Awake()
         {
             EnsureReferences();
@@ -744,34 +775,176 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
-            GameObject feedbackObject = new(
-                "PlacementFeedback_Runtime",
-                typeof(RectTransform),
-                typeof(CanvasRenderer),
-                typeof(Image),
-                typeof(BuildPlacementFeedbackView));
-            feedbackObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
-            feedbackObject.transform.SetParent(parent, false);
+            RectTransform rect = FindRectTransform(PlacementFeedbackRuntimeName);
+            bool created = false;
+            if (rect == null)
+            {
+                GameObject feedbackObject = new(
+                    PlacementFeedbackRuntimeName,
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image),
+                    typeof(BuildPlacementFeedbackView));
+                feedbackObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                feedbackObject.transform.SetParent(parent, false);
+                rect = feedbackObject.GetComponent<RectTransform>();
+                SetRuntimeAnchors(rect, new Vector2(0.04f, 0.02f), new Vector2(0.96f, 0.10f));
+                created = true;
+            }
 
-            RectTransform rect = feedbackObject.GetComponent<RectTransform>();
-            SetRuntimeAnchors(rect, new Vector2(0.04f, 0.02f), new Vector2(0.96f, 0.10f));
+            Image background = rect.GetComponent<Image>();
+            bool backgroundCreated = false;
+            if (background == null)
+            {
+                background = rect.gameObject.AddComponent<Image>();
+                backgroundCreated = true;
+            }
 
-            Image background = feedbackObject.GetComponent<Image>();
-            background.color = new Color(0.18f, 0.14f, 0.09f, 0.96f);
+            if (created || backgroundCreated)
+            {
+                background.color = new Color(0.18f, 0.14f, 0.09f, 0.96f);
+            }
+
             background.raycastTarget = false;
 
-            Text text = CreateRuntimeText(
-                "PlacementFeedbackText",
-                feedbackObject.transform,
-                "单击道具查看信息；合法松手直接放置，非法返回托盘。",
-                16,
-                FontStyle.Normal,
-                TextAnchor.MiddleCenter);
-            SetRuntimeAnchors(text.rectTransform, Vector2.zero, Vector2.one);
+            Text text = ResolvePlacementFeedbackText(rect);
+            bool textCreated = false;
+            if (text == null)
+            {
+                text = CreateRuntimeText(
+                    PlacementFeedbackTextName,
+                    rect,
+                    PlacementFeedbackDefaultText,
+                    16,
+                    FontStyle.Normal,
+                    TextAnchor.MiddleCenter);
+                textCreated = true;
+            }
 
-            placementFeedbackView = feedbackObject.GetComponent<BuildPlacementFeedbackView>();
+            if (created || textCreated)
+            {
+                SetRuntimeAnchors(text.rectTransform, Vector2.zero, Vector2.one);
+            }
+
+            placementFeedbackView = rect.GetComponent<BuildPlacementFeedbackView>();
+            if (placementFeedbackView == null)
+            {
+                placementFeedbackView = rect.gameObject.AddComponent<BuildPlacementFeedbackView>();
+            }
+
             placementFeedbackView.Bind(text, background);
+            placementFeedbackView.SetStateBackgroundColorsEnabled(created);
             placementFeedbackView.ShowNeutral(text.text);
+        }
+
+        private void EnsureEditablePlacementFeedbackInHierarchy()
+        {
+            if (gameObject == null || !gameObject.scene.IsValid())
+            {
+                return;
+            }
+
+            RectTransform rect = FindRectTransform(PlacementFeedbackRuntimeName);
+            bool created = false;
+            if (rect == null)
+            {
+                RectTransform parent = FindRectTransform("BattleLikePreviewArea");
+                if (parent == null)
+                {
+                    parent = boardGridPreview == null ? null : boardGridPreview.parent as RectTransform;
+                }
+
+                if (parent == null)
+                {
+                    return;
+                }
+
+                GameObject feedbackObject = new(
+                    PlacementFeedbackRuntimeName,
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image),
+                    typeof(BuildPlacementFeedbackView));
+                feedbackObject.transform.SetParent(parent, false);
+                rect = feedbackObject.GetComponent<RectTransform>();
+                SetRuntimeAnchors(rect, new Vector2(0.04f, 0.02f), new Vector2(0.96f, 0.10f));
+                created = true;
+            }
+
+            BindEditablePlacementFeedback(rect, created);
+        }
+
+        private void BindEditablePlacementFeedback(RectTransform rect, bool created)
+        {
+            if (rect == null)
+            {
+                return;
+            }
+
+            Image background = rect.GetComponent<Image>();
+            if (background == null)
+            {
+                background = rect.gameObject.AddComponent<Image>();
+                created = true;
+            }
+
+            if (created)
+            {
+                background.color = new Color(0.18f, 0.14f, 0.09f, 0.96f);
+            }
+
+            background.raycastTarget = false;
+
+            Text text = ResolvePlacementFeedbackText(rect);
+            bool textCreated = false;
+            if (text == null)
+            {
+                GameObject textObject = new(PlacementFeedbackTextName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
+                textObject.transform.SetParent(rect, false);
+                text = textObject.GetComponent<Text>();
+                textCreated = true;
+            }
+
+            if (textCreated)
+            {
+                SetRuntimeAnchors(text.rectTransform, Vector2.zero, Vector2.one);
+                text.text = PlacementFeedbackDefaultText;
+                text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                text.fontSize = 16;
+                text.fontStyle = FontStyle.Normal;
+                text.alignment = TextAnchor.MiddleCenter;
+                text.color = new Color(0.91f, 0.88f, 0.76f, 1f);
+                text.raycastTarget = false;
+            }
+            else if (string.IsNullOrWhiteSpace(text.text))
+            {
+                text.text = PlacementFeedbackDefaultText;
+            }
+
+            placementFeedbackView = rect.GetComponent<BuildPlacementFeedbackView>();
+            if (placementFeedbackView == null)
+            {
+                placementFeedbackView = rect.gameObject.AddComponent<BuildPlacementFeedbackView>();
+            }
+
+            placementFeedbackView.Bind(text, background);
+            placementFeedbackView.SetStateBackgroundColorsEnabled(false);
+        }
+
+        private static Text ResolvePlacementFeedbackText(RectTransform feedbackRect)
+        {
+            if (feedbackRect == null)
+            {
+                return null;
+            }
+
+            Transform direct = feedbackRect.Find(PlacementFeedbackTextName);
+            if (direct != null && direct.TryGetComponent(out Text directText))
+            {
+                return directText;
+            }
+
+            return feedbackRect.GetComponentInChildren<Text>(true);
         }
 
         private void BuildSlotLookup()
@@ -1151,7 +1324,7 @@ namespace TalismanBag.BuildSandbox
             }
 
             battlePrepareOpenPosition = battlePrepareMotionRoot.anchoredPosition;
-            battlePrepareNormalPosition = battlePrepareOpenPosition + new Vector2(0f, -BattlePreparePullOffset);
+            battlePrepareNormalPosition = battlePrepareOpenPosition + new Vector2(0f, battleStateYOffset);
             hasBattlePreparePositions = true;
         }
 
@@ -1463,7 +1636,7 @@ namespace TalismanBag.BuildSandbox
 
             bool feedbackVisible = sandboxBattleActive && !battlePrepareStateActive;
             SetGameObjectActive(enemyCombatFeedbackPanel, feedbackVisible);
-            SetGameObjectActive(enemyCombatFeedbackFloatingRoot, feedbackVisible);
+            SetGameObjectActive(enemyCombatFeedbackFloatingRoot, false);
             if (feedbackVisible && !enemyCombatFeedbackVisibleLastFrame)
             {
                 enemyCombatFeedbackController?.RestartBattleModePreview();
@@ -2447,7 +2620,8 @@ namespace TalismanBag.BuildSandbox
                     wholeItemStyle,
                     itemColor,
                     ResolveItemRotation(result.ItemId),
-                    ResolveWholeItemArtworkDragGhostRotationOffsetDegrees(result.ItemId));
+                    ResolveWholeItemArtworkDragGhostRotationOffsetDegrees(result.ItemId),
+                    result.IsValid);
             }
         }
 
@@ -2544,7 +2718,8 @@ namespace TalismanBag.BuildSandbox
             ShapeCellVisualStyle style,
             Color fallbackColor,
             ItemShapeRotation rotation,
-            float stateRotationOffsetDegrees)
+            float stateRotationOffsetDegrees,
+            bool valid)
         {
             if (result == null
                 || style == null
@@ -2554,11 +2729,28 @@ namespace TalismanBag.BuildSandbox
                 || !EnsureBoardArtworkView(
                     BoardPreviewArtworkName,
                     out boardPreviewArtwork,
-                    out boardPreviewArtworkImage))
+                    out boardPreviewArtworkImage)
+                || !EnsureBoardArtworkView(
+                    BoardPreviewShadowArtworkName,
+                    out boardPreviewShadowArtwork,
+                    out boardPreviewShadowArtworkImage))
             {
                 ClearBoardPreviewArtwork();
                 return;
             }
+
+            ApplyBoardArtwork(
+                boardPreviewShadowArtwork,
+                boardPreviewShadowArtworkImage,
+                layout,
+                style,
+                fallbackColor,
+                BoardPreviewShadowTint.a,
+                rotation,
+                stateRotationOffsetDegrees,
+                BoardPreviewShadowTint,
+                BoardPreviewShadowOffset,
+                BoardPreviewShadowScale);
 
             ApplyBoardArtwork(
                 boardPreviewArtwork,
@@ -2569,6 +2761,29 @@ namespace TalismanBag.BuildSandbox
                 0.96f,
                 rotation,
                 stateRotationOffsetDegrees);
+
+            if (valid
+                || !EnsureBoardArtworkView(
+                    BoardPreviewInvalidArtworkName,
+                    out boardPreviewInvalidArtwork,
+                    out boardPreviewInvalidArtworkImage))
+            {
+                ClearBoardPreviewInvalidArtwork();
+                return;
+            }
+
+            ApplyBoardArtwork(
+                boardPreviewInvalidArtwork,
+                boardPreviewInvalidArtworkImage,
+                layout,
+                style,
+                fallbackColor,
+                BoardPreviewInvalidTint.a,
+                rotation,
+                stateRotationOffsetDegrees,
+                BoardPreviewInvalidTint,
+                Vector2.zero,
+                1f);
         }
 
         private void DrawBoardPlacedArtwork(
@@ -2608,6 +2823,33 @@ namespace TalismanBag.BuildSandbox
             ItemShapeRotation rotation,
             float stateRotationOffsetDegrees)
         {
+            ApplyBoardArtwork(
+                artworkRect,
+                artworkImage,
+                layout,
+                style,
+                fallbackColor,
+                maxAlpha,
+                rotation,
+                stateRotationOffsetDegrees,
+                null,
+                Vector2.zero,
+                1f);
+        }
+
+        private void ApplyBoardArtwork(
+            RectTransform artworkRect,
+            Image artworkImage,
+            ShapeCellVisualLayout layout,
+            ShapeCellVisualStyle style,
+            Color fallbackColor,
+            float maxAlpha,
+            ItemShapeRotation rotation,
+            float stateRotationOffsetDegrees,
+            Color? tintColor,
+            Vector2 localOffset,
+            float scaleMultiplier)
+        {
             if (artworkRect == null || artworkImage == null || layout == null || style == null)
             {
                 return;
@@ -2620,9 +2862,48 @@ namespace TalismanBag.BuildSandbox
                 layout.SizeDelta,
                 rotation,
                 style.SourceRotationDegrees + stateRotationOffsetDegrees);
+            artworkRect.anchoredPosition += localOffset;
+            float safeScale = Mathf.Max(0.01f, scaleMultiplier);
+            artworkRect.localScale = new Vector3(safeScale, safeScale, 1f);
             artworkRect.SetAsLastSibling();
             artworkImage.raycastTarget = false;
-            style.ApplyTo(artworkImage, fallbackColor, maxAlpha);
+            ApplyArtworkStyle(artworkImage, style, fallbackColor, maxAlpha, tintColor);
+        }
+
+        private static void ApplyArtworkStyle(
+            Image image,
+            ShapeCellVisualStyle style,
+            Color fallbackColor,
+            float maxAlpha,
+            Color? tintColor)
+        {
+            if (image == null || style == null)
+            {
+                return;
+            }
+
+            if (!tintColor.HasValue)
+            {
+                style.ApplyTo(image, fallbackColor, maxAlpha);
+                return;
+            }
+
+            image.overrideSprite = null;
+            image.sprite = style.Sprite;
+            image.type = style.Sprite == null ? Image.Type.Simple : style.ImageType;
+            image.preserveAspect = style.PreserveAspect;
+            image.fillCenter = style.FillCenter;
+            image.material = style.Material;
+            image.pixelsPerUnitMultiplier = style.PixelsPerUnitMultiplier;
+
+            Color targetColor = tintColor.Value;
+            if (style.Sprite == null && Mathf.Approximately(targetColor.a, 0f))
+            {
+                targetColor = fallbackColor;
+            }
+
+            targetColor.a = Mathf.Min(targetColor.a, maxAlpha);
+            image.color = targetColor;
         }
 
         private void ClearBoardPreviewArtwork()
@@ -2630,6 +2911,21 @@ namespace TalismanBag.BuildSandbox
             if (boardPreviewArtwork != null)
             {
                 boardPreviewArtwork.gameObject.SetActive(false);
+            }
+
+            if (boardPreviewShadowArtwork != null)
+            {
+                boardPreviewShadowArtwork.gameObject.SetActive(false);
+            }
+
+            ClearBoardPreviewInvalidArtwork();
+        }
+
+        private void ClearBoardPreviewInvalidArtwork()
+        {
+            if (boardPreviewInvalidArtwork != null)
+            {
+                boardPreviewInvalidArtwork.gameObject.SetActive(false);
             }
         }
 
@@ -3471,7 +3767,7 @@ namespace TalismanBag.BuildSandbox
 
             if (TryResolveDragGhostLayout(item, result, source, out ShapeCellVisualLayout layout))
             {
-                ApplyDragGhostLayout(layout, item, result);
+                ApplyDragGhostLayout(layout, item, result, source);
             }
             else
             {
@@ -3496,7 +3792,7 @@ namespace TalismanBag.BuildSandbox
 
             if (TryResolveDragGhostLayout(selectedItem, result, source, out ShapeCellVisualLayout layout))
             {
-                ApplyDragGhostLayout(layout, selectedItem, result);
+                ApplyDragGhostLayout(layout, selectedItem, result, source);
             }
             else
             {
@@ -3643,6 +3939,68 @@ namespace TalismanBag.BuildSandbox
                 out layout);
         }
 
+        public bool TryResolveBoardItemFeedbackAnchor(
+            string itemId,
+            IReadOnlyList<ItemShapeCell> occupiedCells,
+            out RectTransform itemArtworkRect,
+            out RectTransform feedbackLayer,
+            out Vector2 anchoredPosition,
+            out Vector2 sizeDelta)
+        {
+            itemArtworkRect = null;
+            feedbackLayer = null;
+            anchoredPosition = Vector2.zero;
+            sizeDelta = Vector2.zero;
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                return false;
+            }
+
+            if (boardPlacedArtworkByItemId.TryGetValue(itemId, out RectTransform artworkRect)
+                && artworkRect != null
+                && artworkRect.gameObject.activeInHierarchy)
+            {
+                itemArtworkRect = artworkRect;
+                feedbackLayer = artworkRect.parent as RectTransform;
+                anchoredPosition = artworkRect.anchoredPosition;
+                sizeDelta = artworkRect.rect.size.sqrMagnitude > 0.01f
+                    ? artworkRect.rect.size
+                    : artworkRect.sizeDelta;
+                return feedbackLayer != null;
+            }
+
+            List<ItemShapeCell> cells = occupiedCells == null
+                ? new List<ItemShapeCell>()
+                : occupiedCells
+                    .Where(cell => boardSlotByCell.ContainsKey(cell))
+                    .Select(cell => new ItemShapeCell(cell.x, cell.y))
+                    .Distinct()
+                    .ToList();
+            if (cells.Count == 0 && boardReceiver != null)
+            {
+                cells = boardReceiver.OccupiedCells
+                    .Where(pair => string.Equals(pair.Value, itemId, StringComparison.Ordinal))
+                    .Select(pair => new ItemShapeCell(pair.Key.x, pair.Key.y))
+                    .Distinct()
+                    .ToList();
+            }
+
+            if (cells.Count == 0 || !TryBuildBoardCellVisualLayout(cells, out ShapeCellVisualLayout layout))
+            {
+                return false;
+            }
+
+            feedbackLayer = EnsureBoardArtworkLayer();
+            if (feedbackLayer == null)
+            {
+                return false;
+            }
+
+            anchoredPosition = layout.AnchoredPosition + new Vector2(layout.SizeDelta.x * 0.5f, -layout.SizeDelta.y * 0.5f);
+            sizeDelta = layout.SizeDelta;
+            return true;
+        }
+
         private RectTransform ResolveBoardSlotRect(ItemShapeCell dataCell)
         {
             if (!boardSlotByCell.TryGetValue(dataCell, out BuildGridPreviewSlotView slot)
@@ -3657,7 +4015,8 @@ namespace TalismanBag.BuildSandbox
         private void ApplyDragGhostLayout(
             ShapeCellVisualLayout layout,
             PreviewItem item,
-            ShapePlacementResult result)
+            ShapePlacementResult result,
+            ShapePlacementSource source)
         {
             if (layout == null || dragGhostRoot == null)
             {
@@ -3679,23 +4038,6 @@ namespace TalismanBag.BuildSandbox
             }
 
             Color color = ResolveDragGhostCellColor(item, result);
-            if (wholeItemStyle != null)
-            {
-                layer.gameObject.SetActive(false);
-                ApplyDragGhostArtwork(
-                    layout,
-                    wholeItemStyle,
-                    color,
-                    item == null ? ItemShapeRotation.Rotation0 : item.Rotation,
-                    ResolveWholeItemArtworkDragGhostRotationOffsetDegrees(item));
-                if (dragGhostText != null)
-                {
-                    dragGhostText.transform.SetAsLastSibling();
-                }
-
-                return;
-            }
-
             layer.gameObject.SetActive(true);
             layer.anchorMin = new Vector2(0f, 1f);
             layer.anchorMax = new Vector2(0f, 1f);
@@ -3741,7 +4083,13 @@ namespace TalismanBag.BuildSandbox
                 Image image = child.GetComponent<Image>();
                 if (image != null)
                 {
-                    ShapeCellVisualStyle visualStyle = wholeItemStyle != null || (result != null && !result.IsValid)
+                    if (wholeItemStyle != null)
+                    {
+                        ApplyDragGhostCellUnderlay(image, item, result, source, i, color);
+                        continue;
+                    }
+
+                    ShapeCellVisualStyle visualStyle = result != null && !result.IsValid
                         ? null
                         : ResolveItemVisualStyle(item?.ItemId, i);
                     if (visualStyle != null)
@@ -3757,21 +4105,137 @@ namespace TalismanBag.BuildSandbox
                         image.fillCenter = true;
                         image.material = null;
                         image.pixelsPerUnitMultiplier = 1f;
-                        image.color = wholeItemStyle == null
-                            ? color
-                            : new Color(color.r, color.g, color.b, Mathf.Min(color.a, 0.30f));
+                        image.color = color;
                     }
 
                     image.raycastTarget = false;
                 }
             }
 
-            HideDragGhostArtwork();
+            if (wholeItemStyle != null)
+            {
+                ApplyDragGhostArtwork(
+                    layout,
+                    wholeItemStyle,
+                    color,
+                    item == null ? ItemShapeRotation.Rotation0 : item.Rotation,
+                    ResolveWholeItemArtworkDragGhostRotationOffsetDegrees(item),
+                    result != null && !result.IsValid);
+            }
+            else
+            {
+                HideDragGhostArtwork();
+            }
 
             if (dragGhostText != null)
             {
                 dragGhostText.transform.SetAsLastSibling();
             }
+        }
+
+        private void ApplyDragGhostCellUnderlay(
+            Image image,
+            PreviewItem item,
+            ShapePlacementResult result,
+            ShapePlacementSource source,
+            int visualIndex,
+            Color fallbackColor)
+        {
+            if (image == null)
+            {
+                return;
+            }
+
+            if (TryResolveDragGhostCellUnderlayStyle(item, result, source, visualIndex, out ShapeCellVisualStyle style)
+                && style != null)
+            {
+                style.ApplyTo(image, fallbackColor);
+            }
+            else
+            {
+                image.overrideSprite = null;
+                image.sprite = null;
+                image.type = Image.Type.Simple;
+                image.preserveAspect = false;
+                image.fillCenter = true;
+                image.material = null;
+                image.pixelsPerUnitMultiplier = 1f;
+                image.color = new Color(
+                    fallbackColor.r,
+                    fallbackColor.g,
+                    fallbackColor.b,
+                    Mathf.Min(fallbackColor.a, 0.42f));
+            }
+
+            image.raycastTarget = false;
+        }
+
+        private bool TryResolveDragGhostCellUnderlayStyle(
+            PreviewItem item,
+            ShapePlacementResult result,
+            ShapePlacementSource source,
+            int visualIndex,
+            out ShapeCellVisualStyle style)
+        {
+            style = null;
+            if (source == ShapePlacementSource.Board
+                && TryCaptureBoardCellUnderlayStyle(result, visualIndex, out style))
+            {
+                return true;
+            }
+
+            if (source == ShapePlacementSource.Tray
+                && itemTrayView != null
+                && itemTrayView.TryCaptureTraySlotUnderlayStyle(item?.ItemId, visualIndex, out style))
+            {
+                return true;
+            }
+
+            if (TryCaptureBoardCellUnderlayStyle(result, visualIndex, out style))
+            {
+                return true;
+            }
+
+            if (itemTrayView != null
+                && itemTrayView.TryCaptureTraySlotUnderlayStyle(item?.ItemId, visualIndex, out style))
+            {
+                return true;
+            }
+
+            return TryCaptureFirstBoardCellUnderlayStyle(out style)
+                || (itemTrayView != null && itemTrayView.TryCaptureFirstTraySlotUnderlayStyle(out style));
+        }
+
+        private bool TryCaptureBoardCellUnderlayStyle(
+            ShapePlacementResult result,
+            int visualIndex,
+            out ShapeCellVisualStyle style)
+        {
+            style = null;
+            if (result == null
+                || visualIndex < 0
+                || visualIndex >= result.OccupiedCells.Count)
+            {
+                return false;
+            }
+
+            return boardSlotByCell.TryGetValue(result.OccupiedCells[visualIndex], out BuildGridPreviewSlotView slot)
+                && slot != null
+                && slot.TryCaptureCellUnderlayStyle(out style);
+        }
+
+        private bool TryCaptureFirstBoardCellUnderlayStyle(out ShapeCellVisualStyle style)
+        {
+            foreach (BuildGridPreviewSlotView slot in boardSlots ?? Array.Empty<BuildGridPreviewSlotView>())
+            {
+                if (slot != null && slot.TryCaptureCellUnderlayStyle(out style))
+                {
+                    return true;
+                }
+            }
+
+            style = null;
+            return false;
         }
 
         private void CacheAllItemVisualStyles()
@@ -3981,7 +4445,8 @@ namespace TalismanBag.BuildSandbox
             ShapeCellVisualStyle style,
             Color fallbackColor,
             ItemShapeRotation rotation,
-            float stateRotationOffsetDegrees)
+            float stateRotationOffsetDegrees,
+            bool invalid)
         {
             if (layout == null
                 || style == null
@@ -4002,7 +4467,16 @@ namespace TalismanBag.BuildSandbox
                 style.SourceRotationDegrees + stateRotationOffsetDegrees);
             dragGhostArtwork.SetAsLastSibling();
             dragGhostArtworkImage.raycastTarget = false;
-            style.ApplyTo(dragGhostArtworkImage, fallbackColor, 0.88f);
+            ApplyArtworkStyle(dragGhostArtworkImage, style, fallbackColor, 0.88f, null);
+
+            if (invalid)
+            {
+                ApplyDragGhostInvalidArtwork(layout, style, fallbackColor, rotation, stateRotationOffsetDegrees);
+            }
+            else
+            {
+                HideDragGhostInvalidArtwork();
+            }
         }
 
         private void HideDragGhostArtwork()
@@ -4010,6 +4484,50 @@ namespace TalismanBag.BuildSandbox
             if (dragGhostArtwork != null)
             {
                 dragGhostArtwork.gameObject.SetActive(false);
+            }
+
+            HideDragGhostInvalidArtwork();
+        }
+
+        private void ApplyDragGhostInvalidArtwork(
+            ShapeCellVisualLayout layout,
+            ShapeCellVisualStyle style,
+            Color fallbackColor,
+            ItemShapeRotation rotation,
+            float stateRotationOffsetDegrees)
+        {
+            if (layout == null
+                || style == null
+                || !style.SpansWholeItem
+                || style.Sprite == null
+                || !EnsureDragGhostInvalidArtworkView())
+            {
+                HideDragGhostInvalidArtwork();
+                return;
+            }
+
+            dragGhostInvalidArtwork.gameObject.SetActive(true);
+            ApplyWholeItemArtworkTransform(
+                dragGhostInvalidArtwork,
+                Vector2.zero,
+                layout.SizeDelta,
+                rotation,
+                style.SourceRotationDegrees + stateRotationOffsetDegrees);
+            dragGhostInvalidArtwork.SetAsLastSibling();
+            dragGhostInvalidArtworkImage.raycastTarget = false;
+            ApplyArtworkStyle(
+                dragGhostInvalidArtworkImage,
+                style,
+                fallbackColor,
+                DragGhostInvalidTint.a,
+                DragGhostInvalidTint);
+        }
+
+        private void HideDragGhostInvalidArtwork()
+        {
+            if (dragGhostInvalidArtwork != null)
+            {
+                dragGhostInvalidArtwork.gameObject.SetActive(false);
             }
         }
 
@@ -4043,6 +4561,39 @@ namespace TalismanBag.BuildSandbox
             }
 
             dragGhostArtworkImage.raycastTarget = false;
+            return true;
+        }
+
+        private bool EnsureDragGhostInvalidArtworkView()
+        {
+            if (dragGhostRoot == null)
+            {
+                return false;
+            }
+
+            if (dragGhostInvalidArtwork == null || dragGhostInvalidArtwork.parent != dragGhostRoot)
+            {
+                Transform existing = dragGhostRoot.Find(DragGhostInvalidArtworkName);
+                GameObject artworkObject = existing == null
+                    ? new GameObject(DragGhostInvalidArtworkName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(LayoutElement))
+                    : existing.gameObject;
+                artworkObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                artworkObject.transform.SetParent(dragGhostRoot, false);
+                dragGhostInvalidArtwork = artworkObject.GetComponent<RectTransform>();
+                LayoutElement layoutElement = artworkObject.GetComponent<LayoutElement>();
+                if (layoutElement != null)
+                {
+                    layoutElement.ignoreLayout = true;
+                }
+            }
+
+            dragGhostInvalidArtworkImage = dragGhostInvalidArtwork.GetComponent<Image>();
+            if (dragGhostInvalidArtworkImage == null)
+            {
+                dragGhostInvalidArtworkImage = dragGhostInvalidArtwork.gameObject.AddComponent<Image>();
+            }
+
+            dragGhostInvalidArtworkImage.raycastTarget = false;
             return true;
         }
 

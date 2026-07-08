@@ -266,6 +266,45 @@ namespace TalismanBag.BuildSandbox
             return styles.Count > 0;
         }
 
+        internal bool TryCaptureTraySlotUnderlayStyle(
+            string itemId,
+            int visualIndex,
+            out ShapeCellVisualStyle style)
+        {
+            style = null;
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                return false;
+            }
+
+            TrayPlacementViewModel placement = placementModels.FirstOrDefault(model =>
+                model != null
+                && model.isValid
+                && string.Equals(model.itemId, itemId, StringComparison.Ordinal));
+            IReadOnlyList<int> occupiedSlots = placement?.occupiedSlotIndexes ?? Array.Empty<int>();
+            if (occupiedSlots.Count == 0)
+            {
+                return false;
+            }
+
+            int safeIndex = Mathf.Clamp(visualIndex, 0, occupiedSlots.Count - 1);
+            return reservationView.TryCaptureSlotUnderlayStyle(occupiedSlots[safeIndex], out style);
+        }
+
+        internal bool TryCaptureFirstTraySlotUnderlayStyle(out ShapeCellVisualStyle style)
+        {
+            for (int i = 0; i < GetTraySlotCount(); i++)
+            {
+                if (reservationView.TryCaptureSlotUnderlayStyle(i, out style))
+                {
+                    return true;
+                }
+            }
+
+            style = null;
+            return false;
+        }
+
         private void RemoveItemPlacement(string itemId)
         {
             placementModels.RemoveAll(model =>
@@ -364,7 +403,7 @@ namespace TalismanBag.BuildSandbox
                 itemCardLayer,
                 traySlotRects,
                 BuildGridInteractionPreviewController.TrayColumns);
-            reservationView.Bind(traySlotImages, traySlotOutlines);
+            reservationView.Bind(traySlotRects, traySlotImages, traySlotOutlines);
         }
 
         private void EnsureRuntimeMatureScrollArea()
