@@ -30,6 +30,7 @@ namespace TalismanBag.BuildSandbox
         private const string PlacementFeedbackDefaultText = "单击道具查看信息；合法松手直接放置，非法返回托盘。";
         private const string DragGhostCellLayerName = "DragGhostCellLayer";
         private const string DragGhostCellNamePrefix = "DragGhostCell_";
+        private const string DragGhostCellUnderlayName = "CellUnderlayImage";
         private const string DragGhostArtworkName = "DragGhostArtwork";
         private const string DragGhostInvalidArtworkName = "DragGhostInvalidArtwork";
         private const string BoardArtworkLayerName = "BoardItemArtworkLayer";
@@ -4149,10 +4150,22 @@ namespace TalismanBag.BuildSandbox
             if (TryResolveDragGhostCellUnderlayStyle(item, result, source, visualIndex, out ShapeCellVisualStyle style)
                 && style != null)
             {
-                style.ApplyTo(image, fallbackColor);
+                if (style.HasRectTransformOverride && image.transform is RectTransform cellRect)
+                {
+                    Image childImage = EnsureDragGhostCellUnderlayImage(cellRect);
+                    HideDragGhostCellParentImage(image);
+                    style.ApplyTo(childImage, fallbackColor);
+                    ApplyDragGhostCellUnderlayTransform(childImage.rectTransform, style);
+                }
+                else
+                {
+                    HideDragGhostCellUnderlayImage(image.transform);
+                    style.ApplyTo(image, fallbackColor);
+                }
             }
             else
             {
+                HideDragGhostCellUnderlayImage(image.transform);
                 image.overrideSprite = null;
                 image.sprite = null;
                 image.type = Image.Type.Simple;
@@ -4168,6 +4181,62 @@ namespace TalismanBag.BuildSandbox
             }
 
             image.raycastTarget = false;
+        }
+
+        private static Image EnsureDragGhostCellUnderlayImage(RectTransform cellRect)
+        {
+            Transform existing = cellRect == null ? null : cellRect.Find(DragGhostCellUnderlayName);
+            GameObject underlayObject = existing == null
+                ? new GameObject(DragGhostCellUnderlayName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image))
+                : existing.gameObject;
+            underlayObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            underlayObject.transform.SetParent(cellRect, false);
+            Image image = underlayObject.GetComponent<Image>();
+            image.raycastTarget = false;
+            underlayObject.SetActive(true);
+            return image;
+        }
+
+        private static void ApplyDragGhostCellUnderlayTransform(
+            RectTransform rect,
+            ShapeCellVisualStyle style)
+        {
+            if (rect == null || style == null || !style.HasRectTransformOverride)
+            {
+                return;
+            }
+
+            rect.anchorMin = style.AnchorMin;
+            rect.anchorMax = style.AnchorMax;
+            rect.pivot = style.Pivot;
+            rect.anchoredPosition = style.AnchoredPosition;
+            rect.sizeDelta = style.SizeDelta;
+            rect.localScale = style.LocalScale;
+            rect.localEulerAngles = style.LocalEulerAngles;
+        }
+
+        private static void HideDragGhostCellParentImage(Image image)
+        {
+            if (image == null)
+            {
+                return;
+            }
+
+            image.overrideSprite = null;
+            image.sprite = null;
+            Color color = image.color;
+            color.a = 0f;
+            image.color = color;
+            image.raycastTarget = false;
+        }
+
+        private static void HideDragGhostCellUnderlayImage(Transform cellTransform)
+        {
+            Transform existing = cellTransform == null ? null : cellTransform.Find(DragGhostCellUnderlayName);
+            if (existing != null)
+            {
+                existing.gameObject.SetActive(false);
+            }
         }
 
         private bool TryResolveDragGhostCellUnderlayStyle(

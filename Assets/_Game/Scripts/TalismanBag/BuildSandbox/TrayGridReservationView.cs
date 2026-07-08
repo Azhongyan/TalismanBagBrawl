@@ -116,11 +116,17 @@ namespace TalismanBag.BuildSandbox
                 return false;
             }
 
-            style = ShapeCellVisualStyle.FromImage(image)?.WithColor(ResolveAuthoredColor(
-                slotImageAuthoredColors,
-                slotIndex,
-                image.color,
-                reserved: true));
+            Image rootImage = slotIndex >= 0 && slotIndex < slotImages.Count
+                ? slotImages[slotIndex]
+                : null;
+            style = ShapeCellVisualStyle.FromImage(
+                    image,
+                    captureRectTransform: rootImage != null && image != rootImage)
+                ?.WithColor(ResolveAuthoredColor(
+                    slotImageAuthoredColors,
+                    slotIndex,
+                    image.color,
+                    reserved: true));
             return style != null;
         }
 
