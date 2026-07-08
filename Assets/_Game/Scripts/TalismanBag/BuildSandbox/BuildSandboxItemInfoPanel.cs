@@ -79,6 +79,35 @@ namespace TalismanBag.BuildSandbox
             return panel;
         }
 
+        public static BuildSandboxItemInfoPanel EnsureEditableInScene()
+        {
+            if (Application.isPlaying)
+            {
+                return FindOrCreateInScene();
+            }
+
+            Transform popupLayer = FindTransform("PopupLayer");
+            if (popupLayer == null)
+            {
+                return null;
+            }
+
+            GameObject root = FindOrCreateRuntimeRoot(popupLayer, keepEditableInScene: true, out bool created);
+            BuildSandboxItemInfoPanel panel = root.GetComponent<BuildSandboxItemInfoPanel>();
+            if (panel == null)
+            {
+                panel = root.AddComponent<BuildSandboxItemInfoPanel>();
+            }
+
+            panel.EnsureRuntimePanel();
+            if (created)
+            {
+                panel.SetVisible(true);
+            }
+
+            return panel;
+        }
+
         private void Awake()
         {
             EnsureRuntimePanel();
@@ -248,6 +277,7 @@ namespace TalismanBag.BuildSandbox
 
             panelRoot = root.gameObject;
             CleanupLegacyChildren(root);
+            bool applyDefaultRootLayout = root.childCount == 0;
             if (panelRoot.name != RuntimeRootName)
             {
                 panelRoot.name = RuntimeRootName;
@@ -263,9 +293,11 @@ namespace TalismanBag.BuildSandbox
                 panelRoot.AddComponent<CanvasRenderer>();
             }
             Image shade = panelRoot.GetComponent<Image>();
+            bool shadeCreated = false;
             if (shade == null)
             {
                 shade = panelRoot.AddComponent<Image>();
+                shadeCreated = true;
             }
             if (panelCanvasGroup == null)
             {
@@ -276,94 +308,181 @@ namespace TalismanBag.BuildSandbox
                 }
             }
 
-            SetFullStretch(rootRect);
-            shade.color = new Color(0f, 0f, 0f, 0.42f);
+            if (applyDefaultRootLayout)
+            {
+                SetFullStretch(rootRect);
+            }
+
+            if (applyDefaultRootLayout || shadeCreated)
+            {
+                shade.color = new Color(0f, 0f, 0f, 0.42f);
+            }
+
             shade.raycastTarget = true;
 
             Transform existingPanel = root.Find(PanelObjectName);
-            GameObject panel = existingPanel != null
-                ? existingPanel.gameObject
-                : new GameObject(PanelObjectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Outline));
-            panel.transform.SetParent(panelRoot.transform, false);
+            bool panelCreated = existingPanel == null;
+            GameObject panel;
+            if (existingPanel != null)
+            {
+                panel = existingPanel.gameObject;
+            }
+            else
+            {
+                panel = new GameObject(PanelObjectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Outline));
+                panel.transform.SetParent(panelRoot.transform, false);
+            }
+
             RectTransform panelRect = panel.GetComponent<RectTransform>();
             if (panelRect == null)
             {
                 panelRect = panel.AddComponent<RectTransform>();
+                panelCreated = true;
             }
-            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
-            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-            panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(760f, 610f);
-            panelRect.anchoredPosition = Vector2.zero;
+
+            if (panelCreated)
+            {
+                panelRect.anchorMin = new Vector2(0.5f, 0.5f);
+                panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+                panelRect.pivot = new Vector2(0.5f, 0.5f);
+                panelRect.sizeDelta = new Vector2(760f, 610f);
+                panelRect.anchoredPosition = Vector2.zero;
+            }
+
             Image panelImage = panel.GetComponent<Image>();
+            bool panelImageCreated = false;
             if (panelImage == null)
             {
                 panelImage = panel.AddComponent<Image>();
+                panelImageCreated = true;
             }
-            panelImage.color = new Color(0.14f, 0.13f, 0.10f, 0.98f);
+
+            if (panelCreated || panelImageCreated)
+            {
+                panelImage.color = new Color(0.14f, 0.13f, 0.10f, 0.98f);
+            }
+
             Outline outline = panel.GetComponent<Outline>();
+            bool outlineCreated = false;
             if (outline == null)
             {
                 outline = panel.AddComponent<Outline>();
+                outlineCreated = true;
             }
-            outline.effectColor = new Color(0.64f, 0.48f, 0.22f, 0.82f);
-            outline.effectDistance = new Vector2(2f, -2f);
 
+            if (panelCreated || outlineCreated)
+            {
+                outline.effectColor = new Color(0.64f, 0.48f, 0.22f, 0.82f);
+                outline.effectDistance = new Vector2(2f, -2f);
+            }
+
+            bool titleCreated = panel.transform.Find(TitleObjectName) == null;
             titleText = EnsureText(TitleObjectName, panel.transform, string.Empty, 24, FontStyle.Bold, TextAnchor.MiddleLeft);
-            SetAnchors(titleText.rectTransform, new Vector2(0.05f, 0.88f), new Vector2(0.75f, 0.97f));
+            if (titleCreated)
+            {
+                SetAnchors(titleText.rectTransform, new Vector2(0.05f, 0.88f), new Vector2(0.75f, 0.97f));
+            }
 
+            bool rotateButtonCreated = panel.transform.Find(RotateButtonObjectName) == null;
             rotateButton = EnsureButton(RotateButtonObjectName, panel.transform, RotateButtonLabel);
-            SetAnchors(rotateButton.GetComponent<RectTransform>(), new Vector2(0.77f, 0.89f), new Vector2(0.88f, 0.97f));
+            if (rotateButtonCreated)
+            {
+                SetAnchors(rotateButton.GetComponent<RectTransform>(), new Vector2(0.77f, 0.89f), new Vector2(0.88f, 0.97f));
+            }
+
             Text rotateLabel = rotateButton.GetComponentInChildren<Text>(true);
-            if (rotateLabel != null)
+            if (rotateLabel != null && rotateButtonCreated)
             {
                 rotateLabel.text = RotateButtonLabel;
                 rotateLabel.fontSize = 18;
             }
 
+            bool closeButtonCreated = panel.transform.Find(CloseButtonObjectName) == null;
             closeButton = EnsureButton(CloseButtonObjectName, panel.transform, CloseButtonLabel);
-            SetAnchors(closeButton.GetComponent<RectTransform>(), new Vector2(0.89f, 0.89f), new Vector2(0.97f, 0.97f));
+            if (closeButtonCreated)
+            {
+                SetAnchors(closeButton.GetComponent<RectTransform>(), new Vector2(0.89f, 0.89f), new Vector2(0.97f, 0.97f));
+            }
 
             Transform existingViewport = panel.transform.Find(BodyViewportObjectName);
-            GameObject viewport = existingViewport != null
-                ? existingViewport.gameObject
-                : new GameObject(BodyViewportObjectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(RectMask2D));
-            viewport.transform.SetParent(panel.transform, false);
+            bool viewportCreated = existingViewport == null;
+            GameObject viewport;
+            if (existingViewport != null)
+            {
+                viewport = existingViewport.gameObject;
+            }
+            else
+            {
+                viewport = new GameObject(BodyViewportObjectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(RectMask2D));
+                viewport.transform.SetParent(panel.transform, false);
+            }
+
             RectTransform viewportRect = viewport.GetComponent<RectTransform>();
             if (viewportRect == null)
             {
                 viewportRect = viewport.AddComponent<RectTransform>();
+                viewportCreated = true;
             }
-            SetAnchors(viewportRect, new Vector2(0.05f, 0.06f), new Vector2(0.95f, 0.86f));
+
+            if (viewportCreated)
+            {
+                SetAnchors(viewportRect, new Vector2(0.05f, 0.06f), new Vector2(0.95f, 0.86f));
+            }
+
             Image viewportImage = viewport.GetComponent<Image>();
+            bool viewportImageCreated = false;
             if (viewportImage == null)
             {
                 viewportImage = viewport.AddComponent<Image>();
+                viewportImageCreated = true;
             }
-            viewportImage.color = new Color(0.06f, 0.06f, 0.05f, 0.16f);
+
+            if (viewportCreated || viewportImageCreated)
+            {
+                viewportImage.color = new Color(0.06f, 0.06f, 0.05f, 0.16f);
+            }
+
             if (viewport.GetComponent<RectMask2D>() == null)
             {
                 viewport.AddComponent<RectMask2D>();
             }
 
             Transform existingContent = viewport.transform.Find(BodyContentObjectName);
-            GameObject content = existingContent != null
-                ? existingContent.gameObject
-                : new GameObject(BodyContentObjectName, typeof(RectTransform));
-            content.transform.SetParent(viewport.transform, false);
+            bool contentCreated = existingContent == null;
+            GameObject content;
+            if (existingContent != null)
+            {
+                content = existingContent.gameObject;
+            }
+            else
+            {
+                content = new GameObject(BodyContentObjectName, typeof(RectTransform));
+                content.transform.SetParent(viewport.transform, false);
+            }
+
             RectTransform contentRect = content.GetComponent<RectTransform>();
             if (contentRect == null)
             {
                 contentRect = content.AddComponent<RectTransform>();
+                contentCreated = true;
             }
-            contentRect.anchorMin = new Vector2(0f, 1f);
-            contentRect.anchorMax = new Vector2(1f, 1f);
-            contentRect.pivot = new Vector2(0.5f, 1f);
-            contentRect.anchoredPosition = Vector2.zero;
-            contentRect.sizeDelta = new Vector2(0f, 780f);
 
+            if (contentCreated)
+            {
+                contentRect.anchorMin = new Vector2(0f, 1f);
+                contentRect.anchorMax = new Vector2(1f, 1f);
+                contentRect.pivot = new Vector2(0.5f, 1f);
+                contentRect.anchoredPosition = Vector2.zero;
+                contentRect.sizeDelta = new Vector2(0f, 780f);
+            }
+
+            bool bodyTextCreated = content.transform.Find(BodyTextObjectName) == null;
             bodyText = EnsureText(BodyTextObjectName, content.transform, string.Empty, 18, FontStyle.Normal, TextAnchor.UpperLeft);
-            SetFullStretch(bodyText.rectTransform);
+            if (bodyTextCreated)
+            {
+                SetFullStretch(bodyText.rectTransform);
+            }
+
             bodyText.horizontalOverflow = HorizontalWrapMode.Wrap;
             bodyText.verticalOverflow = VerticalWrapMode.Overflow;
             bodyText.lineSpacing = 1.12f;
@@ -639,6 +758,14 @@ namespace TalismanBag.BuildSandbox
 
         private static GameObject FindOrCreateRuntimeRoot(Transform popupLayer)
         {
+            return FindOrCreateRuntimeRoot(popupLayer, keepEditableInScene: false, out _);
+        }
+
+        private static GameObject FindOrCreateRuntimeRoot(
+            Transform popupLayer,
+            bool keepEditableInScene,
+            out bool createdRoot)
+        {
             List<Transform> candidates = new();
             foreach (Transform child in popupLayer)
             {
@@ -652,14 +779,24 @@ namespace TalismanBag.BuildSandbox
                 ?? candidates.FirstOrDefault();
             if (keep == null)
             {
+                createdRoot = true;
                 GameObject created = new(RuntimeRootName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(CanvasGroup));
                 created.transform.SetParent(popupLayer, false);
-                created.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                if (!keepEditableInScene || Application.isPlaying)
+                {
+                    created.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                }
+
                 return created;
             }
 
+            createdRoot = false;
             keep.name = RuntimeRootName;
-            keep.gameObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            if (keepEditableInScene && !Application.isPlaying)
+            {
+                keep.gameObject.hideFlags = HideFlags.None;
+            }
+
             foreach (Transform duplicate in candidates)
             {
                 if (duplicate != null && duplicate != keep)

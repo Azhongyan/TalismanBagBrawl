@@ -26,6 +26,7 @@ namespace TalismanBag.BuildSandbox
         private const string EnemyCombatFeedbackFloatingRootName = "EnemyCombatFeedbackFloatingRoot";
         private const string DevChapterDropdownSlotName = "DevChapterDropdownSlot";
         private const string PlacementFeedbackRuntimeName = "PlacementFeedback_Runtime";
+        private const string BattlePrepareTransitionSequenceObjectName = "guajian";
         private const string PlacementFeedbackTextName = "PlacementFeedbackText";
         private const string PlacementFeedbackDefaultText = "单击道具查看信息；合法松手直接放置，非法返回托盘。";
         private const string DragGhostCellLayerName = "DragGhostCellLayer";
@@ -84,6 +85,10 @@ namespace TalismanBag.BuildSandbox
         [Header("V0.4 Battle Layout")]
         [Tooltip("Battle-state Y offset from the authored BattleLikePreviewArea position. Negative moves the battle view down.")]
         [SerializeField] private float battleStateYOffset = DefaultBattleStateYOffset;
+
+        [Header("V0.4 Battle FX")]
+        [Tooltip("Optional sprite-sequence animation played when opening prepare mode and when continuing battle.")]
+        [SerializeField] private BuildSandboxSpriteSequencePlayer battlePrepareTransitionSequencePlayer;
 
         [Header("V0.4 Artwork Direction Calibration")]
         [Tooltip("3-cell triangle/corner artwork in tray. Positive rotates left, negative rotates right.")]
@@ -665,11 +670,13 @@ namespace TalismanBag.BuildSandbox
             }
 
             EnsureEditablePlacementFeedbackInHierarchy();
+            BuildSandboxItemInfoPanel.EnsureEditableInScene();
         }
 
         private void Awake()
         {
             EnsureReferences();
+            EnsureBattlePrepareTransitionSequencePlayer();
             BuildSlotLookup();
             BuildShapeLookup();
             BuildItemLookup();
@@ -1397,6 +1404,7 @@ namespace TalismanBag.BuildSandbox
                 battlePrepareStateActive = false;
                 battlePrepareContinueStateActive = true;
                 sandboxBattleActive = true;
+                PlayBattlePrepareTransitionSequence();
                 RefreshBattlePrepareChrome(snapMotion: false);
                 placementFeedbackView?.ShowValid("V0.4 沙盒：当前摆放已读取，正在收起整备界面。");
                 return;
@@ -1423,8 +1431,51 @@ namespace TalismanBag.BuildSandbox
             }
 
             battlePrepareStateActive = true;
+            PlayBattlePrepareTransitionSequence();
             RefreshBattlePrepareChrome(snapMotion: false);
             placementFeedbackView?.ShowInfo("V0.4 沙盒整备界面已打开；可在道具栏与棋盘间拖动道具。");
+        }
+
+        private void PlayBattlePrepareTransitionSequence()
+        {
+            EnsureBattlePrepareTransitionSequencePlayer();
+            battlePrepareTransitionSequencePlayer?.PlayFromStart();
+        }
+
+        private void EnsureBattlePrepareTransitionSequencePlayer()
+        {
+            if (battlePrepareTransitionSequencePlayer != null)
+            {
+                return;
+            }
+
+            battlePrepareTransitionSequencePlayer = GetComponentInChildren<BuildSandboxSpriteSequencePlayer>(true);
+            if (battlePrepareTransitionSequencePlayer != null)
+            {
+                return;
+            }
+
+            BuildSandboxSpriteSequencePlayer fallback = null;
+            foreach (BuildSandboxSpriteSequencePlayer player in FindObjectsOfType<BuildSandboxSpriteSequencePlayer>(true))
+            {
+                if (player == null)
+                {
+                    continue;
+                }
+
+                if (string.Equals(player.gameObject.name, BattlePrepareTransitionSequenceObjectName, StringComparison.OrdinalIgnoreCase))
+                {
+                    battlePrepareTransitionSequencePlayer = player;
+                    return;
+                }
+
+                if (fallback == null && player.FrameCount > 0)
+                {
+                    fallback = player;
+                }
+            }
+
+            battlePrepareTransitionSequencePlayer = fallback;
         }
 
         public void RefreshSandboxBattleActionChrome()

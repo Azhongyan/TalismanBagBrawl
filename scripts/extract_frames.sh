@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  printf 'Usage: bash scripts/extract_frames.sh input.mp4 output_frames 12\n' >&2
+  printf 'Usage: bash scripts/extract_frames.sh input.mp4 output_root 12\n' >&2
 }
 
 if [ "$#" -ne 3 ]; then
@@ -11,7 +11,7 @@ if [ "$#" -ne 3 ]; then
 fi
 
 input_file="$1"
-output_dir="$2"
+output_root="$2"
 fps="$3"
 
 if [ ! -f "$input_file" ]; then
@@ -62,6 +62,18 @@ ffmpeg_bin="$(find_ffmpeg || true)"
 if [ -z "$ffmpeg_bin" ]; then
   printf 'ffmpeg not found. Run bash scripts/install_ffmpeg.sh first.\n' >&2
   exit 1
+fi
+
+input_name="$(basename "$input_file")"
+input_stem="${input_name%.*}"
+safe_stem="$(printf '%s' "$input_stem" | tr -c 'A-Za-z0-9._-' '_')"
+if [ -z "$safe_stem" ]; then
+  safe_stem="frames"
+fi
+
+output_dir="${output_root}/${safe_stem}"
+if [ -d "$output_dir" ] && find "$output_dir" -maxdepth 1 -name 'frame_*.png' -print -quit | grep -q .; then
+  output_dir="${output_root}/${safe_stem}_$(date +%Y%m%d_%H%M%S)"
 fi
 
 mkdir -p "$output_dir"
