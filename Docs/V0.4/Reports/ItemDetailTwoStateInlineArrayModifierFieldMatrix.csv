@@ -1,0 +1,8 @@
+field,owner,purpose,writeBehavior
+displayLightingStatusText,ItemDetailViewModel,header lighting status,read-only projection
+displayArrayBonusStatusText,ItemDetailViewModel,header array-vein status,read-only projection
+displayAwakeningStatusText,ItemDetailViewModel,core internal awakening state only,not consumed by header badge
+arrayModifierColor,ItemDetailVisualTheme,editable array modifier special color,theme token default #55C6B3
+arrayModifierIcon,ItemDetailVisualTheme,editable sprite reference for Icon_ArrayVeinModifier,nullable sprite slot
+ItemDetailArrayModifierDefinition,ItemDetailArrayModifierResolver,candidate array modifier payload,does not mutate source stat/affix/core/build data
+ArrayModifierCandidates,ItemFullDetailBuildSandboxWorkbenchSession,workbench-visible editable candidate inventory,modifierId-based idempotent edit list

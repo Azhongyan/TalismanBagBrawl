@@ -1,0 +1,52 @@
+# Encounter Composition Schema 01 Leak Check Report
+
+- Result: PASS
+- Execution: Pure C# same-source offline verifier
+- Failed leak/boundary checks: 0
+- Player-facing projection: none
+- Scene / Prefab / Config / Battle / Board / Item writes: none
+
+## Explicit scans
+
+- PASS — baseline.carriers: 11/7/18
+- PASS — baseline.mechanic.profiles: 10/6/16
+- PASS — baseline.map.rules: 10
+- PASS — baseline.carrier.bindings: 17
+- PASS — baseline.map.bindings: 30
+- PASS — baseline.intentional.exceptions: 2
+- PASS — baseline.unresolved.references: 0
+- PASS — leak.runtime.forbidden.00: TalismanBag.BuildSandbox = 0
+- PASS — leak.runtime.forbidden.01: TalismanBag.Battle = 0
+- PASS — leak.runtime.forbidden.02: TalismanBag.Item = 0
+- PASS — leak.runtime.forbidden.03: ItemSystem = 0
+- PASS — leak.runtime.forbidden.04: UnityEngine = 0
+- PASS — leak.runtime.forbidden.05: MonoBehaviour = 0
+- PASS — leak.runtime.forbidden.06: ScriptableObject = 0
+- PASS — leak.runtime.forbidden.07: GameObject = 0
+- PASS — leak.runtime.forbidden.08: Transform = 0
+- PASS — leak.runtime.forbidden.09: Addressables = 0
+- PASS — leak.runtime.forbidden.10: SceneManager = 0
+- PASS — leak.runtime.forbidden.11: BattleContract = 0
+- PASS — leak.runtime.forbidden.12: BattleBridge = 0
+- PASS — leak.runtime.forbidden.13: UnifiedBattlePage = 0
+- PASS — leak.runtime.forbidden.14: RunFlow = 0
+- PASS — leak.runtime.forbidden.15: PageState = 0
+- PASS — leak.runtime.forbidden.16: FormationState = 0
+- PASS — leak.runtime.forbidden.17: Reward = 0
+- PASS — leak.runtime.forbidden.18: SaveData = 0
+- PASS — leak.runtime.forbidden.19: PlayerPrefs = 0
+- PASS — leak.runtime.forbidden.20: V02FormationGridFrame = 0
+- PASS — leak.runtime.forbidden.21: DamageText = 0
+- PASS — leak.runtime.forbidden.22: BuildReadiness = 0
+- PASS — leak.runtime.forbidden.23: requiredCapability = 0
+- PASS — leak.runtime.forbidden.24: hardSolution = 0
+- PASS — leak.runtime.forbidden.25: weakness = 0
+- PASS — leak.runtime.forbidden.26: DropBias = 0
+- PASS — leak.chapter.hardcode: 0
+- PASS — leak.editor.legacy.reader.count: 1
+- PASS — protected.e01e02e03: 14/14 unchanged
+- PASS — protected.legacy: 3/3 unchanged
+- PASS — package.expected.files: 14/14
+- PASS — package.path.whitelist: EncounterCompositionPrimitives.cs;EncounterCompositionPrimitives.cs.meta;EncounterCompositionSnapshots.cs;EncounterCompositionSnapshots.cs.meta;EncounterCompositionValidation.cs;EncounterCompositionValidation.cs.meta
+- PASS — whitespace.trailing: 0
+- PASS — guid.conflicts: 0

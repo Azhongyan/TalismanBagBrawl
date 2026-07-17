@@ -2,6 +2,7 @@
 
 Package: `V0.4-BattleSandboxItemTriggerFeedbackFx01`
 Date: `2026-07-08`
+Resource sequence trial update: `2026-07-10`
 
 ## Result
 
@@ -30,6 +31,10 @@ Static package leak check: `PASS_WITH_LOCAL_STATIC_LIMITATION`
   - prefers existing placed artwork rect
   - falls back to existing board-cell layout data
 - The procedural VFX layer is transient and cleared on loop reset/disable.
+- Inspector sequence frame slots are local serialized Sprite references on the devOnly feedback controller and preserve manual frame order.
+- Resource sequence trial only reads from `Assets/_Game/Resources/anim/照煞镜_VFX_RGBA_9帧/frames`.
+- Runtime-created sequence UI objects and fallback-created sprites use `HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild`.
+- The trial is gated to `preview_fire_talisman`, `damage`, and single-cell occupied rows, then falls back to procedural VFX when Resource frames are unavailable.
 - Build modifier passive rows are sampled at lower step frequency, then passive playback uses global/per-item throttling inside the runtime-only controller to avoid stealing active trigger readability.
 
 ## Validation Notes

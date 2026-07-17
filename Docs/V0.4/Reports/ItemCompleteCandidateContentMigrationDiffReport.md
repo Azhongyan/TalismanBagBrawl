@@ -1,0 +1,34 @@
+# Item Complete Candidate Content Migration Diff
+
+- Strategy: additive + idempotent; known generated placeholder cores are upgraded, arbitrary non-empty user text remains untouched.
+- Revision: ITEM_COMPLETE_CANDIDATE_CONTENT_WORKBENCH01_R1
+- I001: signature=signature_i001, pool=9, cores=5, powers=5
+- I002: signature=signature_i002, pool=9, cores=5, powers=5
+- I003: signature=signature_i003, pool=9, cores=5, powers=5
+- I004: signature=signature_i004, pool=9, cores=5, powers=5
+- I005: signature=signature_i005, pool=9, cores=5, powers=5
+- I006: signature=signature_i006, pool=9, cores=5, powers=5
+- I007: signature=signature_i007, pool=9, cores=5, powers=5
+- I008: signature=signature_i008, pool=9, cores=5, powers=5
+- I009: signature=signature_i009, pool=9, cores=5, powers=5
+- I010: signature=signature_i010, pool=9, cores=5, powers=5
+- I011: signature=signature_i011, pool=9, cores=5, powers=5
+- I012: signature=signature_i012, pool=9, cores=5, powers=5
+- I013: signature=signature_i013, pool=9, cores=5, powers=5
+- I014: signature=signature_i014, pool=9, cores=5, powers=5
+- I015: signature=signature_i015, pool=9, cores=5, powers=5
+- I016: signature=signature_i016, pool=9, cores=5, powers=5
+- I017: signature=signature_i017, pool=9, cores=5, powers=5
+- I018: signature=signature_i018, pool=9, cores=5, powers=5
+- I019: signature=signature_i019, pool=9, cores=5, powers=5
+- I020: signature=signature_i020, pool=9, cores=5, powers=5
+- I021: signature=signature_i021, pool=9, cores=5, powers=5
+- I022: signature=signature_i022, pool=9, cores=5, powers=5
+- I023: signature=signature_i023, pool=9, cores=5, powers=5
+- I024: signature=signature_i024, pool=9, cores=5, powers=5
+- I025: signature=signature_i025, pool=9, cores=5, powers=5
+- I026: signature=signature_i026, pool=9, cores=5, powers=5
+- I027: signature=signature_i027, pool=9, cores=5, powers=5
+- I028: signature=signature_i028, pool=9, cores=5, powers=5
+- I029: signature=signature_i029, pool=9, cores=5, powers=5
+- I030: signature=signature_i030, pool=9, cores=5, powers=5

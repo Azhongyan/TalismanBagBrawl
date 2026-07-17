@@ -1,0 +1,5 @@
+﻿caseId,placementId,itemId,occupiedCells,occupiedArrayBonusCellIds,isLit,isOnArrayBonusCell,isArrayBonusActive,actualResult
+multi-cell lit item active on two AP cells,P_MULTI_AP01_AP03,I015,"(1,1);(2,1);(1,2)",AP01|AP03,true,true,true,PASS
+single lit item active on AP02,P_SINGLE_AP02,I001,"(2,3)",AP02,true,true,true,PASS
+unlit item occupies AP04 but is inactive,P_SINGLE_AP04_UNLIT,I007,"(3,2)",AP04,false,true,false,PASS
+lit item off AP cells has no array state,P_OFF_ARRAY,I013,"(0,0)",None,true,false,false,PASS

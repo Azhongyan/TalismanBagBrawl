@@ -1,0 +1,64 @@
+category,stableKey,developerLabelZh,description,playerVisible,developerOnly
+"Mechanic","mechanic.basic_pressure","基础压力","不带专用机制原语的基础战斗压力。",false,false
+"Mechanic","mechanic.burning","燃烧","敌方施加持续燃烧负面状态。",false,false
+"Mechanic","mechanic.burst_spike","高爆发","敌方在短时间内制造显著承伤峰值。",false,false
+"Mechanic","mechanic.energy_drain","偷灵与能量削减","敌方削减、窃取或切断玩家供能资源。",false,false
+"Mechanic","mechanic.formation_eye_disruption","阵眼干扰","敌方干扰阵眼、阵位或供能链稳定。",false,false
+"Mechanic","mechanic.high_health_endurance","厚血与长线战斗","敌方依靠高耐久把战斗拖入长线输出检查。",false,false
+"Mechanic","mechanic.layered_shield","层叠护盾","敌方以可重复叠加或恢复的护盾层制造压力。",false,false
+"Mechanic","mechanic.long_cast","长读条施法","敌方通过可观察的长读条准备关键技能。",false,false
+"Mechanic","mechanic.poison","毒","敌方施加持续毒性负面状态。",false,false
+"Mechanic","mechanic.polluted_tile","污染格","敌方或环境污染可摆放格并限制阵盘空间。",false,false
+"Mechanic","mechanic.swarm_summon","群怪与召唤","敌方通过多目标、增援或召唤物扩大场面压力。",false,false
+"Mechanic","mechanic.talisman_seal","封符","敌方压制或暂时封锁符箓触发。",false,false
+"BuildCapability","capability.break_power","破盾能力","Build 对护盾、护壳或防御层的处理能力。",false,false
+"BuildCapability","capability.burst_window","爆发窗口","Build 在短窗口内集中输出或完成反制的能力。",false,false
+"BuildCapability","capability.caster_interrupt","施法打断","Build 专门阻止敌方读条施法完成的能力。",false,false
+"BuildCapability","capability.chain_reaction","连锁反应","Build 通过连锁触发扩大清场或输出的能力。",false,false
+"BuildCapability","capability.cleanse_power","净化能力","Build 清除负面状态或污染影响的能力。",false,false
+"BuildCapability","capability.clear_power","清场能力","Build 同时处理多目标与召唤物的能力。",false,false
+"BuildCapability","capability.control_power","控制能力","Build 施加控制并争取反制节奏的能力。",false,false
+"BuildCapability","capability.cooldown_recovery","冷却恢复","Build 对冷却延缓或持续触发压力的恢复能力。",false,false
+"BuildCapability","capability.debuff_counter","负面状态反制","Build 压低、免疫或反制负面状态的能力。",false,false
+"BuildCapability","capability.energy_stability","供能稳定","Build 面对资源削减时维持供能链的能力。",false,false
+"BuildCapability","capability.guard_power","护阵能力","Build 承受爆发并保护阵位的能力。",false,false
+"BuildCapability","capability.interrupt_timing","打断时机","Build 把握施法时机完成打断的能力。",false,false
+"BuildCapability","capability.placement_shape","摆放形态","Build 通过占格形态与阵位保持可用布局的能力。",false,false
+"BuildCapability","capability.spirit_lock","锁灵能力","Build 防止灵力被窃取或切断的能力。",false,false
+"BuildCapability","capability.sustained_damage","持续输出","Build 在长线战斗中稳定输出的能力。",false,false
+"BuildCapability","capability.thunder_chain","雷链能力","Build 以雷系连锁强化破盾或多段处理的能力。",false,false
+"PressureChannel","pressure.burst_survival","爆发承伤压力","战斗压力主要来自短时高额伤害。",false,false
+"PressureChannel","pressure.cast_interrupt","施法打断压力","战斗压力要求识别并处理敌方读条。",false,false
+"PressureChannel","pressure.multi_target","多目标压力","战斗压力主要来自多目标、增援或召唤物。",false,false
+"PressureChannel","pressure.placement_formation","摆放与阵眼压力","战斗压力来自占格、阵位、阵眼或供能链限制。",false,false
+"PressureChannel","pressure.resource_disruption","资源干扰压力","战斗压力主要来自灵力与供能资源被干扰。",false,false
+"PressureChannel","pressure.seal_control","封符与控制压力","战斗压力主要来自符箓受封或行动受控。",false,false
+"PressureChannel","pressure.shield","护盾压力","战斗压力主要来自护盾或护壳层。",false,false
+"PressureChannel","pressure.status_damage","持续伤害与负面状态压力","战斗压力主要来自持续伤害、污染或负面状态。",false,false
+"PressureChannel","pressure.sustained_output","长线输出压力","战斗压力要求稳定持续输出。",false,false
+"CounterWindowType","counter_window.cleanse_reveal","净化后显形","完成净化反制后出现的显形窗口。",false,false
+"CounterWindowType","counter_window.clear_core_exposure","清场后核心暴露","清除召唤物后出现的核心暴露窗口。",false,false
+"CounterWindowType","counter_window.energy_counter_full_array","供能反制后全阵窗口","完成供能反制后出现的全阵协同窗口。",false,false
+"CounterWindowType","counter_window.guard_rebound","护阵后反震","成功护阵后触发的反震窗口。",false,false
+"CounterWindowType","counter_window.interrupt_stagger","打断后僵直","成功打断施法后出现的僵直窗口。",false,false
+"CounterWindowType","counter_window.shell_break","破壳后虚弱","成功破除护壳后出现的虚弱窗口。",false,false
+"PlayerHintCategory","player_hint.basic_pressure","基础压力信号","敌方压力正在提升。",true,false
+"PlayerHintCategory","player_hint.burst_incoming","高威胁攻击将至","敌方正在准备高威胁攻击。",true,false
+"PlayerHintCategory","player_hint.cast_interrupt_opportunity","施法可被打断","敌方施法出现可观察的反制时机。",true,false
+"PlayerHintCategory","player_hint.energy_disrupted","供能受到干扰","当前阵盘供能出现干扰。",true,false
+"PlayerHintCategory","player_hint.formation_disrupted","阵位受到干扰","阵眼或关键摆放区域正在受到影响。",true,false
+"PlayerHintCategory","player_hint.multi_target_pressure","敌群正在聚集","场上目标数量正在增加。",true,false
+"PlayerHintCategory","player_hint.shield_pressure","护盾正在恢复","敌方护盾状态正在发生变化。",true,false
+"PlayerHintCategory","player_hint.status_pressure","持续异常状态","持续异常影响正在累积。",true,false
+"PlayerHintCategory","player_hint.sustained_pressure","长线压力升高","战斗正在进入持续消耗阶段。",true,false
+"PlayerHintCategory","player_hint.talisman_sealed","符箓暂时受封","部分符箓触发暂时受到限制。",true,false
+"DeveloperDiagnosticCategory","diagnostic.canonical_signature_mismatch","签名不一致","开发者诊断发现确定性签名异常。",false,true
+"DeveloperDiagnosticCategory","diagnostic.capability_gap","能力缺口","开发者诊断发现抽象 Build 能力不足。",false,true
+"DeveloperDiagnosticCategory","diagnostic.category_collision","类别键冲突","开发者诊断发现不同类别共享完整稳定键。",false,true
+"DeveloperDiagnosticCategory","diagnostic.duplicate_legacy_source","重复旧来源","开发者诊断发现旧来源键重复登记。",false,true
+"DeveloperDiagnosticCategory","diagnostic.duplicate_stable_key","重复稳定键","开发者诊断发现稳定键重复。",false,true
+"DeveloperDiagnosticCategory","diagnostic.invalid_reference","无效引用","开发者诊断发现稳定键引用无法解析。",false,true
+"DeveloperDiagnosticCategory","diagnostic.invalid_stable_key_format","稳定键格式错误","开发者诊断发现稳定键不符合命名格式。",false,true
+"DeveloperDiagnosticCategory","diagnostic.out_of_scope_legacy_key","旧键范围外","开发者诊断记录旧键明确不属于本词汇包。",false,true
+"DeveloperDiagnosticCategory","diagnostic.player_answer_leak","玩家答案泄漏","开发者诊断发现玩家提示包含答案字段。",false,true
+"DeveloperDiagnosticCategory","diagnostic.unmapped_legacy_key","未映射旧键","开发者诊断发现旧键未完成映射。",false,true

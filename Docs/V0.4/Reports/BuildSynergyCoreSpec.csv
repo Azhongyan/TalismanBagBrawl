@@ -1,0 +1,20 @@
+﻿caseId,buildId,category,litCount,build2Active,build4Active,build6Active,note,actualResult
+track,famen:zhenlei,faMen,6,true,true,true,,PASS
+track,famen:lihuo,faMen,2,true,false,false,,PASS
+track,qilei:fu,qiLei,4,true,true,false,,PASS
+track,qilei:yin,qiLei,1,false,false,false,,PASS
+JuNian source is excluded,P_I031_SOURCE,item,0,false,false,false,,PASS
+Lit valid faMen/qiLei item counts,P_I001,item,1,true,true,true,qilei:fu,PASS
+Duplicate base item is excluded,P_I001_DUP_BASE,item,0,true,true,true,qilei:fu,PASS
+Unlit item is excluded,P_I009_UNLIT,item,0,true,false,false,qilei:yin,PASS
+duplicatePlacementDedup,P_I001,validation,6,true,true,true,duplicate ignored; count unchanged,PASS
+duplicateBaseItemExcluded,P_I001_DUP_BASE,validation,6,true,true,true,DUPLICATE_BASE_ITEM_PLACED; duplicate base excluded; legal I001-I006 count remains 6,PASS
+missingCatalog,P_MISSING_CATALOG,validation,0,true,true,true,validationErrors includes missing catalog,PASS
+emptyPlacementId,empty,validation,0,true,true,true,empty placement ignored,PASS
+invalidTags,P_BAD_TAG,validation,0,true,true,true,invalid faMenTag/qiLeiTag excluded,PASS
+selectedMainBuildReserved,selectedMainBuildId,readonlySnapshot,0,true,true,true,reserved empty,PASS
+monitorSlotsNotGenerated,MonitorSlots,readonlySnapshot,0,true,true,true,no MonitorSlots member or ItemSkillMonitorSlot type,PASS
+detailProjection,P_I001,viewModel,6,true,true,true,faMen/qiLei progress only; validationErrors visible,PASS
+snapshotProvider,IItemBuildSynergySnapshotProvider,interface,1,true,true,true,ItemSandboxGridPlacementPreviewView,PASS
+greyboxOverview,BuildOverview,ui,10,true,true,true,Build overview: lit non-JuNian items only; no effects or combat settlement. / FaMen: lihuo 2/6 Build2; taibai 0/6 None; xuanshui 0/6 None; zhenlei 6/6 Build6; zhongyue 0/6 None / QiLei: fa 1/4 None; fu 4/4 Build4; jing 1/4 None; ling 1/4 None; yin 1/4 None / SelectedMainBuildId: None (reserved; not selected by BuildSynergyCore01). / ValidationErrors: placementId is empty for itemId 'I012'; item was ignored. | duplicate placementId 'P_I001' was ignored after the first occurrence. | DUPLICATE_BASE_ITEM_PLACED: baseItemId/itemId 'I001' placementId 'P_I001_DUP_BASE' duplicates placementId 'P_I001' and was excluded from Build counts. | missing catalog item for placementId 'P_MISSING_CATALOG' itemId 'I999'.,PASS
+nullLightingSnapshot,lightingResult,validation,0,true,true,true,validationErrors includes null snapshot,PASS

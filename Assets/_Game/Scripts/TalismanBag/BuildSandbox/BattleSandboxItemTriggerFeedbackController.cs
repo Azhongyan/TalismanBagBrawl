@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,6 +11,7 @@ namespace TalismanBag.BuildSandbox
         public const string PackageName = "V0.4-BattleSandboxItemTriggerFeedbackFx01";
 
         private const string FxLayerName = "BattleSandboxItemTriggerFeedbackFxLayer";
+        private const string ZhaoShaMirrorFramesResourcesPath = "anim/\u7167\u715e\u955c_VFX_RGBA_9\u5e27/frames";
         private const float TargetPulseDuration = 0.28f;
         private const float FlashDuration = 0.36f;
         private const float VfxDuration = 0.48f;
@@ -20,12 +22,25 @@ namespace TalismanBag.BuildSandbox
 
         [SerializeField] private bool devOnly = true;
         [SerializeField] private bool isEnabled;
+        [SerializeField] private bool playResourceSequenceVfx = true;
+        [SerializeField] private bool preferInspectorSequenceFrameSlots = true;
+        [SerializeField] private List<Sprite> inspectorSequenceFrameSlots = new();
+        [SerializeField] private string resourceSequenceFramesPath = ZhaoShaMirrorFramesResourcesPath;
+        [SerializeField] private string resourceSequenceTargetItemId = "preview_fire_talisman";
+        [SerializeField] private string resourceSequenceTargetFeedbackKind = "damage";
+        [SerializeField] private bool resourceSequenceRequiresSingleCell = true;
+        [SerializeField, Min(1f)] private float resourceSequenceFramesPerSecond = 18f;
+        [SerializeField, Min(0.1f)] private float resourceSequenceScale = 1.35f;
+        [SerializeField] private bool suppressProceduralVfxWhenResourceSequencePlays = true;
 
         private readonly List<GameObject> transientObjects = new();
+        private readonly List<Sprite> generatedSequenceSprites = new();
         private readonly Dictionary<RectTransform, Vector3> pulsedTargetBaseScales = new();
         private readonly Dictionary<string, float> passiveFeedbackLastPlayTimes = new();
         private BuildGridInteractionPreviewController gridController;
         private Font runtimeFont;
+        private List<Sprite> cachedResourceSequenceFrames;
+        private string cachedResourceSequenceFramesPath = string.Empty;
         private float lastActiveFeedbackTime = -100f;
         private float lastPassiveFeedbackTime = -100f;
 
@@ -86,7 +101,17 @@ namespace TalismanBag.BuildSandbox
                 StartCoroutine(SpawnFlashAtAnchor(fxLayer, anchoredPosition, sizeDelta, color, isPassive));
             }
 
-            StartCoroutine(SpawnSkillVfx(fxLayer, anchoredPosition, sizeDelta, color, row.boardItemTriggerFeedbackKind, isPassive));
+            bool playedResourceSequence = TryPlayResourceSequenceVfx(
+                row,
+                fxLayer,
+                anchoredPosition,
+                sizeDelta,
+                isPassive);
+            if (!playedResourceSequence || !suppressProceduralVfxWhenResourceSequencePlays)
+            {
+                StartCoroutine(SpawnSkillVfx(fxLayer, anchoredPosition, sizeDelta, color, row.boardItemTriggerFeedbackKind, isPassive));
+            }
+
             StartCoroutine(SpawnFloatingText(
                 fxLayer,
                 anchoredPosition,
@@ -117,6 +142,11 @@ namespace TalismanBag.BuildSandbox
             }
 
             transientObjects.Clear();
+        }
+
+        private void OnDestroy()
+        {
+            DestroyGeneratedSequenceSprites();
         }
 
         private IEnumerator PulseTarget(RectTransform target, bool isPassive)
@@ -254,6 +284,190 @@ namespace TalismanBag.BuildSandbox
 
             transientObjects.Remove(root);
             DestroyTransient(root);
+        }
+
+        private bool TryPlayResourceSequenceVfx(
+            BattleSandboxRuntimeLoopRow row,
+            RectTransform layer,
+            Vector2 anchoredPosition,
+            Vector2 sizeDelta,
+            bool isPassive)
+        {
+            if (!playResourceSequenceVfx || isPassive || row == null || layer == null)
+            {
+                return false;
+            }
+
+            if (resourceSequenceRequiresSingleCell
+                && (row.boardItemTriggerOccupiedCells == null || row.boardItemTriggerOccupiedCells.Count != 1))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(resourceSequenceTargetItemId)
+                && !string.Equals(row.itemId, resourceSequenceTargetItemId.Trim(), StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(resourceSequenceTargetFeedbackKind)
+                && !string.Equals(row.boardItemTriggerFeedbackKind, resourceSequenceTargetFeedbackKind.Trim(), StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            List<Sprite> frames = ResolveResourceSequenceFrames();
+            if (frames.Count == 0)
+            {
+                return false;
+            }
+
+            StartCoroutine(SpawnResourceSequenceVfx(
+                layer,
+                anchoredPosition,
+                sizeDelta,
+                frames));
+            return true;
+        }
+
+        private IEnumerator SpawnResourceSequenceVfx(
+            RectTransform layer,
+            Vector2 anchoredPosition,
+            Vector2 sizeDelta,
+            IReadOnlyList<Sprite> frames)
+        {
+            if (layer == null || frames == null || frames.Count == 0)
+            {
+                yield break;
+            }
+
+            GameObject root = CreateUiObject("ItemTriggerResourceSequenceVfx", layer);
+            transientObjects.Add(root);
+            RectTransform rect = root.GetComponent<RectTransform>();
+            SetTopLeftAnchor(rect);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = ResolveSafeSize(sizeDelta, 92f) * Mathf.Max(0.1f, resourceSequenceScale);
+            rect.localScale = Vector3.one;
+
+            CanvasGroup group = root.AddComponent<CanvasGroup>();
+            group.blocksRaycasts = false;
+            group.interactable = false;
+
+            Image image = root.AddComponent<Image>();
+            image.raycastTarget = false;
+            image.preserveAspect = true;
+            image.color = Color.white;
+
+            float frameDuration = 1f / Mathf.Max(1f, resourceSequenceFramesPerSecond);
+            float elapsed = 0f;
+            float totalDuration = frameDuration * frames.Count;
+            int frameIndex = -1;
+            while (elapsed < totalDuration && root != null && image != null)
+            {
+                int nextFrameIndex = Mathf.Clamp(Mathf.FloorToInt(elapsed / frameDuration), 0, frames.Count - 1);
+                if (nextFrameIndex != frameIndex)
+                {
+                    frameIndex = nextFrameIndex;
+                    image.sprite = frames[frameIndex];
+                }
+
+                float normalized = totalDuration <= 0f ? 1f : Mathf.Clamp01(elapsed / totalDuration);
+                rect.localScale = Vector3.one * Mathf.Lerp(0.94f, 1.08f, Mathf.Sin(normalized * Mathf.PI));
+                group.alpha = normalized < 0.82f ? 1f : Mathf.Lerp(1f, 0f, (normalized - 0.82f) / 0.18f);
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            transientObjects.Remove(root);
+            DestroyTransient(root);
+        }
+
+        private List<Sprite> ResolveResourceSequenceFrames()
+        {
+            if (TryResolveInspectorSequenceFrames(out List<Sprite> inspectorFrames))
+            {
+                return inspectorFrames;
+            }
+
+            string path = string.IsNullOrWhiteSpace(resourceSequenceFramesPath)
+                ? string.Empty
+                : resourceSequenceFramesPath.Trim();
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return new List<Sprite>();
+            }
+
+            if (cachedResourceSequenceFrames != null
+                && string.Equals(cachedResourceSequenceFramesPath, path, StringComparison.Ordinal))
+            {
+                return cachedResourceSequenceFrames;
+            }
+
+            cachedResourceSequenceFramesPath = path;
+            cachedResourceSequenceFrames = LoadResourceSequenceSprites(path);
+            return cachedResourceSequenceFrames;
+        }
+
+        private bool TryResolveInspectorSequenceFrames(out List<Sprite> frames)
+        {
+            frames = new List<Sprite>();
+            if (!preferInspectorSequenceFrameSlots || inspectorSequenceFrameSlots == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < inspectorSequenceFrameSlots.Count; i++)
+            {
+                Sprite frame = inspectorSequenceFrameSlots[i];
+                if (frame != null)
+                {
+                    frames.Add(frame);
+                }
+            }
+
+            return frames.Count > 0;
+        }
+
+        private List<Sprite> LoadResourceSequenceSprites(string path)
+        {
+            List<Sprite> frames = new(Resources.LoadAll<Sprite>(path) ?? Array.Empty<Sprite>());
+            frames.RemoveAll(sprite => sprite == null);
+            if (frames.Count == 0)
+            {
+                foreach (Texture2D texture in Resources.LoadAll<Texture2D>(path) ?? Array.Empty<Texture2D>())
+                {
+                    if (texture == null)
+                    {
+                        continue;
+                    }
+
+                    Sprite sprite = Sprite.Create(
+                        texture,
+                        new Rect(0f, 0f, texture.width, texture.height),
+                        new Vector2(0.5f, 0.5f),
+                        100f);
+                    sprite.name = texture.name;
+                    sprite.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                    generatedSequenceSprites.Add(sprite);
+                    frames.Add(sprite);
+                }
+            }
+
+            frames.Sort((left, right) => StringComparer.OrdinalIgnoreCase.Compare(left.name, right.name));
+            return frames;
+        }
+
+        private void DestroyGeneratedSequenceSprites()
+        {
+            for (int i = generatedSequenceSprites.Count - 1; i >= 0; i--)
+            {
+                DestroyTransient(generatedSequenceSprites[i]);
+            }
+
+            generatedSequenceSprites.Clear();
+            cachedResourceSequenceFrames = null;
+            cachedResourceSequenceFramesPath = string.Empty;
         }
 
         private IEnumerator SpawnFloatingText(
@@ -506,6 +720,23 @@ namespace TalismanBag.BuildSandbox
         }
 
         private static void DestroyTransient(GameObject obj)
+        {
+            if (obj == null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(obj);
+            }
+            else
+            {
+                DestroyImmediate(obj);
+            }
+        }
+
+        private static void DestroyTransient(UnityEngine.Object obj)
         {
             if (obj == null)
             {

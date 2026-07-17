@@ -1,0 +1,28 @@
+ownerType,fieldName,fieldType,cardinality,semantic,visibility,sourceOfTruth,futureConsumer
+EnemySystemSnapshotInput,EnemyDomainSnapshot,EnemyDomainSnapshot,1,E01 immutable domain,developer-only input,E01 Provider,E09 Validator
+EnemySystemSnapshotInput,EnemyMechanicVocabularySnapshot,EnemyMechanicVocabularySnapshot,1,E02 immutable vocabulary,developer-only input,E02 Provider,E09 Validator
+EnemySystemSnapshotInput,EnemyValidationContentSnapshot,EnemyValidationContentSnapshot,1,E03 normalized content,developer-only input,E03 Normalizer,E09 Root
+EnemySystemSnapshotInput,EncounterCompositionCatalogSnapshot,EncounterCompositionCatalogSnapshot,1,E04 encounter composition,developer-only input,E04 Provider,E09 relations
+EnemySystemSnapshotInput,EnemySkillBossPhaseCatalogSnapshot,EnemySkillBossPhaseCatalogSnapshot,1,E05 skill and phase catalog,developer-only input,E05 Provider,E09 relations
+EnemySystemSnapshotInput,CounterWindowAndPressureCatalogSnapshot,CounterWindowAndPressureCatalogSnapshot,1,E06 pressure and window catalog,developer-only input,E06 Provider,E09 relations
+EnemySystemSchemaManifestEntry,ComponentId,string,1,E01 through E08 ordinal component,developer-only,E09 contract,validator/report
+EnemySystemSchemaManifestEntry,ComponentMode,EnemySystemComponentMode,1,StaticEmbedded or TransientContract,developer-only,E09 contract,validator/report
+EnemySystemSchemaManifestEntry,EmbeddedInRoot,bool,1,Static six true; transient two false,developer-only,E09 contract,validator/report
+EnemySystemSchemaManifestEntry,ContractCanonicalSignature,string,1,Schema mode and embedded contract hash,developer-only,E09,compatibility gate
+EnemySystemIdentitySnapshot,IdentityKind,EnemySystemIdentityKind,1,Kind-scoped identity,developer-only,E09,diagnostics
+EnemySystemIdentitySnapshot,StableId,string,1,Ordinal stable identity,developer-only,E01-E06,relations
+EnemySystemRelationSnapshot,RelationKind,EnemySystemRelationKind,1,Cross-catalog declared relation,developer-only,E09,diagnostics
+EnemySystemRelationSnapshot,Resolved,bool,1,Ordinal target resolution,developer-only,E09,validation gate
+EnemySystemRelationSnapshot,IsolationCompatible,bool,1,Endpoint isolation compatibility,developer-only,E09,validation gate
+EnemySystemPlayerSafeSnapshot,Enemies,EnemyValidationPlayerProjection[],0..N,Existing E03 player projection,player-safe,E03,future optional consumer
+EnemySystemPlayerSafeSnapshot,Bosses,EnemyValidationPlayerProjection[],0..N,Existing E03 player projection,player-safe,E03,future optional consumer
+EnemySystemPlayerSafeSnapshot,MechanicProfiles,EnemyValidationPlayerProjection[],0..N,Existing E03 player projection,player-safe,E03,future optional consumer
+EnemySystemPlayerSafeSnapshot,MapRules,EnemyValidationPlayerProjection[],0..N,Existing E03 player projection,player-safe,E03,future optional consumer
+EnemySystemPlayerSafeSnapshot,SkillPatterns,SkillPatternPlayerProjection[],0..N,Existing E05 player projection,player-safe,E05,future optional consumer
+EnemySystemPlayerSafeSnapshot,BossPhases,BossPhasePlayerProjection[],0..N,Existing E05 player projection,player-safe,E05,future optional consumer
+EnemySystemPlayerSafeSnapshot,BuildPressureProfiles,BuildPressurePlayerProjection[],0..N,Existing E06 player projection,player-safe,E06,future optional consumer
+EnemySystemPlayerSafeSnapshot,CounterWindows,CounterWindowPlayerProjection[],0..N,Existing E06 player projection,player-safe,E06,future optional consumer
+EnemySystemSnapshot,CanonicalSignature,string,1,Static full root canonical signature,developer-only,E09,validator
+EnemySystemSnapshot,PlayerSafeCanonicalSignature,string,1,Player whitelist-only signature,player-safe hash,E09,validator
+EnemySystemSnapshot,PublicPropertyClosure,17 exact properties,17,CanonicalSignature;CounterWindowAndPressureCatalogSnapshot;DevOnly;EncounterCompositionCatalogSnapshot;EnemyDomainSnapshot;EnemyMechanicVocabularySnapshot;EnemySkillBossPhaseCatalogSnapshot;EnemyValidationContentSnapshot;EntersFormalFlow;IdentityIndex;IsEnabled;PlayerSafe;PlayerSafeCanonicalSignature;RelationIndex;SchemaId;SchemaManifest;SchemaVersion,closed,E09 Validator,LeakCheckReport
+EnemySystemSnapshot,TransientInstancePayload,E07/E08,0,"E07/E08 contract rows only; no transient instance identity, relation, or static signature payload",absent,E09,validator/report

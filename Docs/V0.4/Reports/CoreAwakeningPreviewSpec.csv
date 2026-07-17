@@ -1,0 +1,32 @@
+﻿caseId,placementId,itemId,inputLevel,resolvedLevel,isLit,supportsAwakening,unlockedCoreEffectIds,activeCoreEffectIds,nextUnlockLevel,validationErrors,expectedResult,actualResult
+definitionProviderDefault,definitions,I001,1,1,false,true,I001_CORE_01|I001_CORE_02|I001_CORE_03|I001_CORE_ULT,None,10,None,I001 has four item-specific ids; I031 has none,PASS
+levelLv1,P_LV1,I001,1,1,true,true,None,None,10,None,PASS,PASS
+levelLv9,P_LV9,I002,9,9,true,true,None,None,10,None,PASS,PASS
+levelLv10,P_LV10,I003,10,10,true,true,I003_CORE_01,I003_CORE_01,20,None,PASS,PASS
+levelLv19,P_LV19,I004,19,19,true,true,I004_CORE_01,I004_CORE_01,20,None,PASS,PASS
+levelLv20,P_LV20,I005,20,20,true,true,I005_CORE_01|I005_CORE_02,I005_CORE_01|I005_CORE_02,30,None,PASS,PASS
+levelLv29,P_LV29,I006,29,29,true,true,I006_CORE_01|I006_CORE_02,I006_CORE_01|I006_CORE_02,30,None,PASS,PASS
+levelLv30,P_LV30,I007,30,30,true,true,I007_CORE_01|I007_CORE_02|I007_CORE_03,I007_CORE_01|I007_CORE_02|I007_CORE_03,40,None,PASS,PASS
+levelLv39,P_LV39,I013,39,39,true,true,I013_CORE_01|I013_CORE_02|I013_CORE_03,I013_CORE_01|I013_CORE_02|I013_CORE_03,40,None,PASS,PASS
+levelLv40,P_LV40,I015,40,40,true,true,I015_CORE_01|I015_CORE_02|I015_CORE_03|I015_CORE_ULT,I015_CORE_01|I015_CORE_02|I015_CORE_03|I015_CORE_ULT,0,None,PASS,PASS
+highRarityReservedOnly,P_HIGH_RARITY_LV1,I007,1,1,true,true,None,None,10,None,Ultimate remains locked with ReservedRarityGate,PASS
+sourceUnsupported,P_SOURCE,I031,40,40,true,false,None,None,0,None,I031 has no core nodes,PASS
+inputLevel0Clamp,P_INPUT0,I001,0,1,true,true,None,None,10,inputLevel 0 below 1 for placementId 'P_INPUT0'; resolvedLevel=1.,resolvedLevel=1 with validationErrors,PASS
+inputLevel41Clamp,P_INPUT41,I004,41,40,true,true,I004_CORE_01|I004_CORE_02|I004_CORE_03|I004_CORE_ULT,I004_CORE_01|I004_CORE_02|I004_CORE_03|I004_CORE_ULT,0,inputLevel 41 above 40 for placementId 'P_INPUT41'; resolvedLevel=40.,resolvedLevel=40 with validationErrors,PASS
+missingInputDefaultLv1,P_MISSING_INPUT,I013,1,1,true,true,None,None,10,missing awakening input for placementId 'P_MISSING_INPUT'; defaulted to Lv.1.,MissingInputDefaultLv1 with validationErrors,PASS
+definitionMissing,P_DEF,I001,40,40,true,false,None,None,10,ordinary itemId 'I001' has no core effect definitions.|missing core effect definition for itemId 'I001' nodeKind 'Core1'.|missing core effect definition for itemId 'I001' nodeKind 'Core2'.|missing core effect definition for itemId 'I001' nodeKind 'Core3'.|missing core effect definition for itemId 'I001' nodeKind 'Ultimate'.,validationErrors contains no core effect definitions,PASS
+duplicateCoreEffectId,P_DEF,I001,40,40,true,true,I001_CORE_DUP|I001_CORE_03|I001_CORE_ULT,I001_CORE_DUP|I001_CORE_03|I001_CORE_ULT,20,duplicate coreEffectId 'I001_CORE_DUP' for itemId 'I001' ignored after stable first definition.|missing core effect definition for itemId 'I001' nodeKind 'Core2'.,validationErrors contains duplicate coreEffectId,PASS
+duplicateNodeKind,P_DEF,I001,40,40,true,true,I001_CORE_01|I001_CORE_02|I001_CORE_03|I001_CORE_ULT,I001_CORE_01|I001_CORE_02|I001_CORE_03|I001_CORE_ULT,0,duplicate nodeKind 'Core1' for itemId 'I001' ignored after stable first definition.,validationErrors contains duplicate nodeKind,PASS
+wrongNodeLevel,P_DEF,I001,40,40,true,true,I001_CORE_01|I001_CORE_03|I001_CORE_ULT,I001_CORE_01|I001_CORE_03|I001_CORE_ULT,20,"nodeKind 'Core2' unlockLevel mismatch for itemId 'I001': expected 20, actual 21.|missing core effect definition for itemId 'I001' nodeKind 'Core2'.",validationErrors contains unlockLevel mismatch,PASS
+definitionItemMismatch,P_DEF,I001,40,40,true,true,I001_CORE_02|I001_CORE_03|I001_CORE_ULT,I001_CORE_02|I001_CORE_03|I001_CORE_ULT,10,core effect definition itemId mismatch for current itemId 'I001': definition itemId 'I999'.|missing core effect definition for itemId 'I001' nodeKind 'Core1'.,validationErrors contains itemId mismatch,PASS
+emptyCoreEffectId,P_DEF,I001,40,40,true,true,I001_CORE_02|I001_CORE_03|I001_CORE_ULT,I001_CORE_02|I001_CORE_03|I001_CORE_ULT,10,empty coreEffectId for itemId 'I001' nodeKind 'Core1' ignored.|missing core effect definition for itemId 'I001' nodeKind 'Core1'.,validationErrors contains empty coreEffectId,PASS
+nullDefinition,P_DEF,I001,40,40,true,true,I001_CORE_01|I001_CORE_02|I001_CORE_03|I001_CORE_ULT,I001_CORE_01|I001_CORE_02|I001_CORE_03|I001_CORE_ULT,0,null core effect definition for itemId 'I001' ignored.,validationErrors contains null core effect definition,PASS
+nullDefinitionProvider,P_DEF,I001,40,40,true,false,None,None,10,definitionProvider is null for itemId 'I001'.|ordinary itemId 'I001' has no core effect definitions.|missing core effect definition for itemId 'I001' nodeKind 'Core1'.|missing core effect definition for itemId 'I001' nodeKind 'Core2'.|missing core effect definition for itemId 'I001' nodeKind 'Core3'.|missing core effect definition for itemId 'I001' nodeKind 'Ultimate'.,validationErrors contains definitionProvider is null,PASS
+detailProjection,P_LV40,I015,40,40,true,true,I015_CORE_01|I015_CORE_02|I015_CORE_03|I015_CORE_ULT,I015_CORE_01|I015_CORE_02|I015_CORE_03|I015_CORE_ULT,0,None,ViewModel exposes core ids and active state,PASS
+sandboxPreviewCatalog,PreviewCatalog,all,1,1,false,true,None,None,10,None,"Preview resolvedLevel values stay within 1-40, exclude Lv0, and include 1/10/20/30/40 without placementId inference.",PASS
+build6CannotUnlockCore,P_BUILD_I001,I001,1,1,true,true,None,None,10,None,Build6 active but Lv1 core remains locked; no MonitorSlots,PASS
+arrayCannotUnlockCore,P_ARRAY_ACTIVE,I001,1,1,true,true,None,None,10,None,Array active but Lv1 core remains locked,PASS
+lightingRegression,P_LIGHT_DIRECT,I001,1,1,true,true,None,None,10,None,direct lit/unlit samples pass,PASS
+arrayBonusRegression,P_AP_LIT,I001,1,1,true,true,None,None,10,None,array lit/unlit samples pass,PASS
+buildSynergyCoreRegression,famen:zhenlei,Build,1,1,true,true,None,None,10,None,Build6 active and selectedMainBuildId empty,PASS
+snapshotInputDefinitionInterfaces,interfaces,all,1,1,false,true,None,None,10,None,snapshot/input/definition provider interfaces present,PASS

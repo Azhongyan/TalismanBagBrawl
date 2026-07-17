@@ -1,0 +1,10 @@
+statId,displayName,unitKey,direction,decimalPlaces,stepUnits,roundingMode,dataMaturity
+break,破盾,flat,HigherIsBetter,0,1,Nearest,BALANCE_CANDIDATE
+cleanse,净化,stack,HigherIsBetter,0,1,Nearest,BALANCE_CANDIDATE
+control,控制,point,HigherIsBetter,0,1,Nearest,BALANCE_CANDIDATE
+cooldown,冷却,turn,LowerIsBetter,0,1,Nearest,BALANCE_CANDIDATE
+damage,伤害,flat,HigherIsBetter,0,1,Nearest,BALANCE_CANDIDATE
+duration,持续,turn,HigherIsBetter,0,1,Nearest,BALANCE_CANDIDATE
+guard,护势,flat,HigherIsBetter,0,1,Nearest,BALANCE_CANDIDATE
+heal,回复,flat,HigherIsBetter,0,1,Nearest,BALANCE_CANDIDATE
+nianCost,耗念,point,LowerIsBetter,0,1,Nearest,BALANCE_CANDIDATE

@@ -1,0 +1,81 @@
+﻿caseId,selectedMainBuildId,buildCount,activeStage,slotType,isUnlocked,isMonitoring,isTriggered,cooldown01,charge01,presentationCueId,chibiActionKey,validationErrors,expectedResult,actualResult
+emptySelection,,0,0,BasicAttack,false,false,false,0,0,none_basic_attack,none_basic_attack,None,Locked,PASS
+emptySelection,,0,0,Build2,false,false,false,0,0,none_build2,none_build2,None,Locked,PASS
+emptySelection,,0,0,Build4,false,false,false,0,0,none_build4,none_build4,None,Locked,PASS
+emptySelection,,0,0,Build6,false,false,false,0,0,none_build6,none_build6,None,Locked,PASS
+validFaMenCount0,famen:zhenlei,0,0,BasicAttack,false,false,false,0,0,zhenlei_basic_attack,zhenlei_basic_attack,None,Locked,PASS
+validFaMenCount0,famen:zhenlei,0,0,Build2,false,false,false,0,0,zhenlei_build2,zhenlei_build2,None,Locked,PASS
+validFaMenCount0,famen:zhenlei,0,0,Build4,false,false,false,0,0,zhenlei_build4,zhenlei_build4,None,Locked,PASS
+validFaMenCount0,famen:zhenlei,0,0,Build6,false,false,false,0,0,zhenlei_build6,zhenlei_build6,None,Locked,PASS
+validFaMenCount1,famen:zhenlei,1,0,BasicAttack,true,true,false,0,0,zhenlei_basic_attack,zhenlei_basic_attack,None,Monitoring,PASS
+validFaMenCount1,famen:zhenlei,1,0,Build2,false,false,false,0,0,zhenlei_build2,zhenlei_build2,None,Locked,PASS
+validFaMenCount1,famen:zhenlei,1,0,Build4,false,false,false,0,0,zhenlei_build4,zhenlei_build4,None,Locked,PASS
+validFaMenCount1,famen:zhenlei,1,0,Build6,false,false,false,0,0,zhenlei_build6,zhenlei_build6,None,Locked,PASS
+validFaMenBuild2,famen:zhenlei,2,2,BasicAttack,true,true,false,0,0,zhenlei_basic_attack,zhenlei_basic_attack,None,Monitoring,PASS
+validFaMenBuild2,famen:zhenlei,2,2,Build2,true,true,false,0,0,zhenlei_build2,zhenlei_build2,None,Monitoring,PASS
+validFaMenBuild2,famen:zhenlei,2,2,Build4,false,false,false,0,0,zhenlei_build4,zhenlei_build4,None,Locked,PASS
+validFaMenBuild2,famen:zhenlei,2,2,Build6,false,false,false,0,0,zhenlei_build6,zhenlei_build6,None,Locked,PASS
+validFaMenBuild4,famen:zhenlei,4,4,BasicAttack,true,true,false,0,0,zhenlei_basic_attack,zhenlei_basic_attack,None,Monitoring,PASS
+validFaMenBuild4,famen:zhenlei,4,4,Build2,true,true,false,0,0,zhenlei_build2,zhenlei_build2,None,Monitoring,PASS
+validFaMenBuild4,famen:zhenlei,4,4,Build4,true,true,false,0,0,zhenlei_build4,zhenlei_build4,None,Monitoring,PASS
+validFaMenBuild4,famen:zhenlei,4,4,Build6,false,false,false,0,0,zhenlei_build6,zhenlei_build6,None,Locked,PASS
+validFaMenBuild6,famen:zhenlei,6,6,BasicAttack,true,true,false,0,0,zhenlei_basic_attack,zhenlei_basic_attack,None,Monitoring,PASS
+validFaMenBuild6,famen:zhenlei,6,6,Build2,true,true,false,0,0,zhenlei_build2,zhenlei_build2,None,Monitoring,PASS
+validFaMenBuild6,famen:zhenlei,6,6,Build4,true,true,false,0,0,zhenlei_build4,zhenlei_build4,None,Monitoring,PASS
+validFaMenBuild6,famen:zhenlei,6,6,Build6,true,true,false,0,0,zhenlei_build6,zhenlei_build6,None,Monitoring,PASS
+build6DropsTo5,famen:zhenlei,5,4,BasicAttack,true,true,false,0,0,zhenlei_basic_attack,zhenlei_basic_attack,None,Monitoring,PASS
+build6DropsTo5,famen:zhenlei,5,4,Build2,true,true,false,0,0,zhenlei_build2,zhenlei_build2,None,Monitoring,PASS
+build6DropsTo5,famen:zhenlei,5,4,Build4,true,true,false,0,0,zhenlei_build4,zhenlei_build4,None,Monitoring,PASS
+build6DropsTo5,famen:zhenlei,5,4,Build6,false,false,false,0,0,zhenlei_build6,zhenlei_build6,None,Locked,PASS
+twoFaMenActiveNoSelection,,0,0,BasicAttack,false,false,false,0,0,none_basic_attack,none_basic_attack,None,Locked,PASS
+twoFaMenActiveNoSelection,,0,0,Build2,false,false,false,0,0,none_build2,none_build2,None,Locked,PASS
+twoFaMenActiveNoSelection,,0,0,Build4,false,false,false,0,0,none_build4,none_build4,None,Locked,PASS
+twoFaMenActiveNoSelection,,0,0,Build6,false,false,false,0,0,none_build6,none_build6,None,Locked,PASS
+explicitLowerStageNoAutoSwitch,famen:lihuo,2,2,BasicAttack,true,true,false,0,0,lihuo_basic_attack,lihuo_basic_attack,None,Monitoring,PASS
+explicitLowerStageNoAutoSwitch,famen:lihuo,2,2,Build2,true,true,false,0,0,lihuo_build2,lihuo_build2,None,Monitoring,PASS
+explicitLowerStageNoAutoSwitch,famen:lihuo,2,2,Build4,false,false,false,0,0,lihuo_build4,lihuo_build4,None,Locked,PASS
+explicitLowerStageNoAutoSwitch,famen:lihuo,2,2,Build6,false,false,false,0,0,lihuo_build6,lihuo_build6,None,Locked,PASS
+selectQiLeiRejected,qilei:fu,0,0,BasicAttack,false,false,false,0,0,none_basic_attack,none_basic_attack,selectedMainBuildId 'qilei:fu' points to qiLei Build; only faMen Build can be main Build.,Locked,PASS
+selectQiLeiRejected,qilei:fu,0,0,Build2,false,false,false,0,0,none_build2,none_build2,selectedMainBuildId 'qilei:fu' points to qiLei Build; only faMen Build can be main Build.,Locked,PASS
+selectQiLeiRejected,qilei:fu,0,0,Build4,false,false,false,0,0,none_build4,none_build4,selectedMainBuildId 'qilei:fu' points to qiLei Build; only faMen Build can be main Build.,Locked,PASS
+selectQiLeiRejected,qilei:fu,0,0,Build6,false,false,false,0,0,none_build6,none_build6,selectedMainBuildId 'qilei:fu' points to qiLei Build; only faMen Build can be main Build.,Locked,PASS
+selectMissingBuildRejected,famen:xuanshui,0,0,BasicAttack,false,false,false,0,0,none_basic_attack,none_basic_attack,selectedMainBuildId 'famen:xuanshui' was not found in faMen Build snapshot.,Locked,PASS
+selectMissingBuildRejected,famen:xuanshui,0,0,Build2,false,false,false,0,0,none_build2,none_build2,selectedMainBuildId 'famen:xuanshui' was not found in faMen Build snapshot.,Locked,PASS
+selectMissingBuildRejected,famen:xuanshui,0,0,Build4,false,false,false,0,0,none_build4,none_build4,selectedMainBuildId 'famen:xuanshui' was not found in faMen Build snapshot.,Locked,PASS
+selectMissingBuildRejected,famen:xuanshui,0,0,Build6,false,false,false,0,0,none_build6,none_build6,selectedMainBuildId 'famen:xuanshui' was not found in faMen Build snapshot.,Locked,PASS
+nullBuildSnapshotRejected,famen:zhenlei,0,0,BasicAttack,false,false,false,0,0,none_basic_attack,none_basic_attack,Build snapshot is null; emitted four locked skill monitor slots.,Locked,PASS
+nullBuildSnapshotRejected,famen:zhenlei,0,0,Build2,false,false,false,0,0,none_build2,none_build2,Build snapshot is null; emitted four locked skill monitor slots.,Locked,PASS
+nullBuildSnapshotRejected,famen:zhenlei,0,0,Build4,false,false,false,0,0,none_build4,none_build4,Build snapshot is null; emitted four locked skill monitor slots.,Locked,PASS
+nullBuildSnapshotRejected,famen:zhenlei,0,0,Build6,false,false,false,0,0,none_build6,none_build6,Build snapshot is null; emitted four locked skill monitor slots.,Locked,PASS
+slotOrderFixedUnique,famen:taibai,6,6,BasicAttack,true,true,false,0,0,taibai_basic_attack,taibai_basic_attack,None,Monitoring,PASS
+slotOrderFixedUnique,famen:taibai,6,6,Build2,true,true,false,0,0,taibai_build2,taibai_build2,None,Monitoring,PASS
+slotOrderFixedUnique,famen:taibai,6,6,Build4,true,true,false,0,0,taibai_build4,taibai_build4,None,Monitoring,PASS
+slotOrderFixedUnique,famen:taibai,6,6,Build6,true,true,false,0,0,taibai_build6,taibai_build6,None,Monitoring,PASS
+triggerAlwaysFalse,famen:zhenlei,6,6,BasicAttack,true,true,false,0,0,zhenlei_basic_attack,zhenlei_basic_attack,None,Monitoring,PASS
+triggerAlwaysFalse,famen:zhenlei,6,6,Build2,true,true,false,0,0,zhenlei_build2,zhenlei_build2,None,Monitoring,PASS
+triggerAlwaysFalse,famen:zhenlei,6,6,Build4,true,true,false,0,0,zhenlei_build4,zhenlei_build4,None,Monitoring,PASS
+triggerAlwaysFalse,famen:zhenlei,6,6,Build6,true,true,false,0,0,zhenlei_build6,zhenlei_build6,None,Monitoring,PASS
+cooldownChargeAlwaysZero,famen:zhenlei,6,6,BasicAttack,true,true,false,0,0,zhenlei_basic_attack,zhenlei_basic_attack,None,Monitoring,PASS
+cooldownChargeAlwaysZero,famen:zhenlei,6,6,Build2,true,true,false,0,0,zhenlei_build2,zhenlei_build2,None,Monitoring,PASS
+cooldownChargeAlwaysZero,famen:zhenlei,6,6,Build4,true,true,false,0,0,zhenlei_build4,zhenlei_build4,None,Monitoring,PASS
+cooldownChargeAlwaysZero,famen:zhenlei,6,6,Build6,true,true,false,0,0,zhenlei_build6,zhenlei_build6,None,Monitoring,PASS
+stableCueKeysOnly,famen:zhenlei,6,6,BasicAttack,true,true,false,0,0,zhenlei_basic_attack,zhenlei_basic_attack,None,stable key only,PASS
+stableCueKeysOnly,famen:zhenlei,6,6,Build2,true,true,false,0,0,zhenlei_build2,zhenlei_build2,None,stable key only,PASS
+stableCueKeysOnly,famen:zhenlei,6,6,Build4,true,true,false,0,0,zhenlei_build4,zhenlei_build4,None,stable key only,PASS
+stableCueKeysOnly,famen:zhenlei,6,6,Build6,true,true,false,0,0,zhenlei_build6,zhenlei_build6,None,stable key only,PASS
+buildResolverIsolation,famen:zhenlei,6,6,BasicAttack,true,true,false,0,0,zhenlei_basic_attack,zhenlei_basic_attack,None,Build resolver remains pure statistics,PASS
+buildResolverIsolation,famen:zhenlei,6,6,Build2,true,true,false,0,0,zhenlei_build2,zhenlei_build2,None,Build resolver remains pure statistics,PASS
+buildResolverIsolation,famen:zhenlei,6,6,Build4,true,true,false,0,0,zhenlei_build4,zhenlei_build4,None,Build resolver remains pure statistics,PASS
+buildResolverIsolation,famen:zhenlei,6,6,Build6,true,true,false,0,0,zhenlei_build6,zhenlei_build6,None,Build resolver remains pure statistics,PASS
+formatInvalidRejected,zhenlei,0,0,BasicAttack,false,false,false,0,0,none_basic_attack,none_basic_attack,selectedMainBuildId 'zhenlei' format is invalid; expected famen:<stableKey>.,Locked,PASS
+formatInvalidRejected,zhenlei,0,0,Build2,false,false,false,0,0,none_build2,none_build2,selectedMainBuildId 'zhenlei' format is invalid; expected famen:<stableKey>.,Locked,PASS
+formatInvalidRejected,zhenlei,0,0,Build4,false,false,false,0,0,none_build4,none_build4,selectedMainBuildId 'zhenlei' format is invalid; expected famen:<stableKey>.,Locked,PASS
+formatInvalidRejected,zhenlei,0,0,Build6,false,false,false,0,0,none_build6,none_build6,selectedMainBuildId 'zhenlei' format is invalid; expected famen:<stableKey>.,Locked,PASS
+duplicateFaMenTrackRejected,famen:zhenlei,0,0,BasicAttack,false,false,false,0,0,none_basic_attack,none_basic_attack,duplicate faMen build track 'famen:zhenlei' found in Build snapshot; main Build selection is locked.,Locked,PASS
+duplicateFaMenTrackRejected,famen:zhenlei,0,0,Build2,false,false,false,0,0,none_build2,none_build2,duplicate faMen build track 'famen:zhenlei' found in Build snapshot; main Build selection is locked.,Locked,PASS
+duplicateFaMenTrackRejected,famen:zhenlei,0,0,Build4,false,false,false,0,0,none_build4,none_build4,duplicate faMen build track 'famen:zhenlei' found in Build snapshot; main Build selection is locked.,Locked,PASS
+duplicateFaMenTrackRejected,famen:zhenlei,0,0,Build6,false,false,false,0,0,none_build6,none_build6,duplicate faMen build track 'famen:zhenlei' found in Build snapshot; main Build selection is locked.,Locked,PASS
+lightingArrayBuildAwakeningRegression,famen:zhenlei,6,6,BasicAttack,true,true,false,0,0,zhenlei_basic_attack,zhenlei_basic_attack,None,Lighting/Array/Build/Awakening PASS,PASS
+lightingArrayBuildAwakeningRegression,famen:zhenlei,6,6,Build2,true,true,false,0,0,zhenlei_build2,zhenlei_build2,None,Lighting/Array/Build/Awakening PASS,PASS
+lightingArrayBuildAwakeningRegression,famen:zhenlei,6,6,Build4,true,true,false,0,0,zhenlei_build4,zhenlei_build4,None,Lighting/Array/Build/Awakening PASS,PASS
+lightingArrayBuildAwakeningRegression,famen:zhenlei,6,6,Build6,true,true,false,0,0,zhenlei_build6,zhenlei_build6,None,Lighting/Array/Build/Awakening PASS,PASS

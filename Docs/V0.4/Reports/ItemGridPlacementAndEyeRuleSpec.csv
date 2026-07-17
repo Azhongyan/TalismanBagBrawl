@@ -1,0 +1,6 @@
+caseId,itemId,anchorCell,expectedReason,actualReason,isValid,shapeCells,occupiedCells,coreCellLocal,coreCellWorld,note
+array_cell_can_be_occupied,I001,"(2,1)",None,None,true,"(0,0)","(2,1)","(0,0)","(2,1)",Array bonus cell identity does not block placement.
+eye_cell_cannot_be_covered,I001,"(2,2)",EyeCellCovered,EyeCellCovered,false,"(0,0)","(2,2)","(0,0)","(2,2)",eyeCell is fixed and cannot be covered by occupiedCells.
+out_of_grid_is_blocked,I002,"(4,0)",OutOfGrid,OutOfGrid,false,"(0,0);(1,0)","(4,0);(5,0)","(0,0)","(4,0)",Line2H at x=4 produces occupiedCells outside 5x5.
+overlap_is_blocked,I001,"(0,0)",CellOccupied,CellOccupied,false,"(0,0)","(0,0)","(0,0)","(0,0)",occupiedCells collide with an existing preview placement.
+core_cell_world_is_visualized,I018,"(0,1)",None,None,true,"(0,0);(1,0);(0,1);(1,1)","(0,1);(1,1);(0,2);(1,2)","(1,1)","(1,2)",coreCellWorld is anchorCell + coreCellLocal for the selected shape.

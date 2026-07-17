@@ -1,0 +1,11 @@
+buildId,stableTag,stagePieceCount,displayName,description,effectId,category,operation,valueUnitKey,valueUnits,conditionText,dataMaturity,designNote
+"qilei:fa:build2","fa","2","法 Build2","耗念降低（候选）","qilei:fa:build2:effect","BuildSynergyEffect","AddPercent","basisPoint","600","已点亮且具有对应Build资格的实例达到2件。","BALANCE_CANDIDATE","Build阶段候选效果；不接正式Battle。"
+"qilei:fa:build4","fa","4","法 Build4","施法后推进全组冷却（候选）","qilei:fa:build4:effect","BuildSynergyEffect","ExtraTrigger","count","1","已点亮且具有对应Build资格的实例达到4件。","BALANCE_CANDIDATE","Build阶段候选效果；不接正式Battle。"
+"qilei:fu:build2","fu","2","符 Build2","触发频率提高（候选）","qilei:fu:build2:effect","BuildSynergyEffect","AddPercent","basisPoint","600","已点亮且具有对应Build资格的实例达到2件。","BALANCE_CANDIDATE","Build阶段候选效果；不接正式Battle。"
+"qilei:fu:build4","fu","4","符 Build4","每轮追加一次符纸触发（候选）","qilei:fu:build4:effect","BuildSynergyEffect","ExtraTrigger","count","1","已点亮且具有对应Build资格的实例达到4件。","BALANCE_CANDIDATE","Build阶段候选效果；不接正式Battle。"
+"qilei:jing:build2","jing","2","镜 Build2","镜照效果提高（候选）","qilei:jing:build2:effect","BuildSynergyEffect","AddPercent","basisPoint","600","已点亮且具有对应Build资格的实例达到2件。","BALANCE_CANDIDATE","Build阶段候选效果；不接正式Battle。"
+"qilei:jing:build4","jing","4","镜 Build4","复制一次关键状态变化（候选）","qilei:jing:build4:effect","BuildSynergyEffect","ExtraTrigger","count","1","已点亮且具有对应Build资格的实例达到4件。","BALANCE_CANDIDATE","Build阶段候选效果；不接正式Battle。"
+"qilei:ling:build2","ling","2","令 Build2","控制强度提高（候选）","qilei:ling:build2:effect","BuildSynergyEffect","AddPercent","basisPoint","600","已点亮且具有对应Build资格的实例达到2件。","BALANCE_CANDIDATE","Build阶段候选效果；不接正式Battle。"
+"qilei:ling:build4","ling","4","令 Build4","号令额外影响一个目标（候选）","qilei:ling:build4:effect","BuildSynergyEffect","ExtraTrigger","count","1","已点亮且具有对应Build资格的实例达到4件。","BALANCE_CANDIDATE","Build阶段候选效果；不接正式Battle。"
+"qilei:yin:build2","yin","2","印 Build2","护势与稳定性提高（候选）","qilei:yin:build2:effect","BuildSynergyEffect","AddPercent","basisPoint","600","已点亮且具有对应Build资格的实例达到2件。","BALANCE_CANDIDATE","Build阶段候选效果；不接正式Battle。"
+"qilei:yin:build4","yin","4","印 Build4","承伤后为同类印补护（候选）","qilei:yin:build4:effect","BuildSynergyEffect","ExtraTrigger","count","1","已点亮且具有对应Build资格的实例达到4件。","BALANCE_CANDIDATE","Build阶段候选效果；不接正式Battle。"

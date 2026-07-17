@@ -1,0 +1,1139 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace TalismanBag.Items.Detail.UI
+{
+    [DisallowMultipleComponent]
+    public sealed class ItemDetailPanelView : MonoBehaviour
+    {
+        private const int RequiredPlayerSectionCount = 15;
+        private const int RequiredDebugSectionCount = 3;
+        private const float MouseWheelNormalizedStep = 0.08f;
+        private const float TouchDragDeadZonePixels = 2f;
+        private const string FaMenIconResourcePrefix = "item/阵法icon/";
+        private const string QiLeiIconResourcePrefix = "item/器类icon/";
+        private const string RarityIconResourcePrefix = "item/品阶icon/品阶icon_";
+
+        [SerializeField] private Text itemNameText;
+        [SerializeField] private Text metaText;
+        [SerializeField] private Text powerText;
+        [SerializeField] private Text artworkText;
+        [SerializeField] private Image artworkFrameImage;
+        [SerializeField] private Image artworkImageSlot;
+        [SerializeField] private Text artworkKeyText;
+        [SerializeField] private Image rarityBadgeImage;
+        [SerializeField] private Text rarityBadgeText;
+        [SerializeField] private Image faMenIconImage;
+        [SerializeField] private Image qiLeiIconImage;
+        [SerializeField] private Image[] statusBadgeImages = new Image[3];
+        [SerializeField] private Text[] statusBadgeTexts = new Text[3];
+        [SerializeField] private Button closeButton;
+        [SerializeField] private Image rarityAccentImage;
+        [SerializeField] private Image cardBackgroundImage;
+        [SerializeField] private ItemDetailSectionView[] playerSections = new ItemDetailSectionView[RequiredPlayerSectionCount];
+        [SerializeField] private ItemDetailSectionView[] debugSections = new ItemDetailSectionView[RequiredDebugSectionCount];
+        [SerializeField] private Button detailTabButton;
+        [SerializeField] private Button debugTabButton;
+        [SerializeField] private Text detailTabText;
+        [SerializeField] private Text debugTabText;
+        [SerializeField] private GameObject detailScrollRoot;
+        [SerializeField] private GameObject debugScrollRoot;
+        [SerializeField] private ScrollRect detailScrollRect;
+        [SerializeField] private ScrollRect debugScrollRect;
+        [SerializeField] private ItemDetailVisualTheme visualTheme;
+        [SerializeField] private Font chineseTextFont;
+
+        private DetailTab activeTab = DetailTab.Detail;
+        private string currentModelIdentity;
+        private int activeTouchFingerId = int.MinValue;
+        private bool touchScrolling;
+        private bool preserveAuthoredVisualStyle;
+        private Sprite lightingStatusLitSprite;
+        private Sprite lightingStatusUnlitSprite;
+        private Sprite arrayStatusLitSprite;
+        private Sprite arrayStatusUnlitSprite;
+
+#if UNITY_EDITOR
+        public void ConfigureEditor(
+            Text configuredItemNameText,
+            Text configuredMetaText,
+            Text configuredPowerText,
+            Text configuredArtworkText,
+            Image configuredArtworkFrameImage,
+            Image configuredArtworkImageSlot,
+            Text configuredArtworkKeyText,
+            Image configuredRarityBadgeImage,
+            Text configuredRarityBadgeText,
+            Image[] configuredStatusBadgeImages,
+            Text[] configuredStatusBadgeTexts,
+            Button configuredCloseButton,
+            Image configuredRarityAccentImage,
+            Image configuredCardBackgroundImage,
+            ItemDetailSectionView[] configuredPlayerSections,
+            ItemDetailSectionView[] configuredDebugSections,
+            Button configuredDetailTabButton,
+            Button configuredDebugTabButton,
+            Text configuredDetailTabText,
+            Text configuredDebugTabText,
+            GameObject configuredDetailScrollRoot,
+            GameObject configuredDebugScrollRoot,
+            ScrollRect configuredDetailScrollRect,
+            ScrollRect configuredDebugScrollRect)
+        {
+            itemNameText = configuredItemNameText;
+            metaText = configuredMetaText;
+            powerText = configuredPowerText;
+            artworkText = configuredArtworkText;
+            artworkFrameImage = configuredArtworkFrameImage;
+            artworkImageSlot = configuredArtworkImageSlot;
+            artworkKeyText = configuredArtworkKeyText;
+            rarityBadgeImage = configuredRarityBadgeImage;
+            rarityBadgeText = configuredRarityBadgeText;
+            statusBadgeImages = configuredStatusBadgeImages ?? statusBadgeImages;
+            statusBadgeTexts = configuredStatusBadgeTexts ?? statusBadgeTexts;
+            closeButton = configuredCloseButton;
+            rarityAccentImage = configuredRarityAccentImage;
+            cardBackgroundImage = configuredCardBackgroundImage;
+            playerSections = configuredPlayerSections ?? playerSections;
+            debugSections = configuredDebugSections ?? debugSections;
+            detailTabButton = configuredDetailTabButton;
+            debugTabButton = configuredDebugTabButton;
+            detailTabText = configuredDetailTabText;
+            debugTabText = configuredDebugTabText;
+            detailScrollRoot = configuredDetailScrollRoot;
+            debugScrollRoot = configuredDebugScrollRoot;
+            detailScrollRect = configuredDetailScrollRect;
+            debugScrollRect = configuredDebugScrollRect;
+            BindTabs();
+        }
+
+        public void ConfigureThemeEditor(ItemDetailVisualTheme configuredTheme)
+        {
+            visualTheme = configuredTheme;
+            ApplySectionTheme(playerSections);
+            ApplySectionTheme(debugSections);
+        }
+#endif
+
+        private void Awake()
+        {
+            ResolveIdentityIconImages();
+            BindTabs();
+        }
+
+        private void OnDisable()
+        {
+            activeTouchFingerId = int.MinValue;
+            touchScrolling = false;
+        }
+
+        private void Update()
+        {
+            HandleDirectScrollInput();
+        }
+
+        public void Bind(ItemDetailViewModel model)
+        {
+            Bind(model, null);
+        }
+
+        public void Bind(ItemDetailViewModel model, Sprite artworkSprite)
+        {
+            if (model == null)
+            {
+                currentModelIdentity = string.Empty;
+                SetHeader(string.Empty, string.Empty, string.Empty);
+                SetRarityBadge(string.Empty);
+                SetArtwork(string.Empty, string.Empty, string.Empty, null);
+                SetStatusBadges(null);
+                SetPlayerSections(playerSections, null);
+                SetSections(debugSections, null);
+                ShowPlayerDetailTab();
+                return;
+            }
+
+            string nextIdentity = BuildModelIdentity(model);
+            bool changedModel = !string.Equals(currentModelIdentity, nextIdentity, StringComparison.Ordinal);
+            currentModelIdentity = nextIdentity;
+
+            Color rarityColor = ResolveRarityColor(model.rarityColorKey, model.displayRarityName);
+            string rarityDisplayName = ResolveRarityDisplayName(model.rarityColorKey, model.displayRarityName);
+            ApplyRarityStyle(rarityColor);
+            SetHeader(
+                model.displayItemName,
+                BuildMetaText(model, rarityDisplayName, rarityColor),
+                BuildPowerText(model.displayItemPower, rarityColor));
+            SetIdentityIcons(model.displayFaMenName, model.displayQiLeiName);
+            SetRarityBadge(rarityDisplayName);
+            SetArtwork(
+                model.displayQiLeiName,
+                SanitizeShapeName(model.displayShapeName),
+                model.iconPlaceholderKey,
+                artworkSprite);
+            SetStatusBadges(model);
+            ApplySectionTheme(playerSections);
+            ApplySectionTheme(debugSections);
+            ApplySectionRarityStyle(
+                playerSections,
+                rarityColor,
+                model.rarityColorKey,
+                rarityDisplayName);
+            SetPlayerSections(playerSections, model.displayPlayerSections);
+            SetSections(debugSections, model.displayDebugSections);
+
+            if (changedModel)
+            {
+                ShowPlayerDetailTab();
+                ResetScrollToTop();
+            }
+            else
+            {
+                ApplyTabState();
+            }
+        }
+
+        public void ShowPlayerDetailTab()
+        {
+            activeTab = DetailTab.Detail;
+            ApplyTabState();
+            ResetScroll(detailScrollRect);
+        }
+
+        public void ShowDebugTab()
+        {
+            activeTab = DetailTab.Debug;
+            ApplyTabState();
+            ResetScroll(debugScrollRect);
+        }
+
+        public void ResetScrollToTop()
+        {
+            ResetScroll(detailScrollRect);
+            ResetScroll(debugScrollRect);
+        }
+
+        public void SetVisible(bool visible)
+        {
+            gameObject.SetActive(visible);
+        }
+
+        public void SetPreserveAuthoredVisualStyle(bool preserve)
+        {
+            preserveAuthoredVisualStyle = preserve;
+        }
+
+        public void SetStatusBadgeSprites(
+            Sprite lightingLit,
+            Sprite lightingUnlit,
+            Sprite arrayLit,
+            Sprite arrayUnlit)
+        {
+            lightingStatusLitSprite = lightingLit;
+            lightingStatusUnlitSprite = lightingUnlit;
+            arrayStatusLitSprite = arrayLit;
+            arrayStatusUnlitSprite = arrayUnlit;
+        }
+
+        public void Close()
+        {
+            SetVisible(false);
+        }
+
+        private void BindTabs()
+        {
+            if (detailTabButton != null)
+            {
+                detailTabButton.onClick.RemoveListener(ShowPlayerDetailTab);
+                detailTabButton.onClick.AddListener(ShowPlayerDetailTab);
+            }
+
+            if (debugTabButton != null)
+            {
+                debugTabButton.onClick.RemoveListener(ShowDebugTab);
+                debugTabButton.onClick.AddListener(ShowDebugTab);
+            }
+
+            if (closeButton != null)
+            {
+                closeButton.onClick.RemoveListener(Close);
+                closeButton.onClick.AddListener(Close);
+            }
+
+            ApplyTabState();
+        }
+
+        private void ApplyTabState()
+        {
+            bool detailActive = activeTab == DetailTab.Detail;
+            SetActive(detailScrollRoot, detailActive);
+            SetActive(debugScrollRoot, !detailActive);
+            SetTabVisual(detailTabButton, detailTabText, detailActive);
+            SetTabVisual(debugTabButton, debugTabText, !detailActive);
+        }
+
+        private void HandleDirectScrollInput()
+        {
+            ScrollRect scrollRect = ActiveScrollRect();
+            if (!CanDirectScroll(scrollRect))
+            {
+                activeTouchFingerId = int.MinValue;
+                touchScrolling = false;
+                return;
+            }
+
+            HandleMouseWheelScroll(scrollRect);
+            HandleTouchDragScroll(scrollRect);
+        }
+
+        private ScrollRect ActiveScrollRect()
+        {
+            return activeTab == DetailTab.Detail ? detailScrollRect : debugScrollRect;
+        }
+
+        private bool CanDirectScroll(ScrollRect scrollRect)
+        {
+            return scrollRect != null
+                && scrollRect.gameObject.activeInHierarchy
+                && scrollRect.content != null
+                && ResolveScrollableHeight(scrollRect) > 0.5f;
+        }
+
+        private void HandleMouseWheelScroll(ScrollRect scrollRect)
+        {
+            float wheel = Input.mouseScrollDelta.y;
+            if (Mathf.Abs(wheel) <= Mathf.Epsilon
+                || !ContainsScreenPoint(Input.mousePosition))
+            {
+                return;
+            }
+
+            ApplyNormalizedScroll(scrollRect, wheel * MouseWheelNormalizedStep);
+        }
+
+        private void HandleTouchDragScroll(ScrollRect scrollRect)
+        {
+            if (Input.touchCount <= 0)
+            {
+                activeTouchFingerId = int.MinValue;
+                touchScrolling = false;
+                return;
+            }
+
+            Touch touch = FindActiveTouch();
+            if (touch.phase == TouchPhase.Began
+                && ContainsScreenPoint(touch.position))
+            {
+                activeTouchFingerId = touch.fingerId;
+                touchScrolling = false;
+                return;
+            }
+
+            if (touch.fingerId != activeTouchFingerId)
+            {
+                return;
+            }
+
+            if (touch.phase == TouchPhase.Canceled || touch.phase == TouchPhase.Ended)
+            {
+                activeTouchFingerId = int.MinValue;
+                touchScrolling = false;
+                return;
+            }
+
+            if (touch.phase != TouchPhase.Moved)
+            {
+                return;
+            }
+
+            float deltaY = touch.deltaPosition.y;
+            if (!touchScrolling && Mathf.Abs(deltaY) < TouchDragDeadZonePixels)
+            {
+                return;
+            }
+
+            touchScrolling = true;
+            ApplyNormalizedScroll(scrollRect, -deltaY / ResolveScrollableHeight(scrollRect));
+        }
+
+        private Touch FindActiveTouch()
+        {
+            if (activeTouchFingerId == int.MinValue)
+            {
+                return Input.GetTouch(0);
+            }
+
+            for (int index = 0; index < Input.touchCount; index++)
+            {
+                Touch touch = Input.GetTouch(index);
+                if (touch.fingerId == activeTouchFingerId)
+                {
+                    return touch;
+                }
+            }
+
+            activeTouchFingerId = int.MinValue;
+            touchScrolling = false;
+            return Input.GetTouch(0);
+        }
+
+        private bool ContainsScreenPoint(Vector2 screenPosition)
+        {
+            RectTransform rect = transform as RectTransform;
+            return rect != null
+                && RectTransformUtility.RectangleContainsScreenPoint(rect, screenPosition, ResolveEventCamera());
+        }
+
+        private Camera ResolveEventCamera()
+        {
+            Canvas canvas = GetComponentInParent<Canvas>();
+            return canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? canvas.worldCamera
+                : null;
+        }
+
+        private static void ApplyNormalizedScroll(ScrollRect scrollRect, float normalizedDelta)
+        {
+            scrollRect.StopMovement();
+            scrollRect.velocity = Vector2.zero;
+            scrollRect.verticalNormalizedPosition = Mathf.Clamp01(
+                scrollRect.verticalNormalizedPosition + normalizedDelta);
+        }
+
+        private static float ResolveScrollableHeight(ScrollRect scrollRect)
+        {
+            RectTransform viewport = scrollRect.viewport != null
+                ? scrollRect.viewport
+                : scrollRect.transform as RectTransform;
+            if (scrollRect.content == null || viewport == null)
+            {
+                return 0f;
+            }
+
+            return Mathf.Max(0f, scrollRect.content.rect.height - viewport.rect.height);
+        }
+
+        private static void SetSections(
+            ItemDetailSectionView[] targetSections,
+            IReadOnlyList<ItemDetailSectionViewModel> sourceSections)
+        {
+            if (targetSections == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < targetSections.Length; i++)
+            {
+                ItemDetailSectionView target = targetSections[i];
+                if (target == null)
+                {
+                    continue;
+                }
+
+                if (sourceSections != null && i < sourceSections.Count)
+                {
+                    target.SetContent(sourceSections[i]);
+                }
+                else
+                {
+                    target.SetContent(string.Empty, string.Empty, keepWhenEmpty: false);
+                }
+            }
+        }
+
+        private static void SetPlayerSections(
+            ItemDetailSectionView[] targetSections,
+            IReadOnlyList<ItemDetailSectionViewModel> sourceSections)
+        {
+            if (targetSections == null)
+            {
+                return;
+            }
+
+            for (int index = 0; index < targetSections.Length; index++)
+            {
+                ItemDetailSectionView target = targetSections[index];
+                if (target == null)
+                {
+                    continue;
+                }
+
+                string[] stateKeys = PlayerStateKeysForTarget(target.name);
+                if (stateKeys == null)
+                {
+                    if (sourceSections != null && index < sourceSections.Count)
+                    {
+                        target.SetContent(sourceSections[index]);
+                    }
+                    else
+                    {
+                        target.SetContent(string.Empty, string.Empty, keepWhenEmpty: false);
+                    }
+
+                    continue;
+                }
+
+                ItemDetailSectionViewModel source = FindPlayerSection(sourceSections, stateKeys);
+                if (source != null)
+                {
+                    target.SetContent(source);
+                }
+                else
+                {
+                    target.SetContent(string.Empty, string.Empty, keepWhenEmpty: false);
+                }
+            }
+        }
+
+        private static ItemDetailSectionViewModel FindPlayerSection(
+            IReadOnlyList<ItemDetailSectionViewModel> sourceSections,
+            IReadOnlyList<string> stateKeys)
+        {
+            if (sourceSections == null || stateKeys == null)
+            {
+                return null;
+            }
+
+            foreach (string stateKey in stateKeys)
+            {
+                for (int index = 0; index < sourceSections.Count; index++)
+                {
+                    ItemDetailSectionViewModel source = sourceSections[index];
+                    if (source != null && string.Equals(
+                            source.stateKey,
+                            stateKey,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        return source;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static string[] PlayerStateKeysForTarget(string targetName)
+        {
+            return targetName switch
+            {
+                "HeaderSection" => new[] { "header", "itemPower" },
+                "CoreIdentitySection" => new[] { "identity" },
+                "CurrentStateSection" => new[] { "currentState", "status" },
+                "BaseStatsSection" => new[] { "stats" },
+                "TriggerConditionSection" => new[] { "trigger" },
+                "BasicEffectSection" => new[] { "basic" },
+                "CoreAwakeningSection" => new[] { "coreEffect", "awakening" },
+                "FaMenBuildSection" => new[] { "famenBuild" },
+                "QiLeiBuildSection" => new[] { "qileiBuild" },
+                "MainBuildMonitorSection" => new[] { "skillMonitor" },
+                "FixedAffixSection" => new[] { "fixedAffix" },
+                "RandomAffixSection" => new[] { "randomAffix" },
+                "OrangeGrowthSection" => new[] { "orange" },
+                "PlacementHintSection" => new[] { "placement" },
+                "FlavorSection" => new[] { "flavor" },
+                _ => null
+            };
+        }
+
+        private void SetHeader(string itemName, string meta, string power)
+        {
+            if (itemNameText != null)
+            {
+                itemNameText.text = itemName ?? string.Empty;
+            }
+
+            if (metaText != null)
+            {
+                metaText.text = meta ?? string.Empty;
+            }
+
+            if (powerText != null)
+            {
+                powerText.text = power ?? string.Empty;
+            }
+        }
+
+        private void SetArtwork(string qiLeiName, string shapeName, string iconKey, Sprite artworkSprite)
+        {
+            bool hasArtwork = artworkSprite != null;
+            if (artworkImageSlot != null)
+            {
+                artworkImageSlot.sprite = artworkSprite;
+                artworkImageSlot.enabled = hasArtwork;
+                if (!preserveAuthoredVisualStyle)
+                {
+                    artworkImageSlot.color = Color.white;
+                }
+            }
+
+            if (artworkText != null)
+            {
+                artworkText.enabled = !hasArtwork;
+                artworkText.text = string.IsNullOrWhiteSpace(qiLeiName) && string.IsNullOrWhiteSpace(shapeName)
+                    ? "符器图"
+                    : $"{qiLeiName}\n{shapeName}";
+            }
+
+            if (artworkKeyText != null)
+            {
+                artworkKeyText.text = string.IsNullOrWhiteSpace(iconKey)
+                    ? "ART SLOT"
+                    : iconKey;
+            }
+        }
+
+        private void SetRarityBadge(string rarityName)
+        {
+            if (rarityBadgeImage != null)
+            {
+                Sprite sprite = string.IsNullOrWhiteSpace(rarityName)
+                    ? null
+                    : Resources.Load<Sprite>(RarityIconResourcePrefix + rarityName.Trim());
+                rarityBadgeImage.sprite = sprite;
+                rarityBadgeImage.enabled = sprite != null;
+            }
+
+            if (rarityBadgeText != null)
+            {
+                rarityBadgeText.text = string.IsNullOrWhiteSpace(rarityName) ? "未定阶" : rarityName;
+            }
+        }
+
+        private void ResolveIdentityIconImages()
+        {
+            faMenIconImage ??= FindNamedImage("zhenfaicon");
+            qiLeiIconImage ??= FindNamedImage("qixingicon");
+        }
+
+        private Image FindNamedImage(string objectName)
+        {
+            foreach (Image image in GetComponentsInChildren<Image>(true))
+            {
+                if (image != null && string.Equals(image.name, objectName, StringComparison.Ordinal))
+                {
+                    return image;
+                }
+            }
+
+            return null;
+        }
+
+        private void SetIdentityIcons(string faMenName, string qiLeiName)
+        {
+            ResolveIdentityIconImages();
+            SetIdentityIcon(faMenIconImage, FaMenIconResourcePrefix, ResolveFaMenIconName(faMenName));
+            SetIdentityIcon(qiLeiIconImage, QiLeiIconResourcePrefix, ResolveQiLeiIconName(qiLeiName));
+        }
+
+        private static void SetIdentityIcon(Image target, string resourcePrefix, string iconName)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(iconName))
+            {
+                target.enabled = false;
+                return;
+            }
+
+            Sprite sprite = Resources.Load<Sprite>(resourcePrefix + iconName);
+            target.sprite = sprite;
+            target.enabled = sprite != null;
+        }
+
+        private static string ResolveFaMenIconName(string displayName)
+        {
+            string value = displayName?.Trim() ?? string.Empty;
+            return value.ToLowerInvariant() switch
+            {
+                "zhenlei" => "震雷法",
+                "lihuo" => "离火法",
+                "zhongyue" => "中岳法",
+                "xuanshui" => "玄水法",
+                "taibai" => "太白法",
+                "震雷法" or "离火法" or "中岳法" or "玄水法" or "太白法" => value,
+                _ => string.Empty
+            };
+        }
+
+        private static string ResolveQiLeiIconName(string displayName)
+        {
+            string value = displayName?.Trim() ?? string.Empty;
+            string key = value.ToLowerInvariant();
+            if (key == "fu" || value.Contains("符", StringComparison.Ordinal))
+            {
+                return "符类";
+            }
+            if (key == "yin" || value.Contains("印", StringComparison.Ordinal))
+            {
+                return "印类";
+            }
+            if (key == "ling" || value.Contains("令", StringComparison.Ordinal))
+            {
+                return "令类";
+            }
+            if (key == "jing" || value.Contains("镜", StringComparison.Ordinal))
+            {
+                return "镜类";
+            }
+            if (key == "fa" || value == "法" || value == "法类")
+            {
+                return "法类";
+            }
+
+            return string.Empty;
+        }
+
+        private void SetStatusBadges(ItemDetailViewModel model)
+        {
+            if (model == null)
+            {
+                SetStatusBadge(0, "状态未接入", ThemeWeak, lightingStatusUnlitSprite);
+                SetStatusBadge(1, "开窍未计算", ThemeWeak);
+                SetStatusBadge(2, "阵脉未计算", ThemeWeak, arrayStatusUnlitSprite);
+                return;
+            }
+
+            ItemDetailStatusFlags flags = model.statusFlags ?? new ItemDetailStatusFlags();
+            bool hasPlacement = !string.IsNullOrWhiteSpace(model.placementId);
+            bool lightingActive = flags.isLit || flags.isLightingSource;
+            SetStatusBadge(
+                0,
+                ResolveLightingBadgeText(flags, hasPlacement),
+                ResolveLightingBadgeColor(flags, hasPlacement),
+                lightingActive ? lightingStatusLitSprite : lightingStatusUnlitSprite);
+
+            int awakened = Mathf.Clamp(flags.unlockedCoreEffectCount, 0, 4);
+            SetStatusBadge(
+                1,
+                awakened > 0 ? $"开窍 {awakened}/4" : "尚未开窍",
+                awakened >= 4 ? ThemeBuildActive : awakened > 0 ? ThemeBuildNearActive : ThemeWeak);
+
+            if (flags.isArrayBonusActive)
+            {
+                SetStatusBadge(2, "阵脉生效", ThemeArrayModifier, arrayStatusLitSprite);
+            }
+            else if (flags.isOnArrayBonusCell)
+            {
+                SetStatusBadge(2, "阵脉待亮", ThemeBuildNearActive, arrayStatusUnlitSprite);
+            }
+            else
+            {
+                SetStatusBadge(
+                    2,
+                    hasPlacement ? "未占阵脉" : "阵脉未计算",
+                    ThemeWeak,
+                    arrayStatusUnlitSprite);
+            }
+        }
+
+        private void SetStatusBadge(int index, string label, Color color, Sprite iconSprite = null)
+        {
+            if (statusBadgeImages != null
+                && index >= 0
+                && index < statusBadgeImages.Length
+                && statusBadgeImages[index] != null
+                && iconSprite != null)
+            {
+                statusBadgeImages[index].sprite = iconSprite;
+            }
+
+            if (!preserveAuthoredVisualStyle
+                && statusBadgeImages != null
+                && index >= 0
+                && index < statusBadgeImages.Length
+                && statusBadgeImages[index] != null)
+            {
+                statusBadgeImages[index].color = color;
+            }
+
+            if (statusBadgeTexts != null && index >= 0 && index < statusBadgeTexts.Length && statusBadgeTexts[index] != null)
+            {
+                statusBadgeTexts[index].text = label ?? string.Empty;
+                if (!preserveAuthoredVisualStyle)
+                {
+                    statusBadgeTexts[index].color = ThemeBody;
+                }
+            }
+        }
+
+        private void ClearStatusBadge(int index)
+        {
+            if (!preserveAuthoredVisualStyle
+                && statusBadgeImages != null
+                && index >= 0
+                && index < statusBadgeImages.Length
+                && statusBadgeImages[index] != null)
+            {
+                statusBadgeImages[index].color = Color.clear;
+            }
+
+            if (statusBadgeTexts != null && index >= 0 && index < statusBadgeTexts.Length && statusBadgeTexts[index] != null)
+            {
+                statusBadgeTexts[index].text = string.Empty;
+            }
+        }
+
+        private static string ResolveLightingBadgeText(ItemDetailStatusFlags flags, bool hasPlacement)
+        {
+            if (!hasPlacement)
+            {
+                return "尚未入阵";
+            }
+
+            if (flags.isLightingSource)
+            {
+                return "点亮源";
+            }
+
+            if (flags.isDirectLit)
+            {
+                return "直接点亮";
+            }
+
+            if (flags.isRelayLit)
+            {
+                return "相邻接亮";
+            }
+
+            return "未点亮";
+        }
+
+        private Color ResolveLightingBadgeColor(ItemDetailStatusFlags flags, bool hasPlacement)
+        {
+            if (!hasPlacement)
+            {
+                return ThemeWeak;
+            }
+
+            return flags.isLit || flags.isLightingSource ? ThemeBuildActive : ThemeRestriction;
+        }
+
+        private void ApplyRarityStyle(Color rarityColor)
+        {
+            if (preserveAuthoredVisualStyle)
+            {
+                if (itemNameText != null)
+                {
+                    itemNameText.color = rarityColor;
+                }
+
+                if (metaText != null)
+                {
+                    metaText.color = rarityColor;
+                }
+
+                return;
+            }
+
+            if (itemNameText != null)
+            {
+                itemNameText.color = rarityColor;
+            }
+
+            if (powerText != null)
+            {
+                powerText.color = ThemeBody;
+            }
+
+            if (metaText != null)
+            {
+                metaText.color = ThemeBody;
+            }
+
+            if (artworkText != null)
+            {
+                artworkText.color = ThemeBody;
+            }
+
+            if (artworkFrameImage != null)
+            {
+                artworkFrameImage.color = new Color(rarityColor.r, rarityColor.g, rarityColor.b, 0.28f);
+            }
+
+            if (rarityBadgeImage != null)
+            {
+                rarityBadgeImage.color = new Color(rarityColor.r, rarityColor.g, rarityColor.b, 0.30f);
+            }
+
+            if (rarityBadgeText != null)
+            {
+                rarityBadgeText.color = rarityColor;
+            }
+
+            if (rarityAccentImage != null)
+            {
+                rarityAccentImage.color = new Color(rarityColor.r, rarityColor.g, rarityColor.b, 0.75f);
+            }
+
+            if (cardBackgroundImage != null)
+            {
+                cardBackgroundImage.color = ThemeCard;
+            }
+        }
+
+        private static void SetActive(GameObject target, bool active)
+        {
+            if (target != null)
+            {
+                target.SetActive(active);
+            }
+        }
+
+        private void SetTabVisual(Button button, Text label, bool active)
+        {
+            Image image = button != null ? button.GetComponent<Image>() : null;
+            if (image != null)
+            {
+                image.color = active ? ThemeBuildNearActive : ThemeSecondaryCard;
+            }
+
+            if (label != null)
+            {
+                label.color = active ? ThemeRarityOrange : ThemeBody;
+            }
+        }
+
+        private static void ResetScroll(ScrollRect scrollRect)
+        {
+            if (scrollRect == null)
+            {
+                return;
+            }
+
+            scrollRect.StopMovement();
+            scrollRect.velocity = Vector2.zero;
+            scrollRect.verticalNormalizedPosition = 1f;
+        }
+
+        private static string BuildModelIdentity(ItemDetailViewModel model)
+        {
+            if (model == null)
+            {
+                return string.Empty;
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.placementId))
+            {
+                return model.placementId;
+            }
+
+            return string.IsNullOrWhiteSpace(model.itemInstanceId)
+                ? model.itemId ?? string.Empty
+                : model.itemInstanceId;
+        }
+
+        private static void ApplySectionRarityStyle(
+            ItemDetailSectionView[] sections,
+            Color rarityColor,
+            string rarityKey,
+            string rarityDisplayName)
+        {
+            if (sections == null)
+            {
+                return;
+            }
+
+            foreach (ItemDetailSectionView section in sections)
+            {
+                section?.SetRarityPresentation(rarityColor, rarityKey, rarityDisplayName);
+            }
+        }
+
+        private void ApplySectionTheme(ItemDetailSectionView[] sections)
+        {
+            if (sections == null)
+            {
+                return;
+            }
+
+            foreach (ItemDetailSectionView section in sections)
+            {
+                section?.SetVisualTheme(visualTheme);
+            }
+        }
+
+        private string BuildMetaText(ItemDetailViewModel model, string rarityDisplayName, Color rarityColor)
+        {
+            string rarity = rarityDisplayName ?? string.Empty;
+            string faMen = model.displayFaMenName ?? string.Empty;
+            string qiLei = model.displayQiLeiName ?? string.Empty;
+            string shape = SanitizeShapeName(model.displayShapeName);
+            if (preserveAuthoredVisualStyle)
+            {
+                return string.Join(" · ", new[]
+                {
+                    string.IsNullOrWhiteSpace(rarity) ? string.Empty : $"<b>{rarity}</b>",
+                    faMen,
+                    qiLei,
+                    shape
+                }.Where(value => !string.IsNullOrWhiteSpace(value)));
+            }
+
+            string rarityLine = string.IsNullOrWhiteSpace(rarity)
+                ? string.Empty
+                : $"<color=#{ColorUtility.ToHtmlStringRGB(rarityColor)}><b>{rarity}</b></color>";
+            string identity = string.Join(" / ", new[] { faMen, qiLei }
+                .Where(value => !string.IsNullOrWhiteSpace(value)));
+            string detailLine = string.Join(" · ", new[] { identity, shape }
+                .Where(value => !string.IsNullOrWhiteSpace(value)));
+            if (!string.IsNullOrWhiteSpace(detailLine))
+            {
+                detailLine = $"<color=#{ColorUtility.ToHtmlStringRGB(ThemeBody)}>· {detailLine}</color>";
+            }
+
+            return string.Join("\n", new[] { rarityLine, detailLine }
+                .Where(value => !string.IsNullOrWhiteSpace(value)));
+        }
+
+        private string BuildPowerText(string rawPower, Color rarityColor)
+        {
+            if (!int.TryParse(rawPower, out int power) || power < 0)
+            {
+                return $"物品强度  <color=#{ColorUtility.ToHtmlStringRGB(ThemeWeak)}><b>{ItemDetailPresentationFormatter.ItemPowerUnavailable}</b></color>";
+            }
+
+            string rarityHex = ColorUtility.ToHtmlStringRGB(rarityColor);
+            return $"物品强度  <color=#{rarityHex}><b>{power}</b></color>";
+        }
+
+        private Color ResolveRarityColor(string rarityKey, string displayRarityName)
+        {
+            string key = string.IsNullOrWhiteSpace(rarityKey) ? displayRarityName : rarityKey;
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                return ThemeRarityWhite;
+            }
+
+            key = key.Trim().ToLowerInvariant();
+            if (key.Contains("orange") || key.Contains("cheng") || key.Contains("道") || key.Contains("橙"))
+            {
+                return ThemeRarityOrange;
+            }
+
+            if (key.Contains("purple") || key.Contains("zi") || key.Contains("玄") || key.Contains("紫"))
+            {
+                return ThemeRarityPurple;
+            }
+
+            if (key.Contains("blue") || key.Contains("lan") || key.Contains("灵") || key.Contains("藍") || key.Contains("蓝"))
+            {
+                return ThemeRarityBlue;
+            }
+
+            if (key.Contains("green") || key.Contains("qing") || key.Contains("良") || key.Contains("绿"))
+            {
+                return ThemeRarityGreen;
+            }
+
+            return ThemeRarityWhite;
+        }
+
+        private Color ThemeCard => visualTheme != null ? visualTheme.cardBackground : ItemDetailVisualThemeDefaults.CardBackground;
+        private Color ThemeSecondaryCard => visualTheme != null ? visualTheme.secondaryCardBackground : ItemDetailVisualThemeDefaults.SecondaryCardBackground;
+        private Color ThemeBody => visualTheme != null ? visualTheme.bodyText : ItemDetailVisualThemeDefaults.BodyText;
+        private Color ThemeWeak => visualTheme != null ? visualTheme.weakText : ItemDetailVisualThemeDefaults.WeakText;
+        private Color ThemeRestriction => visualTheme != null ? visualTheme.restrictionText : ItemDetailVisualThemeDefaults.RestrictionText;
+        private Color ThemeBuildActive => visualTheme != null ? visualTheme.buildActive : ItemDetailVisualThemeDefaults.BuildActive;
+        private Color ThemeBuildNearActive => visualTheme != null ? visualTheme.buildNearActive : ItemDetailVisualThemeDefaults.BuildNearActive;
+        private Color ThemeArrayModifier => visualTheme != null ? visualTheme.arrayModifierColor : ItemDetailVisualThemeDefaults.ArrayModifierColor;
+        private Color ThemeRarityWhite => visualTheme != null ? visualTheme.rarityWhite : ItemDetailVisualThemeDefaults.RarityWhite;
+        private Color ThemeRarityGreen => visualTheme != null ? visualTheme.rarityGreen : ItemDetailVisualThemeDefaults.RarityGreen;
+        private Color ThemeRarityBlue => visualTheme != null ? visualTheme.rarityBlue : ItemDetailVisualThemeDefaults.RarityBlue;
+        private Color ThemeRarityPurple => visualTheme != null ? visualTheme.rarityPurple : ItemDetailVisualThemeDefaults.RarityPurple;
+        private Color ThemeRarityOrange => visualTheme != null ? visualTheme.rarityOrange : ItemDetailVisualThemeDefaults.RarityOrange;
+
+        private static string ResolveRarityDisplayName(string rarityKey, string displayRarityName)
+        {
+            string key = string.IsNullOrWhiteSpace(rarityKey) ? displayRarityName : rarityKey;
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                return "未定阶";
+            }
+
+            key = key.Trim().ToLowerInvariant();
+            if (key.Contains("cheng") || key.Contains("orange") || key.Contains("道") || key.Contains("橙"))
+            {
+                return "道品";
+            }
+
+            if (key.Contains("zi") || key.Contains("purple") || key.Contains("玄") || key.Contains("紫"))
+            {
+                return "玄品";
+            }
+
+            if (key.Contains("lan") || key.Contains("blue") || key.Contains("灵") || key.Contains("藍") || key.Contains("蓝"))
+            {
+                return "灵品";
+            }
+
+            if (key.Contains("qing") || key.Contains("green") || key.Contains("良") || key.Contains("青") || key.Contains("绿"))
+            {
+                return "良品";
+            }
+
+            if (key.Contains("bai") || key.Contains("white") || key.Contains("凡") || key.Contains("白"))
+            {
+                return "凡品";
+            }
+
+            return displayRarityName ?? key;
+        }
+
+        private static string SanitizeShapeName(string shapeName)
+        {
+            if (string.IsNullOrWhiteSpace(shapeName))
+            {
+                return string.Empty;
+            }
+
+            string value = shapeName.Trim();
+            if (value.Contains("square_4") || value.Contains("block2x2"))
+            {
+                return "方块四格";
+            }
+
+            if (value.Contains("corner_3") || value.Contains("corner3"))
+            {
+                return "折角三格";
+            }
+
+            if (value.Contains("vertical_3") || value.Contains("line3_v"))
+            {
+                return "竖排三格";
+            }
+
+            if (value.Contains("vertical_2") || value.Contains("line2_v"))
+            {
+                return "竖排两格";
+            }
+
+            if (value.Contains("single_1"))
+            {
+                return "单格";
+            }
+
+            if (value.Contains("line3_h"))
+            {
+                return "横排三格";
+            }
+
+            if (value.Contains("line2_h"))
+            {
+                return "横排两格";
+            }
+
+            return value;
+        }
+
+        private enum DetailTab
+        {
+            Detail,
+            Debug
+        }
+    }
+}

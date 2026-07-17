@@ -1,0 +1,458 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94ed01388841f6e42bf279e5a56d4498, type: 3}
+  m_Name: ItemBalanceProfile_I009
+  m_EditorClassIdentifier: 
+  balanceDataRevision: ITEM_COMPLETE_CANDIDATE_CONTENT_WORKBENCH01_R1
+  baseItemId: I009
+  displayName: "\u79BB\u706B\u711A\u90AA\u5370"
+  faMenTag: lihuo
+  qiLeiTag: yin
+  qiLeiPosition: 3
+  primaryStatId: damage
+  secondaryStatId: duration
+  fixedAffixId: affix_damage_up
+  randomPoolId: candidate_pool_i009
+  randomAffixes:
+  - affixId: affix_duration_up
+    weight: 4
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    designNote: 
+  - affixId: affix_nian_efficiency
+    weight: 3
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    designNote: "\u79BB\u706B\u711A\u90AA\u5370\u5B9A\u5411\u5019\u9009\u6C60"
+  - affixId: affix_cooldown_reduction
+    weight: 3
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    designNote: "\u79BB\u706B\u711A\u90AA\u5370\u5B9A\u5411\u5019\u9009\u6C60"
+  - affixId: affix_array_guard
+    weight: 8
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    designNote: "\u79BB\u706B\u711A\u90AA\u5370\u5B9A\u5411\u5019\u9009\u6C60"
+  - affixId: affix_damage_cost_trade
+    weight: 7
+    mutexGroupId: TRADEOFF
+    repeatPolicy: NO_DUPLICATE
+    designNote: "\u79BB\u706B\u711A\u90AA\u5370\u5B9A\u5411\u5019\u9009\u6C60"
+  - affixId: affix_trigger_refund
+    weight: 4
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    designNote: "\u79BB\u706B\u711A\u90AA\u5370\u5B9A\u5411\u5019\u9009\u6C60"
+  - affixId: affix_direct_lit_power
+    weight: 3
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    designNote: "\u79BB\u706B\u711A\u90AA\u5370\u5B9A\u5411\u5019\u9009\u6C60"
+  - affixId: affix_core_next_power
+    weight: 2
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    designNote: "\u79BB\u706B\u711A\u90AA\u5370\u5B9A\u5411\u5019\u9009\u6C60"
+  - affixId: affix_first_trigger_bonus
+    weight: 1
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    designNote: "\u79BB\u706B\u711A\u90AA\u5370\u5B9A\u5411\u5019\u9009\u6C60"
+  signatureAffix:
+    affixId: signature_i009
+    displayName: "\u843D\u706B"
+    description: "\u538B\u5370\u547D\u4E2D\u5E26\u4F59\u7130\u76EE\u6807\u65F6\u5EF6\u957F\u4F59\u7130\uFF0C\u5E76\u7ACB\u5373\u7ED3\u7B97\u4E00\u5C0F\u6BB5\u4F24\u5BB3\u3002"
+    effectPayload:
+      effectId: signature_i009
+      displayName: "\u843D\u706B"
+      description: "\u538B\u5370\u547D\u4E2D\u5E26\u4F59\u7130\u76EE\u6807\u65F6\u5EF6\u957F\u4F59\u7130\uFF0C\u5E76\u7ACB\u5373\u7ED3\u7B97\u4E00\u5C0F\u6BB5\u4F24\u5BB3\u3002"
+      effectCategory: 2
+      triggerEventId: on_hit_burning
+      conditionId: burn_stack_gt_0
+      targetSelector: effect_primary_target
+      targetStatId: burn
+      operation: 7
+      valueUnitKey: turn
+      valueUnits: 1
+      secondaryValueUnits: 2500
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: i009_signature
+      mutexGroupId: SIGNATURE_I009
+      effectTags:
+      - TriggeredEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: SIGNATURE_I009
+    repeatPolicy: UNIQUE_FIXED
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u79BB\u706B\u711A\u90AA\u5370\u4E13\u5C5E\u8EAB\u4EFD\u8BCD\u6761\uFF1B\u5019\u9009\u6570\u636E\uFF0C\u4E0D\u63A5\u6B63\u5F0F\u6218\u6597\u3002"
+  candidateDisplay:
+    triggerDescription: "\u6838\u5FC3\u683C\u5DF2\u70B9\u4EAE\u65F6\uFF0C\u6BCF\u6B21\u6EE1\u8DB3\u201C\u843D\u706B\u201D\u7684\u89E6\u53D1\u6761\u4EF6\u5373\u53EF\u53D1\u52A8\uFF1B\u5019\u9009\u5185\u90E8\u51B7\u5374\u6309\u8F7D\u8377\u8BFB\u53D6\u3002"
+    basicEffectDescription: "\u5370\u5FC3\u843D\u706B\uFF0C\u5F3A\u5316\u79BB\u706B\u6301\u7EED\u6BB5\u3002
+      \u672C\u6548\u679C\u4E3ASandbox\u5019\u9009\uFF0C\u4E0D\u8FDB\u5165\u6B63\u5F0F\u6218\u6597\u7ED3\u7B97\u3002"
+    lightingDescription: "\u6838\u5FC3\u683C\u8FDB\u5165\u805A\u5FF5\u8303\u56F4\u6216\u7531\u6B63\u4EA4\u76F8\u90BB\u9053\u5177\u63A5\u4EAE\u540E\u751F\u6548\uFF1B\u672A\u70B9\u4EAE\u65F6\u4E0D\u53D1\u52A8\uFF0C\u4E5F\u4E0D\u8BA1\u5165Build\u3002"
+    placementRecommendation: "\u4F18\u5148\u5360\u636E\u9635\u4F4D\u70B9\u5E76\u627F\u63A5\u76F8\u90BB\u63A5\u4EAE\uFF1B\u5F53\u524Dlihuo\u6CD5\u95E8\u5019\u9009Build\u9700\u8981\u5DF2\u70B9\u4EAE\u5B9E\u4F8B\u8BA1\u6570\u3002"
+    flavorText: "\u65E7\u7269\u8BB0\uFF1A\u79BB\u706B\u711A\u90AA\u5370\u539F\u662F\u9752\u77F3\u574A\u91CC\u5E38\u89C1\u7684\u5370\uFF0C\u7ECF\u79BB\u706B\u6CD5\u6CD5\u8109\u91CD\u9898\u7B26\u80C6\u540E\uFF0C\u7559\u4E0B\u4E86\u201C\u843D\u706B\u201D\u8FD9\u4E00\u624B\u72EC\u95E8\u7528\u6CD5\u3002"
+    faMenDisplayName: "\u79BB\u706B\u6CD5"
+    qiLeiDisplayName: "\u5370"
+    shapeDescription: "shape_line2_h \xB7 2\u683C \xB7 \u6838\u5FC3\u683C(0,0)"
+    iconKey: i009_placeholder
+    dataMaturity: BALANCE_CANDIDATE
+  coreCandidates:
+  - coreEffectId: candidate_core_i009_01
+    displayName: "\u79BB\u706B\u711A\u90AA\u5370\xB7\u521D\u8BC6"
+    description: "\u79BB\u706B\u711A\u90AA\u5370\u70B9\u4EAE\u540E\uFF0C\u201C\u843D\u706B\u201D\u7684\u57FA\u7840\u5019\u9009\u6548\u679C\u83B7\u5F97\u7B2C\u4E00\u5C42\u5F3A\u5316\u3002"
+    isUltimate: 0
+    nodeKind: Core1
+    unlockLevel: 10
+    requiredRarity: 0
+    effectType: TriggeredEffect
+    effectPayload:
+      effectId: candidate_core_i009_01
+      displayName: "\u79BB\u706B\u711A\u90AA\u5370\xB7\u521D\u8BC6"
+      description: "\u79BB\u706B\u711A\u90AA\u5370\u70B9\u4EAE\u540E\uFF0C\u201C\u843D\u706B\u201D\u7684\u57FA\u7840\u5019\u9009\u6548\u679C\u83B7\u5F97\u7B2C\u4E00\u5C42\u5F3A\u5316\u3002"
+      effectCategory: 2
+      triggerEventId: on_hit_burning
+      conditionId: burn_stack_gt_0
+      targetSelector: effect_primary_target
+      targetStatId: burn
+      operation: 7
+      valueUnitKey: turn
+      valueUnits: 1
+      secondaryValueUnits: 2500
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: i009_core_1
+      mutexGroupId: CORE_I009
+      effectTags:
+      - TriggeredEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    stateDescription: "\u54C1\u9636\u6EE1\u8DB3\u540E\u53EF\u89C1\uFF1B\u517B\u6210\u89E3\u9501\u4E14\u5B9E\u4F8B\u70B9\u4EAE\u65F6\u624D\u53EF\u6FC0\u6D3B\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u540C\u539F\u578B\u4E94\u5C42\u9012\u8FDB\u5019\u9009\u6838\u5FC3\u3002"
+  - coreEffectId: candidate_core_i009_02
+    displayName: "\u79BB\u706B\u711A\u90AA\u5370\xB7\u627F\u5F0F"
+    description: "\u89E6\u53D1\u201C\u843D\u706B\u201D\u540E\u8FD4\u8FD8\u4E00\u90E8\u5206\u8282\u594F\u8D44\u6E90\uFF0C\u5E76\u4FDD\u7559\u4E0B\u4E00\u6B21\u89E6\u53D1\u6761\u4EF6\u3002"
+    isUltimate: 0
+    nodeKind: Core2
+    unlockLevel: 20
+    requiredRarity: 1
+    effectType: TriggeredEffect
+    effectPayload:
+      effectId: candidate_core_i009_02
+      displayName: "\u79BB\u706B\u711A\u90AA\u5370\xB7\u627F\u5F0F"
+      description: "\u89E6\u53D1\u201C\u843D\u706B\u201D\u540E\u8FD4\u8FD8\u4E00\u90E8\u5206\u8282\u594F\u8D44\u6E90\uFF0C\u5E76\u4FDD\u7559\u4E0B\u4E00\u6B21\u89E6\u53D1\u6761\u4EF6\u3002"
+      effectCategory: 2
+      triggerEventId: on_hit_burning
+      conditionId: burn_stack_gt_0
+      targetSelector: effect_primary_target
+      targetStatId: burn
+      operation: 7
+      valueUnitKey: turn
+      valueUnits: 2
+      secondaryValueUnits: 2500
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: i009_core_2
+      mutexGroupId: CORE_I009
+      effectTags:
+      - TriggeredEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    stateDescription: "\u54C1\u9636\u6EE1\u8DB3\u540E\u53EF\u89C1\uFF1B\u517B\u6210\u89E3\u9501\u4E14\u5B9E\u4F8B\u70B9\u4EAE\u65F6\u624D\u53EF\u6FC0\u6D3B\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u540C\u539F\u578B\u4E94\u5C42\u9012\u8FDB\u5019\u9009\u6838\u5FC3\u3002"
+  - coreEffectId: candidate_core_i009_03
+    displayName: "\u79BB\u706B\u711A\u90AA\u5370\xB7\u5408\u8109"
+    description: "\u540C\u5C5Elihuo\u6CD5\u95E8\u7684\u5DF2\u70B9\u4EAE\u9053\u5177\u8FBE\u5230Build2\u65F6\uFF0C\u201C\u843D\u706B\u201D\u8FFD\u52A0\u534F\u540C\u6570\u503C\u3002"
+    isUltimate: 0
+    nodeKind: Core3
+    unlockLevel: 30
+    requiredRarity: 2
+    effectType: CoreEffect
+    effectPayload:
+      effectId: candidate_core_i009_03
+      displayName: "\u79BB\u706B\u711A\u90AA\u5370\xB7\u5408\u8109"
+      description: "\u540C\u5C5Elihuo\u6CD5\u95E8\u7684\u5DF2\u70B9\u4EAE\u9053\u5177\u8FBE\u5230Build2\u65F6\uFF0C\u201C\u843D\u706B\u201D\u8FFD\u52A0\u534F\u540C\u6570\u503C\u3002"
+      effectCategory: 7
+      triggerEventId: on_hit_burning
+      conditionId: burn_stack_gt_0
+      targetSelector: effect_primary_target
+      targetStatId: burn
+      operation: 1
+      valueUnitKey: turn
+      valueUnits: 3
+      secondaryValueUnits: 2500
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: i009_core_3
+      mutexGroupId: CORE_I009
+      effectTags:
+      - CoreEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    stateDescription: "\u54C1\u9636\u6EE1\u8DB3\u540E\u53EF\u89C1\uFF1B\u517B\u6210\u89E3\u9501\u4E14\u5B9E\u4F8B\u70B9\u4EAE\u65F6\u624D\u53EF\u6FC0\u6D3B\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u540C\u539F\u578B\u4E94\u5C42\u9012\u8FDB\u5019\u9009\u6838\u5FC3\u3002"
+  - coreEffectId: candidate_core_i009_04
+    displayName: "\u79BB\u706B\u711A\u90AA\u5370\xB7\u8F6C\u673A"
+    description: "\u201C\u843D\u706B\u201D\u6EE1\u8DB3\u5173\u952E\u6761\u4EF6\u540E\u989D\u5916\u89E6\u53D1\u4E00\u6B21\uFF0C\u4F46\u53D7\u72EC\u7ACB\u51B7\u5374\u9650\u5236\u3002"
+    isUltimate: 0
+    nodeKind: Core4
+    unlockLevel: 40
+    requiredRarity: 3
+    effectType: CoreEffect
+    effectPayload:
+      effectId: candidate_core_i009_04
+      displayName: "\u79BB\u706B\u711A\u90AA\u5370\xB7\u8F6C\u673A"
+      description: "\u201C\u843D\u706B\u201D\u6EE1\u8DB3\u5173\u952E\u6761\u4EF6\u540E\u989D\u5916\u89E6\u53D1\u4E00\u6B21\uFF0C\u4F46\u53D7\u72EC\u7ACB\u51B7\u5374\u9650\u5236\u3002"
+      effectCategory: 7
+      triggerEventId: on_hit_burning
+      conditionId: burn_stack_gt_0
+      targetSelector: effect_primary_target
+      targetStatId: burn
+      operation: 7
+      valueUnitKey: turn
+      valueUnits: 4
+      secondaryValueUnits: 2500
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: i009_core_4
+      mutexGroupId: CORE_I009
+      effectTags:
+      - CoreEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    stateDescription: "\u54C1\u9636\u6EE1\u8DB3\u540E\u53EF\u89C1\uFF1B\u517B\u6210\u89E3\u9501\u4E14\u5B9E\u4F8B\u70B9\u4EAE\u65F6\u624D\u53EF\u6FC0\u6D3B\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u540C\u539F\u578B\u4E94\u5C42\u9012\u8FDB\u5019\u9009\u6838\u5FC3\u3002"
+  - coreEffectId: candidate_core_i009_ultimate
+    displayName: "\u79BB\u706B\u711A\u90AA\u5370\xB7\u6210\u6CD5"
+    description: "\u79BB\u706B\u711A\u90AA\u5370\u5B8C\u6210\u6210\u6CD5\u540E\uFF0C\u5C06\u201C\u843D\u706B\u201D\u7684\u89E6\u53D1\u7ED3\u679C\u8F6C\u6362\u4E3A\u4E00\u6B21\u4E0D\u6D88\u8017\u539F\u72B6\u6001\u7684\u673A\u5236\u56DE\u54CD\uFF1B\u6BCF\u8F6E\u9650\u4E00\u6B21\u3002"
+    isUltimate: 1
+    nodeKind: Ultimate
+    unlockLevel: 40
+    requiredRarity: 4
+    effectType: MechanicConversion
+    effectPayload:
+      effectId: candidate_core_i009_ultimate
+      displayName: "\u79BB\u706B\u711A\u90AA\u5370\xB7\u6210\u6CD5"
+      description: "\u79BB\u706B\u711A\u90AA\u5370\u5B8C\u6210\u6210\u6CD5\u540E\uFF0C\u5C06\u201C\u843D\u706B\u201D\u7684\u89E6\u53D1\u7ED3\u679C\u8F6C\u6362\u4E3A\u4E00\u6B21\u4E0D\u6D88\u8017\u539F\u72B6\u6001\u7684\u673A\u5236\u56DE\u54CD\uFF1B\u6BCF\u8F6E\u9650\u4E00\u6B21\u3002"
+      effectCategory: 8
+      triggerEventId: on_signature_resolved
+      conditionId: ultimate_ready
+      targetSelector: effect_primary_target
+      targetStatId: burn
+      operation: 8
+      valueUnitKey: turn
+      valueUnits: 5
+      secondaryValueUnits: 1
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: i009_core_5
+      mutexGroupId: CORE_I009
+      effectTags:
+      - MechanicConversion
+      - Convert
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    stateDescription: "\u54C1\u9636\u6EE1\u8DB3\u540E\u53EF\u89C1\uFF1B\u517B\u6210\u89E3\u9501\u4E14\u5B9E\u4F8B\u70B9\u4EAE\u65F6\u624D\u53EF\u6FC0\u6D3B\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u673A\u5236\u8F6C\u6362\u578B\u7EC8\u6781\u6838\u5FC3\uFF1B\u4E0D\u662F\u5355\u7EAF\u500D\u7387\u653E\u5927\u3002"
+  rarityVersions:
+  - rarity: 0
+    versionKey: I009@white
+    cultivationPotentialProfileId: candidate_core_profile_i009_white
+    dataMaturity: BALANCE_CANDIDATE
+    statRanges:
+    - statId: damage
+      minUnits: 18
+      maxUnits: 26
+    - statId: duration
+      minUnits: 1
+      maxUnits: 2
+    - statId: nianCost
+      minUnits: 6
+      maxUnits: 7
+    - statId: cooldown
+      minUnits: 6
+      maxUnits: 7
+    eligibleCoreEffectIds:
+    - candidate_core_i009_01
+    visibleCoreEffectIds:
+    - candidate_core_i009_01
+    candidateItemPower: 57
+    candidateItemPowerOverridden: 0
+    candidateDisplaySummary: "\u79BB\u706B\u711A\u90AA\u5370 \xB7 \u51E1\u54C1 \xB7
+      \u7269\u54C1\u5F3A\u5EA6\uFF08\u5019\u9009\uFF0957"
+  - rarity: 1
+    versionKey: I009@green
+    cultivationPotentialProfileId: candidate_core_profile_i009_green
+    dataMaturity: BALANCE_CANDIDATE
+    statRanges:
+    - statId: damage
+      minUnits: 24
+      maxUnits: 33
+    - statId: duration
+      minUnits: 2
+      maxUnits: 4
+    - statId: nianCost
+      minUnits: 6
+      maxUnits: 6
+    - statId: cooldown
+      minUnits: 6
+      maxUnits: 6
+    eligibleCoreEffectIds:
+    - candidate_core_i009_01
+    - candidate_core_i009_02
+    visibleCoreEffectIds:
+    - candidate_core_i009_01
+    - candidate_core_i009_02
+    candidateItemPower: 78
+    candidateItemPowerOverridden: 0
+    candidateDisplaySummary: "\u79BB\u706B\u711A\u90AA\u5370 \xB7 \u826F\u54C1 \xB7
+      \u7269\u54C1\u5F3A\u5EA6\uFF08\u5019\u9009\uFF0978"
+  - rarity: 2
+    versionKey: I009@blue
+    cultivationPotentialProfileId: candidate_core_profile_i009_blue
+    dataMaturity: BALANCE_CANDIDATE
+    statRanges:
+    - statId: damage
+      minUnits: 31
+      maxUnits: 41
+    - statId: duration
+      minUnits: 3
+      maxUnits: 5
+    - statId: nianCost
+      minUnits: 5
+      maxUnits: 6
+    - statId: cooldown
+      minUnits: 5
+      maxUnits: 6
+    eligibleCoreEffectIds:
+    - candidate_core_i009_01
+    - candidate_core_i009_02
+    - candidate_core_i009_03
+    visibleCoreEffectIds:
+    - candidate_core_i009_01
+    - candidate_core_i009_02
+    - candidate_core_i009_03
+    candidateItemPower: 99
+    candidateItemPowerOverridden: 0
+    candidateDisplaySummary: "\u79BB\u706B\u711A\u90AA\u5370 \xB7 \u7075\u54C1 \xB7
+      \u7269\u54C1\u5F3A\u5EA6\uFF08\u5019\u9009\uFF0999"
+  - rarity: 3
+    versionKey: I009@purple
+    cultivationPotentialProfileId: candidate_core_profile_i009_purple
+    dataMaturity: BALANCE_CANDIDATE
+    statRanges:
+    - statId: damage
+      minUnits: 37
+      maxUnits: 45
+    - statId: duration
+      minUnits: 4
+      maxUnits: 5
+    - statId: nianCost
+      minUnits: 4
+      maxUnits: 5
+    - statId: cooldown
+      minUnits: 4
+      maxUnits: 5
+    eligibleCoreEffectIds:
+    - candidate_core_i009_01
+    - candidate_core_i009_02
+    - candidate_core_i009_03
+    - candidate_core_i009_04
+    visibleCoreEffectIds:
+    - candidate_core_i009_01
+    - candidate_core_i009_02
+    - candidate_core_i009_03
+    - candidate_core_i009_04
+    candidateItemPower: 117
+    candidateItemPowerOverridden: 0
+    candidateDisplaySummary: "\u79BB\u706B\u711A\u90AA\u5370 \xB7 \u7384\u54C1 \xB7
+      \u7269\u54C1\u5F3A\u5EA6\uFF08\u5019\u9009\uFF09117"
+  - rarity: 4
+    versionKey: I009@orange
+    cultivationPotentialProfileId: candidate_core_profile_i009_orange
+    dataMaturity: BALANCE_CANDIDATE
+    statRanges:
+    - statId: damage
+      minUnits: 44
+      maxUnits: 48
+    - statId: duration
+      minUnits: 5
+      maxUnits: 6
+    - statId: nianCost
+      minUnits: 4
+      maxUnits: 5
+    - statId: cooldown
+      minUnits: 4
+      maxUnits: 5
+    eligibleCoreEffectIds:
+    - candidate_core_i009_01
+    - candidate_core_i009_02
+    - candidate_core_i009_03
+    - candidate_core_i009_04
+    - candidate_core_i009_ultimate
+    visibleCoreEffectIds:
+    - candidate_core_i009_01
+    - candidate_core_i009_02
+    - candidate_core_i009_03
+    - candidate_core_i009_04
+    - candidate_core_i009_ultimate
+    candidateItemPower: 137
+    candidateItemPowerOverridden: 0
+    candidateDisplaySummary: "\u79BB\u706B\u711A\u90AA\u5370 \xB7 \u9053\u54C1 \xB7
+      \u7269\u54C1\u5F3A\u5EA6\uFF08\u5019\u9009\uFF09137"

@@ -1,0 +1,24 @@
+field_order,view_model_field,ui_label,source,notes
+1,displayItemName,道具名,ItemDetailViewModel,玩家显示文案
+2,displayRarityName/displayFaMenName/displayQiLeiName/displayShapeName,品阶换行；法门 / 器类 · 中文形状,ItemDetailViewModel,详情卡头部元信息；不显示 raw shape id
+3,displayItemPower,物品强度（品阶色动态数字）,ItemDetailViewModel,动态读取 Provider 数字；缺失时显示 --；不写死数值，不参与战斗计算
+4,displayPrimaryStats,主属性,List<ItemDetailStatLine>,只展示，不做放置或数值计算
+5,displayTriggerText,触发说明,ItemDetailViewModel,只展示 stub 触发文本
+6,displayLightingStatusText/displayAwakeningStatusText/displayArrayBonusStatusText/statusFlags,点亮 / 接亮 / 开窍状态,ItemDetailViewModel,状态来自 stub，不做真实点亮计算
+7,displayFixedAffixes,固定词条,List<ItemDetailTextLine>,只展示
+8,displayRandomAffixes,随机词条,List<ItemDetailTextLine>,只展示
+9,divider,分隔线,UI layout,无数据绑定
+10,displayOrangeAffix,橙色词条 / 道痕,ItemDetailViewModel,为空时隐藏
+11,displayBasicEffects,基础效果,List<ItemDetailTextLine>,已点亮时标记 active
+12,displayCoreEffects,核心效果,List<ItemDetailTextLine>,已点亮 + 已开窍才标记 active
+13,displayFaMenBuilds,法门 / Build,List<ItemDetailBuildPreview>,只预览，不接 BuildSynergyResolver
+14,displayQiLeiBuilds,器类 / Build,List<ItemDetailBuildPreview>,只预览，不接 BuildSynergyResolver
+15,divider,分隔线,UI layout,无数据绑定
+16,displayPlacementTips,摆放提示,List<ItemDetailTextLine>,只展示，不做坐标计算
+17,displayFlavorText,鉴定笺,ItemDetailViewModel,旧纸符器鉴定卡收束文本
+reserved,IItemLightingPreviewProvider,点亮预览接口,reserved interface,预留但不接真实点亮系统
+reserved,IItemBuildPreviewProvider,Build 预览接口,reserved interface,预留但不接真实 Build 计算
+reserved,IItemAwakeningPreviewProvider,开窍预览接口,reserved interface,预留但不接养成系统
+reserved,IItemAcquirePreviewProvider,获得来源预览接口,reserved interface,预留但不接正式掉落 / 奖励
+reserved,IItemUpgradePreviewProvider,升级预览接口,reserved interface,预留但不接升级 / 存档
+reserved,IItemBattleEffectPreviewProvider,战斗效果预览接口,reserved interface,预留但不接 BattleResolver / Battle Bridge

@@ -1,0 +1,125 @@
+checkId,expected,actual,status
+"schema.id","EncounterComposition.v1","EncounterComposition.v1",PASS
+"schema.version","1","1",PASS
+"fixture.encounter.count","2","2",PASS
+"fixture.wave.count","at least 3","4",PASS
+"fixture.slot.count","at least 6","6",PASS
+"fixture.multi.wave","true","True",PASS
+"fixture.multi.slot","true","True",PASS
+"fixture.elite.slot","true","True",PASS
+"fixture.boss.slot","true","True",PASS
+"fixture.map.rule","at least 1","3",PASS
+"fixture.carrier.reused.across.encounters","dev_enemy_poison_cultist","2",PASS
+"fixture.profile.reused.across.carriers","dev_enemy_poison_burn_problem","2",PASS
+"fixture.intentional.mechanicless.exception","true","True",PASS
+"lookup.ordinal.exact","true","True",PASS
+"lookup.ordinal.case.variant","false","False",PASS
+"lookup.ordinal.outer.whitespace","false","False",PASS
+"lookup.wave.ordinal.exact","true","True",PASS
+"lookup.wave.ordinal.case.variant","false","False",PASS
+"lookup.wave.ordinal.outer.whitespace","false","False",PASS
+"lookup.slot.ordinal.exact","true","True",PASS
+"lookup.slot.ordinal.case.variant","false","False",PASS
+"lookup.slot.ordinal.outer.whitespace","false","False",PASS
+"canonical.format","sha256 + 64 lowercase hex","sha256:4114368013d7af0c0e51378a8cc06ac13561d0537768b5b80db5c0ae75e18618",PASS
+"canonical.repeat","sha256:4114368013d7af0c0e51378a8cc06ac13561d0537768b5b80db5c0ae75e18618","sha256:4114368013d7af0c0e51378a8cc06ac13561d0537768b5b80db5c0ae75e18618",PASS
+"canonical.input.order.independent","sha256:4114368013d7af0c0e51378a8cc06ac13561d0537768b5b80db5c0ae75e18618","sha256:4114368013d7af0c0e51378a8cc06ac13561d0537768b5b80db5c0ae75e18618",PASS
+"canonical.wave.order.sensitive","changed","changed",PASS
+"canonical.spawn.order.sensitive","changed","changed",PASS
+"canonical.carrier.sensitive","changed","changed",PASS
+"canonical.quantity.sensitive","changed","changed",PASS
+"canonical.map.rule.sensitive","changed","changed",PASS
+"canonical.developer.tag.sensitive","changed","changed",PASS
+"canonical.mechanic.profile.sensitive","changed","changed",PASS
+"readonly.all.collections","true","True",PASS
+"defensive.input.copy","true","True",PASS
+"baseline.carriers","11/7/18","11/7/18",PASS
+"baseline.mechanic.profiles","10/6/16","10/6/16",PASS
+"baseline.map.rules","10","10",PASS
+"baseline.carrier.bindings","17","17",PASS
+"baseline.map.bindings","30","30",PASS
+"baseline.intentional.exceptions","2","2",PASS
+"baseline.unresolved.references","0","0",PASS
+"reject.input.null","INPUT_NULL","INPUT_NULL",PASS
+"reject.resolver.null","REFERENCE_RESOLVER_NULL","REFERENCE_RESOLVER_NULL",PASS
+"reject.schema.id","SCHEMA_ID_MISMATCH","SCHEMA_ID_MISMATCH",PASS
+"reject.schema.version","SCHEMA_VERSION_MISMATCH","SCHEMA_VERSION_MISMATCH",PASS
+"reject.encounter.null","ENCOUNTER_NULL","ENCOUNTER_NULL",PASS
+"reject.encounter.reference.null","ENCOUNTER_REFERENCE_NULL","ENCOUNTER_REFERENCE_NULL",PASS
+"reject.id.empty.encounter","ID_EMPTY","ID_EMPTY",PASS
+"reject.id.whitespace.encounter","ID_OUTER_WHITESPACE","ID_OUTER_WHITESPACE",PASS
+"reject.encounter.duplicate","ENCOUNTER_ID_DUPLICATE","ENCOUNTER_ID_DUPLICATE",PASS
+"reject.waves.empty","ENCOUNTER_WAVES_EMPTY","ENCOUNTER_WAVES_EMPTY",PASS
+"reject.wave.null","WAVE_NULL","WAVE_NULL",PASS
+"reject.id.empty.wave","ID_EMPTY","ID_EMPTY",PASS
+"reject.wave.id.duplicate","WAVE_ID_DUPLICATE","WAVE_ID_DUPLICATE",PASS
+"reject.wave.order.duplicate","WAVE_ORDER_DUPLICATE","WAVE_ORDER_DUPLICATE",PASS
+"reject.wave.order.noncontiguous","WAVE_ORDER_NON_CONTIGUOUS","WAVE_ORDER_NON_CONTIGUOUS",PASS
+"reject.wave.order.negative","WAVE_ORDER_NEGATIVE","WAVE_ORDER_NEGATIVE;WAVE_ORDER_NON_CONTIGUOUS",PASS
+"reject.slots.empty","WAVE_SLOTS_EMPTY","WAVE_SLOTS_EMPTY",PASS
+"reject.slot.null","SLOT_NULL","SLOT_NULL",PASS
+"reject.id.empty.slot","ID_EMPTY","ID_EMPTY",PASS
+"reject.slot.id.duplicate.encounter","SLOT_ID_DUPLICATE","SLOT_ID_DUPLICATE",PASS
+"reject.spawn.order.duplicate","SPAWN_ORDER_DUPLICATE","SPAWN_ORDER_DUPLICATE",PASS
+"reject.spawn.order.noncontiguous","SPAWN_ORDER_NON_CONTIGUOUS","SPAWN_ORDER_NON_CONTIGUOUS",PASS
+"reject.spawn.order.negative","SPAWN_ORDER_NEGATIVE","SPAWN_ORDER_NEGATIVE;SPAWN_ORDER_NON_CONTIGUOUS",PASS
+"reject.quantity","QUANTITY_INVALID","QUANTITY_INVALID",PASS
+"reject.map.duplicate","MAP_RULE_ID_DUPLICATE","MAP_RULE_ID_DUPLICATE",PASS
+"reject.map.empty","ID_EMPTY","ID_EMPTY;MAP_RULE_REFERENCE_UNRESOLVED",PASS
+"reject.map.outer.whitespace","ID_OUTER_WHITESPACE","ID_OUTER_WHITESPACE;MAP_RULE_REFERENCE_UNRESOLVED",PASS
+"reject.map.unresolved","MAP_RULE_REFERENCE_UNRESOLVED","MAP_RULE_REFERENCE_UNRESOLVED",PASS
+"reject.map.case.variant","MAP_RULE_REFERENCE_UNRESOLVED","MAP_RULE_REFERENCE_UNRESOLVED",PASS
+"reject.mechanic.duplicate","MECHANIC_PROFILE_ID_DUPLICATE","MECHANIC_PROFILE_ID_DUPLICATE",PASS
+"reject.mechanic.id.empty","ID_EMPTY","ID_EMPTY;MECHANIC_PROFILE_REFERENCE_UNRESOLVED",PASS
+"reject.mechanic.unresolved","MECHANIC_PROFILE_REFERENCE_UNRESOLVED","MECHANIC_PROFILE_REFERENCE_UNRESOLVED",PASS
+"reject.carrier.binding","CARRIER_MECHANIC_BINDING_MISSING","CARRIER_MECHANIC_BINDING_MISSING",PASS
+"reject.mechanic.kind","MECHANIC_PROFILE_KIND_MISMATCH","MECHANIC_PROFILE_KIND_MISMATCH;CARRIER_MECHANIC_BINDING_MISSING",PASS
+"reject.enemy.unresolved","ENEMY_REFERENCE_UNRESOLVED","ENEMY_REFERENCE_UNRESOLVED",PASS
+"reject.boss.unresolved","BOSS_REFERENCE_UNRESOLVED","BOSS_REFERENCE_UNRESOLVED",PASS
+"reject.carrier.kind.enemy.as.boss","SLOT_CARRIER_KIND_MISMATCH","BOSS_REFERENCE_UNRESOLVED;SLOT_CARRIER_KIND_MISMATCH;MECHANIC_PROFILE_KIND_MISMATCH",PASS
+"reject.carrier.kind.boss.as.enemy","SLOT_CARRIER_KIND_MISMATCH","ENEMY_REFERENCE_UNRESOLVED;SLOT_CARRIER_KIND_MISMATCH;MECHANIC_PROFILE_KIND_MISMATCH",PASS
+"reject.enemy.role.boss","ENEMY_ROLE_INVALID","ENEMY_ROLE_INVALID",PASS
+"reject.boss.role.normal","BOSS_ROLE_INVALID","BOSS_ROLE_INVALID",PASS
+"reject.slot.kind.undefined","SLOT_KIND_INVALID","SLOT_KIND_INVALID",PASS
+"reject.slot.role.undefined","SLOT_ROLE_INVALID","SLOT_ROLE_INVALID",PASS
+"reject.mechanic.required","MECHANIC_PROFILE_REQUIRED","MECHANIC_PROFILE_REQUIRED",PASS
+"allow.intentional.mechanicless.exception","0 issues","",PASS
+"reject.isolation.devonly.false","DEV_ISOLATION_INVALID","DEV_ISOLATION_INVALID",PASS
+"reject.isolation.enabled.true","DEV_ISOLATION_INVALID","DEV_ISOLATION_INVALID",PASS
+"reject.isolation.formal.true","DEV_ISOLATION_INVALID","DEV_ISOLATION_INVALID",PASS
+"reject.developer.tag.empty","ID_EMPTY","ID_EMPTY",PASS
+"leak.runtime.forbidden.00","TalismanBag.BuildSandbox = 0","TalismanBag.BuildSandbox = 0",PASS
+"leak.runtime.forbidden.01","TalismanBag.Battle = 0","TalismanBag.Battle = 0",PASS
+"leak.runtime.forbidden.02","TalismanBag.Item = 0","TalismanBag.Item = 0",PASS
+"leak.runtime.forbidden.03","ItemSystem = 0","ItemSystem = 0",PASS
+"leak.runtime.forbidden.04","UnityEngine = 0","UnityEngine = 0",PASS
+"leak.runtime.forbidden.05","MonoBehaviour = 0","MonoBehaviour = 0",PASS
+"leak.runtime.forbidden.06","ScriptableObject = 0","ScriptableObject = 0",PASS
+"leak.runtime.forbidden.07","GameObject = 0","GameObject = 0",PASS
+"leak.runtime.forbidden.08","Transform = 0","Transform = 0",PASS
+"leak.runtime.forbidden.09","Addressables = 0","Addressables = 0",PASS
+"leak.runtime.forbidden.10","SceneManager = 0","SceneManager = 0",PASS
+"leak.runtime.forbidden.11","BattleContract = 0","BattleContract = 0",PASS
+"leak.runtime.forbidden.12","BattleBridge = 0","BattleBridge = 0",PASS
+"leak.runtime.forbidden.13","UnifiedBattlePage = 0","UnifiedBattlePage = 0",PASS
+"leak.runtime.forbidden.14","RunFlow = 0","RunFlow = 0",PASS
+"leak.runtime.forbidden.15","PageState = 0","PageState = 0",PASS
+"leak.runtime.forbidden.16","FormationState = 0","FormationState = 0",PASS
+"leak.runtime.forbidden.17","Reward = 0","Reward = 0",PASS
+"leak.runtime.forbidden.18","SaveData = 0","SaveData = 0",PASS
+"leak.runtime.forbidden.19","PlayerPrefs = 0","PlayerPrefs = 0",PASS
+"leak.runtime.forbidden.20","V02FormationGridFrame = 0","V02FormationGridFrame = 0",PASS
+"leak.runtime.forbidden.21","DamageText = 0","DamageText = 0",PASS
+"leak.runtime.forbidden.22","BuildReadiness = 0","BuildReadiness = 0",PASS
+"leak.runtime.forbidden.23","requiredCapability = 0","requiredCapability = 0",PASS
+"leak.runtime.forbidden.24","hardSolution = 0","hardSolution = 0",PASS
+"leak.runtime.forbidden.25","weakness = 0","weakness = 0",PASS
+"leak.runtime.forbidden.26","DropBias = 0","DropBias = 0",PASS
+"leak.chapter.hardcode","0","0",PASS
+"leak.editor.legacy.reader.count","1","1",PASS
+"protected.e01e02e03","14/14 unchanged","14/14 unchanged",PASS
+"protected.legacy","3/3 unchanged","3/3 unchanged",PASS
+"package.expected.files","14/14","14/14",PASS
+"package.path.whitelist","PASS","EncounterCompositionPrimitives.cs;EncounterCompositionPrimitives.cs.meta;EncounterCompositionSnapshots.cs;EncounterCompositionSnapshots.cs.meta;EncounterCompositionValidation.cs;EncounterCompositionValidation.cs.meta",PASS
+"whitespace.trailing","0","0",PASS
+"guid.conflicts","0","0",PASS

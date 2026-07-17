@@ -1,0 +1,15 @@
+# ItemPlacementUniqueBaseRule01 Leak Check Report
+
+- Result: **PASS**
+- Runtime scope: Item placement/snapshot/Build/Sandbox feedback only.
+- Scene / Prefab / BuildSettings writes: none.
+- Formal Battle / bridge / RunFlow / Save / Reward / Boss / drop / cultivation connections: none.
+
+- PASS `SCOPE_Assets__Game_Scripts_TalismanBag_Items_ItemSystemSnapshot_cs`: clean
+- PASS `SCOPE_Assets__Game_Scripts_TalismanBag_Items_Build_ItemBuildSynergyRules_cs`: clean
+- PASS `SCOPE_Assets__Game_Scripts_TalismanBag_ItemSandbox_ItemFullDetailBuildSandboxWorkbenchSession_cs`: clean
+- PASS `SCOPE_Assets__Game_Scripts_TalismanBag_ItemSandbox_ItemSandboxV04BoardFullDetailAdapter_cs`: clean
+- PASS `PROTECTED_Assets__Game_Scenes_Scene_TalismanBag_V04_ItemSandbox_unity`: before=8A9614B50BB732A46778356CE704CB405E60F7568055C82AD8BABD851CCB0343; after=8A9614B50BB732A46778356CE704CB405E60F7568055C82AD8BABD851CCB0343
+- PASS `PROTECTED_Assets__Game_Scenes_Scene_TalismanBag_V04_BattleSandboxPreview_unity`: before=554FC001244E76218D47E04C51BD060A560E3297DEE247EEB91E5273F5FD6C17; after=554FC001244E76218D47E04C51BD060A560E3297DEE247EEB91E5273F5FD6C17
+- PASS `PROTECTED_Assets__Game_Prefabs`: before=372B1E7DB1C94BA48E412D7946686556D640D414EAB77E339C32FA3E88044B5D; after=372B1E7DB1C94BA48E412D7946686556D640D414EAB77E339C32FA3E88044B5D
+- PASS `PROTECTED_ProjectSettings_EditorBuildSettings_asset`: before=1079B5D8CEC522B3825F7E55C79FC972C7DA1D0F024FAF7885CBFD92F94EE9D0; after=1079B5D8CEC522B3825F7E55C79FC972C7DA1D0F024FAF7885CBFD92F94EE9D0

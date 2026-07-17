@@ -1,0 +1,6 @@
+rarity,coreResolutionStatus,allowsUltimateCoreEffect,buildPolicyMode,probabilityProfileId,dataMaturityKey,formalCoreProfileCount,formalProbabilityProfileCount
+white,Unresolved,false,LockedNone,,SCHEMA_ONLY,0,0
+green,Unresolved,false,ProbabilityUnresolved,,SCHEMA_ONLY,0,0
+blue,Unresolved,false,ProbabilityUnresolved,,SCHEMA_ONLY,0,0
+purple,Unresolved,false,ProbabilityUnresolved,,SCHEMA_ONLY,0,0
+orange,Unresolved,true,ProbabilityUnresolved,,SCHEMA_ONLY,0,0

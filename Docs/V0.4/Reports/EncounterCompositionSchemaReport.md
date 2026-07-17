@@ -1,0 +1,137 @@
+# Encounter Composition Schema 01 Report
+
+- Result: PASS
+- Execution: Pure C# same-source offline verifier
+- Verifier: 124/124
+- Schema: EncounterComposition.v1 / 1
+- Canonical signature: sha256:4114368013d7af0c0e51378a8cc06ac13561d0537768b5b80db5c0ae75e18618
+- Fixture: 2 Encounter / 4 Wave / 6 Slot
+- Player-facing projection: none
+- Runtime execution: none
+
+## Checks
+
+- PASS — schema.id: EncounterComposition.v1
+- PASS — schema.version: 1
+- PASS — fixture.encounter.count: 2
+- PASS — fixture.wave.count: 4
+- PASS — fixture.slot.count: 6
+- PASS — fixture.multi.wave: True
+- PASS — fixture.multi.slot: True
+- PASS — fixture.elite.slot: True
+- PASS — fixture.boss.slot: True
+- PASS — fixture.map.rule: 3
+- PASS — fixture.carrier.reused.across.encounters: 2
+- PASS — fixture.profile.reused.across.carriers: 2
+- PASS — fixture.intentional.mechanicless.exception: True
+- PASS — lookup.ordinal.exact: True
+- PASS — lookup.ordinal.case.variant: False
+- PASS — lookup.ordinal.outer.whitespace: False
+- PASS — lookup.wave.ordinal.exact: True
+- PASS — lookup.wave.ordinal.case.variant: False
+- PASS — lookup.wave.ordinal.outer.whitespace: False
+- PASS — lookup.slot.ordinal.exact: True
+- PASS — lookup.slot.ordinal.case.variant: False
+- PASS — lookup.slot.ordinal.outer.whitespace: False
+- PASS — canonical.format: sha256:4114368013d7af0c0e51378a8cc06ac13561d0537768b5b80db5c0ae75e18618
+- PASS — canonical.repeat: sha256:4114368013d7af0c0e51378a8cc06ac13561d0537768b5b80db5c0ae75e18618
+- PASS — canonical.input.order.independent: sha256:4114368013d7af0c0e51378a8cc06ac13561d0537768b5b80db5c0ae75e18618
+- PASS — canonical.wave.order.sensitive: changed
+- PASS — canonical.spawn.order.sensitive: changed
+- PASS — canonical.carrier.sensitive: changed
+- PASS — canonical.quantity.sensitive: changed
+- PASS — canonical.map.rule.sensitive: changed
+- PASS — canonical.developer.tag.sensitive: changed
+- PASS — canonical.mechanic.profile.sensitive: changed
+- PASS — readonly.all.collections: True
+- PASS — defensive.input.copy: True
+- PASS — baseline.carriers: 11/7/18
+- PASS — baseline.mechanic.profiles: 10/6/16
+- PASS — baseline.map.rules: 10
+- PASS — baseline.carrier.bindings: 17
+- PASS — baseline.map.bindings: 30
+- PASS — baseline.intentional.exceptions: 2
+- PASS — baseline.unresolved.references: 0
+- PASS — reject.input.null: INPUT_NULL
+- PASS — reject.resolver.null: REFERENCE_RESOLVER_NULL
+- PASS — reject.schema.id: SCHEMA_ID_MISMATCH
+- PASS — reject.schema.version: SCHEMA_VERSION_MISMATCH
+- PASS — reject.encounter.null: ENCOUNTER_NULL
+- PASS — reject.encounter.reference.null: ENCOUNTER_REFERENCE_NULL
+- PASS — reject.id.empty.encounter: ID_EMPTY
+- PASS — reject.id.whitespace.encounter: ID_OUTER_WHITESPACE
+- PASS — reject.encounter.duplicate: ENCOUNTER_ID_DUPLICATE
+- PASS — reject.waves.empty: ENCOUNTER_WAVES_EMPTY
+- PASS — reject.wave.null: WAVE_NULL
+- PASS — reject.id.empty.wave: ID_EMPTY
+- PASS — reject.wave.id.duplicate: WAVE_ID_DUPLICATE
+- PASS — reject.wave.order.duplicate: WAVE_ORDER_DUPLICATE
+- PASS — reject.wave.order.noncontiguous: WAVE_ORDER_NON_CONTIGUOUS
+- PASS — reject.wave.order.negative: WAVE_ORDER_NEGATIVE;WAVE_ORDER_NON_CONTIGUOUS
+- PASS — reject.slots.empty: WAVE_SLOTS_EMPTY
+- PASS — reject.slot.null: SLOT_NULL
+- PASS — reject.id.empty.slot: ID_EMPTY
+- PASS — reject.slot.id.duplicate.encounter: SLOT_ID_DUPLICATE
+- PASS — reject.spawn.order.duplicate: SPAWN_ORDER_DUPLICATE
+- PASS — reject.spawn.order.noncontiguous: SPAWN_ORDER_NON_CONTIGUOUS
+- PASS — reject.spawn.order.negative: SPAWN_ORDER_NEGATIVE;SPAWN_ORDER_NON_CONTIGUOUS
+- PASS — reject.quantity: QUANTITY_INVALID
+- PASS — reject.map.duplicate: MAP_RULE_ID_DUPLICATE
+- PASS — reject.map.empty: ID_EMPTY;MAP_RULE_REFERENCE_UNRESOLVED
+- PASS — reject.map.outer.whitespace: ID_OUTER_WHITESPACE;MAP_RULE_REFERENCE_UNRESOLVED
+- PASS — reject.map.unresolved: MAP_RULE_REFERENCE_UNRESOLVED
+- PASS — reject.map.case.variant: MAP_RULE_REFERENCE_UNRESOLVED
+- PASS — reject.mechanic.duplicate: MECHANIC_PROFILE_ID_DUPLICATE
+- PASS — reject.mechanic.id.empty: ID_EMPTY;MECHANIC_PROFILE_REFERENCE_UNRESOLVED
+- PASS — reject.mechanic.unresolved: MECHANIC_PROFILE_REFERENCE_UNRESOLVED
+- PASS — reject.carrier.binding: CARRIER_MECHANIC_BINDING_MISSING
+- PASS — reject.mechanic.kind: MECHANIC_PROFILE_KIND_MISMATCH;CARRIER_MECHANIC_BINDING_MISSING
+- PASS — reject.enemy.unresolved: ENEMY_REFERENCE_UNRESOLVED
+- PASS — reject.boss.unresolved: BOSS_REFERENCE_UNRESOLVED
+- PASS — reject.carrier.kind.enemy.as.boss: BOSS_REFERENCE_UNRESOLVED;SLOT_CARRIER_KIND_MISMATCH;MECHANIC_PROFILE_KIND_MISMATCH
+- PASS — reject.carrier.kind.boss.as.enemy: ENEMY_REFERENCE_UNRESOLVED;SLOT_CARRIER_KIND_MISMATCH;MECHANIC_PROFILE_KIND_MISMATCH
+- PASS — reject.enemy.role.boss: ENEMY_ROLE_INVALID
+- PASS — reject.boss.role.normal: BOSS_ROLE_INVALID
+- PASS — reject.slot.kind.undefined: SLOT_KIND_INVALID
+- PASS — reject.slot.role.undefined: SLOT_ROLE_INVALID
+- PASS — reject.mechanic.required: MECHANIC_PROFILE_REQUIRED
+- PASS — allow.intentional.mechanicless.exception
+- PASS — reject.isolation.devonly.false: DEV_ISOLATION_INVALID
+- PASS — reject.isolation.enabled.true: DEV_ISOLATION_INVALID
+- PASS — reject.isolation.formal.true: DEV_ISOLATION_INVALID
+- PASS — reject.developer.tag.empty: ID_EMPTY
+- PASS — leak.runtime.forbidden.00: TalismanBag.BuildSandbox = 0
+- PASS — leak.runtime.forbidden.01: TalismanBag.Battle = 0
+- PASS — leak.runtime.forbidden.02: TalismanBag.Item = 0
+- PASS — leak.runtime.forbidden.03: ItemSystem = 0
+- PASS — leak.runtime.forbidden.04: UnityEngine = 0
+- PASS — leak.runtime.forbidden.05: MonoBehaviour = 0
+- PASS — leak.runtime.forbidden.06: ScriptableObject = 0
+- PASS — leak.runtime.forbidden.07: GameObject = 0
+- PASS — leak.runtime.forbidden.08: Transform = 0
+- PASS — leak.runtime.forbidden.09: Addressables = 0
+- PASS — leak.runtime.forbidden.10: SceneManager = 0
+- PASS — leak.runtime.forbidden.11: BattleContract = 0
+- PASS — leak.runtime.forbidden.12: BattleBridge = 0
+- PASS — leak.runtime.forbidden.13: UnifiedBattlePage = 0
+- PASS — leak.runtime.forbidden.14: RunFlow = 0
+- PASS — leak.runtime.forbidden.15: PageState = 0
+- PASS — leak.runtime.forbidden.16: FormationState = 0
+- PASS — leak.runtime.forbidden.17: Reward = 0
+- PASS — leak.runtime.forbidden.18: SaveData = 0
+- PASS — leak.runtime.forbidden.19: PlayerPrefs = 0
+- PASS — leak.runtime.forbidden.20: V02FormationGridFrame = 0
+- PASS — leak.runtime.forbidden.21: DamageText = 0
+- PASS — leak.runtime.forbidden.22: BuildReadiness = 0
+- PASS — leak.runtime.forbidden.23: requiredCapability = 0
+- PASS — leak.runtime.forbidden.24: hardSolution = 0
+- PASS — leak.runtime.forbidden.25: weakness = 0
+- PASS — leak.runtime.forbidden.26: DropBias = 0
+- PASS — leak.chapter.hardcode: 0
+- PASS — leak.editor.legacy.reader.count: 1
+- PASS — protected.e01e02e03: 14/14 unchanged
+- PASS — protected.legacy: 3/3 unchanged
+- PASS — package.expected.files: 14/14
+- PASS — package.path.whitelist: EncounterCompositionPrimitives.cs;EncounterCompositionPrimitives.cs.meta;EncounterCompositionSnapshots.cs;EncounterCompositionSnapshots.cs.meta;EncounterCompositionValidation.cs;EncounterCompositionValidation.cs.meta
+- PASS — whitespace.trailing: 0
+- PASS — guid.conflicts: 0

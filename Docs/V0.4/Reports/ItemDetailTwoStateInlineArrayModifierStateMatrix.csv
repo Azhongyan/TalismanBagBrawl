@@ -1,0 +1,7 @@
+caseId,placementState,lightingBadge,arrayBadge,inlineModifierCount
+notPlaced,no placementId,尚未入阵,阵脉未计算,0
+placedUnlitNoArray,placed unlit not on array,未点亮,未占阵脉,0
+placedUnlitArray,placed unlit on array,未点亮,阵脉待亮,0
+directLitArray,direct lit on array,直接点亮,阵脉生效,configured target count
+relayLitArray,relay lit on array,相邻接亮,阵脉生效,configured target count
+lightingSource,isLightingSource true,点亮源,阵脉状态按占位计算,0

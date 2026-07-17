@@ -1,0 +1,3645 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47136b3196c67e34db5d7d567b8194dc, type: 3}
+  m_Name: ItemBalanceWorkbenchCatalog
+  m_EditorClassIdentifier: 
+  balanceDataRevision: ITEM_COMPLETE_CANDIDATE_CONTENT_WORKBENCH01_R1
+  dataMaturity: BALANCE_CANDIDATE
+  editState: EDITABLE
+  liveState: NOT_LIVE_LOCKED
+  battleState: NOT_BATTLE_CONNECTED
+  statDefinitions:
+  - statId: damage
+    displayName: "\u4F24\u5BB3"
+    unitKey: flat
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+  - statId: break
+    displayName: "\u7834\u76FE"
+    unitKey: flat
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+  - statId: guard
+    displayName: "\u62A4\u52BF"
+    unitKey: flat
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+  - statId: heal
+    displayName: "\u56DE\u590D"
+    unitKey: flat
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+  - statId: cleanse
+    displayName: "\u51C0\u5316"
+    unitKey: stack
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+  - statId: control
+    displayName: "\u63A7\u5236"
+    unitKey: point
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+  - statId: duration
+    displayName: "\u6301\u7EED"
+    unitKey: turn
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+  - statId: nianCost
+    displayName: "\u8017\u5FF5"
+    unitKey: point
+    direction: 1
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+  - statId: cooldown
+    displayName: "\u51B7\u5374"
+    unitKey: turn
+    direction: 1
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+  higherBandTemplate:
+  - rarity: 0
+    min01: 0
+    max01: 0.25
+  - rarity: 1
+    min01: 0.2
+    max01: 0.5
+  - rarity: 2
+    min01: 0.45
+    max01: 0.75
+  - rarity: 3
+    min01: 0.65
+    max01: 0.9
+  - rarity: 4
+    min01: 0.85
+    max01: 1
+  lowerBandTemplate:
+  - rarity: 0
+    min01: 0.75
+    max01: 1
+  - rarity: 1
+    min01: 0.5
+    max01: 0.8
+  - rarity: 2
+    min01: 0.25
+    max01: 0.55
+  - rarity: 3
+    min01: 0.1
+    max01: 0.35
+  - rarity: 4
+    min01: 0
+    max01: 0.2
+  affixDefinitions:
+  - affixId: affix_damage_up
+    displayName: "\u4F24\u5BB3\u63D0\u5347"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 200
+      maxUnits: 400
+    - rarity: 1
+      minUnits: 350
+      maxUnits: 650
+    - rarity: 2
+      minUnits: 550
+      maxUnits: 900
+    - rarity: 3
+      minUnits: 800
+      maxUnits: 1300
+    - rarity: 4
+      minUnits: 1200
+      maxUnits: 1800
+  - affixId: affix_break_up
+    displayName: "\u7834\u76FE\u63D0\u5347"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 200
+      maxUnits: 400
+    - rarity: 1
+      minUnits: 350
+      maxUnits: 650
+    - rarity: 2
+      minUnits: 550
+      maxUnits: 900
+    - rarity: 3
+      minUnits: 800
+      maxUnits: 1300
+    - rarity: 4
+      minUnits: 1200
+      maxUnits: 1800
+  - affixId: affix_guard_up
+    displayName: "\u62A4\u52BF\u63D0\u5347"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 200
+      maxUnits: 400
+    - rarity: 1
+      minUnits: 350
+      maxUnits: 650
+    - rarity: 2
+      minUnits: 550
+      maxUnits: 900
+    - rarity: 3
+      minUnits: 800
+      maxUnits: 1300
+    - rarity: 4
+      minUnits: 1200
+      maxUnits: 1800
+  - affixId: affix_heal_up
+    displayName: "\u56DE\u590D\u63D0\u5347"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 200
+      maxUnits: 400
+    - rarity: 1
+      minUnits: 350
+      maxUnits: 650
+    - rarity: 2
+      minUnits: 550
+      maxUnits: 900
+    - rarity: 3
+      minUnits: 800
+      maxUnits: 1300
+    - rarity: 4
+      minUnits: 1200
+      maxUnits: 1800
+  - affixId: affix_cleanse_up
+    displayName: "\u51C0\u5316\u63D0\u5347"
+    unitKey: stack
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 4
+      maxUnits: 5
+  - affixId: affix_control_up
+    displayName: "\u63A7\u5236\u63D0\u5347"
+    unitKey: point
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 3
+    - rarity: 1
+      minUnits: 3
+      maxUnits: 6
+    - rarity: 2
+      minUnits: 5
+      maxUnits: 8
+    - rarity: 3
+      minUnits: 7
+      maxUnits: 9
+    - rarity: 4
+      minUnits: 9
+      maxUnits: 10
+  - affixId: affix_duration_up
+    displayName: "\u6301\u7EED\u63D0\u5347"
+    unitKey: turn
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 4
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 5
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+  - affixId: affix_nian_efficiency
+    displayName: "\u8017\u5FF5\u6548\u7387"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 200
+      maxUnits: 400
+    - rarity: 1
+      minUnits: 350
+      maxUnits: 650
+    - rarity: 2
+      minUnits: 550
+      maxUnits: 900
+    - rarity: 3
+      minUnits: 800
+      maxUnits: 1300
+    - rarity: 4
+      minUnits: 1200
+      maxUnits: 1800
+  - affixId: affix_cooldown_reduction
+    displayName: "\u51B7\u5374\u7F29\u51CF"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 200
+      maxUnits: 400
+    - rarity: 1
+      minUnits: 350
+      maxUnits: 650
+    - rarity: 2
+      minUnits: 550
+      maxUnits: 900
+    - rarity: 3
+      minUnits: 800
+      maxUnits: 1300
+    - rarity: 4
+      minUnits: 1200
+      maxUnits: 1800
+  - affixId: affix_trigger_refund
+    displayName: "\u56DE\u5FF5"
+    unitKey: point
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+  - affixId: affix_direct_lit_power
+    displayName: "\u660E\u70B9"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 400
+      maxUnits: 533
+    - rarity: 1
+      minUnits: 533
+      maxUnits: 666
+    - rarity: 2
+      minUnits: 666
+      maxUnits: 799
+    - rarity: 3
+      minUnits: 799
+      maxUnits: 932
+    - rarity: 4
+      minUnits: 932
+      maxUnits: 1065
+  - affixId: affix_relay_lit_power
+    displayName: "\u63A5\u660E"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 350
+      maxUnits: 466
+    - rarity: 1
+      minUnits: 466
+      maxUnits: 582
+    - rarity: 2
+      minUnits: 582
+      maxUnits: 698
+    - rarity: 3
+      minUnits: 698
+      maxUnits: 814
+    - rarity: 4
+      minUnits: 814
+      maxUnits: 930
+  - affixId: affix_array_guard
+    displayName: "\u9547\u4F4D"
+    unitKey: flat
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 1
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 2
+      minUnits: 5
+      maxUnits: 6
+    - rarity: 3
+      minUnits: 6
+      maxUnits: 7
+    - rarity: 4
+      minUnits: 7
+      maxUnits: 8
+  - affixId: affix_adjacent_guard
+    displayName: "\u90BB\u62A4"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 250
+      maxUnits: 333
+    - rarity: 1
+      minUnits: 333
+      maxUnits: 416
+    - rarity: 2
+      minUnits: 416
+      maxUnits: 499
+    - rarity: 3
+      minUnits: 499
+      maxUnits: 582
+    - rarity: 4
+      minUnits: 582
+      maxUnits: 665
+  - affixId: affix_adjacent_damage
+    displayName: "\u90BB\u653B"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 250
+      maxUnits: 333
+    - rarity: 1
+      minUnits: 333
+      maxUnits: 416
+    - rarity: 2
+      minUnits: 416
+      maxUnits: 499
+    - rarity: 3
+      minUnits: 499
+      maxUnits: 582
+    - rarity: 4
+      minUnits: 582
+      maxUnits: 665
+  - affixId: affix_isolated_power
+    displayName: "\u72EC\u9635"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 700
+      maxUnits: 933
+    - rarity: 1
+      minUnits: 933
+      maxUnits: 1166
+    - rarity: 2
+      minUnits: 1166
+      maxUnits: 1399
+    - rarity: 3
+      minUnits: 1399
+      maxUnits: 1632
+    - rarity: 4
+      minUnits: 1632
+      maxUnits: 1865
+  - affixId: affix_break_cooldown
+    displayName: "\u7834\u58F3\u56DE\u8F6C"
+    unitKey: turn
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+  - affixId: affix_cleanse_refund
+    displayName: "\u51C0\u540E\u56DE\u5FF5"
+    unitKey: point
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+  - affixId: affix_guard_refund
+    displayName: "\u62A4\u52BF\u56DE\u6D41"
+    unitKey: point
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+  - affixId: affix_core_next_power
+    displayName: "\u7A8D\u540E\u84C4\u52BF"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 600
+      maxUnits: 800
+    - rarity: 1
+      minUnits: 800
+      maxUnits: 1000
+    - rarity: 2
+      minUnits: 1000
+      maxUnits: 1200
+    - rarity: 3
+      minUnits: 1200
+      maxUnits: 1400
+    - rarity: 4
+      minUnits: 1400
+      maxUnits: 1600
+  - affixId: affix_core_cooldown
+    displayName: "\u7A8D\u540E\u56DE\u8F6C"
+    unitKey: turn
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+  - affixId: affix_famen2_power
+    displayName: "\u6CD5\u95E8\u521D\u6210"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 500
+      maxUnits: 666
+    - rarity: 1
+      minUnits: 666
+      maxUnits: 832
+    - rarity: 2
+      minUnits: 832
+      maxUnits: 998
+    - rarity: 3
+      minUnits: 998
+      maxUnits: 1164
+    - rarity: 4
+      minUnits: 1164
+      maxUnits: 1330
+  - affixId: affix_famen4_trigger
+    displayName: "\u6CD5\u95E8\u5408\u5F0F"
+    unitKey: count
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+  - affixId: affix_qilei2_power
+    displayName: "\u5668\u7C7B\u6210\u5BF9"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 500
+      maxUnits: 666
+    - rarity: 1
+      minUnits: 666
+      maxUnits: 832
+    - rarity: 2
+      minUnits: 832
+      maxUnits: 998
+    - rarity: 3
+      minUnits: 998
+      maxUnits: 1164
+    - rarity: 4
+      minUnits: 1164
+      maxUnits: 1330
+  - affixId: affix_qilei4_target
+    displayName: "\u5668\u7C7B\u5408\u9635"
+    unitKey: count
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+  - affixId: affix_overheal_to_guard
+    displayName: "\u76C8\u7597\u6210\u62A4"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 5000
+      maxUnits: 6666
+    - rarity: 1
+      minUnits: 6666
+      maxUnits: 8332
+    - rarity: 2
+      minUnits: 8332
+      maxUnits: 9998
+    - rarity: 3
+      minUnits: 9998
+      maxUnits: 11664
+    - rarity: 4
+      minUnits: 11664
+      maxUnits: 13330
+  - affixId: affix_break_to_damage
+    displayName: "\u7834\u52BF\u6210\u4F24"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 3000
+      maxUnits: 4000
+    - rarity: 1
+      minUnits: 4000
+      maxUnits: 5000
+    - rarity: 2
+      minUnits: 5000
+      maxUnits: 6000
+    - rarity: 3
+      minUnits: 6000
+      maxUnits: 7000
+    - rarity: 4
+      minUnits: 7000
+      maxUnits: 8000
+  - affixId: affix_cleanse_to_heal
+    displayName: "\u6E05\u79FD\u56DE\u751F"
+    unitKey: flat
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 1
+      minUnits: 5
+      maxUnits: 6
+    - rarity: 2
+      minUnits: 6
+      maxUnits: 7
+    - rarity: 3
+      minUnits: 7
+      maxUnits: 8
+    - rarity: 4
+      minUnits: 8
+      maxUnits: 9
+  - affixId: affix_damage_cost_trade
+    displayName: "\u70C8\u6027"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 900
+      maxUnits: 1200
+    - rarity: 1
+      minUnits: 1200
+      maxUnits: 1500
+    - rarity: 2
+      minUnits: 1500
+      maxUnits: 1800
+    - rarity: 3
+      minUnits: 1800
+      maxUnits: 2100
+    - rarity: 4
+      minUnits: 2100
+      maxUnits: 2400
+  - affixId: affix_guard_slow_trade
+    displayName: "\u6C89\u5B88"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1000
+      maxUnits: 1333
+    - rarity: 1
+      minUnits: 1333
+      maxUnits: 1666
+    - rarity: 2
+      minUnits: 1666
+      maxUnits: 1999
+    - rarity: 3
+      minUnits: 1999
+      maxUnits: 2332
+    - rarity: 4
+      minUnits: 2332
+      maxUnits: 2665
+  - affixId: affix_fast_weak_trade
+    displayName: "\u6025\u5F0F"
+    unitKey: turn
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+  - affixId: affix_low_health_power
+    displayName: "\u5371\u65F6"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 800
+      maxUnits: 1066
+    - rarity: 1
+      minUnits: 1066
+      maxUnits: 1332
+    - rarity: 2
+      minUnits: 1332
+      maxUnits: 1598
+    - rarity: 3
+      minUnits: 1598
+      maxUnits: 1864
+    - rarity: 4
+      minUnits: 1864
+      maxUnits: 2130
+  - affixId: affix_shield_target_power
+    displayName: "\u7834\u7532"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 700
+      maxUnits: 933
+    - rarity: 1
+      minUnits: 933
+      maxUnits: 1166
+    - rarity: 2
+      minUnits: 1166
+      maxUnits: 1399
+    - rarity: 3
+      minUnits: 1399
+      maxUnits: 1632
+    - rarity: 4
+      minUnits: 1632
+      maxUnits: 1865
+  - affixId: affix_debuff_target_power
+    displayName: "\u9010\u79FD"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 650
+      maxUnits: 866
+    - rarity: 1
+      minUnits: 866
+      maxUnits: 1082
+    - rarity: 2
+      minUnits: 1082
+      maxUnits: 1298
+    - rarity: 3
+      minUnits: 1298
+      maxUnits: 1514
+    - rarity: 4
+      minUnits: 1514
+      maxUnits: 1730
+  - affixId: affix_first_trigger_bonus
+    displayName: "\u5148\u58F0"
+    unitKey: basisPoint
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 3000
+      maxUnits: 4000
+    - rarity: 1
+      minUnits: 4000
+      maxUnits: 5000
+    - rarity: 2
+      minUnits: 5000
+      maxUnits: 6000
+    - rarity: 3
+      minUnits: 6000
+      maxUnits: 7000
+    - rarity: 4
+      minUnits: 7000
+      maxUnits: 8000
+  - affixId: affix_chain_target
+    displayName: "\u8FDE\u5E94"
+    unitKey: count
+    direction: 0
+    decimalPlaces: 0
+    stepUnits: 1
+    roundingMode: 0
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+  buildPolicies:
+  - rarity: 0
+    noneWeight: 100
+    faMenWeight: 0
+    qiLeiWeight: 0
+    dualWeight: 0
+  - rarity: 1
+    noneWeight: 70
+    faMenWeight: 15
+    qiLeiWeight: 15
+    dualWeight: 0
+  - rarity: 2
+    noneWeight: 45
+    faMenWeight: 25
+    qiLeiWeight: 25
+    dualWeight: 5
+  - rarity: 3
+    noneWeight: 20
+    faMenWeight: 30
+    qiLeiWeight: 30
+    dualWeight: 20
+  - rarity: 4
+    noneWeight: 5
+    faMenWeight: 20
+    qiLeiWeight: 20
+    dualWeight: 55
+  dropSegments:
+  - minStage: 1
+    maxStage: 10
+    openEnded: 0
+    whiteWeight: 100
+    greenWeight: 0
+    blueWeight: 0
+    purpleWeight: 0
+    orangeWeight: 0
+  - minStage: 11
+    maxStage: 20
+    openEnded: 0
+    whiteWeight: 70
+    greenWeight: 25
+    blueWeight: 5
+    purpleWeight: 0
+    orangeWeight: 0
+  - minStage: 21
+    maxStage: 30
+    openEnded: 0
+    whiteWeight: 45
+    greenWeight: 35
+    blueWeight: 17
+    purpleWeight: 3
+    orangeWeight: 0
+  - minStage: 31
+    maxStage: 40
+    openEnded: 0
+    whiteWeight: 25
+    greenWeight: 35
+    blueWeight: 28
+    purpleWeight: 10
+    orangeWeight: 2
+  - minStage: 41
+    maxStage: 0
+    openEnded: 1
+    whiteWeight: 10
+    greenWeight: 25
+    blueWeight: 35
+    purpleWeight: 22
+    orangeWeight: 8
+  previewCoefficients:
+  - dimensionId: BreakPower
+    statId: break
+    coefficient: 1
+  - dimensionId: CleansePower
+    statId: cleanse
+    coefficient: 1
+  - dimensionId: ControlPower
+    statId: control
+    coefficient: 1
+  - dimensionId: GuardPower
+    statId: guard
+    coefficient: 1
+  - dimensionId: GuardPower
+    statId: heal
+    coefficient: 0.4
+  - dimensionId: EnergyStability
+    statId: nianCost
+    coefficient: -1
+  - dimensionId: ClearPower
+    statId: damage
+    coefficient: 0.6
+  - dimensionId: ClearPower
+    statId: duration
+    coefficient: 0.4
+  - dimensionId: BurstWindow
+    statId: damage
+    coefficient: 0.5
+  - dimensionId: BurstWindow
+    statId: control
+    coefficient: 0.5
+  - dimensionId: BurstWindow
+    statId: cooldown
+    coefficient: -0.3
+  candidateItemPowerCoefficients:
+  - coefficientId: STAT_MIDPOINT
+    value: 1
+    description: "\u56DB\u6761\u57FA\u7840\u5C5E\u6027\u4E2D\u70B9\u603B\u548C\u7CFB\u6570"
+  - coefficientId: SIGNATURE_AFFIX
+    value: 12
+    description: "\u4E13\u5C5E\u56FA\u5B9A\u8BCD\u6761\u5019\u9009\u4EF7\u503C"
+  - coefficientId: VISIBLE_CORE
+    value: 8
+    description: "\u6BCF\u4E2A\u5F53\u524D\u54C1\u9636\u53EF\u89C1\u6838\u5FC3\u7684\u5019\u9009\u4EF7\u503C"
+  - coefficientId: BUILD_ELIGIBILITY
+    value: 6
+    description: "\u54C1\u9636Build\u8D44\u683C\u6F5C\u529B\u5019\u9009\u4EF7\u503C"
+  candidateRandomAffixes:
+  - affixId: affix_damage_up
+    displayName: "\u4F24\u5BB3\u63D0\u5347"
+    description: "\u4F24\u5BB3\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_damage_up:effect
+      displayName: "\u4F24\u5BB3\u63D0\u5347"
+      description: "\u4F24\u5BB3\u63D0\u9AD8X%\u3002"
+      effectCategory: 0
+      triggerEventId: always
+      conditionId: NONE
+      targetSelector: effect_primary_target
+      targetStatId: damage
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 300
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_damage_up_params
+      mutexGroupId: NONE
+      effectTags:
+      - NumericModifier
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 300
+      maxUnits: 400
+    - rarity: 1
+      minUnits: 400
+      maxUnits: 500
+    - rarity: 2
+      minUnits: 500
+      maxUnits: 600
+    - rarity: 3
+      minUnits: 600
+      maxUnits: 700
+    - rarity: 4
+      minUnits: 700
+      maxUnits: 800
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_break_up
+    displayName: "\u7834\u76FE\u63D0\u5347"
+    description: "\u7834\u76FE\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_break_up:effect
+      displayName: "\u7834\u76FE\u63D0\u5347"
+      description: "\u7834\u76FE\u63D0\u9AD8X%\u3002"
+      effectCategory: 0
+      triggerEventId: always
+      conditionId: NONE
+      targetSelector: effect_primary_target
+      targetStatId: break
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 300
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_break_up_params
+      mutexGroupId: NONE
+      effectTags:
+      - NumericModifier
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 300
+      maxUnits: 400
+    - rarity: 1
+      minUnits: 400
+      maxUnits: 500
+    - rarity: 2
+      minUnits: 500
+      maxUnits: 600
+    - rarity: 3
+      minUnits: 600
+      maxUnits: 700
+    - rarity: 4
+      minUnits: 700
+      maxUnits: 800
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_guard_up
+    displayName: "\u62A4\u52BF\u63D0\u5347"
+    description: "\u83B7\u5F97\u7684\u62A4\u52BF\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_guard_up:effect
+      displayName: "\u62A4\u52BF\u63D0\u5347"
+      description: "\u83B7\u5F97\u7684\u62A4\u52BF\u63D0\u9AD8X%\u3002"
+      effectCategory: 0
+      triggerEventId: always
+      conditionId: NONE
+      targetSelector: effect_primary_target
+      targetStatId: guard
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 300
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_guard_up_params
+      mutexGroupId: NONE
+      effectTags:
+      - NumericModifier
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 300
+      maxUnits: 400
+    - rarity: 1
+      minUnits: 400
+      maxUnits: 500
+    - rarity: 2
+      minUnits: 500
+      maxUnits: 600
+    - rarity: 3
+      minUnits: 600
+      maxUnits: 700
+    - rarity: 4
+      minUnits: 700
+      maxUnits: 800
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_heal_up
+    displayName: "\u56DE\u590D\u63D0\u5347"
+    description: "\u56DE\u590D\u6548\u679C\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_heal_up:effect
+      displayName: "\u56DE\u590D\u63D0\u5347"
+      description: "\u56DE\u590D\u6548\u679C\u63D0\u9AD8X%\u3002"
+      effectCategory: 0
+      triggerEventId: always
+      conditionId: NONE
+      targetSelector: effect_primary_target
+      targetStatId: heal
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 300
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_heal_up_params
+      mutexGroupId: NONE
+      effectTags:
+      - NumericModifier
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 300
+      maxUnits: 400
+    - rarity: 1
+      minUnits: 400
+      maxUnits: 500
+    - rarity: 2
+      minUnits: 500
+      maxUnits: 600
+    - rarity: 3
+      minUnits: 600
+      maxUnits: 700
+    - rarity: 4
+      minUnits: 700
+      maxUnits: 800
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_cleanse_up
+    displayName: "\u51C0\u5316\u589E\u91CF"
+    description: "\u6BCF\u6B21\u51C0\u5316\u989D\u5916\u79FB\u9664X\u5C42\u3002"
+    effectPayload:
+      effectId: affix_cleanse_up:effect
+      displayName: "\u51C0\u5316\u589E\u91CF"
+      description: "\u6BCF\u6B21\u51C0\u5316\u989D\u5916\u79FB\u9664X\u5C42\u3002"
+      effectCategory: 0
+      triggerEventId: on_cleanse
+      conditionId: cleanse_success
+      targetSelector: effect_primary_target
+      targetStatId: cleanse
+      operation: 0
+      valueUnitKey: stack
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_cleanse_up_params
+      mutexGroupId: NONE
+      effectTags:
+      - NumericModifier
+      - AddFlat
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_control_up
+    displayName: "\u63A7\u5236\u589E\u91CF"
+    description: "\u63A7\u5236\u5F3A\u5EA6\u63D0\u9AD8X\u70B9\u3002"
+    effectPayload:
+      effectId: affix_control_up:effect
+      displayName: "\u63A7\u5236\u589E\u91CF"
+      description: "\u63A7\u5236\u5F3A\u5EA6\u63D0\u9AD8X\u70B9\u3002"
+      effectCategory: 0
+      triggerEventId: always
+      conditionId: NONE
+      targetSelector: effect_primary_target
+      targetStatId: control
+      operation: 0
+      valueUnitKey: point
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_control_up_params
+      mutexGroupId: NONE
+      effectTags:
+      - NumericModifier
+      - AddFlat
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_duration_up
+    displayName: "\u6301\u7EED\u5EF6\u957F"
+    description: "\u6301\u7EED\u65F6\u95F4\u5EF6\u957FX\u56DE\u5408\u3002"
+    effectPayload:
+      effectId: affix_duration_up:effect
+      displayName: "\u6301\u7EED\u5EF6\u957F"
+      description: "\u6301\u7EED\u65F6\u95F4\u5EF6\u957FX\u56DE\u5408\u3002"
+      effectCategory: 0
+      triggerEventId: on_apply_duration
+      conditionId: duration_gt_0
+      targetSelector: effect_primary_target
+      targetStatId: duration
+      operation: 0
+      valueUnitKey: turn
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_duration_up_params
+      mutexGroupId: NONE
+      effectTags:
+      - NumericModifier
+      - AddFlat
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_nian_efficiency
+    displayName: "\u7701\u5FF5"
+    description: "\u8017\u5FF5\u964D\u4F4EX\u70B9\u3002"
+    effectPayload:
+      effectId: affix_nian_efficiency:effect
+      displayName: "\u7701\u5FF5"
+      description: "\u8017\u5FF5\u964D\u4F4EX\u70B9\u3002"
+      effectCategory: 3
+      triggerEventId: before_trigger
+      conditionId: nian_cost_gt_0
+      targetSelector: effect_primary_target
+      targetStatId: nianCost
+      operation: 3
+      valueUnitKey: point
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_nian_efficiency_params
+      mutexGroupId: NONE
+      effectTags:
+      - ResourceEffect
+      - ReduceFlat
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_cooldown_reduction
+    displayName: "\u56DE\u8F6C"
+    description: "\u51B7\u5374\u7F29\u77EDX\u56DE\u5408\u3002"
+    effectPayload:
+      effectId: affix_cooldown_reduction:effect
+      displayName: "\u56DE\u8F6C"
+      description: "\u51B7\u5374\u7F29\u77EDX\u56DE\u5408\u3002"
+      effectCategory: 4
+      triggerEventId: after_trigger
+      conditionId: cooldown_gt_0
+      targetSelector: effect_primary_target
+      targetStatId: cooldown
+      operation: 3
+      valueUnitKey: turn
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_cooldown_reduction_params
+      mutexGroupId: NONE
+      effectTags:
+      - CooldownEffect
+      - ReduceFlat
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_trigger_refund
+    displayName: "\u56DE\u5FF5"
+    description: "\u89E6\u53D1\u540E\u8FD4\u8FD8X\u70B9\u5FF5\u3002"
+    effectPayload:
+      effectId: affix_trigger_refund:effect
+      displayName: "\u56DE\u5FF5"
+      description: "\u89E6\u53D1\u540E\u8FD4\u8FD8X\u70B9\u5FF5\u3002"
+      effectCategory: 3
+      triggerEventId: after_trigger
+      conditionId: trigger_success
+      targetSelector: effect_primary_target
+      targetStatId: nian
+      operation: 5
+      valueUnitKey: point
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_trigger_refund_params
+      mutexGroupId: NONE
+      effectTags:
+      - ResourceEffect
+      - Refund
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_direct_lit_power
+    displayName: "\u660E\u70B9"
+    description: "\u76F4\u63A5\u70B9\u4EAE\u65F6\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_direct_lit_power:effect
+      displayName: "\u660E\u70B9"
+      description: "\u76F4\u63A5\u70B9\u4EAE\u65F6\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+      effectCategory: 1
+      triggerEventId: on_direct_lit
+      conditionId: is_direct_lit
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 400
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_direct_lit_power_params
+      mutexGroupId: NONE
+      effectTags:
+      - ConditionalModifier
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 400
+      maxUnits: 533
+    - rarity: 1
+      minUnits: 533
+      maxUnits: 666
+    - rarity: 2
+      minUnits: 666
+      maxUnits: 799
+    - rarity: 3
+      minUnits: 799
+      maxUnits: 932
+    - rarity: 4
+      minUnits: 932
+      maxUnits: 1065
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_relay_lit_power
+    displayName: "\u63A5\u660E"
+    description: "\u7531\u76F8\u90BB\u9053\u5177\u63A5\u4EAE\u65F6\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_relay_lit_power:effect
+      displayName: "\u63A5\u660E"
+      description: "\u7531\u76F8\u90BB\u9053\u5177\u63A5\u4EAE\u65F6\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+      effectCategory: 1
+      triggerEventId: on_relay_lit
+      conditionId: is_relay_lit
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 350
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_relay_lit_power_params
+      mutexGroupId: NONE
+      effectTags:
+      - ConditionalModifier
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 350
+      maxUnits: 466
+    - rarity: 1
+      minUnits: 466
+      maxUnits: 582
+    - rarity: 2
+      minUnits: 582
+      maxUnits: 698
+    - rarity: 3
+      minUnits: 698
+      maxUnits: 814
+    - rarity: 4
+      minUnits: 814
+      maxUnits: 930
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_array_guard
+    displayName: "\u9547\u4F4D"
+    description: "\u5360\u636E\u9635\u4F4D\u70B9\u4E14\u5DF2\u70B9\u4EAE\u65F6\u83B7\u5F97X\u70B9\u62A4\u52BF\u3002"
+    effectPayload:
+      effectId: affix_array_guard:effect
+      displayName: "\u9547\u4F4D"
+      description: "\u5360\u636E\u9635\u4F4D\u70B9\u4E14\u5DF2\u70B9\u4EAE\u65F6\u83B7\u5F97X\u70B9\u62A4\u52BF\u3002"
+      effectCategory: 5
+      triggerEventId: on_turn_start
+      conditionId: lit_on_array_cell
+      targetSelector: effect_primary_target
+      targetStatId: guard
+      operation: 0
+      valueUnitKey: flat
+      valueUnits: 3
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_array_guard_params
+      mutexGroupId: NONE
+      effectTags:
+      - SpatialEffect
+      - AddFlat
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 1
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 2
+      minUnits: 5
+      maxUnits: 6
+    - rarity: 3
+      minUnits: 6
+      maxUnits: 7
+    - rarity: 4
+      minUnits: 7
+      maxUnits: 8
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_adjacent_guard
+    displayName: "\u90BB\u62A4"
+    description: "\u6BCF\u6709\u4E00\u4E2A\u76F8\u90BB\u9053\u5177\uFF0C\u62A4\u52BF\u63D0\u9AD8X%\uFF0C\u6700\u591AY\u5C42\u3002"
+    effectPayload:
+      effectId: affix_adjacent_guard:effect
+      displayName: "\u90BB\u62A4"
+      description: "\u6BCF\u6709\u4E00\u4E2A\u76F8\u90BB\u9053\u5177\uFF0C\u62A4\u52BF\u63D0\u9AD8X%\uFF0C\u6700\u591AY\u5C42\u3002"
+      effectCategory: 5
+      triggerEventId: on_layout_evaluate
+      conditionId: orthogonal_adjacent
+      targetSelector: effect_primary_target
+      targetStatId: guard
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 250
+      secondaryValueUnits: 3
+      durationUnits: 1
+      stackLimit: 3
+      internalCooldownUnits: 1
+      parameterProfileId: affix_adjacent_guard_params
+      mutexGroupId: NONE
+      effectTags:
+      - SpatialEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 250
+      maxUnits: 333
+    - rarity: 1
+      minUnits: 333
+      maxUnits: 416
+    - rarity: 2
+      minUnits: 416
+      maxUnits: 499
+    - rarity: 3
+      minUnits: 499
+      maxUnits: 582
+    - rarity: 4
+      minUnits: 582
+      maxUnits: 665
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_adjacent_damage
+    displayName: "\u90BB\u653B"
+    description: "\u6BCF\u6709\u4E00\u4E2A\u76F8\u90BB\u540C\u6CD5\u95E8\u9053\u5177\uFF0C\u4F24\u5BB3\u63D0\u9AD8X%\uFF0C\u6700\u591AY\u5C42\u3002"
+    effectPayload:
+      effectId: affix_adjacent_damage:effect
+      displayName: "\u90BB\u653B"
+      description: "\u6BCF\u6709\u4E00\u4E2A\u76F8\u90BB\u540C\u6CD5\u95E8\u9053\u5177\uFF0C\u4F24\u5BB3\u63D0\u9AD8X%\uFF0C\u6700\u591AY\u5C42\u3002"
+      effectCategory: 5
+      triggerEventId: on_layout_evaluate
+      conditionId: adjacent_same_famen
+      targetSelector: effect_primary_target
+      targetStatId: damage
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 250
+      secondaryValueUnits: 3
+      durationUnits: 1
+      stackLimit: 3
+      internalCooldownUnits: 1
+      parameterProfileId: affix_adjacent_damage_params
+      mutexGroupId: NONE
+      effectTags:
+      - SpatialEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 250
+      maxUnits: 333
+    - rarity: 1
+      minUnits: 333
+      maxUnits: 416
+    - rarity: 2
+      minUnits: 416
+      maxUnits: 499
+    - rarity: 3
+      minUnits: 499
+      maxUnits: 582
+    - rarity: 4
+      minUnits: 582
+      maxUnits: 665
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_isolated_power
+    displayName: "\u72EC\u9635"
+    description: "\u65E0\u76F8\u90BB\u9053\u5177\u65F6\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_isolated_power:effect
+      displayName: "\u72EC\u9635"
+      description: "\u65E0\u76F8\u90BB\u9053\u5177\u65F6\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+      effectCategory: 5
+      triggerEventId: on_layout_evaluate
+      conditionId: adjacent_count_0
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 700
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_isolated_power_params
+      mutexGroupId: NONE
+      effectTags:
+      - SpatialEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 700
+      maxUnits: 933
+    - rarity: 1
+      minUnits: 933
+      maxUnits: 1166
+    - rarity: 2
+      minUnits: 1166
+      maxUnits: 1399
+    - rarity: 3
+      minUnits: 1399
+      maxUnits: 1632
+    - rarity: 4
+      minUnits: 1632
+      maxUnits: 1865
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_break_cooldown
+    displayName: "\u7834\u58F3\u56DE\u8F6C"
+    description: "\u7834\u76FE\u6210\u529F\u540E\u51B7\u5374\u63A8\u8FDBX\u56DE\u5408\u3002"
+    effectPayload:
+      effectId: affix_break_cooldown:effect
+      displayName: "\u7834\u58F3\u56DE\u8F6C"
+      description: "\u7834\u76FE\u6210\u529F\u540E\u51B7\u5374\u63A8\u8FDBX\u56DE\u5408\u3002"
+      effectCategory: 4
+      triggerEventId: on_break_success
+      conditionId: break_success
+      targetSelector: effect_primary_target
+      targetStatId: cooldown
+      operation: 3
+      valueUnitKey: turn
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_break_cooldown_params
+      mutexGroupId: NONE
+      effectTags:
+      - CooldownEffect
+      - ReduceFlat
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_cleanse_refund
+    displayName: "\u51C0\u540E\u56DE\u5FF5"
+    description: "\u51C0\u5316\u6210\u529F\u540E\u8FD4\u8FD8X\u70B9\u5FF5\u3002"
+    effectPayload:
+      effectId: affix_cleanse_refund:effect
+      displayName: "\u51C0\u540E\u56DE\u5FF5"
+      description: "\u51C0\u5316\u6210\u529F\u540E\u8FD4\u8FD8X\u70B9\u5FF5\u3002"
+      effectCategory: 3
+      triggerEventId: on_cleanse
+      conditionId: cleanse_success
+      targetSelector: effect_primary_target
+      targetStatId: nian
+      operation: 5
+      valueUnitKey: point
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_cleanse_refund_params
+      mutexGroupId: NONE
+      effectTags:
+      - ResourceEffect
+      - Refund
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_guard_refund
+    displayName: "\u62A4\u52BF\u56DE\u6D41"
+    description: "\u62A4\u52BF\u8017\u5C3D\u65F6\u8FD4\u8FD8X\u70B9\u5FF5\u3002"
+    effectPayload:
+      effectId: affix_guard_refund:effect
+      displayName: "\u62A4\u52BF\u56DE\u6D41"
+      description: "\u62A4\u52BF\u8017\u5C3D\u65F6\u8FD4\u8FD8X\u70B9\u5FF5\u3002"
+      effectCategory: 3
+      triggerEventId: on_guard_depleted
+      conditionId: guard_was_positive
+      targetSelector: effect_primary_target
+      targetStatId: nian
+      operation: 5
+      valueUnitKey: point
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_guard_refund_params
+      mutexGroupId: NONE
+      effectTags:
+      - ResourceEffect
+      - Refund
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_core_next_power
+    displayName: "\u7A8D\u540E\u84C4\u52BF"
+    description: "\u6838\u5FC3\u6548\u679C\u6FC0\u6D3B\u65F6\uFF0C\u4E0B\u4E00\u6B21\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_core_next_power:effect
+      displayName: "\u7A8D\u540E\u84C4\u52BF"
+      description: "\u6838\u5FC3\u6548\u679C\u6FC0\u6D3B\u65F6\uFF0C\u4E0B\u4E00\u6B21\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+      effectCategory: 7
+      triggerEventId: on_core_active
+      conditionId: next_basic_effect
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 600
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_core_next_power_params
+      mutexGroupId: NONE
+      effectTags:
+      - CoreEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 600
+      maxUnits: 800
+    - rarity: 1
+      minUnits: 800
+      maxUnits: 1000
+    - rarity: 2
+      minUnits: 1000
+      maxUnits: 1200
+    - rarity: 3
+      minUnits: 1200
+      maxUnits: 1400
+    - rarity: 4
+      minUnits: 1400
+      maxUnits: 1600
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_core_cooldown
+    displayName: "\u7A8D\u540E\u56DE\u8F6C"
+    description: "\u6838\u5FC3\u6548\u679C\u6FC0\u6D3B\u540E\u51B7\u5374\u63A8\u8FDBX\u56DE\u5408\u3002"
+    effectPayload:
+      effectId: affix_core_cooldown:effect
+      displayName: "\u7A8D\u540E\u56DE\u8F6C"
+      description: "\u6838\u5FC3\u6548\u679C\u6FC0\u6D3B\u540E\u51B7\u5374\u63A8\u8FDBX\u56DE\u5408\u3002"
+      effectCategory: 7
+      triggerEventId: on_core_active
+      conditionId: core_effect_active
+      targetSelector: effect_primary_target
+      targetStatId: cooldown
+      operation: 3
+      valueUnitKey: turn
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_core_cooldown_params
+      mutexGroupId: NONE
+      effectTags:
+      - CoreEffect
+      - ReduceFlat
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_famen2_power
+    displayName: "\u6CD5\u95E8\u521D\u6210"
+    description: "\u6CD5\u95E8Build2\u6FC0\u6D3B\u65F6\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_famen2_power:effect
+      displayName: "\u6CD5\u95E8\u521D\u6210"
+      description: "\u6CD5\u95E8Build2\u6FC0\u6D3B\u65F6\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+      effectCategory: 6
+      triggerEventId: on_build_change
+      conditionId: famen_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 500
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_famen2_power_params
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 500
+      maxUnits: 666
+    - rarity: 1
+      minUnits: 666
+      maxUnits: 832
+    - rarity: 2
+      minUnits: 832
+      maxUnits: 998
+    - rarity: 3
+      minUnits: 998
+      maxUnits: 1164
+    - rarity: 4
+      minUnits: 1164
+      maxUnits: 1330
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_famen4_trigger
+    displayName: "\u6CD5\u95E8\u5408\u5F0F"
+    description: "\u6CD5\u95E8Build4\u6FC0\u6D3B\u65F6\u6BCF\u8F6E\u8FFD\u52A0\u4E00\u6B21\u5019\u9009\u89E6\u53D1\u3002"
+    effectPayload:
+      effectId: affix_famen4_trigger:effect
+      displayName: "\u6CD5\u95E8\u5408\u5F0F"
+      description: "\u6CD5\u95E8Build4\u6FC0\u6D3B\u65F6\u6BCF\u8F6E\u8FFD\u52A0\u4E00\u6B21\u5019\u9009\u89E6\u53D1\u3002"
+      effectCategory: 6
+      triggerEventId: on_round
+      conditionId: famen_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 7
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_famen4_trigger_params
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_qilei2_power
+    displayName: "\u5668\u7C7B\u6210\u5BF9"
+    description: "\u5668\u7C7BBuild2\u6FC0\u6D3B\u65F6\u5173\u952E\u6570\u503C\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_qilei2_power:effect
+      displayName: "\u5668\u7C7B\u6210\u5BF9"
+      description: "\u5668\u7C7BBuild2\u6FC0\u6D3B\u65F6\u5173\u952E\u6570\u503C\u63D0\u9AD8X%\u3002"
+      effectCategory: 6
+      triggerEventId: on_build_change
+      conditionId: qilei_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: primaryStat
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 500
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_qilei2_power_params
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 500
+      maxUnits: 666
+    - rarity: 1
+      minUnits: 666
+      maxUnits: 832
+    - rarity: 2
+      minUnits: 832
+      maxUnits: 998
+    - rarity: 3
+      minUnits: 998
+      maxUnits: 1164
+    - rarity: 4
+      minUnits: 1164
+      maxUnits: 1330
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_qilei4_target
+    displayName: "\u5668\u7C7B\u5408\u9635"
+    description: "\u5668\u7C7BBuild4\u6FC0\u6D3B\u65F6\u989D\u5916\u5F71\u54CDX\u4E2A\u76EE\u6807\u3002"
+    effectPayload:
+      effectId: affix_qilei4_target:effect
+      displayName: "\u5668\u7C7B\u5408\u9635"
+      description: "\u5668\u7C7BBuild4\u6FC0\u6D3B\u65F6\u989D\u5916\u5F71\u54CDX\u4E2A\u76EE\u6807\u3002"
+      effectCategory: 6
+      triggerEventId: on_trigger
+      conditionId: qilei_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: targetCount
+      operation: 6
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_qilei4_target_params
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTarget
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_overheal_to_guard
+    displayName: "\u76C8\u7597\u6210\u62A4"
+    description: "\u6CBB\u7597\u6EA2\u51FA\u8F6C\u4E3A\u62A4\u52BF\u3002"
+    effectPayload:
+      effectId: affix_overheal_to_guard:effect
+      displayName: "\u76C8\u7597\u6210\u62A4"
+      description: "\u6CBB\u7597\u6EA2\u51FA\u8F6C\u4E3A\u62A4\u52BF\u3002"
+      effectCategory: 8
+      triggerEventId: on_overheal
+      conditionId: overheal_gt_0
+      targetSelector: effect_primary_target
+      targetStatId: heal_to_guard
+      operation: 8
+      valueUnitKey: basisPoint
+      valueUnits: 5000
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_overheal_to_guard_params
+      mutexGroupId: NONE
+      effectTags:
+      - MechanicConversion
+      - Convert
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 5000
+      maxUnits: 6666
+    - rarity: 1
+      minUnits: 6666
+      maxUnits: 8332
+    - rarity: 2
+      minUnits: 8332
+      maxUnits: 9998
+    - rarity: 3
+      minUnits: 9998
+      maxUnits: 11664
+    - rarity: 4
+      minUnits: 11664
+      maxUnits: 13330
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_break_to_damage
+    displayName: "\u7834\u52BF\u6210\u4F24"
+    description: "\u6EA2\u51FA\u7684\u7834\u76FE\u8F6C\u4E3A\u4F24\u5BB3\u3002"
+    effectPayload:
+      effectId: affix_break_to_damage:effect
+      displayName: "\u7834\u52BF\u6210\u4F24"
+      description: "\u6EA2\u51FA\u7684\u7834\u76FE\u8F6C\u4E3A\u4F24\u5BB3\u3002"
+      effectCategory: 8
+      triggerEventId: on_break_overflow
+      conditionId: break_overflow_gt_0
+      targetSelector: effect_primary_target
+      targetStatId: break_to_damage
+      operation: 8
+      valueUnitKey: basisPoint
+      valueUnits: 3000
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_break_to_damage_params
+      mutexGroupId: NONE
+      effectTags:
+      - MechanicConversion
+      - Convert
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 3000
+      maxUnits: 4000
+    - rarity: 1
+      minUnits: 4000
+      maxUnits: 5000
+    - rarity: 2
+      minUnits: 5000
+      maxUnits: 6000
+    - rarity: 3
+      minUnits: 6000
+      maxUnits: 7000
+    - rarity: 4
+      minUnits: 7000
+      maxUnits: 8000
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_cleanse_to_heal
+    displayName: "\u6E05\u79FD\u56DE\u751F"
+    description: "\u591A\u4F59\u51C0\u5316\u5C42\u6570\u8F6C\u4E3A\u56DE\u590D\u3002"
+    effectPayload:
+      effectId: affix_cleanse_to_heal:effect
+      displayName: "\u6E05\u79FD\u56DE\u751F"
+      description: "\u591A\u4F59\u51C0\u5316\u5C42\u6570\u8F6C\u4E3A\u56DE\u590D\u3002"
+      effectCategory: 8
+      triggerEventId: on_cleanse
+      conditionId: cleanse_overflow_gt_0
+      targetSelector: effect_primary_target
+      targetStatId: cleanse_to_heal
+      operation: 8
+      valueUnitKey: flat
+      valueUnits: 4
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_cleanse_to_heal_params
+      mutexGroupId: NONE
+      effectTags:
+      - MechanicConversion
+      - Convert
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 1
+      minUnits: 5
+      maxUnits: 6
+    - rarity: 2
+      minUnits: 6
+      maxUnits: 7
+    - rarity: 3
+      minUnits: 7
+      maxUnits: 8
+    - rarity: 4
+      minUnits: 8
+      maxUnits: 9
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_damage_cost_trade
+    displayName: "\u70C8\u6027"
+    description: "\u4F24\u5BB3\u63D0\u9AD8X%\uFF0C\u4F46\u8017\u5FF5\u589E\u52A0Y\u3002"
+    effectPayload:
+      effectId: affix_damage_cost_trade:effect
+      displayName: "\u70C8\u6027"
+      description: "\u4F24\u5BB3\u63D0\u9AD8X%\uFF0C\u4F46\u8017\u5FF5\u589E\u52A0Y\u3002"
+      effectCategory: 9
+      triggerEventId: always
+      conditionId: NONE
+      targetSelector: effect_primary_target
+      targetStatId: damage
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 900
+      secondaryValueUnits: 1
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_damage_cost_trade_params
+      mutexGroupId: TRADEOFF
+      effectTags:
+      - TradeoffEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 900
+      maxUnits: 1200
+    - rarity: 1
+      minUnits: 1200
+      maxUnits: 1500
+    - rarity: 2
+      minUnits: 1500
+      maxUnits: 1800
+    - rarity: 3
+      minUnits: 1800
+      maxUnits: 2100
+    - rarity: 4
+      minUnits: 2100
+      maxUnits: 2400
+    mutexGroupId: TRADEOFF
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_guard_slow_trade
+    displayName: "\u6C89\u5B88"
+    description: "\u62A4\u52BF\u63D0\u9AD8X%\uFF0C\u4F46\u51B7\u5374\u589E\u52A0Y\u56DE\u5408\u3002"
+    effectPayload:
+      effectId: affix_guard_slow_trade:effect
+      displayName: "\u6C89\u5B88"
+      description: "\u62A4\u52BF\u63D0\u9AD8X%\uFF0C\u4F46\u51B7\u5374\u589E\u52A0Y\u56DE\u5408\u3002"
+      effectCategory: 9
+      triggerEventId: always
+      conditionId: NONE
+      targetSelector: effect_primary_target
+      targetStatId: guard
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 1000
+      secondaryValueUnits: 1
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_guard_slow_trade_params
+      mutexGroupId: TRADEOFF
+      effectTags:
+      - TradeoffEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1000
+      maxUnits: 1333
+    - rarity: 1
+      minUnits: 1333
+      maxUnits: 1666
+    - rarity: 2
+      minUnits: 1666
+      maxUnits: 1999
+    - rarity: 3
+      minUnits: 1999
+      maxUnits: 2332
+    - rarity: 4
+      minUnits: 2332
+      maxUnits: 2665
+    mutexGroupId: TRADEOFF
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_fast_weak_trade
+    displayName: "\u6025\u5F0F"
+    description: "\u51B7\u5374\u964D\u4F4EX\u56DE\u5408\uFF0C\u4F46\u57FA\u7840\u6548\u679C\u964D\u4F4EY%\u3002"
+    effectPayload:
+      effectId: affix_fast_weak_trade:effect
+      displayName: "\u6025\u5F0F"
+      description: "\u51B7\u5374\u964D\u4F4EX\u56DE\u5408\uFF0C\u4F46\u57FA\u7840\u6548\u679C\u964D\u4F4EY%\u3002"
+      effectCategory: 9
+      triggerEventId: always
+      conditionId: NONE
+      targetSelector: effect_primary_target
+      targetStatId: cooldown
+      operation: 3
+      valueUnitKey: turn
+      valueUnits: 1
+      secondaryValueUnits: 500
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_fast_weak_trade_params
+      mutexGroupId: TRADEOFF
+      effectTags:
+      - TradeoffEffect
+      - ReduceFlat
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: TRADEOFF
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_low_health_power
+    displayName: "\u5371\u65F6"
+    description: "\u751F\u547D\u4F4E\u4E8E\u9608\u503C\u65F6\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_low_health_power:effect
+      displayName: "\u5371\u65F6"
+      description: "\u751F\u547D\u4F4E\u4E8E\u9608\u503C\u65F6\u57FA\u7840\u6548\u679C\u63D0\u9AD8X%\u3002"
+      effectCategory: 1
+      triggerEventId: on_trigger
+      conditionId: owner_low_health
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 800
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_low_health_power_params
+      mutexGroupId: NONE
+      effectTags:
+      - ConditionalModifier
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 800
+      maxUnits: 1066
+    - rarity: 1
+      minUnits: 1066
+      maxUnits: 1332
+    - rarity: 2
+      minUnits: 1332
+      maxUnits: 1598
+    - rarity: 3
+      minUnits: 1598
+      maxUnits: 1864
+    - rarity: 4
+      minUnits: 1864
+      maxUnits: 2130
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_shield_target_power
+    displayName: "\u7834\u7532"
+    description: "\u76EE\u6807\u6709\u62A4\u76FE\u65F6\u6548\u679C\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_shield_target_power:effect
+      displayName: "\u7834\u7532"
+      description: "\u76EE\u6807\u6709\u62A4\u76FE\u65F6\u6548\u679C\u63D0\u9AD8X%\u3002"
+      effectCategory: 1
+      triggerEventId: on_trigger
+      conditionId: target_has_shield
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 700
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_shield_target_power_params
+      mutexGroupId: NONE
+      effectTags:
+      - ConditionalModifier
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 700
+      maxUnits: 933
+    - rarity: 1
+      minUnits: 933
+      maxUnits: 1166
+    - rarity: 2
+      minUnits: 1166
+      maxUnits: 1399
+    - rarity: 3
+      minUnits: 1399
+      maxUnits: 1632
+    - rarity: 4
+      minUnits: 1632
+      maxUnits: 1865
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_debuff_target_power
+    displayName: "\u9010\u79FD"
+    description: "\u76EE\u6807\u6709\u8D1F\u9762\u72B6\u6001\u65F6\u6548\u679C\u63D0\u9AD8X%\u3002"
+    effectPayload:
+      effectId: affix_debuff_target_power:effect
+      displayName: "\u9010\u79FD"
+      description: "\u76EE\u6807\u6709\u8D1F\u9762\u72B6\u6001\u65F6\u6548\u679C\u63D0\u9AD8X%\u3002"
+      effectCategory: 1
+      triggerEventId: on_trigger
+      conditionId: target_has_debuff
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 650
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_debuff_target_power_params
+      mutexGroupId: NONE
+      effectTags:
+      - ConditionalModifier
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 650
+      maxUnits: 866
+    - rarity: 1
+      minUnits: 866
+      maxUnits: 1082
+    - rarity: 2
+      minUnits: 1082
+      maxUnits: 1298
+    - rarity: 3
+      minUnits: 1298
+      maxUnits: 1514
+    - rarity: 4
+      minUnits: 1514
+      maxUnits: 1730
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_first_trigger_bonus
+    displayName: "\u5148\u58F0"
+    description: "\u6BCF\u573A\u9996\u6B21\u89E6\u53D1\u989D\u5916\u6267\u884C\u4E00\u6B21X%\u6548\u679C\u3002"
+    effectPayload:
+      effectId: affix_first_trigger_bonus:effect
+      displayName: "\u5148\u58F0"
+      description: "\u6BCF\u573A\u9996\u6B21\u89E6\u53D1\u989D\u5916\u6267\u884C\u4E00\u6B21X%\u6548\u679C\u3002"
+      effectCategory: 2
+      triggerEventId: on_first_trigger
+      conditionId: first_trigger_in_battle
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 7
+      valueUnitKey: basisPoint
+      valueUnits: 3000
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_first_trigger_bonus_params
+      mutexGroupId: NONE
+      effectTags:
+      - TriggeredEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 3000
+      maxUnits: 4000
+    - rarity: 1
+      minUnits: 4000
+      maxUnits: 5000
+    - rarity: 2
+      minUnits: 5000
+      maxUnits: 6000
+    - rarity: 3
+      minUnits: 6000
+      maxUnits: 7000
+    - rarity: 4
+      minUnits: 7000
+      maxUnits: 8000
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  - affixId: affix_chain_target
+    displayName: "\u8FDE\u5E94"
+    description: "\u8FDE\u7EED\u89E6\u53D1\u8FBE\u5230\u4E09\u6B21\u65F6\u989D\u5916\u5F71\u54CD\u4E00\u4E2A\u76EE\u6807\u3002"
+    effectPayload:
+      effectId: affix_chain_target:effect
+      displayName: "\u8FDE\u5E94"
+      description: "\u8FDE\u7EED\u89E6\u53D1\u8FBE\u5230\u4E09\u6B21\u65F6\u989D\u5916\u5F71\u54CD\u4E00\u4E2A\u76EE\u6807\u3002"
+      effectCategory: 2
+      triggerEventId: on_consecutive_trigger
+      conditionId: chain_count_3
+      targetSelector: effect_primary_target
+      targetStatId: targetCount
+      operation: 6
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: affix_chain_target_params
+      mutexGroupId: NONE
+      effectTags:
+      - TriggeredEffect
+      - ExtraTarget
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    rarityRanges:
+    - rarity: 0
+      minUnits: 1
+      maxUnits: 2
+    - rarity: 1
+      minUnits: 2
+      maxUnits: 3
+    - rarity: 2
+      minUnits: 3
+      maxUnits: 4
+    - rarity: 3
+      minUnits: 4
+      maxUnits: 5
+    - rarity: 4
+      minUnits: 5
+      maxUnits: 6
+    mutexGroupId: NONE
+    repeatPolicy: NO_DUPLICATE
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
+  faMenBuildEffects:
+  - buildId: famen:zhenlei:build2
+    stableTag: zhenlei
+    displayName: "\u9707\u96F7\u6CD5 Build2"
+    stagePieceCount: 2
+    description: "\u7834\u76FE\u63D0\u9AD8\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:zhenlei:build2:effect
+      displayName: "\u9707\u96F7\u6CD5 Build2"
+      description: "\u7834\u76FE\u63D0\u9AD8"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: break
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 800
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_zhenlei_build2
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52302\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:zhenlei:build4
+    stableTag: zhenlei
+    displayName: "\u9707\u96F7\u6CD5 Build4"
+    stagePieceCount: 4
+    description: "\u7834\u76FE\u540E\u8FFD\u52A0\u96F7\u51FB\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:zhenlei:build4:effect
+      displayName: "\u9707\u96F7\u6CD5 Build4"
+      description: "\u7834\u76FE\u540E\u8FFD\u52A0\u96F7\u51FB"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: break
+      operation: 7
+      valueUnitKey: basisPoint
+      valueUnits: 3000
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_zhenlei_build4
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52304\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:zhenlei:build6
+    stableTag: zhenlei
+    displayName: "\u9707\u96F7\u6CD5 Build6"
+    stagePieceCount: 6
+    description: "\u8FDE\u9501\u547D\u4E2D\u989D\u5916\u76EE\u6807\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:zhenlei:build6:effect
+      displayName: "\u9707\u96F7\u6CD5 Build6"
+      description: "\u8FDE\u9501\u547D\u4E2D\u989D\u5916\u76EE\u6807"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_6
+      targetSelector: effect_primary_target
+      targetStatId: break
+      operation: 6
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_zhenlei_build6
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTarget
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52306\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:lihuo:build2
+    stableTag: lihuo
+    displayName: "\u79BB\u706B\u6CD5 Build2"
+    stagePieceCount: 2
+    description: "\u4F59\u7130\u6301\u7EED\u63D0\u9AD8\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:lihuo:build2:effect
+      displayName: "\u79BB\u706B\u6CD5 Build2"
+      description: "\u4F59\u7130\u6301\u7EED\u63D0\u9AD8"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: damage
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 800
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_lihuo_build2
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52302\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:lihuo:build4
+    stableTag: lihuo
+    displayName: "\u79BB\u706B\u6CD5 Build4"
+    stagePieceCount: 4
+    description: "\u4F59\u7130\u53E0\u5C42\u89E6\u53D1\u7206\u71C3\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:lihuo:build4:effect
+      displayName: "\u79BB\u706B\u6CD5 Build4"
+      description: "\u4F59\u7130\u53E0\u5C42\u89E6\u53D1\u7206\u71C3"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: damage
+      operation: 7
+      valueUnitKey: basisPoint
+      valueUnits: 3000
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_lihuo_build4
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52304\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:lihuo:build6
+    stableTag: lihuo
+    displayName: "\u79BB\u706B\u6CD5 Build6"
+    stagePieceCount: 6
+    description: "\u7206\u71C3\u540E\u4FDD\u7559\u706B\u79CD\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:lihuo:build6:effect
+      displayName: "\u79BB\u706B\u6CD5 Build6"
+      description: "\u7206\u71C3\u540E\u4FDD\u7559\u706B\u79CD"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_6
+      targetSelector: effect_primary_target
+      targetStatId: damage
+      operation: 6
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_lihuo_build6
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTarget
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52306\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:zhongyue:build2
+    stableTag: zhongyue
+    displayName: "\u4E2D\u5CB3\u6CD5 Build2"
+    stagePieceCount: 2
+    description: "\u62A4\u52BF\u83B7\u5F97\u63D0\u9AD8\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:zhongyue:build2:effect
+      displayName: "\u4E2D\u5CB3\u6CD5 Build2"
+      description: "\u62A4\u52BF\u83B7\u5F97\u63D0\u9AD8"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: guard
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 800
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_zhongyue_build2
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52302\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:zhongyue:build4
+    stableTag: zhongyue
+    displayName: "\u4E2D\u5CB3\u6CD5 Build4"
+    stagePieceCount: 4
+    description: "\u53D7\u51FB\u65F6\u53CD\u5236\u5E76\u8865\u62A4\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:zhongyue:build4:effect
+      displayName: "\u4E2D\u5CB3\u6CD5 Build4"
+      description: "\u53D7\u51FB\u65F6\u53CD\u5236\u5E76\u8865\u62A4"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: guard
+      operation: 7
+      valueUnitKey: basisPoint
+      valueUnits: 3000
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_zhongyue_build4
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52304\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:zhongyue:build6
+    stableTag: zhongyue
+    displayName: "\u4E2D\u5CB3\u6CD5 Build6"
+    stagePieceCount: 6
+    description: "\u62A4\u52BF\u8017\u5C3D\u524D\u5206\u62C5\u4F24\u5BB3\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:zhongyue:build6:effect
+      displayName: "\u4E2D\u5CB3\u6CD5 Build6"
+      description: "\u62A4\u52BF\u8017\u5C3D\u524D\u5206\u62C5\u4F24\u5BB3"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_6
+      targetSelector: effect_primary_target
+      targetStatId: guard
+      operation: 6
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_zhongyue_build6
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTarget
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52306\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:xuanshui:build2
+    stableTag: xuanshui
+    displayName: "\u7384\u6C34\u6CD5 Build2"
+    stagePieceCount: 2
+    description: "\u51C0\u5316\u4E0E\u56DE\u590D\u63D0\u9AD8\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:xuanshui:build2:effect
+      displayName: "\u7384\u6C34\u6CD5 Build2"
+      description: "\u51C0\u5316\u4E0E\u56DE\u590D\u63D0\u9AD8"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: heal
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 800
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_xuanshui_build2
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52302\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:xuanshui:build4
+    stableTag: xuanshui
+    displayName: "\u7384\u6C34\u6CD5 Build4"
+    stagePieceCount: 4
+    description: "\u51C0\u5316\u540E\u63A8\u8FDB\u51B7\u5374\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:xuanshui:build4:effect
+      displayName: "\u7384\u6C34\u6CD5 Build4"
+      description: "\u51C0\u5316\u540E\u63A8\u8FDB\u51B7\u5374"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: heal
+      operation: 7
+      valueUnitKey: basisPoint
+      valueUnits: 3000
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_xuanshui_build4
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52304\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:xuanshui:build6
+    stableTag: xuanshui
+    displayName: "\u7384\u6C34\u6CD5 Build6"
+    stagePieceCount: 6
+    description: "\u6EA2\u51FA\u56DE\u590D\u8F6C\u4E3A\u62A4\u52BF\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:xuanshui:build6:effect
+      displayName: "\u7384\u6C34\u6CD5 Build6"
+      description: "\u6EA2\u51FA\u56DE\u590D\u8F6C\u4E3A\u62A4\u52BF"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_6
+      targetSelector: effect_primary_target
+      targetStatId: heal
+      operation: 6
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_xuanshui_build6
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTarget
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52306\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:taibai:build2
+    stableTag: taibai
+    displayName: "\u592A\u767D\u6CD5 Build2"
+    stagePieceCount: 2
+    description: "\u5BF9\u7834\u7EFD\u76EE\u6807\u589E\u4F24\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:taibai:build2:effect
+      displayName: "\u592A\u767D\u6CD5 Build2"
+      description: "\u5BF9\u7834\u7EFD\u76EE\u6807\u589E\u4F24"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: damage
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 800
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_taibai_build2
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52302\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:taibai:build4
+    stableTag: taibai
+    displayName: "\u592A\u767D\u6CD5 Build4"
+    stagePieceCount: 4
+    description: "\u65A9\u51FB\u540E\u8FFD\u52A0\u6536\u5272\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:taibai:build4:effect
+      displayName: "\u592A\u767D\u6CD5 Build4"
+      description: "\u65A9\u51FB\u540E\u8FFD\u52A0\u6536\u5272"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: damage
+      operation: 7
+      valueUnitKey: basisPoint
+      valueUnits: 3000
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_taibai_build4
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52304\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: famen:taibai:build6
+    stableTag: taibai
+    displayName: "\u592A\u767D\u6CD5 Build6"
+    stagePieceCount: 6
+    description: "\u51FB\u7834\u76EE\u6807\u540E\u8D2F\u7A7F\u8FDE\u65A9\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: famen:taibai:build6:effect
+      displayName: "\u592A\u767D\u6CD5 Build6"
+      description: "\u51FB\u7834\u76EE\u6807\u540E\u8D2F\u7A7F\u8FDE\u65A9"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: famen_stage_6
+      targetSelector: effect_primary_target
+      targetStatId: damage
+      operation: 6
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: famen_taibai_build6
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTarget
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52306\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  qiLeiBuildEffects:
+  - buildId: qilei:fu:build2
+    stableTag: fu
+    displayName: "\u7B26 Build2"
+    stagePieceCount: 2
+    description: "\u89E6\u53D1\u9891\u7387\u63D0\u9AD8\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: qilei:fu:build2:effect
+      displayName: "\u7B26 Build2"
+      description: "\u89E6\u53D1\u9891\u7387\u63D0\u9AD8"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: qilei_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: cooldown
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 600
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: qilei_fu_build2
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52302\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: qilei:fu:build4
+    stableTag: fu
+    displayName: "\u7B26 Build4"
+    stagePieceCount: 4
+    description: "\u6BCF\u8F6E\u8FFD\u52A0\u4E00\u6B21\u7B26\u7EB8\u89E6\u53D1\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: qilei:fu:build4:effect
+      displayName: "\u7B26 Build4"
+      description: "\u6BCF\u8F6E\u8FFD\u52A0\u4E00\u6B21\u7B26\u7EB8\u89E6\u53D1"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: qilei_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: cooldown
+      operation: 7
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: qilei_fu_build4
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52304\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: qilei:yin:build2
+    stableTag: yin
+    displayName: "\u5370 Build2"
+    stagePieceCount: 2
+    description: "\u62A4\u52BF\u4E0E\u7A33\u5B9A\u6027\u63D0\u9AD8\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: qilei:yin:build2:effect
+      displayName: "\u5370 Build2"
+      description: "\u62A4\u52BF\u4E0E\u7A33\u5B9A\u6027\u63D0\u9AD8"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: qilei_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: guard
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 600
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: qilei_yin_build2
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52302\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: qilei:yin:build4
+    stableTag: yin
+    displayName: "\u5370 Build4"
+    stagePieceCount: 4
+    description: "\u627F\u4F24\u540E\u4E3A\u540C\u7C7B\u5370\u8865\u62A4\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: qilei:yin:build4:effect
+      displayName: "\u5370 Build4"
+      description: "\u627F\u4F24\u540E\u4E3A\u540C\u7C7B\u5370\u8865\u62A4"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: qilei_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: guard
+      operation: 7
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: qilei_yin_build4
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52304\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: qilei:ling:build2
+    stableTag: ling
+    displayName: "\u4EE4 Build2"
+    stagePieceCount: 2
+    description: "\u63A7\u5236\u5F3A\u5EA6\u63D0\u9AD8\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: qilei:ling:build2:effect
+      displayName: "\u4EE4 Build2"
+      description: "\u63A7\u5236\u5F3A\u5EA6\u63D0\u9AD8"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: qilei_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: control
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 600
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: qilei_ling_build2
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52302\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: qilei:ling:build4
+    stableTag: ling
+    displayName: "\u4EE4 Build4"
+    stagePieceCount: 4
+    description: "\u53F7\u4EE4\u989D\u5916\u5F71\u54CD\u4E00\u4E2A\u76EE\u6807\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: qilei:ling:build4:effect
+      displayName: "\u4EE4 Build4"
+      description: "\u53F7\u4EE4\u989D\u5916\u5F71\u54CD\u4E00\u4E2A\u76EE\u6807"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: qilei_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: control
+      operation: 7
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: qilei_ling_build4
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52304\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: qilei:jing:build2
+    stableTag: jing
+    displayName: "\u955C Build2"
+    stagePieceCount: 2
+    description: "\u955C\u7167\u6548\u679C\u63D0\u9AD8\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: qilei:jing:build2:effect
+      displayName: "\u955C Build2"
+      description: "\u955C\u7167\u6548\u679C\u63D0\u9AD8"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: qilei_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 600
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: qilei_jing_build2
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52302\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: qilei:jing:build4
+    stableTag: jing
+    displayName: "\u955C Build4"
+    stagePieceCount: 4
+    description: "\u590D\u5236\u4E00\u6B21\u5173\u952E\u72B6\u6001\u53D8\u5316\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: qilei:jing:build4:effect
+      displayName: "\u955C Build4"
+      description: "\u590D\u5236\u4E00\u6B21\u5173\u952E\u72B6\u6001\u53D8\u5316"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: qilei_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: basicEffect
+      operation: 7
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: qilei_jing_build4
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52304\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: qilei:fa:build2
+    stableTag: fa
+    displayName: "\u6CD5 Build2"
+    stagePieceCount: 2
+    description: "\u8017\u5FF5\u964D\u4F4E\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: qilei:fa:build2:effect
+      displayName: "\u6CD5 Build2"
+      description: "\u8017\u5FF5\u964D\u4F4E"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: qilei_stage_2
+      targetSelector: effect_primary_target
+      targetStatId: nianCost
+      operation: 1
+      valueUnitKey: basisPoint
+      valueUnits: 600
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: qilei_fa_build2
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - AddPercent
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52302\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  - buildId: qilei:fa:build4
+    stableTag: fa
+    displayName: "\u6CD5 Build4"
+    stagePieceCount: 4
+    description: "\u65BD\u6CD5\u540E\u63A8\u8FDB\u5168\u7EC4\u51B7\u5374\uFF08\u5019\u9009\uFF09"
+    effectPayload:
+      effectId: qilei:fa:build4:effect
+      displayName: "\u6CD5 Build4"
+      description: "\u65BD\u6CD5\u540E\u63A8\u8FDB\u5168\u7EC4\u51B7\u5374"
+      effectCategory: 6
+      triggerEventId: on_build_stage_active
+      conditionId: qilei_stage_4
+      targetSelector: effect_primary_target
+      targetStatId: nianCost
+      operation: 7
+      valueUnitKey: count
+      valueUnits: 1
+      secondaryValueUnits: 0
+      durationUnits: 1
+      stackLimit: 1
+      internalCooldownUnits: 1
+      parameterProfileId: qilei_fa_build4
+      mutexGroupId: NONE
+      effectTags:
+      - BuildSynergyEffect
+      - ExtraTrigger
+      - DEV_ONLY
+      dataMaturity: BALANCE_CANDIDATE
+      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
+        executor.
+    conditionText: "\u5DF2\u70B9\u4EAE\u4E14\u5177\u6709\u5BF9\u5E94Build\u8D44\u683C\u7684\u5B9E\u4F8B\u8FBE\u52304\u4EF6\u3002"
+    dataMaturity: BALANCE_CANDIDATE
+    designNote: "Build\u9636\u6BB5\u5019\u9009\u6548\u679C\uFF1B\u4E0D\u63A5\u6B63\u5F0FBattle\u3002"
+  profiles:
+  - {fileID: 11400000, guid: edc46e90e8b3efe4fb0b925aee55f290, type: 2}
+  - {fileID: 11400000, guid: aa04338548267284e89d4be7928f34d8, type: 2}
+  - {fileID: 11400000, guid: 697ad62acf0a5f448887a225f88f4ecc, type: 2}
+  - {fileID: 11400000, guid: 8b07bdf8c68c7894fa0460001ebe679d, type: 2}
+  - {fileID: 11400000, guid: 83711c722e4841249ab1a9586957b406, type: 2}
+  - {fileID: 11400000, guid: 3fe1e684694195e488b9225f2314eafa, type: 2}
+  - {fileID: 11400000, guid: aee76261dbe1c5c4c94238f8832d767d, type: 2}
+  - {fileID: 11400000, guid: 2872b0b394492c04c900adcd21aab3e4, type: 2}
+  - {fileID: 11400000, guid: 44636e94d120d23488e8b882d27e78e5, type: 2}
+  - {fileID: 11400000, guid: 3cbb3071dd9121d46ae6938c59a470b2, type: 2}
+  - {fileID: 11400000, guid: 36025a35d1803c84d95b3b630f26d42c, type: 2}
+  - {fileID: 11400000, guid: 856e5d09e1676c342ba9e29671bcb113, type: 2}
+  - {fileID: 11400000, guid: e97870eacf4a916419879d73afb1cf33, type: 2}
+  - {fileID: 11400000, guid: e9c373cf7f1ade8438c3eff967b96f08, type: 2}
+  - {fileID: 11400000, guid: 5b1d08d9dbd79e046b9655bc3fafaee5, type: 2}
+  - {fileID: 11400000, guid: d90009a96d696af44957e1d6234689e1, type: 2}
+  - {fileID: 11400000, guid: d48f457c17784e2449cda327478fecdd, type: 2}
+  - {fileID: 11400000, guid: 078fd2e43155d9048aae8be8e832d627, type: 2}
+  - {fileID: 11400000, guid: 1f75df87e168c9449a93dac35e3fa47e, type: 2}
+  - {fileID: 11400000, guid: 68a0852e9936e3c47b563a9520e3b6d0, type: 2}
+  - {fileID: 11400000, guid: 231196f67a79e5f4dab51d85864e7153, type: 2}
+  - {fileID: 11400000, guid: 2f8ded0b93632574bb21e37126c3d23b, type: 2}
+  - {fileID: 11400000, guid: dd206bafd197c804f86928c2e05d238c, type: 2}
+  - {fileID: 11400000, guid: ffb8e4cfcfef6294d8a7b881ccb65f98, type: 2}
+  - {fileID: 11400000, guid: 7ef755b694d9a414d8d99b17bdbed5e3, type: 2}
+  - {fileID: 11400000, guid: 0f5431ef1bad18949acc8f1cd3658f28, type: 2}
+  - {fileID: 11400000, guid: 23803822e2d2a774f817f7c789d83871, type: 2}
+  - {fileID: 11400000, guid: 5d7a29b7184125c42a8592e4cee2e909, type: 2}
+  - {fileID: 11400000, guid: 1cb2740d7427eb045be30396ced9f069, type: 2}
+  - {fileID: 11400000, guid: 15a7c7d645ef544499f4dd7e99ea5bfc, type: 2}

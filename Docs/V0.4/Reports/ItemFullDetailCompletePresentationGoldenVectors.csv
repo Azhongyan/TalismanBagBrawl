@@ -1,0 +1,5 @@
+rawBasisPoints,expected,actual,status
+"200","+2%","+2%","PASS"
+"350","+3.5%","+3.5%","PASS"
+"500","+5%","+5%","PASS"
+"1800","+18%","+18%","PASS"

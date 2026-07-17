@@ -27,6 +27,7 @@ namespace TalismanBag.BuildSandbox
         private const string DevChapterDropdownSlotName = "DevChapterDropdownSlot";
         private const string PlacementFeedbackRuntimeName = "PlacementFeedback_Runtime";
         private const string BattlePrepareTransitionSequenceObjectName = "guajian";
+        private const string CharacterIdlePreviewObjectName = "CharacterIdlePreview_IdleAnim";
         private const string PlacementFeedbackTextName = "PlacementFeedbackText";
         private const string PlacementFeedbackDefaultText = "单击道具查看信息；合法松手直接放置，非法返回托盘。";
         private const string DragGhostCellLayerName = "DragGhostCellLayer";
@@ -89,6 +90,8 @@ namespace TalismanBag.BuildSandbox
         [Header("V0.4 Battle FX")]
         [Tooltip("Optional sprite-sequence animation played when opening prepare mode and when continuing battle.")]
         [SerializeField] private BuildSandboxSpriteSequencePlayer battlePrepareTransitionSequencePlayer;
+        [Tooltip("Editable character idle preview object for checking imported frame animation in the V0.4 sandbox scene.")]
+        [SerializeField] private BuildSandboxCharacterIdlePreview characterIdlePreview;
 
         [Header("V0.4 Artwork Direction Calibration")]
         [Tooltip("3-cell triangle/corner artwork in tray. Positive rotates left, negative rotates right.")]
@@ -671,12 +674,14 @@ namespace TalismanBag.BuildSandbox
 
             EnsureEditablePlacementFeedbackInHierarchy();
             BuildSandboxItemInfoPanel.EnsureEditableInScene();
+            EnsureCharacterIdlePreviewInHierarchy();
         }
 
         private void Awake()
         {
             EnsureReferences();
             EnsureBattlePrepareTransitionSequencePlayer();
+            EnsureCharacterIdlePreviewInHierarchy();
             BuildSlotLookup();
             BuildShapeLookup();
             BuildItemLookup();
@@ -937,6 +942,72 @@ namespace TalismanBag.BuildSandbox
 
             placementFeedbackView.Bind(text, background);
             placementFeedbackView.SetStateBackgroundColorsEnabled(false);
+        }
+
+        private void EnsureCharacterIdlePreviewInHierarchy()
+        {
+            if (gameObject == null || !gameObject.scene.IsValid())
+            {
+                return;
+            }
+
+            RectTransform rect = FindRectTransform(CharacterIdlePreviewObjectName);
+            bool created = false;
+            if (rect == null)
+            {
+                RectTransform parent = FindRectTransform("BattleLikePreviewArea");
+                if (parent == null)
+                {
+                    parent = boardGridPreview == null ? null : boardGridPreview.parent as RectTransform;
+                }
+
+                if (parent == null)
+                {
+                    return;
+                }
+
+                GameObject previewObject = new(
+                    CharacterIdlePreviewObjectName,
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image),
+                    typeof(BuildSandboxCharacterIdlePreview));
+                if (Application.isPlaying)
+                {
+                    previewObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+                }
+
+                previewObject.transform.SetParent(parent, false);
+                rect = previewObject.GetComponent<RectTransform>();
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.zero;
+                rect.pivot = Vector2.zero;
+                rect.anchoredPosition = new Vector2(36f, 150f);
+                rect.sizeDelta = new Vector2(220f, 294f);
+                rect.localScale = Vector3.one;
+                created = true;
+            }
+
+            Image image = rect.GetComponent<Image>();
+            if (image == null)
+            {
+                image = rect.gameObject.AddComponent<Image>();
+            }
+
+            image.raycastTarget = false;
+            image.preserveAspect = true;
+            if (created || image.color.a <= 0f)
+            {
+                image.color = Color.white;
+            }
+
+            characterIdlePreview = rect.GetComponent<BuildSandboxCharacterIdlePreview>();
+            if (characterIdlePreview == null)
+            {
+                characterIdlePreview = rect.gameObject.AddComponent<BuildSandboxCharacterIdlePreview>();
+            }
+
+            characterIdlePreview.EnsureDefaults();
         }
 
         private static Text ResolvePlacementFeedbackText(RectTransform feedbackRect)
