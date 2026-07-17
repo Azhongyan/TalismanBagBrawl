@@ -34,6 +34,9 @@ namespace TalismanBag.EditorTools.ItemSandbox
             ["rarity"] = "Assets/_Game/Resources/item/品阶icon/品阶icon_道品.png",
             ["zhenfa"] = "Assets/_Game/Resources/item/阵法icon/震雷法.png",
             ["qilei"] = "Assets/_Game/Resources/item/器类icon/符类.png",
+            ["item_art_i001_orange"] = "Assets/_Game/Resources/item_daoju/震雷法/I001/I001_5.png",
+            ["qilei_skill1"] = "Assets/_Game/Resources/item/器类build技能icon/符类/符技能icon_1.png",
+            ["qilei_skill2"] = "Assets/_Game/Resources/item/器类build技能icon/符类/符技能icon_2.png",
             ["stat_damage"] = "Assets/_Game/Resources/item/基础属性icon/伤害.png",
             ["stat_attack"] = "Assets/_Game/Resources/item/基础属性icon/攻击.png",
             ["stat_control"] = "Assets/_Game/Resources/item/基础属性icon/控制.png",
@@ -235,11 +238,15 @@ namespace TalismanBag.EditorTools.ItemSandbox
                     new Vector2(260f, -182f),
                     new Vector2(18f, 18f));
             }
-            EnsureImageSlot(
-                Require(FindDescendant(panel, "QiLeiBuildSection"), "BodyText"),
-                "InlineArrayModifierIcon_0",
-                new Vector2(330f, -52f),
-                new Vector2(18f, 18f));
+            Transform qiLeiBuildBody = Require(FindDescendant(panel, "QiLeiBuildSection"), "BodyText");
+            if (qiLeiBuildBody.Find("QiLeiBuildRowsRoot") == null)
+            {
+                EnsureImageSlot(
+                    qiLeiBuildBody,
+                    "InlineArrayModifierIcon_0",
+                    new Vector2(330f, -52f),
+                    new Vector2(18f, 18f));
+            }
 
             EnsureCoarseDivider(panel, "CoreAwakeningSection");
             EnsureCoarseDivider(panel, "FaMenBuildSection");
@@ -273,6 +280,36 @@ namespace TalismanBag.EditorTools.ItemSandbox
             {
                 rowsRootName = "RandomAffixRowsRoot";
                 rowNamePrefix = "RandomAffixRow_";
+            }
+            else if (string.Equals(prefix, "DaoTraceIconSlot_", StringComparison.Ordinal))
+            {
+                rowsRootName = "DaoTraceRowsRoot";
+                rowNamePrefix = "DaoTraceRow_";
+            }
+            else if (string.Equals(prefix, "CoreEffectIconSlot_", StringComparison.Ordinal))
+            {
+                rowsRootName = "CoreEffectRowsRoot";
+                rowNamePrefix = "CoreEffectRow_";
+            }
+            else if (string.Equals(prefix, "FaMenBuildStageIconSlot_", StringComparison.Ordinal))
+            {
+                rowsRootName = "FaMenBuildRowsRoot";
+                rowNamePrefix = "FaMenBuildRow_";
+            }
+            else if (string.Equals(prefix, "QiLeiBuildStageIconSlot_", StringComparison.Ordinal))
+            {
+                rowsRootName = "QiLeiBuildRowsRoot";
+                rowNamePrefix = "QiLeiBuildRow_";
+            }
+            else if (string.Equals(prefix, "PlacementIconSlot_", StringComparison.Ordinal))
+            {
+                rowsRootName = "PlacementRowsRoot";
+                rowNamePrefix = "PlacementRow_";
+            }
+            else if (string.Equals(prefix, "FlavorIconSlot_", StringComparison.Ordinal))
+            {
+                rowsRootName = "FlavorRowsRoot";
+                rowNamePrefix = "FlavorRow_";
             }
 
             Transform rowsRoot = string.IsNullOrEmpty(rowsRootName) ? null : body.Find(rowsRootName);
@@ -417,8 +454,8 @@ namespace TalismanBag.EditorTools.ItemSandbox
                     Section("触发条件", "摆入棋盘且被聚念石直接点亮；命中带盾目标时优先触发破盾链。阵脉、构筑与开窍状态在本模板中仅用于排版展示。", "trigger"),
                     Section("基础效果", "普攻命中后施加雷痕；若目标仍有护盾，则本次攻击额外提高破盾并记录一次震雷触发。", "basic"),
                     Section("4 个核心效果", "震雷符·初识：雷痕的基础伤害提高，并在破盾前保留一次触发计数\n震雷符·入门：引雷命中后追加雷击，对护盾目标获得更高收益\n震雷符·贯通：雷击可连锁命中额外目标，控制强度与破盾同步提高\n震雷符·成法：五雷破壳触发后返还念力，并刷新一次最长文案状态提示", "coreEffect"),
-                    Section("震雷法 Build 2/4/6", "震雷法构筑：6/6（静态全点亮压力样本）\n2件效果：破盾提高 8%，雷痕对有盾目标优先结算\n4件效果：破盾后追加雷击，触发系数 30%，并展示较长条件说明\n6件效果：连锁命中额外目标 +1，五雷破壳完整成法", "famenBuild"),
-                    Section("符类 Build 效果", "符类构筑：4/4（qiLeiTag=符）\n2件效果：触发频率提高 6%，相邻符类计入同一器类构筑\n4件效果：" + "[Icon_ArrayVeinModifier]" + " 额外触发 1 次；此处仅展示排版，不计算真实激活", "qileiBuild"),
+                    Section("震雷法 Build 2/4/6", "九霄雷君的敕令\n法门构筑：6/6\n-震雷符\n-五雷急符\n-震雷破壳印\n-五雷急令\n-照壳雷镜\n-天鼓槌\n2件效果：\n破盾提高 8%，雷痕对有盾目标优先结算。\n4件效果：\n破盾后追加雷击，触发系数 30%，并展示较长条件说明。\n6件效果：\n连锁命中额外目标 +1，五雷破壳完整成法。", "famenBuild"),
+                    Section("符类 Build 效果", "符类构筑：4/4（qiLeiTag=符）\n2件效果：\n符箓相合：触发频率提高 6%，相邻符类计入同一器类构筑。\n4件效果：\n符阵成局：额外触发 1 次；此处仅展示排版，不计算真实激活。", "qileiBuild"),
                     Section("技能图标监看", "普攻：震雷符基础攻击与雷痕施加\nBuild2：破盾提高与低阶触发反馈\nBuild4：破盾后追加雷击\nBuild6：五雷破壳与额外连锁目标", "skillMonitor"),
                     Section("固定词条", "控制强度增加 +7 点，并提高对护盾目标的雷痕积累效率\n引雷伤害 +18 点；阵脉生效时追加念力返还说明", "fixedAffix"),
                     Section("随机词条", "触发后返还念力 +4 点\n破盾提高 +5%\n控制持续时间 +0.8 秒\n雷击连锁衰减降低 12%", "randomAffix"),
@@ -468,18 +505,30 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 qixingImage.color = Color.white;
             }
 
-            daojuImage.sprite = null;
-            daojuImage.enabled = true;
+            Image singleCellArtwork = daoju.Find("DaojuSingleCellImage")?.GetComponent<Image>();
+            Image multiCellArtwork = daoju.Find("DaojuMultiCellImage")?.GetComponent<Image>();
+            if (singleCellArtwork != null && multiCellArtwork != null)
+            {
+                daojuImage.enabled = false;
+                BindImage(singleCellArtwork, sprites["item_art_i001_orange"]);
+                multiCellArtwork.sprite = sprites["item_art_i001_orange"];
+                multiCellArtwork.enabled = false;
+            }
+            else
+            {
+                BindImage(daojuImage, sprites["item_art_i001_orange"]);
+            }
             if (firstRun)
             {
-                daojuImage.color = new Color32(92, 92, 92, 255);
+                daojuImage.color = Color.white;
+                daojuImage.preserveAspect = true;
             }
 
             Text artworkText = Require(artworkFrame, "ItemArtworkText").GetComponent<Text>();
-            artworkText.enabled = true;
-            artworkText.text = "I001 道具主体图缺失\n灰盒占位（非正式美术）";
+            artworkText.enabled = false;
+            artworkText.text = string.Empty;
             Text artworkKeyText = Require(artworkFrame, "ItemArtworkKeyPlate/ItemArtworkKeyText").GetComponent<Text>();
-            artworkKeyText.text = "MISSING_ART_I001";
+            artworkKeyText.text = "item_daoju/震雷法/I001/I001_5";
             Text faMenText = Require(artworkFrame, "FaMenNameText").GetComponent<Text>();
             faMenText.text = "阵法 · 震雷法";
             Text qiLeiText = Require(artworkFrame, "QiLeiNameText").GetComponent<Text>();
@@ -509,7 +558,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             });
             BindLineSprites(panel, "QiLeiBuildSection", "QiLeiBuildStageIconSlot_", new[]
             {
-                sprites["qilei"], sprites["qilei"]
+                sprites["qilei_skill1"], sprites["qilei_skill2"]
             });
             BindLineSprites(panel, "MainBuildMonitorSection", "SkillMonitorIconSlot_", new[]
             {
@@ -523,11 +572,16 @@ namespace TalismanBag.EditorTools.ItemSandbox
             {
                 sprites["random"], sprites["random"], sprites["random"], sprites["random"]
             });
-            BindLineSprites(panel, "OrangeGrowthSection", "DaoTraceIconSlot_", new[] { sprites["fixed"] });
+            // Dao Trace has its own artwork slot but no approved art yet. Never reuse a fixed-affix
+            // sprite as fake Dao Trace art; the user will assign the real sprite in the Inspector.
             BindLineSprites(panel, "PlacementHintSection", "PlacementIconSlot_", new[] { sprites["placement"] });
             BindLineSprites(panel, "FlavorSection", "FlavorIconSlot_", new[] { sprites["flavor"] });
             BindLineSprites(panel, "BaseStatsSection", "InlineArrayModifierIcon_", new[] { sprites["array"] });
-            BindLineSprites(panel, "QiLeiBuildSection", "InlineArrayModifierIcon_", new[] { sprites["array"] });
+            Transform qiLeiBuildBody = Require(FindDescendant(panel, "QiLeiBuildSection"), "BodyText");
+            if (qiLeiBuildBody.Find("QiLeiBuildRowsRoot") == null)
+            {
+                BindLineSprites(panel, "QiLeiBuildSection", "InlineArrayModifierIcon_", new[] { sprites["array"] });
+            }
 
             foreach (ItemDetailSectionView section in panel.GetComponentsInChildren<ItemDetailSectionView>(true))
             {

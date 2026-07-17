@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TalismanBag.Items.Detail
 {
@@ -161,7 +163,12 @@ namespace TalismanBag.Items.Detail
             {
                 if (section != null)
                 {
-                    clone.Add(new ItemDetailSectionViewModel(section.title, section.body, section.stateKey, section.keepWhenEmpty));
+                    clone.Add(new ItemDetailSectionViewModel(
+                        section.title,
+                        section.body,
+                        section.stateKey,
+                        section.keepWhenEmpty,
+                        section.coreEffectRowStates));
                 }
             }
 
@@ -302,23 +309,37 @@ namespace TalismanBag.Items.Detail
         }
     }
 
+    public enum ItemDetailCoreEffectRowState
+    {
+        Locked = 0,
+        UnlockedInactive = 1,
+        Active = 2
+    }
+
     public sealed class ItemDetailSectionViewModel
     {
         public string title;
         public string body;
         public string stateKey;
         public bool keepWhenEmpty;
+        public List<ItemDetailCoreEffectRowState> coreEffectRowStates = new();
 
         public ItemDetailSectionViewModel()
         {
         }
 
-        public ItemDetailSectionViewModel(string title, string body, string stateKey = "", bool keepWhenEmpty = true)
+        public ItemDetailSectionViewModel(
+            string title,
+            string body,
+            string stateKey = "",
+            bool keepWhenEmpty = true,
+            IEnumerable<ItemDetailCoreEffectRowState> coreEffectRowStates = null)
         {
             this.title = title;
             this.body = body;
             this.stateKey = stateKey;
             this.keepWhenEmpty = keepWhenEmpty;
+            this.coreEffectRowStates = (coreEffectRowStates ?? Array.Empty<ItemDetailCoreEffectRowState>()).ToList();
         }
     }
 

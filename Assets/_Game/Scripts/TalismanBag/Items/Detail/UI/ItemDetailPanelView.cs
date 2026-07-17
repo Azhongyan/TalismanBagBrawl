@@ -16,6 +16,8 @@ namespace TalismanBag.Items.Detail.UI
         private const string FaMenIconResourcePrefix = "item/阵法icon/";
         private const string QiLeiIconResourcePrefix = "item/器类icon/";
         private const string RarityIconResourcePrefix = "item/品阶icon/品阶icon_";
+        private const string RarityBackgroundResourcePrefix = "item/弹窗背景/background-";
+        private const string DetailArtworkResourcePrefix = "item_daoju/";
 
         [SerializeField] private Text itemNameText;
         [SerializeField] private Text metaText;
@@ -55,6 +57,8 @@ namespace TalismanBag.Items.Detail.UI
         private Sprite lightingStatusUnlitSprite;
         private Sprite arrayStatusLitSprite;
         private Sprite arrayStatusUnlitSprite;
+        private Image singleCellArtworkImageSlot;
+        private Image multiCellArtworkImageSlot;
 
 #if UNITY_EDITOR
         public void ConfigureEditor(
@@ -121,6 +125,7 @@ namespace TalismanBag.Items.Detail.UI
         private void Awake()
         {
             ResolveIdentityIconImages();
+            ResolveArtworkImageSlot();
             BindTabs();
         }
 
@@ -149,6 +154,7 @@ namespace TalismanBag.Items.Detail.UI
                 SetRarityBadge(string.Empty);
                 SetArtwork(string.Empty, string.Empty, string.Empty, null);
                 SetStatusBadges(null);
+                ApplySectionItemPresentation(playerSections, string.Empty, string.Empty, string.Empty, string.Empty);
                 SetPlayerSections(playerSections, null);
                 SetSections(debugSections, null);
                 ShowPlayerDetailTab();
@@ -162,8 +168,9 @@ namespace TalismanBag.Items.Detail.UI
             Color rarityColor = ResolveRarityColor(model.rarityColorKey, model.displayRarityName);
             string rarityDisplayName = ResolveRarityDisplayName(model.rarityColorKey, model.displayRarityName);
             ApplyRarityStyle(rarityColor);
+            SetRarityBackground(rarityDisplayName);
             SetHeader(
-                model.displayItemName,
+                BuildItemNameWithLevel(model),
                 BuildMetaText(model, rarityDisplayName, rarityColor),
                 BuildPowerText(model.displayItemPower, rarityColor));
             SetIdentityIcons(model.displayFaMenName, model.displayQiLeiName);
@@ -172,7 +179,7 @@ namespace TalismanBag.Items.Detail.UI
                 model.displayQiLeiName,
                 SanitizeShapeName(model.displayShapeName),
                 model.iconPlaceholderKey,
-                artworkSprite);
+                artworkSprite ?? ResolveDetailArtworkSprite(model, rarityDisplayName));
             SetStatusBadges(model);
             ApplySectionTheme(playerSections);
             ApplySectionTheme(debugSections);
@@ -181,6 +188,12 @@ namespace TalismanBag.Items.Detail.UI
                 rarityColor,
                 model.rarityColorKey,
                 rarityDisplayName);
+            ApplySectionItemPresentation(
+                playerSections,
+                model.itemId,
+                model.baseItemId,
+                model.displayFaMenName,
+                model.displayQiLeiName);
             SetPlayerSections(playerSections, model.displayPlayerSections);
             SetSections(debugSections, model.displayDebugSections);
 
@@ -555,10 +568,51 @@ namespace TalismanBag.Items.Detail.UI
             }
         }
 
+        private static string BuildItemNameWithLevel(ItemDetailViewModel model)
+        {
+            string itemName = model?.displayItemName ?? string.Empty;
+            int level = ResolveCultivationLevel(model);
+            return string.IsNullOrWhiteSpace(itemName)
+                ? "Lv." + level
+                : itemName + " Lv." + level;
+        }
+
+        private static int ResolveCultivationLevel(ItemDetailViewModel model)
+        {
+            int level = model?.awakeningPreview?.itemLevel ?? 0;
+            if (level <= 0)
+            {
+                level = model?.statusFlags?.itemLevel ?? 0;
+            }
+            if (level <= 0)
+            {
+                level = model?.awakeningPreview?.resolvedLevel ?? 0;
+            }
+            if (level <= 0)
+            {
+                level = model?.statusFlags?.resolvedLevel ?? 0;
+            }
+
+            return Mathf.Clamp(level <= 0 ? 1 : level, 1, 40);
+        }
+
         private void SetArtwork(string qiLeiName, string shapeName, string iconKey, Sprite artworkSprite)
         {
+            ResolveArtworkImageSlot();
             bool hasArtwork = artworkSprite != null;
-            if (artworkImageSlot != null)
+            bool hasSplitArtworkSlots = singleCellArtworkImageSlot != null
+                && multiCellArtworkImageSlot != null;
+            if (hasSplitArtworkSlots)
+            {
+                bool useSingleCellSlot = IsSingleCellArtwork(shapeName);
+                SetArtworkSlot(singleCellArtworkImageSlot, artworkSprite, hasArtwork && useSingleCellSlot);
+                SetArtworkSlot(multiCellArtworkImageSlot, artworkSprite, hasArtwork && !useSingleCellSlot);
+                if (artworkImageSlot != null)
+                {
+                    artworkImageSlot.enabled = false;
+                }
+            }
+            else if (artworkImageSlot != null)
             {
                 artworkImageSlot.sprite = artworkSprite;
                 artworkImageSlot.enabled = hasArtwork;
@@ -584,6 +638,95 @@ namespace TalismanBag.Items.Detail.UI
             }
         }
 
+        private void SetArtworkSlot(Image target, Sprite artworkSprite, bool visible)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            target.sprite = artworkSprite;
+            target.enabled = visible;
+            if (target.gameObject.activeSelf != visible)
+            {
+                target.gameObject.SetActive(visible);
+            }
+
+            if (!preserveAuthoredVisualStyle)
+            {
+                target.color = Color.white;
+            }
+        }
+
+        private static bool IsSingleCellArtwork(string shapeName)
+        {
+            return !string.IsNullOrWhiteSpace(shapeName)
+                && (shapeName.Contains("单格", StringComparison.Ordinal)
+                    || shapeName.Contains("single_1", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private Sprite ResolveDetailArtworkSprite(ItemDetailViewModel model, string rarityDisplayName)
+        {
+            string baseItemId = ExtractDetailArtworkBaseItemId(model?.baseItemId);
+            if (string.IsNullOrEmpty(baseItemId))
+            {
+                baseItemId = ExtractDetailArtworkBaseItemId(model?.itemId);
+            }
+
+            if (string.IsNullOrEmpty(baseItemId)
+                || !int.TryParse(baseItemId.Substring(1), out int itemNumber))
+            {
+                return null;
+            }
+
+            string faMenFolder = itemNumber switch
+            {
+                >= 1 and <= 6 => "震雷法",
+                >= 7 and <= 12 => "离火法",
+                _ => string.Empty
+            };
+            int rarityIndex = rarityDisplayName switch
+            {
+                "凡品" => 1,
+                "良品" => 2,
+                "灵品" => 3,
+                "玄品" => 4,
+                "道品" => 5,
+                _ => 0
+            };
+            if (string.IsNullOrEmpty(faMenFolder) || rarityIndex == 0)
+            {
+                return null;
+            }
+
+            string resourcePath = DetailArtworkResourcePrefix
+                + faMenFolder + "/" + baseItemId + "/"
+                + baseItemId + "_" + rarityIndex;
+            return Resources.Load<Sprite>(resourcePath);
+        }
+
+        private static string ExtractDetailArtworkBaseItemId(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            string normalized = value.Trim().ToUpperInvariant();
+            for (int index = 0; index <= normalized.Length - 4; index++)
+            {
+                if (normalized[index] == 'I'
+                    && char.IsDigit(normalized[index + 1])
+                    && char.IsDigit(normalized[index + 2])
+                    && char.IsDigit(normalized[index + 3]))
+                {
+                    return normalized.Substring(index, 4);
+                }
+            }
+
+            return string.Empty;
+        }
+
         private void SetRarityBadge(string rarityName)
         {
             if (rarityBadgeImage != null)
@@ -601,10 +744,35 @@ namespace TalismanBag.Items.Detail.UI
             }
         }
 
+        private void SetRarityBackground(string rarityName)
+        {
+            if (cardBackgroundImage == null || string.IsNullOrWhiteSpace(rarityName))
+            {
+                return;
+            }
+
+            Sprite sprite = Resources.Load<Sprite>(
+                RarityBackgroundResourcePrefix + rarityName.Trim());
+            if (sprite == null)
+            {
+                return;
+            }
+
+            cardBackgroundImage.sprite = sprite;
+            cardBackgroundImage.enabled = true;
+        }
+
         private void ResolveIdentityIconImages()
         {
             faMenIconImage ??= FindNamedImage("zhenfaicon");
             qiLeiIconImage ??= FindNamedImage("qixingicon");
+        }
+
+        private void ResolveArtworkImageSlot()
+        {
+            artworkImageSlot ??= FindNamedImage("daoju");
+            singleCellArtworkImageSlot ??= FindNamedImage("DaojuSingleCellImage");
+            multiCellArtworkImageSlot ??= FindNamedImage("DaojuMultiCellImage");
         }
 
         private Image FindNamedImage(string objectName)
@@ -941,6 +1109,24 @@ namespace TalismanBag.Items.Detail.UI
             foreach (ItemDetailSectionView section in sections)
             {
                 section?.SetRarityPresentation(rarityColor, rarityKey, rarityDisplayName);
+            }
+        }
+
+        private static void ApplySectionItemPresentation(
+            ItemDetailSectionView[] sections,
+            string itemId,
+            string baseItemId,
+            string faMenName,
+            string qiLeiName)
+        {
+            if (sections == null)
+            {
+                return;
+            }
+
+            foreach (ItemDetailSectionView section in sections)
+            {
+                section?.SetItemPresentation(itemId, baseItemId, faMenName, qiLeiName);
             }
         }
 

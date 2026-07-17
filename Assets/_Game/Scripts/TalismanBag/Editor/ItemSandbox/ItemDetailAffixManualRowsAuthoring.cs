@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using TalismanBag.Items.Detail.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -18,6 +19,12 @@ namespace TalismanBag.EditorTools.ItemSandbox
             "TalismanBag/Item Sandbox/Migrate Fixed And Random Affixes To BaseStats Rows (Once)";
         private const string CleanFieldPrefixesMenuPath =
             "TalismanBag/Item Sandbox/Clean Generic Affix Field Prefixes (Manual Only)";
+        private const string DaoTraceMenuPath =
+            "TalismanBag/Item Sandbox/Migrate Dao Trace To Fixed Affix Row (Once)";
+        private const string CoreEffectMenuPath =
+            "TalismanBag/Item Sandbox/Migrate Core Effects To Authored Rows (Once)";
+        private const string AffixLineSpacingMenuPath =
+            "TalismanBag/Item Sandbox/Set Affix And Dao Trace Line Spacing To 1.2 (Once)";
         private const string ScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V04_ItemSandbox.unity";
         private const string PanelPath =
             "ItemSandboxCanvas/MobileSafeAreaRoot/ItemSandboxRoot/ItemDetailPanel";
@@ -37,8 +44,21 @@ namespace TalismanBag.EditorTools.ItemSandbox
         private const string RandomRowNamePrefix = "RandomAffixRow_";
         private const string RandomTextNamePrefix = "RandomAffixText_";
         private const string RandomIconNamePrefix = "RandomAffixIconSlot_";
+        private const string OrangeSectionName = "OrangeGrowthSection";
+        private const string DaoTraceRowsRootName = "DaoTraceRowsRoot";
+        private const string DaoTraceRowNamePrefix = "DaoTraceRow_";
+        private const string DaoTraceTextNamePrefix = "DaoTraceText_";
+        private const string DaoTraceIconNamePrefix = "DaoTraceIconSlot_";
+        private const string CoreSectionName = "CoreAwakeningSection";
+        private const string CoreEffectRowsRootName = "CoreEffectRowsRoot";
+        private const string CoreEffectRowNamePrefix = "CoreEffectRow_";
+        private const string CoreEffectTextNamePrefix = "CoreEffectText_";
+        private const string CoreEffectIconNamePrefix = "CoreEffectIconSlot_";
         private const int FixedRowCount = 2;
         private const int RandomRowCount = 4;
+        private const int CoreEffectRowCount = 4;
+        private const float SourceAffixLineSpacing = 1.8f;
+        private const float DesiredAffixLineSpacing = 1.2f;
 
         [MenuItem(MenuPath, false, 2212)]
         public static void MigrateAffixRowsFromBaseStatsOnce()
@@ -184,7 +204,427 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 && Normalize(scene.path) == ScenePath;
         }
 
-        [MenuItem(CleanFieldPrefixesMenuPath, false, 2213)]
+        [MenuItem(DaoTraceMenuPath, false, 2213)]
+        public static void MigrateDaoTraceToFixedAffixRowOnce()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                throw new InvalidOperationException("Exit Play Mode before migrating the Dao Trace row.");
+            }
+
+            Scene scene = SceneManager.GetActiveScene();
+            if (!scene.IsValid() || !scene.isLoaded || Normalize(scene.path) != ScenePath)
+            {
+                throw new InvalidOperationException(
+                    "Open the ItemSandbox Scene first. This command intentionally does not open or replace a Scene.");
+            }
+
+            Transform panel = FindScenePath(scene, PanelPath)
+                ?? throw new InvalidOperationException("ItemDetailPanel Scene root not found: " + PanelPath);
+            Transform detailContent = panel.Find(DetailContentPath)
+                ?? throw new InvalidOperationException("DetailContent not found: " + DetailContentPath);
+            Transform fixedSection = detailContent.Find(FixedSectionName)
+                ?? throw new InvalidOperationException("FixedAffixSection not found.");
+            Transform orangeSection = detailContent.Find(OrangeSectionName)
+                ?? throw new InvalidOperationException("OrangeGrowthSection not found.");
+            Transform fixedBody = fixedSection.Find("BodyText")
+                ?? throw new InvalidOperationException("FixedAffixSection/BodyText not found.");
+            Transform orangeBody = orangeSection.Find("BodyText")
+                ?? throw new InvalidOperationException("OrangeGrowthSection/BodyText not found.");
+            Transform fixedRowsRoot = fixedBody.Find(FixedRowsRootName)
+                ?? throw new InvalidOperationException("FixedAffixRowsRoot is required as the authored layout source.");
+
+            Transform existingDaoTraceRoot = orangeBody.Find(DaoTraceRowsRootName);
+            if (existingDaoTraceRoot != null)
+            {
+                ValidateRows(
+                    existingDaoTraceRoot,
+                    DaoTraceRowNamePrefix,
+                    DaoTraceTextNamePrefix,
+                    DaoTraceIconNamePrefix,
+                    1);
+                if (existingDaoTraceRoot.GetComponent<ItemDetailAuthoredRowsVerticalLayoutGroup>() == null
+                    || orangeBody.GetComponent<ItemDetailAuthoredRowsLayoutElement>() == null
+                    || existingDaoTraceRoot.Find(DaoTraceRowNamePrefix + "0")
+                        ?.GetComponent<ItemDetailAuthoredTextRowLayoutElement>() == null)
+                {
+                    throw new InvalidOperationException(
+                        "DaoTraceRowsRoot exists but its adaptive row components are incomplete. No layout was overwritten.");
+                }
+
+                Debug.Log(
+                    "ITEM_DETAIL_DAO_TRACE_ROW_ALREADY_PASS: existing Dao Trace row checked only; "
+                    + "no RectTransform, hierarchy, content, sprite, or Scene save write was performed.");
+                return;
+            }
+
+            Transform fixedRow = fixedRowsRoot.Find(FixedRowNamePrefix + "0")
+                ?? throw new InvalidOperationException("FixedAffixRow_0 not found.");
+            RectTransform fixedTextRect = fixedRow.Find(FixedTextNamePrefix + "0") as RectTransform
+                ?? throw new InvalidOperationException("FixedAffixText_0 not found.");
+            RectTransform fixedIconRect = fixedRow.Find(FixedIconNamePrefix + "0") as RectTransform
+                ?? throw new InvalidOperationException("FixedAffixIconSlot_0 not found.");
+            Text orangeSourceText = orangeBody.GetComponent<Text>()
+                ?? throw new InvalidOperationException("OrangeGrowthSection/BodyText Text component missing.");
+            string sourceLine = orangeSourceText.text ?? string.Empty;
+
+            int undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("Migrate Dao Trace to authored fixed-affix row");
+
+            GameObject rootObject = new GameObject(
+                DaoTraceRowsRootName,
+                typeof(RectTransform),
+                typeof(ItemDetailAuthoredRowsVerticalLayoutGroup));
+            Undo.RegisterCreatedObjectUndo(rootObject, "Create " + DaoTraceRowsRootName);
+            RectTransform daoTraceRowsRoot = rootObject.GetComponent<RectTransform>();
+            Undo.SetTransformParent(daoTraceRowsRoot, orangeBody, "Parent " + DaoTraceRowsRootName);
+            RectSnapshot.Capture((RectTransform)fixedRowsRoot).Apply(daoTraceRowsRoot);
+            ItemDetailAuthoredRowsVerticalLayoutGroup fixedRowsLayout =
+                fixedRowsRoot.GetComponent<ItemDetailAuthoredRowsVerticalLayoutGroup>();
+            rootObject.GetComponent<ItemDetailAuthoredRowsVerticalLayoutGroup>().ConfigureEditor(
+                fixedRowsLayout != null ? fixedRowsLayout.Spacing : 6f,
+                fixedRowsLayout == null || fixedRowsLayout.UseChildScale);
+
+            GameObject rowObject = new GameObject(
+                DaoTraceRowNamePrefix + "0",
+                typeof(RectTransform),
+                typeof(ItemDetailAuthoredTextRowLayoutElement));
+            Undo.RegisterCreatedObjectUndo(rowObject, "Create authored Dao Trace row");
+            RectTransform daoTraceRow = rowObject.GetComponent<RectTransform>();
+            Undo.SetTransformParent(daoTraceRow, daoTraceRowsRoot, "Parent authored Dao Trace row");
+            RectSnapshot.Capture((RectTransform)fixedRow).Apply(daoTraceRow);
+
+            GameObject textObject = new GameObject(
+                DaoTraceTextNamePrefix + "0",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Text));
+            Undo.RegisterCreatedObjectUndo(textObject, "Create authored Dao Trace text");
+            RectTransform daoTraceTextRect = textObject.GetComponent<RectTransform>();
+            Undo.SetTransformParent(daoTraceTextRect, daoTraceRow, "Parent authored Dao Trace text");
+            RectSnapshot.Capture(fixedTextRect).Apply(daoTraceTextRect);
+            Text daoTraceText = textObject.GetComponent<Text>();
+            CopyTextStyle(orangeSourceText, daoTraceText);
+            daoTraceText.text = sourceLine.TrimStart();
+
+            Transform directIcon = orangeBody.Find(DaoTraceIconNamePrefix + "0");
+            RectTransform daoTraceIconRect;
+            Image daoTraceIcon;
+            if (directIcon != null)
+            {
+                daoTraceIconRect = directIcon as RectTransform
+                    ?? throw new InvalidOperationException("Existing DaoTraceIconSlot_0 is not a RectTransform.");
+                daoTraceIcon = directIcon.GetComponent<Image>()
+                    ?? throw new InvalidOperationException("Existing DaoTraceIconSlot_0 Image component missing.");
+                Undo.SetTransformParent(directIcon, daoTraceRow, "Move existing Dao Trace icon into authored row");
+            }
+            else
+            {
+                GameObject iconObject = new GameObject(
+                    DaoTraceIconNamePrefix + "0",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image));
+                Undo.RegisterCreatedObjectUndo(iconObject, "Create Dao Trace artwork placeholder");
+                daoTraceIconRect = iconObject.GetComponent<RectTransform>();
+                daoTraceIcon = iconObject.GetComponent<Image>();
+                Undo.SetTransformParent(daoTraceIconRect, daoTraceRow, "Parent Dao Trace artwork placeholder");
+                daoTraceIcon.color = new Color32(92, 88, 82, 255);
+                daoTraceIcon.sprite = null;
+                daoTraceIcon.preserveAspect = true;
+                daoTraceIcon.raycastTarget = false;
+            }
+
+            RectSnapshot.Capture(fixedIconRect).Apply(daoTraceIconRect);
+            daoTraceIconRect.name = DaoTraceIconNamePrefix + "0";
+            daoTraceIcon.enabled = true;
+            daoTraceIcon.gameObject.SetActive(true);
+            EditorUtility.SetDirty(daoTraceIcon);
+
+            ItemDetailAuthoredTextRowLayoutElement fixedRowLayout =
+                fixedRow.GetComponent<ItemDetailAuthoredTextRowLayoutElement>();
+            rowObject.GetComponent<ItemDetailAuthoredTextRowLayoutElement>().ConfigureEditor(
+                daoTraceText,
+                fixedRowLayout != null ? fixedRowLayout.MinimumHeight : 0f,
+                0f);
+
+            ItemDetailAuthoredRowsLayoutElement bodyLayout =
+                orangeBody.GetComponent<ItemDetailAuthoredRowsLayoutElement>()
+                ?? Undo.AddComponent<ItemDetailAuthoredRowsLayoutElement>(orangeBody.gameObject);
+            bodyLayout.ConfigureEditor(daoTraceRowsRoot, DaoTraceRowNamePrefix);
+            bodyLayout.MarkAffixDynamicRowsEditor();
+
+            Undo.RecordObject(orangeSourceText, "Replace Dao Trace text with transparent layout scaffold");
+            orangeSourceText.text = BuildTransparentLayoutScaffold(new[] { sourceLine });
+            EditorUtility.SetDirty(orangeSourceText);
+
+            ValidateRows(
+                daoTraceRowsRoot,
+                DaoTraceRowNamePrefix,
+                DaoTraceTextNamePrefix,
+                DaoTraceIconNamePrefix,
+                1);
+            EditorSceneManager.MarkSceneDirty(scene);
+            Undo.CollapseUndoOperations(undoGroup);
+            Selection.activeGameObject = orangeSection.gameObject;
+            Canvas.ForceUpdateCanvases();
+            Debug.Log(
+                "ITEM_DETAIL_DAO_TRACE_ROW_PASS: OrangeGrowthSection now mirrors FixedAffixRow_0; "
+                + "DaoTraceIconSlot_0 keeps the same authored RectTransform and has no assigned Sprite; "
+                + "Scene remains unsaved for visual review.");
+        }
+
+        [MenuItem(DaoTraceMenuPath, true)]
+        private static bool ValidateDaoTraceMenu()
+        {
+            return ValidateMenu();
+        }
+
+        [MenuItem(CoreEffectMenuPath, false, 2214)]
+        public static void MigrateCoreEffectsToAuthoredRowsOnce()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                throw new InvalidOperationException("Exit Play Mode before migrating Core Effect rows.");
+            }
+
+            Scene scene = SceneManager.GetActiveScene();
+            if (!scene.IsValid() || !scene.isLoaded || Normalize(scene.path) != ScenePath)
+            {
+                throw new InvalidOperationException(
+                    "Open the ItemSandbox Scene first. This command intentionally does not open or replace a Scene.");
+            }
+
+            Transform panel = FindScenePath(scene, PanelPath)
+                ?? throw new InvalidOperationException("ItemDetailPanel Scene root not found: " + PanelPath);
+            Transform detailContent = panel.Find(DetailContentPath)
+                ?? throw new InvalidOperationException("DetailContent not found: " + DetailContentPath);
+            Transform fixedSection = detailContent.Find(FixedSectionName)
+                ?? throw new InvalidOperationException("FixedAffixSection not found.");
+            Transform coreSection = detailContent.Find(CoreSectionName)
+                ?? throw new InvalidOperationException("CoreAwakeningSection not found.");
+            Transform fixedBody = fixedSection.Find("BodyText")
+                ?? throw new InvalidOperationException("FixedAffixSection/BodyText not found.");
+            Transform coreBody = coreSection.Find("BodyText")
+                ?? throw new InvalidOperationException("CoreAwakeningSection/BodyText not found.");
+            Transform fixedRowsRoot = fixedBody.Find(FixedRowsRootName)
+                ?? throw new InvalidOperationException("FixedAffixRowsRoot is required as the authored layout source.");
+
+            Transform existingCoreRoot = coreBody.Find(CoreEffectRowsRootName);
+            if (existingCoreRoot != null)
+            {
+                ValidateRows(
+                    existingCoreRoot,
+                    CoreEffectRowNamePrefix,
+                    CoreEffectTextNamePrefix,
+                    CoreEffectIconNamePrefix,
+                    CoreEffectRowCount);
+                if (existingCoreRoot.GetComponent<ItemDetailAuthoredRowsVerticalLayoutGroup>() == null
+                    || coreBody.GetComponent<ItemDetailAuthoredRowsLayoutElement>() == null
+                    || Enumerable.Range(0, CoreEffectRowCount).Any(index =>
+                        existingCoreRoot.Find(CoreEffectRowNamePrefix + index)
+                            ?.GetComponent<ItemDetailAuthoredTextRowLayoutElement>() == null))
+                {
+                    throw new InvalidOperationException(
+                        "CoreEffectRowsRoot exists but its adaptive row components are incomplete. No layout was overwritten.");
+                }
+
+                Debug.Log(
+                    "ITEM_DETAIL_CORE_EFFECT_ROWS_ALREADY_PASS: existing Core Effect rows checked only; "
+                    + "no RectTransform, hierarchy, text, sprite, icon size, or Scene save write was performed.");
+                return;
+            }
+
+            Transform fixedRow = fixedRowsRoot.Find(FixedRowNamePrefix + "0")
+                ?? throw new InvalidOperationException("FixedAffixRow_0 not found.");
+            RectTransform fixedTextRect = fixedRow.Find(FixedTextNamePrefix + "0") as RectTransform
+                ?? throw new InvalidOperationException("FixedAffixText_0 not found.");
+            Text coreSourceText = coreBody.GetComponent<Text>()
+                ?? throw new InvalidOperationException("CoreAwakeningSection/BodyText Text component missing.");
+            string[] sourceLines = SplitNonEmptyLinesExact(
+                coreSourceText.text,
+                CoreEffectRowCount,
+                CoreSectionName);
+            Transform[] coreIcons = RequireDirectIcons(
+                coreBody,
+                CoreEffectIconNamePrefix,
+                CoreEffectRowCount);
+
+            RectTransform panelRect = panel as RectTransform
+                ?? throw new InvalidOperationException("ItemDetailPanel RectTransform missing.");
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(panelRect);
+            Canvas.ForceUpdateCanvases();
+
+            RectSnapshot[] iconSnapshots = coreIcons
+                .Select(icon => RectSnapshot.Capture(icon as RectTransform
+                    ?? throw new InvalidOperationException(icon.name + " is not a RectTransform.")))
+                .ToArray();
+            float[] iconHeights = coreIcons
+                .Select(icon => Mathf.Abs(((RectTransform)icon).rect.height))
+                .ToArray();
+
+            int undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("Migrate Core Effects to authored rows");
+
+            VerticalLayoutGroup legacyIconLayout = coreBody.GetComponent<VerticalLayoutGroup>();
+            if (legacyIconLayout != null && legacyIconLayout.enabled)
+            {
+                Undo.RecordObject(legacyIconLayout, "Disable legacy Core Effect icon layout");
+                legacyIconLayout.enabled = false;
+                EditorUtility.SetDirty(legacyIconLayout);
+            }
+
+            GameObject rootObject = new GameObject(
+                CoreEffectRowsRootName,
+                typeof(RectTransform),
+                typeof(ItemDetailAuthoredRowsVerticalLayoutGroup));
+            Undo.RegisterCreatedObjectUndo(rootObject, "Create " + CoreEffectRowsRootName);
+            RectTransform coreRowsRoot = rootObject.GetComponent<RectTransform>();
+            Undo.SetTransformParent(coreRowsRoot, coreBody, "Parent " + CoreEffectRowsRootName);
+            RectSnapshot.Capture((RectTransform)fixedRowsRoot).Apply(coreRowsRoot);
+            ItemDetailAuthoredRowsVerticalLayoutGroup fixedRowsLayout =
+                fixedRowsRoot.GetComponent<ItemDetailAuthoredRowsVerticalLayoutGroup>();
+            rootObject.GetComponent<ItemDetailAuthoredRowsVerticalLayoutGroup>().ConfigureEditor(
+                fixedRowsLayout != null ? fixedRowsLayout.Spacing : 6f,
+                false);
+
+            ItemDetailAuthoredTextRowLayoutElement fixedRowLayout =
+                fixedRow.GetComponent<ItemDetailAuthoredTextRowLayoutElement>();
+            float fixedMinimumHeight = fixedRowLayout != null ? fixedRowLayout.MinimumHeight : 0f;
+            for (int index = 0; index < CoreEffectRowCount; index++)
+            {
+                GameObject rowObject = new GameObject(
+                    CoreEffectRowNamePrefix + index,
+                    typeof(RectTransform),
+                    typeof(ItemDetailAuthoredTextRowLayoutElement));
+                Undo.RegisterCreatedObjectUndo(rowObject, "Create authored Core Effect row");
+                RectTransform row = rowObject.GetComponent<RectTransform>();
+                Undo.SetTransformParent(row, coreRowsRoot, "Parent authored Core Effect row");
+                RectSnapshot.Capture((RectTransform)fixedRow).Apply(row);
+                row.localScale = Vector3.one;
+                EditorUtility.SetDirty(row);
+
+                GameObject textObject = new GameObject(
+                    CoreEffectTextNamePrefix + index,
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Text));
+                Undo.RegisterCreatedObjectUndo(textObject, "Create authored Core Effect text");
+                RectTransform textRect = textObject.GetComponent<RectTransform>();
+                Undo.SetTransformParent(textRect, row, "Parent authored Core Effect text");
+                RectSnapshot.Capture(fixedTextRect).Apply(textRect);
+                Text rowText = textObject.GetComponent<Text>();
+                CopyTextStyle(coreSourceText, rowText);
+                rowText.text = sourceLines[index].TrimStart();
+
+                Undo.SetTransformParent(
+                    coreIcons[index],
+                    row,
+                    "Move original Core Effect icon into authored row");
+                iconSnapshots[index].Apply((RectTransform)coreIcons[index]);
+                coreIcons[index].name = CoreEffectIconNamePrefix + index;
+                coreIcons[index].gameObject.SetActive(true);
+                EditorUtility.SetDirty(coreIcons[index]);
+
+                rowObject.GetComponent<ItemDetailAuthoredTextRowLayoutElement>().ConfigureEditor(
+                    rowText,
+                    Mathf.Max(fixedMinimumHeight, iconHeights[index]),
+                    0f);
+            }
+
+            ItemDetailAuthoredRowsLayoutElement bodyLayout =
+                coreBody.GetComponent<ItemDetailAuthoredRowsLayoutElement>()
+                ?? Undo.AddComponent<ItemDetailAuthoredRowsLayoutElement>(coreBody.gameObject);
+            bodyLayout.ConfigureEditor(coreRowsRoot, CoreEffectRowNamePrefix);
+            bodyLayout.MarkAffixDynamicRowsEditor();
+
+            Undo.RecordObject(coreSourceText, "Replace Core Effect text with transparent layout scaffold");
+            coreSourceText.text = BuildTransparentLayoutScaffold(sourceLines);
+            EditorUtility.SetDirty(coreSourceText);
+
+            ValidateRows(
+                coreRowsRoot,
+                CoreEffectRowNamePrefix,
+                CoreEffectTextNamePrefix,
+                CoreEffectIconNamePrefix,
+                CoreEffectRowCount);
+            EditorSceneManager.MarkSceneDirty(scene);
+            Undo.CollapseUndoOperations(undoGroup);
+            Selection.activeGameObject = coreSection.gameObject;
+            Canvas.ForceUpdateCanvases();
+            Debug.Log(
+                "ITEM_DETAIL_CORE_EFFECT_ROWS_PASS: CoreAwakeningSection now uses 4 authored rows; "
+                + "the four original CoreEffectIconSlot objects, sprites, RectTransform sizes, and local geometry were preserved; "
+                + "Scene remains unsaved for visual review.");
+        }
+
+        [MenuItem(CoreEffectMenuPath, true)]
+        private static bool ValidateCoreEffectMenu()
+        {
+            return ValidateMenu();
+        }
+
+        [MenuItem(AffixLineSpacingMenuPath, false, 2215)]
+        public static void SetAffixAndDaoTraceLineSpacingOnce()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                throw new InvalidOperationException("Exit Play Mode before changing authored Text line spacing.");
+            }
+
+            Scene scene = SceneManager.GetActiveScene();
+            if (!scene.IsValid() || !scene.isLoaded || Normalize(scene.path) != ScenePath)
+            {
+                throw new InvalidOperationException("Open the ItemSandbox Scene first.");
+            }
+
+            Text[] texts = ResolveAffixLineSpacingTexts(scene);
+            if (texts.Any(text => !Mathf.Approximately(text.lineSpacing, SourceAffixLineSpacing)))
+            {
+                throw new InvalidOperationException(
+                    "Line-spacing migration requires all 7 authored Text objects to still be exactly 1.8. "
+                    + "No value was overwritten.");
+            }
+
+            int undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("Set authored affix line spacing to 1.2");
+            foreach (Text text in texts)
+            {
+                Undo.RecordObject(text, "Set authored affix line spacing to 1.2");
+                text.lineSpacing = DesiredAffixLineSpacing;
+                EditorUtility.SetDirty(text);
+            }
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            Undo.CollapseUndoOperations(undoGroup);
+            Canvas.ForceUpdateCanvases();
+            Debug.Log(
+                "ITEM_DETAIL_AFFIX_LINE_SPACING_PASS: FixedAffixText_0..1, RandomAffixText_0..3, "
+                + "and DaoTraceText_0 changed from 1.8 to 1.2; Scene remains unsaved for visual review; "
+                + "the menu is now disabled and will not overwrite future manual tuning.");
+        }
+
+        [MenuItem(AffixLineSpacingMenuPath, true)]
+        private static bool ValidateAffixLineSpacingMenu()
+        {
+            if (!ValidateMenu())
+            {
+                return false;
+            }
+
+            try
+            {
+                return ResolveAffixLineSpacingTexts(SceneManager.GetActiveScene())
+                    .All(text => Mathf.Approximately(text.lineSpacing, SourceAffixLineSpacing));
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+        }
+
+        [MenuItem(CleanFieldPrefixesMenuPath, false, 2216)]
         public static void CleanGenericAffixFieldPrefixesOnly()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
@@ -257,6 +697,53 @@ namespace TalismanBag.EditorTools.ItemSandbox
             }
 
             return changed;
+        }
+
+        private static Text[] ResolveAffixLineSpacingTexts(Scene scene)
+        {
+            Transform panel = FindScenePath(scene, PanelPath)
+                ?? throw new InvalidOperationException("ItemDetailPanel Scene root not found: " + PanelPath);
+            Transform fixedRoot = panel.Find(
+                DetailContentPath + "/" + FixedSectionName + "/BodyText/" + FixedRowsRootName)
+                ?? throw new InvalidOperationException("FixedAffixRowsRoot not found.");
+            Transform randomRoot = panel.Find(
+                DetailContentPath + "/" + RandomSectionName + "/BodyText/" + RandomRowsRootName)
+                ?? throw new InvalidOperationException("RandomAffixRowsRoot not found.");
+            Transform daoTraceRoot = panel.Find(
+                DetailContentPath + "/" + OrangeSectionName + "/BodyText/" + DaoTraceRowsRootName)
+                ?? throw new InvalidOperationException("DaoTraceRowsRoot not found.");
+
+            return Enumerable.Range(0, FixedRowCount)
+                .Select(index => RequireRowText(
+                    fixedRoot,
+                    FixedRowNamePrefix,
+                    FixedTextNamePrefix,
+                    index))
+                .Concat(Enumerable.Range(0, RandomRowCount).Select(index => RequireRowText(
+                    randomRoot,
+                    RandomRowNamePrefix,
+                    RandomTextNamePrefix,
+                    index)))
+                .Concat(new[]
+                {
+                    RequireRowText(
+                        daoTraceRoot,
+                        DaoTraceRowNamePrefix,
+                        DaoTraceTextNamePrefix,
+                        0)
+                })
+                .ToArray();
+        }
+
+        private static Text RequireRowText(
+            Transform rowsRoot,
+            string rowNamePrefix,
+            string textNamePrefix,
+            int index)
+        {
+            return rowsRoot.Find(rowNamePrefix + index + "/" + textNamePrefix + index)
+                ?.GetComponent<Text>()
+                ?? throw new InvalidOperationException("Missing authored row Text: " + textNamePrefix + index);
         }
 
         private static void CreateAffixRows(
@@ -352,6 +839,23 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 throw new InvalidOperationException(
                     sectionName + " expected exactly " + expected + " authored lines, found " + lines.Length
                     + ". No migration was performed.");
+            }
+
+            return lines;
+        }
+
+        private static string[] SplitNonEmptyLinesExact(string value, int expected, string sectionName)
+        {
+            string[] lines = (value ?? string.Empty)
+                .Replace("\r", string.Empty)
+                .Split('\n')
+                .Where(line => !string.IsNullOrWhiteSpace(StripRichTextTags(line)))
+                .ToArray();
+            if (lines.Length != expected)
+            {
+                throw new InvalidOperationException(
+                    sectionName + " expected exactly " + expected + " non-empty authored lines, found "
+                    + lines.Length + ". No migration was performed.");
             }
 
             return lines;

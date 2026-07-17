@@ -201,8 +201,9 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 }
 
                 Image image = target?.GetComponent<Image>();
+                bool expectsPlaceholder = string.IsNullOrEmpty(spec.asset);
                 bool pass = image != null && image.enabled && image.gameObject.activeSelf
-                    && AssetPath(image.sprite) == spec.asset;
+                    && (expectsPlaceholder ? image.sprite == null : AssetPath(image.sprite) == spec.asset);
                 if (pass)
                 {
                     correct++;
@@ -256,7 +257,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             });
             AddSeries(specs, "FixedAffixSection", "FixedAffixIconSlot_", new[] { "词条icon/固定词条icon_道.png", "词条icon/固定词条icon_道.png" });
             AddSeries(specs, "RandomAffixSection", "RandomAffixIconSlot_", Enumerable.Repeat("词条icon/随机词条icon_道.png", 4).ToArray());
-            AddSeries(specs, "OrangeGrowthSection", "DaoTraceIconSlot_", new[] { "词条icon/固定词条icon_道.png" });
+            AddSeries(specs, "OrangeGrowthSection", "DaoTraceIconSlot_", new[] { string.Empty });
             AddSeries(specs, "PlacementHintSection", "PlacementIconSlot_", new[] { "基础属性icon/摆放推荐.png" });
             AddSeries(specs, "FlavorSection", "FlavorIconSlot_", new[] { "基础属性icon/旧物记.png" });
             AddSeries(specs, "BaseStatsSection", "InlineArrayModifierIcon_", new[] { "阵脉icon/阵脉icon_点亮.png" });
@@ -513,7 +514,10 @@ namespace TalismanBag.EditorTools.ItemSandbox
         {
             for (int index = 0; index < assets.Count; index++)
             {
-                specs.Add(new SlotSpec(prefix + index, section, prefix + index, "Assets/_Game/Resources/item/" + assets[index]));
+                string asset = string.IsNullOrWhiteSpace(assets[index])
+                    ? string.Empty
+                    : "Assets/_Game/Resources/item/" + assets[index];
+                specs.Add(new SlotSpec(prefix + index, section, prefix + index, asset));
             }
         }
 

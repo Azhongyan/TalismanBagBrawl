@@ -23,10 +23,48 @@ namespace TalismanBag.Items.Detail.UI
         private const string RandomAffixRowsRootName = "RandomAffixRowsRoot";
         private const string RandomAffixRowNamePrefix = "RandomAffixRow_";
         private const string RandomAffixTextNamePrefix = "RandomAffixText_";
+        private const string DaoTraceRowsRootName = "DaoTraceRowsRoot";
+        private const string DaoTraceRowNamePrefix = "DaoTraceRow_";
+        private const string DaoTraceTextNamePrefix = "DaoTraceText_";
         private const string DaoTraceIconSlotNamePrefix = "DaoTraceIconSlot_";
+        private const string PlacementRowsRootName = "PlacementRowsRoot";
+        private const string PlacementRowNamePrefix = "PlacementRow_";
+        private const string PlacementTextNamePrefix = "PlacementText_";
+        private const string PlacementIconSlotNamePrefix = "PlacementIconSlot_";
+        private const string FlavorRowsRootName = "FlavorRowsRoot";
+        private const string FlavorRowNamePrefix = "FlavorRow_";
+        private const string FlavorTextNamePrefix = "FlavorText_";
+        private const string FlavorIconSlotNamePrefix = "FlavorIconSlot_";
+        private const string CoreEffectRowsRootName = "CoreEffectRowsRoot";
+        private const string CoreEffectRowNamePrefix = "CoreEffectRow_";
+        private const string CoreEffectTextNamePrefix = "CoreEffectText_";
         private const string CoreEffectIconSlotNamePrefix = "CoreEffectIconSlot_";
+        private const string CoreEffectStateOverlayNamePrefix = "CoreEffectStateOverlay_";
+        private const string CoreEffectIconResourcePrefix = "item/\u6838\u5fc3icon/";
+        private const string FaMenBuildRowsRootName = "FaMenBuildRowsRoot";
+        private const string FaMenBuildOverviewRowName = "FaMenBuildOverviewRow";
+        private const string FaMenBuildOverviewTextName = "FaMenBuildOverviewText";
+        private const string FaMenBuildRowNamePrefix = "FaMenBuildRow_";
+        private const string FaMenBuildTextNamePrefix = "FaMenBuildText_";
+        private const string FaMenBuildIconResourcePrefix = "item/build\u6280\u80fdicon/";
+        private static readonly string[] CoreEffectIconResourceFolders =
+        {
+            "\u9707\u96f7\u6cd5",
+            "\u79bb\u706b\u6cd5",
+            "\u4e2d\u5cb3\u6cd5",
+            "\u7384\u6c34\u6cd5",
+            "\u592a\u767d\u6cd5"
+        };
         private const string FaMenBuildStageIconSlotNamePrefix = "FaMenBuildStageIconSlot_";
+        private const string FaMenBuildStateOverlayNamePrefix = "FaMenBuildStateOverlay_";
+        private const string QiLeiBuildRowsRootName = "QiLeiBuildRowsRoot";
+        private const string QiLeiBuildOverviewRowName = "QiLeiBuildOverviewRow";
+        private const string QiLeiBuildOverviewTextName = "QiLeiBuildOverviewText";
+        private const string QiLeiBuildRowNamePrefix = "QiLeiBuildRow_";
+        private const string QiLeiBuildTextNamePrefix = "QiLeiBuildText_";
         private const string QiLeiBuildStageIconSlotNamePrefix = "QiLeiBuildStageIconSlot_";
+        private const string QiLeiBuildStateOverlayNamePrefix = "QiLeiBuildStateOverlay_";
+        private const string QiLeiBuildIconResourcePrefix = "item/器类build技能icon/";
         private const string SkillMonitorIconSlotNamePrefix = "SkillMonitorIconSlot_";
         private const int SectionTitleFontSize = 23;
         private const int SectionBodyFontSize = 20;
@@ -53,6 +91,13 @@ namespace TalismanBag.Items.Detail.UI
             new Dictionary<string, Sprite>(StringComparer.Ordinal);
         private static readonly Dictionary<string, Sprite> CachedAffixIconSprites =
             new Dictionary<string, Sprite>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, Sprite> CachedCoreEffectIconSprites =
+            new Dictionary<string, Sprite>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, Sprite> CachedFaMenBuildIconSprites =
+            new Dictionary<string, Sprite>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, Sprite> CachedQiLeiBuildIconSprites =
+            new Dictionary<string, Sprite>(StringComparer.Ordinal);
+        private static readonly Color NarrativeTextColor = new Color32(0x7E, 0x68, 0x45, 0xFF);
         private readonly List<Image> arrayModifierIconImages = new();
         private Color rarityValueColor = new Color32(135, 182, 106, 255);
         private bool currentSectionIsDivider;
@@ -60,6 +105,10 @@ namespace TalismanBag.Items.Detail.UI
         private string currentRenderedBody = string.Empty;
         private string currentRarityKey = string.Empty;
         private string currentRarityDisplayName = string.Empty;
+        private string currentItemId = string.Empty;
+        private string currentBaseItemId = string.Empty;
+        private string currentFaMenName = string.Empty;
+        private string currentQiLeiName = string.Empty;
 
         private string LineIconTextPadding => new string(' ', Mathf.Max(0, lineIconTextPaddingSpaces));
 
@@ -113,6 +162,14 @@ namespace TalismanBag.Items.Detail.UI
             currentRarityDisplayName = rarityDisplayName ?? string.Empty;
         }
 
+        public void SetItemPresentation(string itemId, string baseItemId, string faMenName, string qiLeiName)
+        {
+            currentItemId = itemId ?? string.Empty;
+            currentBaseItemId = baseItemId ?? string.Empty;
+            currentFaMenName = faMenName ?? string.Empty;
+            currentQiLeiName = qiLeiName ?? string.Empty;
+        }
+
         public void SetContent(ItemDetailSectionViewModel model)
         {
             if (model == null)
@@ -136,7 +193,26 @@ namespace TalismanBag.Items.Detail.UI
                 currentRenderedBody = RemoveArrayModifierIconToken(styledBody);
                 bool usesBaseStatRows = ApplyAuthoredBaseStatRows(model.stateKey, styledBody);
                 bool usesAffixRows = ApplyAuthoredAffixRows(model.stateKey, styledBody);
-                bool usesAuthoredRows = usesBaseStatRows || usesAffixRows;
+                bool usesCoreEffectRows = ApplyAuthoredCoreEffectRows(
+                    model.stateKey,
+                    styledBody,
+                    model.coreEffectRowStates);
+                bool usesFaMenBuildRows = ApplyAuthoredFaMenBuildRows(model.stateKey, styledBody);
+                bool usesQiLeiBuildRows = ApplyAuthoredQiLeiBuildRows(model.stateKey, styledBody);
+                bool usesNarrativeRows = ApplyAuthoredNarrativeRow(model.stateKey, styledBody);
+                bool usesAuthoredRows = usesBaseStatRows
+                    || usesAffixRows
+                    || usesCoreEffectRows
+                    || usesFaMenBuildRows
+                    || usesQiLeiBuildRows
+                    || usesNarrativeRows;
+                if (usesFaMenBuildRows || usesQiLeiBuildRows)
+                {
+                    // Keep the source body available to diagnostics while the disabled BodyText
+                    // graphic delegates visible rendering to the three authored stage rows.
+                    bodyText.text = currentRenderedBody;
+                }
+
                 if (!usesAuthoredRows)
                 {
                     bodyText.text = currentRenderedBody;
@@ -148,7 +224,17 @@ namespace TalismanBag.Items.Detail.UI
                     ApplyAffixIconSlots(model.stateKey, styledBody);
                 }
 
-                ApplyDetailLineIconSlots(model.stateKey, styledBody);
+                if (usesCoreEffectRows
+                    || usesFaMenBuildRows
+                    || usesQiLeiBuildRows
+                    || (usesAffixRows && bodyText.transform.Find(DaoTraceRowsRootName) != null))
+                {
+                    HideDetailLineIconSlotsExcept();
+                }
+                else
+                {
+                    ApplyDetailLineIconSlots(model.stateKey, styledBody);
+                }
                 ApplyInlineArrayModifierIcons(styledBody);
             }
         }
@@ -171,7 +257,21 @@ namespace TalismanBag.Items.Detail.UI
                 string authoredRowStateKey = ResolveAuthoredRowStateKey();
                 bool usesBaseStatRows = ApplyAuthoredBaseStatRows(authoredRowStateKey, body);
                 bool usesAffixRows = ApplyAuthoredAffixRows(authoredRowStateKey, body);
-                bool usesAuthoredRows = usesBaseStatRows || usesAffixRows;
+                bool usesCoreEffectRows = ApplyAuthoredCoreEffectRows(authoredRowStateKey, body, null);
+                bool usesFaMenBuildRows = ApplyAuthoredFaMenBuildRows(authoredRowStateKey, body);
+                bool usesQiLeiBuildRows = ApplyAuthoredQiLeiBuildRows(authoredRowStateKey, body);
+                bool usesNarrativeRows = ApplyAuthoredNarrativeRow(authoredRowStateKey, body);
+                bool usesAuthoredRows = usesBaseStatRows
+                    || usesAffixRows
+                    || usesCoreEffectRows
+                    || usesFaMenBuildRows
+                    || usesQiLeiBuildRows
+                    || usesNarrativeRows;
+                if (usesFaMenBuildRows || usesQiLeiBuildRows)
+                {
+                    bodyText.text = currentRenderedBody;
+                }
+
                 if (!usesAuthoredRows)
                 {
                     bodyText.text = currentRenderedBody;
@@ -183,7 +283,17 @@ namespace TalismanBag.Items.Detail.UI
                     ApplyAffixIconSlots(string.Empty, body);
                 }
 
-                ApplyDetailLineIconSlots(string.Empty, body);
+                if (usesCoreEffectRows
+                    || usesFaMenBuildRows
+                    || usesQiLeiBuildRows
+                    || (usesAffixRows && bodyText.transform.Find(DaoTraceRowsRootName) != null))
+                {
+                    HideDetailLineIconSlotsExcept();
+                }
+                else
+                {
+                    ApplyDetailLineIconSlots(string.Empty, body);
+                }
                 ApplyInlineArrayModifierIcons(body);
             }
         }
@@ -460,7 +570,13 @@ namespace TalismanBag.Items.Detail.UI
 
             return bodyText.transform.Find(BaseStatRowsRootName) != null
                 || bodyText.transform.Find(FixedAffixRowsRootName) != null
-                || bodyText.transform.Find(RandomAffixRowsRootName) != null;
+                || bodyText.transform.Find(RandomAffixRowsRootName) != null
+                || bodyText.transform.Find(DaoTraceRowsRootName) != null
+                || bodyText.transform.Find(CoreEffectRowsRootName) != null
+                || bodyText.transform.Find(FaMenBuildRowsRootName) != null
+                || bodyText.transform.Find(QiLeiBuildRowsRootName) != null
+                || bodyText.transform.Find(PlacementRowsRootName) != null
+                || bodyText.transform.Find(FlavorRowsRootName) != null;
         }
 
         private string ResolveAuthoredRowStateKey()
@@ -480,9 +596,747 @@ namespace TalismanBag.Items.Detail.UI
                 return "fixedAffix";
             }
 
-            return bodyText.transform.Find(RandomAffixRowsRootName) != null
-                ? "randomAffix"
+            if (bodyText.transform.Find(RandomAffixRowsRootName) != null)
+            {
+                return "randomAffix";
+            }
+
+            if (bodyText.transform.Find(CoreEffectRowsRootName) != null)
+            {
+                return "coreEffect";
+            }
+
+            if (bodyText.transform.Find(FaMenBuildRowsRootName) != null)
+            {
+                return "famenBuild";
+            }
+
+            if (bodyText.transform.Find(QiLeiBuildRowsRootName) != null)
+            {
+                return "qileiBuild";
+            }
+
+            if (bodyText.transform.Find(PlacementRowsRootName) != null)
+            {
+                return "placement";
+            }
+
+            if (bodyText.transform.Find(FlavorRowsRootName) != null)
+            {
+                return "flavor";
+            }
+
+            return bodyText.transform.Find(DaoTraceRowsRootName) != null
+                ? "orange"
                 : string.Empty;
+        }
+
+        private bool ApplyAuthoredCoreEffectRows(
+            string stateKey,
+            string body,
+            IReadOnlyList<ItemDetailCoreEffectRowState> rowStates)
+        {
+            if (bodyText == null)
+            {
+                return false;
+            }
+
+            Transform rowsRoot = bodyText.transform.Find(CoreEffectRowsRootName);
+            if (rowsRoot == null)
+            {
+                return false;
+            }
+
+            string key = stateKey ?? string.Empty;
+            bool showCoreEffects = string.Equals(key, "coreEffect", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(key, "awakening", StringComparison.OrdinalIgnoreCase);
+            if (!showCoreEffects || string.IsNullOrWhiteSpace(body))
+            {
+                SetAuthoredAffixRowsVisibleFrom(rowsRoot, CoreEffectRowNamePrefix, 0, false);
+                RefreshAuthoredRowsPreferredHeight(rowsRoot);
+                return true;
+            }
+
+            string[] rawLines = body.Replace("\r", string.Empty).Split('\n');
+            int slotIndex = 0;
+            for (int lineIndex = 0; lineIndex < rawLines.Length; lineIndex++)
+            {
+                string line = rawLines[lineIndex];
+                if (!IsAnyNonEmptyIconLine(line))
+                {
+                    continue;
+                }
+
+                bool hasExplicitState = rowStates != null && slotIndex < rowStates.Count;
+                bool coreEffectUnlocked = hasExplicitState
+                    ? rowStates[slotIndex] != ItemDetailCoreEffectRowState.Locked
+                    : !IsInactiveArrayModifierLine(line);
+
+                Transform row = rowsRoot.Find(CoreEffectRowNamePrefix + slotIndex);
+                if (row == null)
+                {
+                    break;
+                }
+
+                Text rowText = row.Find(CoreEffectTextNamePrefix + slotIndex)?.GetComponent<Text>();
+                if (rowText != null)
+                {
+                    // Authored Core rows own their Inspector font size. Keep the runtime rarity
+                    // colors and emphasis, but do not let legacy <size> tags override the user's
+                    // saved Text settings when Candidate, placed-instance, or Roll data is bound.
+                    rowText.text = RemoveRichTextSizeTags(line.TrimStart());
+                }
+
+                row.GetComponent<ItemDetailAuthoredTextRowLayoutElement>()?.InvalidateLayout();
+
+                Image icon = row.Find(CoreEffectIconSlotNamePrefix + slotIndex)?.GetComponent<Image>();
+                if (icon != null)
+                {
+                    Sprite coreSprite = ResolveCoreEffectIconSprite(slotIndex);
+                    icon.sprite = coreSprite;
+                    icon.color = Color.white;
+                    icon.enabled = coreSprite != null;
+                    if (!icon.gameObject.activeSelf)
+                    {
+                        icon.gameObject.SetActive(true);
+                    }
+
+                    SetCoreEffectStateOverlayVisible(
+                        icon.transform,
+                        slotIndex,
+                        coreSprite,
+                        coreSprite != null && !coreEffectUnlocked);
+                }
+
+                if (!row.gameObject.activeSelf)
+                {
+                    row.gameObject.SetActive(true);
+                }
+
+                slotIndex++;
+            }
+
+            SetAuthoredAffixRowsVisibleFrom(rowsRoot, CoreEffectRowNamePrefix, slotIndex, false);
+            RefreshAuthoredRowsPreferredHeight(rowsRoot);
+            return true;
+        }
+
+        private static void SetCoreEffectStateOverlayVisible(
+            Transform iconSlot,
+            int slotIndex,
+            Sprite coreSprite,
+            bool visible)
+        {
+            Transform overlay = iconSlot?.Find(CoreEffectStateOverlayNamePrefix + slotIndex);
+            if (overlay == null)
+            {
+                return;
+            }
+
+            Image overlayImage = overlay.GetComponent<Image>();
+            if (overlayImage != null)
+            {
+                // Reuse the current Core artwork as the overlay mesh. Its alpha channel keeps
+                // the 70% black state mask on the authored diamond instead of drawing a square.
+                overlayImage.sprite = coreSprite;
+            }
+
+            if (overlay.gameObject.activeSelf != visible)
+            {
+                overlay.gameObject.SetActive(visible);
+            }
+        }
+
+        private bool ApplyAuthoredFaMenBuildRows(string stateKey, string body)
+        {
+            if (bodyText == null)
+            {
+                return false;
+            }
+
+            Transform rowsRoot = bodyText.transform.Find(FaMenBuildRowsRootName);
+            if (rowsRoot == null)
+            {
+                return false;
+            }
+
+            bool showFaMenBuild = string.Equals(
+                stateKey ?? string.Empty,
+                "famenBuild",
+                StringComparison.OrdinalIgnoreCase);
+            if (!showFaMenBuild || string.IsNullOrWhiteSpace(body))
+            {
+                SetAuthoredFaMenBuildOverviewVisible(rowsRoot, false);
+                SetAuthoredAffixRowsVisibleFrom(rowsRoot, FaMenBuildRowNamePrefix, 0, false);
+                RefreshAuthoredRowsPreferredHeight(rowsRoot);
+                return true;
+            }
+
+            string[] rawLines = body.Replace("\r", string.Empty).Split('\n');
+            int firstStageLineIndex = rawLines.Length;
+            for (int lineIndex = 0; lineIndex < rawLines.Length; lineIndex++)
+            {
+                if (IsBuildStageIconLine(rawLines[lineIndex], true))
+                {
+                    firstStageLineIndex = lineIndex;
+                    break;
+                }
+            }
+
+            ApplyAuthoredFaMenBuildOverview(rowsRoot, rawLines, firstStageLineIndex);
+            int slotIndex = 0;
+            for (int lineIndex = firstStageLineIndex; lineIndex < rawLines.Length && slotIndex < 3; lineIndex++)
+            {
+                if (!IsBuildStageIconLine(rawLines[lineIndex], true))
+                {
+                    continue;
+                }
+
+                Transform row = rowsRoot.Find(FaMenBuildRowNamePrefix + slotIndex);
+                if (row == null)
+                {
+                    break;
+                }
+
+                System.Text.StringBuilder rowBody = new();
+                AppendFaMenBuildRowLine(rowBody, rawLines[lineIndex]);
+                int nextLineIndex = lineIndex + 1;
+                while (nextLineIndex < rawLines.Length
+                    && !IsBuildStageIconLine(rawLines[nextLineIndex], true))
+                {
+                    AppendFaMenBuildRowLine(rowBody, rawLines[nextLineIndex]);
+                    nextLineIndex++;
+                }
+
+                Text rowText = row.Find(FaMenBuildTextNamePrefix + slotIndex)?.GetComponent<Text>();
+                if (rowText != null)
+                {
+                    rowText.text = rowBody.ToString();
+                }
+
+                row.GetComponent<ItemDetailAuthoredTextRowLayoutElement>()?.InvalidateLayout();
+
+                Image icon = row.Find(FaMenBuildStageIconSlotNamePrefix + slotIndex)?.GetComponent<Image>();
+                if (icon != null)
+                {
+                    Sprite skillSprite = ResolveFaMenBuildStageIconSprite(slotIndex);
+                    bool isActive = !rawLines[lineIndex].Contains("#8A8A8A", StringComparison.OrdinalIgnoreCase);
+                    icon.sprite = skillSprite;
+                    icon.color = Color.white;
+                    icon.enabled = skillSprite != null;
+                    icon.gameObject.SetActive(skillSprite != null);
+                    SetFaMenBuildStateOverlayVisible(
+                        icon.transform,
+                        slotIndex,
+                        skillSprite,
+                        skillSprite != null && !isActive);
+                }
+
+                if (!row.gameObject.activeSelf)
+                {
+                    row.gameObject.SetActive(true);
+                }
+
+                slotIndex++;
+                lineIndex = nextLineIndex - 1;
+            }
+
+            SetAuthoredAffixRowsVisibleFrom(rowsRoot, FaMenBuildRowNamePrefix, slotIndex, false);
+            RefreshAuthoredRowsPreferredHeight(rowsRoot);
+            return true;
+        }
+
+        private static void SetFaMenBuildStateOverlayVisible(
+            Transform iconSlot,
+            int slotIndex,
+            Sprite skillSprite,
+            bool visible)
+        {
+            Transform overlay = iconSlot?.Find(FaMenBuildStateOverlayNamePrefix + slotIndex);
+            if (overlay == null)
+            {
+                return;
+            }
+
+            Image overlayImage = overlay.GetComponent<Image>();
+            if (overlayImage != null)
+            {
+                // Match Core-effect locking: reuse the current skill artwork so the 70% black
+                // mask follows the icon alpha instead of drawing an 80x80 black square.
+                overlayImage.sprite = skillSprite;
+            }
+
+            if (overlay.gameObject.activeSelf != visible)
+            {
+                overlay.gameObject.SetActive(visible);
+            }
+        }
+
+        private void ApplyAuthoredFaMenBuildOverview(
+            Transform rowsRoot,
+            IReadOnlyList<string> rawLines,
+            int firstStageLineIndex)
+        {
+            Transform overviewRow = rowsRoot?.Find(FaMenBuildOverviewRowName);
+            Text overviewText = overviewRow?.Find(FaMenBuildOverviewTextName)?.GetComponent<Text>();
+            if (overviewRow == null || overviewText == null)
+            {
+                return;
+            }
+
+            List<string> overviewLines = new();
+            int lineCount = Math.Min(firstStageLineIndex, rawLines?.Count ?? 0);
+            for (int lineIndex = 0; lineIndex < lineCount; lineIndex++)
+            {
+                string line = rawLines[lineIndex];
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    overviewLines.Add(RemoveRichTextSizeTags(line.TrimStart()));
+                }
+            }
+
+            if (overviewLines.Count == 0)
+            {
+                overviewRow.gameObject.SetActive(false);
+                return;
+            }
+
+            System.Text.StringBuilder overviewBody = new();
+            string buildName = NormalizeFaMenBuildOverviewName(overviewLines[0]);
+            overviewBody.Append(Rich("-" + buildName, ThemeBuildActive, SectionBodyFontSize, true));
+            int memberStartIndex = 1;
+            if (overviewLines.Count > 1)
+            {
+                string progress = ExtractBuildProgress(overviewLines[1]);
+                if (!string.IsNullOrWhiteSpace(progress))
+                {
+                    overviewBody.Append(' ')
+                        .Append(Rich("（" + progress + "）", ThemeBuildActive, SectionBodyFontSize, true));
+                    memberStartIndex = 2;
+                }
+            }
+
+            for (int lineIndex = memberStartIndex; lineIndex < overviewLines.Count; lineIndex++)
+            {
+                overviewBody.Append('\n').Append(overviewLines[lineIndex]);
+            }
+
+            overviewText.text = overviewBody.ToString();
+            if (!overviewRow.gameObject.activeSelf)
+            {
+                overviewRow.gameObject.SetActive(true);
+            }
+        }
+
+        private static string NormalizeFaMenBuildOverviewName(string value)
+        {
+            string plainText = StripRichTextTags(value).Trim().TrimStart('-').Trim();
+            const string wrapperPrefix = "法门（";
+            if (plainText.StartsWith(wrapperPrefix, StringComparison.Ordinal)
+                && plainText.EndsWith("）", StringComparison.Ordinal)
+                && plainText.Length > wrapperPrefix.Length + 1)
+            {
+                return plainText.Substring(
+                    wrapperPrefix.Length,
+                    plainText.Length - wrapperPrefix.Length - 1).Trim();
+            }
+
+            return plainText;
+        }
+
+        private static string ExtractBuildProgress(string value)
+        {
+            string plainText = StripRichTextTags(value).Trim();
+            int colonIndex = plainText.IndexOf('：');
+            if (colonIndex < 0)
+            {
+                colonIndex = plainText.IndexOf(':');
+            }
+
+            return colonIndex >= 0 && colonIndex + 1 < plainText.Length
+                ? plainText.Substring(colonIndex + 1).Trim()
+                : string.Empty;
+        }
+
+        private static void SetAuthoredFaMenBuildOverviewVisible(Transform rowsRoot, bool visible)
+        {
+            Transform overviewRow = rowsRoot?.Find(FaMenBuildOverviewRowName);
+            if (overviewRow != null && overviewRow.gameObject.activeSelf != visible)
+            {
+                overviewRow.gameObject.SetActive(visible);
+            }
+        }
+
+        private bool ApplyAuthoredQiLeiBuildRows(string stateKey, string body)
+        {
+            if (bodyText == null)
+            {
+                return false;
+            }
+
+            Transform rowsRoot = bodyText.transform.Find(QiLeiBuildRowsRootName);
+            if (rowsRoot == null)
+            {
+                return false;
+            }
+
+            bool showQiLeiBuild = string.Equals(
+                stateKey ?? string.Empty,
+                "qileiBuild",
+                StringComparison.OrdinalIgnoreCase);
+            if (!showQiLeiBuild || string.IsNullOrWhiteSpace(body))
+            {
+                SetAuthoredQiLeiBuildOverviewVisible(rowsRoot, false);
+                SetAuthoredAffixRowsVisibleFrom(rowsRoot, QiLeiBuildRowNamePrefix, 0, false);
+                RefreshAuthoredRowsPreferredHeight(rowsRoot);
+                return true;
+            }
+
+            string[] rawLines = body.Replace("\r", string.Empty).Split('\n');
+            int firstStageLineIndex = rawLines.Length;
+            for (int lineIndex = 0; lineIndex < rawLines.Length; lineIndex++)
+            {
+                if (IsBuildStageIconLine(rawLines[lineIndex], false))
+                {
+                    firstStageLineIndex = lineIndex;
+                    break;
+                }
+            }
+
+            ApplyAuthoredQiLeiBuildOverview(rowsRoot, rawLines, firstStageLineIndex);
+            int slotIndex = 0;
+            for (int lineIndex = firstStageLineIndex; lineIndex < rawLines.Length && slotIndex < 2; lineIndex++)
+            {
+                if (!IsBuildStageIconLine(rawLines[lineIndex], false))
+                {
+                    continue;
+                }
+
+                Transform row = rowsRoot.Find(QiLeiBuildRowNamePrefix + slotIndex);
+                if (row == null)
+                {
+                    break;
+                }
+
+                System.Text.StringBuilder rowBody = new();
+                AppendFaMenBuildRowLine(rowBody, RemoveArrayModifierIconToken(rawLines[lineIndex]));
+                int nextLineIndex = lineIndex + 1;
+                while (nextLineIndex < rawLines.Length
+                    && !IsBuildStageIconLine(rawLines[nextLineIndex], false))
+                {
+                    AppendFaMenBuildRowLine(rowBody, RemoveArrayModifierIconToken(rawLines[nextLineIndex]));
+                    nextLineIndex++;
+                }
+
+                Text rowText = row.Find(QiLeiBuildTextNamePrefix + slotIndex)?.GetComponent<Text>();
+                if (rowText != null)
+                {
+                    rowText.text = rowBody.ToString();
+                }
+
+                row.GetComponent<ItemDetailAuthoredTextRowLayoutElement>()?.InvalidateLayout();
+
+                Image icon = row.Find(QiLeiBuildStageIconSlotNamePrefix + slotIndex)?.GetComponent<Image>();
+                if (icon != null)
+                {
+                    Sprite qiLeiSprite = ResolveQiLeiBuildIconSprite(slotIndex);
+                    bool isActive = !rawLines[lineIndex].Contains("#8A8A8A", StringComparison.OrdinalIgnoreCase);
+                    icon.sprite = qiLeiSprite;
+                    icon.color = Color.white;
+                    icon.enabled = qiLeiSprite != null;
+                    icon.gameObject.SetActive(qiLeiSprite != null);
+                    SetQiLeiBuildStateOverlayVisible(
+                        icon.transform,
+                        slotIndex,
+                        qiLeiSprite,
+                        qiLeiSprite != null && !isActive);
+                }
+
+                if (!row.gameObject.activeSelf)
+                {
+                    row.gameObject.SetActive(true);
+                }
+
+                slotIndex++;
+                lineIndex = nextLineIndex - 1;
+            }
+
+            SetAuthoredAffixRowsVisibleFrom(rowsRoot, QiLeiBuildRowNamePrefix, slotIndex, false);
+            RefreshAuthoredRowsPreferredHeight(rowsRoot);
+            return true;
+        }
+
+        private void ApplyAuthoredQiLeiBuildOverview(
+            Transform rowsRoot,
+            IReadOnlyList<string> rawLines,
+            int firstStageLineIndex)
+        {
+            Transform overviewRow = rowsRoot?.Find(QiLeiBuildOverviewRowName);
+            Text overviewText = overviewRow?.Find(QiLeiBuildOverviewTextName)?.GetComponent<Text>();
+            if (overviewRow == null || overviewText == null)
+            {
+                return;
+            }
+
+            string overviewLine = string.Empty;
+            int lineCount = Math.Min(firstStageLineIndex, rawLines?.Count ?? 0);
+            for (int lineIndex = 0; lineIndex < lineCount; lineIndex++)
+            {
+                if (!string.IsNullOrWhiteSpace(rawLines[lineIndex]))
+                {
+                    overviewLine = StripRichTextTags(rawLines[lineIndex]).Trim().TrimStart('-').Trim();
+                    break;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(overviewLine))
+            {
+                overviewRow.gameObject.SetActive(false);
+                return;
+            }
+
+            int colonIndex = FindStatColonIndex(overviewLine);
+            string buildName = colonIndex > 0 ? overviewLine.Substring(0, colonIndex).Trim() : overviewLine;
+            string progress = colonIndex >= 0 && colonIndex + 1 < overviewLine.Length
+                ? overviewLine.Substring(colonIndex + 1).Trim()
+                : string.Empty;
+            string displayText = "-" + buildName
+                + (string.IsNullOrWhiteSpace(progress) ? string.Empty : " （" + progress + "）");
+            overviewText.text = Rich(displayText, ThemeBuildActive, SectionBodyFontSize, true);
+            if (!overviewRow.gameObject.activeSelf)
+            {
+                overviewRow.gameObject.SetActive(true);
+            }
+        }
+
+        private static void SetAuthoredQiLeiBuildOverviewVisible(Transform rowsRoot, bool visible)
+        {
+            Transform overviewRow = rowsRoot?.Find(QiLeiBuildOverviewRowName);
+            if (overviewRow != null && overviewRow.gameObject.activeSelf != visible)
+            {
+                overviewRow.gameObject.SetActive(visible);
+            }
+        }
+
+        private static void SetQiLeiBuildStateOverlayVisible(
+            Transform iconSlot,
+            int slotIndex,
+            Sprite qiLeiSprite,
+            bool visible)
+        {
+            Transform overlay = iconSlot?.Find(QiLeiBuildStateOverlayNamePrefix + slotIndex);
+            if (overlay == null)
+            {
+                return;
+            }
+
+            Image overlayImage = overlay.GetComponent<Image>();
+            if (overlayImage != null)
+            {
+                overlayImage.sprite = qiLeiSprite;
+            }
+
+            if (overlay.gameObject.activeSelf != visible)
+            {
+                overlay.gameObject.SetActive(visible);
+            }
+        }
+
+        private static void AppendFaMenBuildRowLine(System.Text.StringBuilder builder, string line)
+        {
+            if (builder == null || string.IsNullOrWhiteSpace(line))
+            {
+                return;
+            }
+
+            if (builder.Length > 0)
+            {
+                builder.Append('\n');
+            }
+
+            builder.Append(RemoveRichTextSizeTags(line.TrimStart()));
+        }
+
+        private Sprite ResolveFaMenBuildStageIconSprite(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= 3)
+            {
+                return null;
+            }
+
+            string faMenFolder = NormalizeCoreEffectResourceFolder(currentFaMenName);
+            if (string.IsNullOrEmpty(faMenFolder))
+            {
+                return null;
+            }
+
+            // FaMen Build rows intentionally skip the first (normal attack) artwork.
+            // Row 0/1/2 maps to skill artwork 2/3/4 for Build 2/4/6.
+            string resourcePath = FaMenBuildIconResourcePrefix
+                + faMenFolder + "/\u6280\u80fdicon_" + (slotIndex + 2);
+            if (!CachedFaMenBuildIconSprites.TryGetValue(resourcePath, out Sprite sprite) || sprite == null)
+            {
+                sprite = Resources.Load<Sprite>(resourcePath);
+                CachedFaMenBuildIconSprites[resourcePath] = sprite;
+            }
+
+            return sprite;
+        }
+
+        private Sprite ResolveQiLeiBuildIconSprite(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= 2)
+            {
+                return null;
+            }
+
+            string qiLeiFolder = NormalizeQiLeiResourceFolder(currentQiLeiName);
+            if (string.IsNullOrEmpty(qiLeiFolder))
+            {
+                return null;
+            }
+
+            string iconStem = qiLeiFolder switch
+            {
+                "符类" => "符技能icon_",
+                "印类" => "印技能icon_",
+                "令类" => "令技能icon_",
+                "镜类" => "镜技能icon_",
+                "法类" => "法技能icon_",
+                _ => string.Empty
+            };
+            if (string.IsNullOrEmpty(iconStem))
+            {
+                return null;
+            }
+
+            string resourcePath = QiLeiBuildIconResourcePrefix
+                + qiLeiFolder + "/" + iconStem + (slotIndex + 1);
+            if (!CachedQiLeiBuildIconSprites.TryGetValue(resourcePath, out Sprite sprite) || sprite == null)
+            {
+                sprite = Resources.Load<Sprite>(resourcePath);
+                CachedQiLeiBuildIconSprites[resourcePath] = sprite;
+            }
+
+            return sprite;
+        }
+
+        private static string NormalizeQiLeiResourceFolder(string value)
+        {
+            string segment = NormalizeResourceSegment(value);
+            return segment switch
+            {
+                "fu" or "符" or "符类" => "符类",
+                "yin" or "印" or "印类" => "印类",
+                "ling" or "令" or "令类" => "令类",
+                "jing" or "镜" or "镜类" => "镜类",
+                "fa" or "法" or "法类" => "法类",
+                _ => string.Empty
+            };
+        }
+
+        private Sprite ResolveCoreEffectIconSprite(int slotIndex)
+        {
+            string baseItemId = ExtractStableBaseItemId(currentBaseItemId);
+            if (string.IsNullOrEmpty(baseItemId))
+            {
+                baseItemId = ExtractStableBaseItemId(currentItemId);
+            }
+
+            if (string.IsNullOrEmpty(baseItemId) || slotIndex < 0)
+            {
+                return null;
+            }
+
+            string faMenName = NormalizeCoreEffectResourceFolder(currentFaMenName);
+            Sprite sprite = LoadCoreEffectIconSprite(faMenName, baseItemId, slotIndex);
+            if (sprite != null)
+            {
+                return sprite;
+            }
+
+            // Roll models retain their ViewModel presentation fields, but resource content may
+            // be imported after an earlier null lookup or arrive through an alias. Probe only the
+            // same stable baseItemId in the known art folders; never substitute another item's art.
+            foreach (string folder in CoreEffectIconResourceFolders)
+            {
+                if (string.Equals(folder, faMenName, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                sprite = LoadCoreEffectIconSprite(folder, baseItemId, slotIndex);
+                if (sprite != null)
+                {
+                    return sprite;
+                }
+            }
+
+            return null;
+        }
+
+        private static Sprite LoadCoreEffectIconSprite(
+            string faMenFolder,
+            string baseItemId,
+            int slotIndex)
+        {
+            if (string.IsNullOrEmpty(faMenFolder))
+            {
+                return null;
+            }
+
+            string resourcePath = CoreEffectIconResourcePrefix
+                + faMenFolder + "/"
+                + baseItemId + "/"
+                + baseItemId + "_" + (slotIndex + 1);
+            if (!CachedCoreEffectIconSprites.TryGetValue(resourcePath, out Sprite sprite) || sprite == null)
+            {
+                sprite = Resources.Load<Sprite>(resourcePath);
+                CachedCoreEffectIconSprites[resourcePath] = sprite;
+            }
+
+            return sprite;
+        }
+
+        private static string NormalizeCoreEffectResourceFolder(string value)
+        {
+            string segment = NormalizeResourceSegment(value);
+            return segment switch
+            {
+                "zhenlei" or "\u9707\u96f7" or "\u9707\u96f7\u6cd5" => "\u9707\u96f7\u6cd5",
+                "lihuo" or "\u79bb\u706b" or "\u79bb\u706b\u6cd5" => "\u79bb\u706b\u6cd5",
+                "zhongyue" or "\u4e2d\u5cb3" or "\u4e2d\u5cb3\u6cd5" => "\u4e2d\u5cb3\u6cd5",
+                "xuanshui" or "\u7384\u6c34" or "\u7384\u6c34\u6cd5" => "\u7384\u6c34\u6cd5",
+                "taibai" or "\u592a\u767d" or "\u592a\u767d\u6cd5" => "\u592a\u767d\u6cd5",
+                _ => segment
+            };
+        }
+
+        private static string ExtractStableBaseItemId(string value)
+        {
+            string candidate = (value ?? string.Empty).Trim();
+            for (int index = 0; index + 3 < candidate.Length; index++)
+            {
+                if (char.ToUpperInvariant(candidate[index]) != 'I'
+                    || !char.IsDigit(candidate[index + 1])
+                    || !char.IsDigit(candidate[index + 2])
+                    || !char.IsDigit(candidate[index + 3]))
+                {
+                    continue;
+                }
+
+                return candidate.Substring(index, 4).ToUpperInvariant();
+            }
+
+            return string.Empty;
+        }
+
+        private static string NormalizeResourceSegment(string value)
+        {
+            return (value ?? string.Empty)
+                .Trim()
+                .Replace("/", string.Empty)
+                .Replace("\\", string.Empty);
         }
 
         private bool ApplyAuthoredAffixRows(string stateKey, string body)
@@ -494,6 +1348,7 @@ namespace TalismanBag.Items.Detail.UI
 
             Transform rowsRoot = bodyText.transform.Find(FixedAffixRowsRootName);
             bool fixedAffix = rowsRoot != null;
+            bool daoTrace = false;
             string expectedStateKey = "fixedAffix";
             string rowNamePrefix = FixedAffixRowNamePrefix;
             string textNamePrefix = FixedAffixTextNamePrefix;
@@ -506,6 +1361,16 @@ namespace TalismanBag.Items.Detail.UI
                 rowNamePrefix = RandomAffixRowNamePrefix;
                 textNamePrefix = RandomAffixTextNamePrefix;
                 iconNamePrefix = RandomAffixIconSlotNamePrefix;
+            }
+
+            if (rowsRoot == null)
+            {
+                rowsRoot = bodyText.transform.Find(DaoTraceRowsRootName);
+                daoTrace = rowsRoot != null;
+                expectedStateKey = "orange";
+                rowNamePrefix = DaoTraceRowNamePrefix;
+                textNamePrefix = DaoTraceTextNamePrefix;
+                iconNamePrefix = DaoTraceIconSlotNamePrefix;
             }
 
             if (rowsRoot == null)
@@ -524,7 +1389,7 @@ namespace TalismanBag.Items.Detail.UI
                 return true;
             }
 
-            Sprite raritySprite = ResolveAffixIconSprite(fixedAffix);
+            Sprite raritySprite = daoTrace ? null : ResolveAffixIconSprite(fixedAffix);
             string[] rawLines = body.Replace("\r", string.Empty).Split('\n');
             int slotIndex = 0;
             for (int lineIndex = 0; lineIndex < rawLines.Length; lineIndex++)
@@ -552,9 +1417,20 @@ namespace TalismanBag.Items.Detail.UI
                 Image icon = row.Find(iconNamePrefix + slotIndex)?.GetComponent<Image>();
                 if (icon != null)
                 {
-                    icon.sprite = raritySprite;
-                    icon.enabled = raritySprite != null;
-                    icon.gameObject.SetActive(raritySprite != null);
+                    if (!daoTrace)
+                    {
+                        icon.sprite = raritySprite;
+                        icon.enabled = raritySprite != null;
+                        icon.gameObject.SetActive(raritySprite != null);
+                    }
+                    else
+                    {
+                        // Dao Trace artwork is intentionally unassigned until the user supplies it.
+                        // Keep the authored Image active so its RectTransform and grey placeholder
+                        // remain visible and freely editable in both Edit Mode and Play Mode.
+                        icon.enabled = true;
+                        icon.gameObject.SetActive(true);
+                    }
                 }
 
                 if (!row.gameObject.activeSelf)
@@ -566,6 +1442,89 @@ namespace TalismanBag.Items.Detail.UI
             }
 
             SetAuthoredAffixRowsVisibleFrom(rowsRoot, rowNamePrefix, slotIndex, false);
+            RefreshAuthoredRowsPreferredHeight(rowsRoot);
+            return true;
+        }
+
+        private bool ApplyAuthoredNarrativeRow(string stateKey, string body)
+        {
+            if (bodyText == null)
+            {
+                return false;
+            }
+
+            Transform rowsRoot = bodyText.transform.Find(PlacementRowsRootName);
+            string expectedStateKey = "placement";
+            string rowNamePrefix = PlacementRowNamePrefix;
+            string textNamePrefix = PlacementTextNamePrefix;
+            string iconNamePrefix = PlacementIconSlotNamePrefix;
+            if (rowsRoot == null)
+            {
+                rowsRoot = bodyText.transform.Find(FlavorRowsRootName);
+                expectedStateKey = "flavor";
+                rowNamePrefix = FlavorRowNamePrefix;
+                textNamePrefix = FlavorTextNamePrefix;
+                iconNamePrefix = FlavorIconSlotNamePrefix;
+            }
+
+            if (rowsRoot == null)
+            {
+                return false;
+            }
+
+            if (!string.Equals(
+                    stateKey ?? string.Empty,
+                    expectedStateKey,
+                    StringComparison.OrdinalIgnoreCase)
+                || string.IsNullOrWhiteSpace(body))
+            {
+                SetAuthoredAffixRowsVisibleFrom(rowsRoot, rowNamePrefix, 0, false);
+                RefreshAuthoredRowsPreferredHeight(rowsRoot);
+                return true;
+            }
+
+            Transform row = rowsRoot.Find(rowNamePrefix + "0");
+            if (row == null)
+            {
+                return true;
+            }
+
+            Text rowText = row.Find(textNamePrefix + "0")?.GetComponent<Text>();
+            if (rowText != null)
+            {
+                string[] rawLines = body.Replace("\r", string.Empty).Split('\n');
+                System.Text.StringBuilder coloredBody = new();
+                for (int lineIndex = 0; lineIndex < rawLines.Length; lineIndex++)
+                {
+                    if (lineIndex > 0)
+                    {
+                        coloredBody.Append('\n');
+                    }
+
+                    coloredBody.Append(Rich(
+                        StripRichTextTags(rawLines[lineIndex]).TrimStart(),
+                        NarrativeTextColor,
+                        SectionBodyFontSize,
+                        false));
+                }
+
+                rowText.text = coloredBody.ToString();
+            }
+
+            row.GetComponent<ItemDetailAuthoredTextRowLayoutElement>()?.InvalidateLayout();
+            Image icon = row.Find(iconNamePrefix + "0")?.GetComponent<Image>();
+            if (icon != null)
+            {
+                icon.enabled = icon.sprite != null;
+                icon.gameObject.SetActive(icon.sprite != null);
+            }
+
+            if (!row.gameObject.activeSelf)
+            {
+                row.gameObject.SetActive(true);
+            }
+
+            SetAuthoredAffixRowsVisibleFrom(rowsRoot, rowNamePrefix, 1, false);
             RefreshAuthoredRowsPreferredHeight(rowsRoot);
             return true;
         }
@@ -1158,6 +2117,16 @@ namespace TalismanBag.Items.Detail.UI
                 return;
             }
 
+            if (bodyText.transform.Find(QiLeiBuildRowsRootName) != null)
+            {
+                Transform legacyInlineIcon = bodyText.transform.Find(InlineArrayModifierIconNamePrefix + "0");
+                if (legacyInlineIcon != null && legacyInlineIcon.gameObject.activeSelf)
+                {
+                    legacyInlineIcon.gameObject.SetActive(false);
+                }
+                return;
+            }
+
             if (ApplyAuthoredBaseStatInlineArrayModifierIcons(body))
             {
                 return;
@@ -1299,6 +2268,13 @@ namespace TalismanBag.Items.Detail.UI
                 && value.Contains("<color=#8A8A8A>", StringComparison.OrdinalIgnoreCase);
         }
 
+        private static bool IsWholeLineLockedGreyRichText(string value)
+        {
+            string content = (value ?? string.Empty).Trim();
+            return content.StartsWith("<color=#8A8A8A>", StringComparison.OrdinalIgnoreCase)
+                && content.EndsWith("</color>", StringComparison.OrdinalIgnoreCase);
+        }
+
         private static string StripRichTextTags(string value)
         {
             if (string.IsNullOrEmpty(value))
@@ -1331,6 +2307,38 @@ namespace TalismanBag.Items.Detail.UI
             return builder.ToString();
         }
 
+        private static string RemoveRichTextSizeTags(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return value ?? string.Empty;
+            }
+
+            System.Text.StringBuilder builder = new(value.Length);
+            for (int index = 0; index < value.Length;)
+            {
+                if (value[index] == '<')
+                {
+                    int tagEnd = value.IndexOf('>', index + 1);
+                    if (tagEnd >= 0)
+                    {
+                        string tag = value.Substring(index + 1, tagEnd - index - 1).Trim();
+                        if (tag.StartsWith("size=", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(tag, "/size", StringComparison.OrdinalIgnoreCase))
+                        {
+                            index = tagEnd + 1;
+                            continue;
+                        }
+                    }
+                }
+
+                builder.Append(value[index]);
+                index++;
+            }
+
+            return builder.ToString();
+        }
+
         private string StyleLine(string stateKey, string line, int lineIndex)
         {
             if (string.IsNullOrWhiteSpace(line))
@@ -1352,6 +2360,16 @@ namespace TalismanBag.Items.Detail.UI
             if (stateKey.Contains("Divider", StringComparison.OrdinalIgnoreCase))
             {
                 return indent + Rich(content, ThemeWeak, SectionDetailFontSize, false);
+            }
+
+            if (stateKey.Equals("placement", StringComparison.OrdinalIgnoreCase)
+                || stateKey.Equals("flavor", StringComparison.OrdinalIgnoreCase))
+            {
+                return indent + Rich(
+                    StripRichTextTags(content),
+                    NarrativeTextColor,
+                    SectionBodyFontSize,
+                    false);
             }
 
             if (stateKey.Contains("Build", StringComparison.OrdinalIgnoreCase)
@@ -1420,6 +2438,13 @@ namespace TalismanBag.Items.Detail.UI
                 return indent
                     + LineIconTextPadding
                     + Rich(content, ThemeBody, SectionDetailFontSize, false);
+            }
+
+            if ((stateKey.Equals("awakening", StringComparison.OrdinalIgnoreCase)
+                    || stateKey.Equals("coreEffect", StringComparison.OrdinalIgnoreCase))
+                && IsWholeLineLockedGreyRichText(content))
+            {
+                return indent + detailLinePadding + content;
             }
 
             if (stateKey.Equals("awakening", StringComparison.OrdinalIgnoreCase)

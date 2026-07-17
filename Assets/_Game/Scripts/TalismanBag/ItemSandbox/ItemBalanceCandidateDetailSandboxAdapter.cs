@@ -11,6 +11,7 @@ using TalismanBag.Items.Generation.Affixes;
 using TalismanBag.Items.Generation.Potential;
 using TalismanBag.Items.Generation.Projection;
 using TalismanBag.Items.Generation.Stats;
+using TalismanBag.Items.InnerCatalog;
 
 namespace TalismanBag.ItemSandbox
 {
@@ -386,20 +387,28 @@ namespace TalismanBag.ItemSandbox
             string randomAffixes = FormatTextLines(model.displayRandomAffixes);
             string eligibleCore = Join(projection.EligibleCoreEffectIds);
             string visibleCore = Join(projection.VisibleCoreEffectIds);
-            Dictionary<string, ItemBalanceCoreCandidate> coreById = (profile?.coreCandidates
+            HashSet<string> visibleCoreIdSet = new(projection.VisibleCoreEffectIds, StringComparer.Ordinal);
+            List<ItemBalanceCoreCandidate> previewCoreCandidates = (profile?.coreCandidates
                     ?? new List<ItemBalanceCoreCandidate>())
-                .Where(value => value != null && !string.IsNullOrWhiteSpace(value.coreEffectId))
-                .GroupBy(value => value.coreEffectId, StringComparer.Ordinal)
-                .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
-            model.displayCoreEffects = projection.EligibleCoreEffectIds.Select(coreId =>
-            {
-                coreById.TryGetValue(coreId, out ItemBalanceCoreCandidate candidate);
-                string name = string.IsNullOrWhiteSpace(candidate?.displayName) ? coreId : candidate.displayName;
-                return new ItemDetailTextLine(
-                    name,
+                .Where(value => value != null
+                    && !value.isUltimate
+                    && !string.IsNullOrWhiteSpace(value.coreEffectId)
+                    && visibleCoreIdSet.Contains(value.coreEffectId))
+                .OrderBy(value => value.unlockLevel)
+                .ThenBy(value => value.coreEffectId, StringComparer.Ordinal)
+                .Take(4)
+                .ToList();
+            model.displayCoreEffects = previewCoreCandidates.Count > 0
+                ? previewCoreCandidates.Select(candidate => new ItemDetailTextLine(
+                    string.IsNullOrWhiteSpace(candidate.displayName)
+                        ? candidate.coreEffectId
+                        : candidate.displayName,
                     FormatCoreEffectDetail(candidate),
-                    coreId);
-            }).ToList();
+                    candidate.coreEffectId)).ToList()
+                : projection.EligibleCoreEffectIds.Take(4).Select(coreId => new ItemDetailTextLine(
+                    coreId,
+                    FormatCoreEffectDetail(null),
+                    coreId)).ToList();
             model.displayFaMenBuilds = BuildCandidateBuilds(workbench, profile?.faMenTag, true, 0);
             model.displayQiLeiBuilds = BuildCandidateBuilds(workbench, profile?.qiLeiTag, false, 0);
             string qualification = projection.buildQualification.ToString();
@@ -701,13 +710,50 @@ namespace TalismanBag.ItemSandbox
                 true);
             if (faMen)
             {
+                string memberRows = FormatFaMenCandidateMemberRows(stableTag);
                 return BuildColoredText(NonEmpty(previews.FirstOrDefault()?.buildName, "未命名法门典藏"), BuildTitleHex, true)
                     + "\n" + progressLine
+                    + (string.IsNullOrWhiteSpace(memberRows) ? string.Empty : "\n" + memberRows)
                     + "\n" + string.Join("\n", rows);
             }
 
             return progressLine
                 + "\n" + string.Join("\n", rows);
+        }
+
+        private static string FormatFaMenCandidateMemberRows(string stableTag)
+        {
+            string normalizedTag = NormalizeBuildStableTag(stableTag);
+            if (string.IsNullOrWhiteSpace(normalizedTag))
+            {
+                return string.Empty;
+            }
+
+            return string.Join("\n", ItemInnerDataCatalog.AllItems
+                .Where(item => item != null
+                    && !item.isLightingSource
+                    && string.Equals(
+                        NormalizeBuildStableTag(item.FaMenKey),
+                        normalizedTag,
+                        StringComparison.Ordinal))
+                .OrderBy(item => item.itemId, StringComparer.Ordinal)
+                .Select(item => BuildColoredText("-" + item.displayName, BuildInactiveHex, false)));
+        }
+
+        private static string NormalizeBuildStableTag(string value)
+        {
+            string text = (value ?? string.Empty).Trim().ToLowerInvariant();
+            if (text.StartsWith("famen:", StringComparison.Ordinal))
+            {
+                text = text.Substring("famen:".Length);
+            }
+            else if (text.StartsWith("qilei:", StringComparison.Ordinal))
+            {
+                text = text.Substring("qilei:".Length);
+            }
+
+            int colon = text.IndexOf(':');
+            return colon >= 0 ? text.Substring(0, colon) : text;
         }
 
         private static string FormatBuildStageRow(
@@ -718,12 +764,17 @@ namespace TalismanBag.ItemSandbox
         {
             int threshold = ResolveBuildStageThreshold(value);
             bool isActive = currentCount >= threshold;
-            string label = faMen
-                ? FormatBuildStageName(value)
-                : NonEmpty(value?.buildName, FormatBuildStageName(value));
+            string label = FormatBuildStageName(value);
+            string detailText = value?.previewText;
+            if (!faMen
+                && !string.IsNullOrWhiteSpace(value?.buildName)
+                && !string.Equals(value.buildName, label, StringComparison.Ordinal))
+            {
+                detailText = value.buildName + "：" + NonEmpty(detailText, "未配置");
+            }
             string color = isActive ? BuildActiveHex : BuildInactiveHex;
             return BuildColoredText(label + "：", color, true)
-                + "\n" + FormatBuildStageDetail(value?.previewText, isActive, rarity);
+                + "\n" + FormatBuildStageDetail(detailText, isActive, rarity);
         }
 
         private static string FormatBuildStageDetail(string value, bool isActive, ItemInstanceRarity rarity)
@@ -734,7 +785,10 @@ namespace TalismanBag.ItemSandbox
                 return BuildColoredText(text, BuildInactiveHex, false);
             }
 
-            return HighlightBuildCoreValue(text, RarityColorHex(rarity));
+            return BuildColoredText(
+                HighlightBuildCoreValue(text, RarityColorHex(rarity)),
+                BuildActiveHex,
+                false);
         }
 
         private static string HighlightBuildCoreValue(string value, string colorHex)

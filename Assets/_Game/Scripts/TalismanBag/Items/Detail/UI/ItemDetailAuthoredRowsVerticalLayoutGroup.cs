@@ -10,6 +10,8 @@ namespace TalismanBag.Items.Detail.UI
     [DisallowMultipleComponent]
     public sealed class ItemDetailAuthoredRowsVerticalLayoutGroup : UIBehaviour, ILayoutElement, ILayoutGroup
     {
+        private const string StaticAuthoredCoreRowsRootName = "CoreEffectRowsRoot";
+
         [SerializeField] private RectOffset m_Padding = new();
         [SerializeField] private TextAnchor m_ChildAlignment = TextAnchor.UpperLeft;
         [SerializeField, Min(0f)] private float spacing = 6f;
@@ -40,6 +42,13 @@ namespace TalismanBag.Items.Detail.UI
 
         public void SetLayoutVertical()
         {
+            // Core-effect rows are positioned explicitly in the Scene. Their text and sprites may
+            // change at runtime, but their authored Row/Text/Icon geometry must never be rewritten.
+            if (string.Equals(gameObject.name, StaticAuthoredCoreRowsRootName, System.StringComparison.Ordinal))
+            {
+                return;
+            }
+
             float position = Padding.top;
             for (int index = 0; index < transform.childCount; index++)
             {

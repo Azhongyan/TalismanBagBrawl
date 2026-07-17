@@ -1366,3 +1366,125 @@ NEXT: ItemDetailMaxDaoArtTemplate01
 STATE: WAITING_TASK_ASSIGNMENT
 GATE: 完成后必须等待用户非 Play 手调与明确确认，才可下发 ItemDetailVisualSlotTool01。
 ```
+
+### 2026-07-17：ItemDetailMaxDaoArtTemplate01 阶段状态同步
+
+```text
+Package: ItemDetailMaxDaoArtTemplate01
+Status: USER_VISUAL_TUNING_NEAR_COMPLETE
+Layout: LAYOUT_CHECKPOINT_ACCEPTABLE
+Art: ART_ASSETS_STILL_PARTIAL
+Guard: NOT_FINAL_GUARD_PASS
+Next: WAITING_FINAL_MANUAL_ACCEPTANCE_AND_CLOSEOUT
+Source: ITEMDETAILMAXDAOARTTEMPLATE01_INTERIM_SUMMARY_TO_ITEM_GUARD
+```
+
+Guard 当前只接受为阶段性成果：
+
+```text
+Item Detail 编辑真源为 Scene_TalismanBag_V04_ItemSandbox.unity 内原有 ItemDetailPanel 场景子树。
+ItemDetailPanel 未删除重建；Canvas、ItemSandboxRoot、棋盘和道具栏未被本包重建。
+zhenfaicon、qixingicon、daoju 原对象保留；qixingicon 的技术语义仍为 qiLeiTag，不是七星系统。
+daoju 下已拆分 DaojuSingleCellImage / DaojuMultiCellImage 两个可独立手调 Image；Runtime 只允许选择显隐和 Sprite，不得写入其位置或尺寸。
+Header、品阶背景、状态、基础属性、固定/随机词条、道痕、四个核心效果、法门 Build、器类 Build、摆放提示和旧物记已形成当前近完成视觉结构。
+普通样本与 Roll 详情当前共用同一详情投影/绑定入口，但本阶段接受不代表150版本全量稳定复用已完成。
+```
+
+当前已接素材范围：
+
+```text
+五品阶弹窗背景。
+震雷法 I001-I006 核心效果图标。
+离火法 I007-I012 核心效果图标。
+器类 Build 的符 / 印 / 令 / 镜 / 法专用技能图标。
+item_daoju 中震雷法 I001-I006、离火法 I007-I012 的 _1.._5 品阶主体图。
+当前主体图只接 Item Detail 的 ItemArtworkFrame；尚未接道具栏、棋盘或拖拽图。
+其余普通道具与后续美术仍属于 ART_ASSETS_STILL_PARTIAL。
+```
+
+阶段验证边界：
+
+```text
+最近 Assembly Reload 后未观察到新的 C# 编译错误，但这不是最终完整 Unity verifier 回执。
+尚未确认 ItemDetailMaxDaoArtTemplate 最终 verifier PASS、历史 Item System / Item Algorithm 全回归、最终 LeakCheck 与全包 git diff --check。
+当前三份报告必须在最终收口前刷新，不能用较早报告冒充当前最终场景状态。
+工作树中的 .DS_Store / .ds_store 及其他系统垃圾文件不得进入任何 checkpoint 或最终提交。
+阶段性 RepoOps checkpoint 只保存当前版面，不等于最终 Guard PASS、最终美术完成或 hash baseline 接受。
+```
+
+基线与禁区继续锁定：
+
+```text
+当前不接受、不更新 Scene / Prefab hash 或 geometry baseline。
+不启动 ItemDetailVisualSlotTool01。
+不接道具栏、棋盘或拖拽美术绑定。
+不接 V0.4 Battle、BattleContract、Battle Bridge、UnifiedBattlePage。
+不接 V0.3 RunFlow、Reward、Inventory、SaveData、Boss。
+不修改 BuildSettings、Item算法、品阶/属性/词条概率或正式 Candidate 数据。
+本 Guard 不执行 commit / tag / push。
+```
+
+最终关闭条件：
+
+```text
+1. 用户补充当前计划内剩余美术，并给出最终视觉确认。
+2. 用户完成非 Play 手调、保存重开、Play 后退出不回退、Inspector 可自由调整等最终手测。
+3. 最终 verifier、历史回归、LeakCheck 与全包 git diff --check 完成。
+4. 刷新 ItemDetailMaxDaoArtTemplateReport / Spec / LeakCheckReport。
+5. 用户明确接受最终 Scene / Prefab / BuildSettings hash 与授权范围内 geometry 状态。
+6. 以上完成后，Guard 才决定是否给出 GUARD_PASS_ITEMDETAILMAXDAOARTTEMPLATE01。
+```
+
+当前队列覆盖状态：
+
+```text
+CURRENT: ItemDetailMaxDaoArtTemplate01
+STATE: USER_VISUAL_TUNING_NEAR_COMPLETE / NOT_FINAL_GUARD_PASS
+NEXT: ItemDetailVisualSlotTool01
+NEXT_STATE: BLOCKED_UNTIL_FINAL_MANUAL_ACCEPTANCE_AND_CLOSEOUT
+```
+
+### 2026-07-17：Item Detail 弹窗阶段性大包用户验收
+
+```text
+User acceptance: 我觉得item弹窗系统可以上传一个阶段性大包了，已经很满意了
+Package: ItemDetailMaxDaoArtTemplate01
+Milestone: ITEMDETAIL_PHASE_BIG_PACKAGE01
+Status: USER_ACCEPTED_PHASE_MILESTONE
+Layout: USER_ACCEPTED
+Visual: USER_ACCEPTED_FOR_PHASE
+Art: PARTIAL / DEFERRED_COMPLETION
+RepoOps: COMMIT_AND_PUSH_AUTHORIZED
+Tag: NOT_AUTHORIZED
+```
+
+Guard 收口：
+
+```text
+当前 Item Detail 弹窗的场景原地版面、核心信息结构、美术插槽和当前已有素材表现已达到用户满意，可作为阶段性大包保存并上传。
+本次用户验收解除“等待最终视觉确认”的阻断，但只针对当前阶段版面与已接素材。
+剩余 I013-I030 等后续美术、未来素材替换和全量150版本复用不属于当前阶段已完成声明。
+阶段性上传不得写成 FINAL_ART_COMPLETE、LIVE_LOCKED 或正式战斗接入完成。
+RepoOps 允许在当前工作分支精确选择 Item Detail 本包文件，创建 checkpoint / milestone commit 并 push。
+不得使用整目录 git add，不得纳入 .DS_Store / .ds_store / 未引用的 -2 重复素材或无关 dirty 文件。
+不得 tag、merge、改 BuildSettings 或接入 Battle / RunFlow / Save / Reward / Boss。
+```
+
+上传前最低门槛：
+
+```text
+Unity 当前编译无新增 C# Error。
+ItemDetailMaxDaoArtTemplate verifier 若可只读运行，应记录真实结果；失败时不得伪装 PASS，也不得由 RepoOps 修代码。
+git diff --cached --check 无本包新增 whitespace error。
+暂存清单经人工核对，只包含 Item Detail 场景、脚本、报告、Guard规则与已确认美术及配套 .meta。
+阶段性 commit 必须明确标记 art pending / phase milestone，不打 verified tag。
+```
+
+当前队列覆盖状态：
+
+```text
+CURRENT: ItemDetailMaxDaoArtTemplate01
+STATE: USER_ACCEPTED_PHASE_MILESTONE / READY_FOR_REPOOPS_UPLOAD
+NEXT: ItemDetailVisualSlotTool01
+NEXT_STATE: WAIT_UNTIL_REPOOPS_UPLOAD_RECEIPT
+```

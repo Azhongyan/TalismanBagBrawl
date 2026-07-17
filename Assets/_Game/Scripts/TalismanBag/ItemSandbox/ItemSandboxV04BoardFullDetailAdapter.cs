@@ -129,6 +129,7 @@ namespace TalismanBag.ItemSandbox
         private int dragRotation;
         private ItemFullDetailPlacementPreview placementPreview;
         private Camera dragCamera;
+        private bool showingCandidatePreview;
 
         public ItemFullDetailBuildSandboxWorkbenchSession Session => session;
         public IReadOnlyList<ItemSandboxV04TrayEntry> TrayEntries => trayEntries.AsReadOnly();
@@ -559,6 +560,7 @@ namespace TalismanBag.ItemSandbox
             }
             ItemDetailViewModel preview = session.PreviewCandidate(selectedTrayItemId, selectedRarityKey, selectedSeed);
             ShowDetail(preview);
+            showingCandidatePreview = preview != null;
             SetFeedback(preview == null
                 ? "候选预览失败。"
                 : selectedTrayItemId + " · " + selectedRarityKey + " · Seed "
@@ -614,7 +616,7 @@ namespace TalismanBag.ItemSandbox
                 SetFeedback(DescribePlacementFailure(reason));
                 return;
             }
-            RefreshAfterStateChange("顺时针旋转成功；规则状态已重算。", true);
+            RefreshAfterStateChange("顺时针旋转成功；规则状态已重算。");
         }
 
         private void RemoveSelected()
@@ -698,11 +700,16 @@ namespace TalismanBag.ItemSandbox
                 : "MainBuild = " + buildId + "（显式选择）");
         }
 
-        private void RefreshAfterStateChange(string feedback, bool keepDetail = false)
+        private void RefreshAfterStateChange(string feedback)
         {
-            if (keepDetail || !string.IsNullOrWhiteSpace(session?.SelectedPlacementId))
+            ItemDetailViewModel detail = session?.BuildSelectedDetail();
+            if (showingCandidatePreview || detail == null)
             {
-                ShowDetail(session?.BuildSelectedDetail());
+                ShowCandidatePreview();
+            }
+            else
+            {
+                ShowDetail(detail);
             }
             SetFeedback(feedback);
             RefreshAll();
@@ -836,6 +843,14 @@ namespace TalismanBag.ItemSandbox
             if (levelText != null)
             {
                 levelText.text = "Sandbox Lv " + session.SandboxLevel.ToString(CultureInfo.InvariantCulture) + " / 40";
+            }
+            if (levelDownButton != null)
+            {
+                levelDownButton.interactable = session.SandboxLevel > 1;
+            }
+            if (levelUpButton != null)
+            {
+                levelUpButton.interactable = session.SandboxLevel < 40;
             }
 
             ItemBuildSynergyResolutionResult build = session.Snapshot?.build;
@@ -1017,6 +1032,7 @@ namespace TalismanBag.ItemSandbox
             {
                 return;
             }
+            showingCandidatePreview = false;
             detailPanel.Bind(model);
             detailPanel.SetVisible(true);
         }

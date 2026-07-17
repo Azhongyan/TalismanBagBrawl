@@ -377,7 +377,7 @@ namespace TalismanBag.ItemSandbox
         private string selectedInstanceId = string.Empty;
         private string selectedPlacementId = string.Empty;
         private string selectedMainBuildId = string.Empty;
-        private int sandboxLevel = 1;
+        private int sandboxLevel = 10;
 
         public ItemFullDetailBuildSandboxWorkbenchSession(
             ItemBalanceCandidateDetailSandboxAdapter candidateAdapter,
@@ -514,7 +514,12 @@ namespace TalismanBag.ItemSandbox
                 rarityKey = rarityKey,
                 rootSeedText = rootSeed.ToString(CultureInfo.InvariantCulture)
             });
-            return candidate?.isSuccess == true ? candidate.viewModel?.Clone() : null;
+            ItemDetailViewModel model = candidate?.isSuccess == true
+                ? candidate.viewModel?.Clone()
+                : null;
+            ApplySandboxLevelPreview(model);
+            ApplySandboxCoreUnlockPreview(model, candidate);
+            return model;
         }
 
         public bool SelectInstance(string itemInstanceId)
@@ -858,6 +863,7 @@ namespace TalismanBag.ItemSandbox
             });
             if (instance == null)
             {
+                ApplySandboxLevelPreview(model);
                 return model;
             }
 
@@ -881,6 +887,10 @@ namespace TalismanBag.ItemSandbox
             IReadOnlyList<ItemDetailResolvedArrayModifier> arrayModifiers =
                 ResolveArrayModifiers(instance, arrayItem, buildItem, awakening);
             ApplyGeneratedFactSections(model, instance, buildItem, awakening, arrayModifiers);
+            if (awakening == null)
+            {
+                ApplySandboxCoreUnlockPreview(model, instance.Candidate);
+            }
             ItemDetailSectionViewModel hiddenBasicSection = model.displayPlayerSections.FirstOrDefault(value => value != null
                 && string.Equals(value.stateKey, "basic", StringComparison.Ordinal));
             string hiddenBasicText = hiddenBasicSection?.body ?? string.Empty;
@@ -922,7 +932,114 @@ namespace TalismanBag.ItemSandbox
                     + "\nBALANCE_CANDIDATE\nNOT_LIVE_LOCKED\nNOT_BATTLE_CONNECTED";
             }
 
+            ApplySandboxLevelPreview(model);
             return model;
+        }
+
+        private void ApplySandboxLevelPreview(ItemDetailViewModel model)
+        {
+            if (model == null)
+            {
+                return;
+            }
+
+            int level = Mathf.Clamp(sandboxLevel, 1, 40);
+            model.statusFlags ??= new ItemDetailStatusFlags();
+            model.statusFlags.inputLevel = level;
+            model.statusFlags.resolvedLevel = level;
+            model.statusFlags.itemLevel = level;
+            model.awakeningPreview ??= new ItemAwakeningPreview();
+            model.awakeningPreview.inputLevel = level;
+            model.awakeningPreview.resolvedLevel = level;
+            model.awakeningPreview.itemLevel = level;
+        }
+
+        private void ApplySandboxCoreUnlockPreview(
+            ItemDetailViewModel model,
+            ItemBalanceCandidateDetailResult candidate)
+        {
+            ItemInstanceProjectionContractSnapshot projection = candidate?.detailProjection?.projection;
+            if (model == null || candidate?.isSuccess != true || projection == null)
+            {
+                return;
+            }
+
+            int level = Mathf.Clamp(sandboxLevel, 1, 40);
+            HashSet<string> visibleCoreIds = new(projection.VisibleCoreEffectIds, StringComparer.Ordinal);
+            ItemDetailTextLine[] displayLines = (candidate.viewModel?.displayCoreEffects
+                    ?? new List<ItemDetailTextLine>())
+                .Where(value => value != null && !string.IsNullOrWhiteSpace(value.title))
+                .Take(4)
+                .ToArray();
+            List<ItemDetailCoreEffectRowState> rowStates = new(displayLines.Length);
+            List<string> unlockedIds = new();
+            List<string> lockedIds = new();
+            List<int> unlockedLevels = new();
+            List<int> lockedLevels = new();
+
+            for (int index = 0; index < displayLines.Length; index++)
+            {
+                string coreEffectId = displayLines[index].stateKey ?? string.Empty;
+                int unlockLevel = candidate.CoreUnlockLevels.TryGetValue(coreEffectId, out int configuredLevel)
+                    ? Mathf.Clamp(configuredLevel, 1, 40)
+                    : Mathf.Min(40, (index + 1) * 10);
+                bool unlocked = visibleCoreIds.Contains(coreEffectId) && level >= unlockLevel;
+                rowStates.Add(unlocked
+                    ? ItemDetailCoreEffectRowState.UnlockedInactive
+                    : ItemDetailCoreEffectRowState.Locked);
+                if (unlocked)
+                {
+                    unlockedIds.Add(coreEffectId);
+                    unlockedLevels.Add(unlockLevel);
+                }
+                else
+                {
+                    lockedIds.Add(coreEffectId);
+                    lockedLevels.Add(unlockLevel);
+                }
+            }
+
+            ItemDetailSectionViewModel coreSection = model.displayPlayerSections.FirstOrDefault(value => value != null
+                && (string.Equals(value.stateKey, "coreEffect", StringComparison.Ordinal)
+                    || string.Equals(value.stateKey, "awakening", StringComparison.Ordinal)));
+            if (coreSection != null)
+            {
+                coreSection.stateKey = "coreEffect";
+                coreSection.body = BuildCoreUnlockPreviewFacts(displayLines, rowStates);
+                coreSection.coreEffectRowStates = rowStates;
+            }
+
+            model.statusFlags ??= new ItemDetailStatusFlags();
+            model.statusFlags.coreEffectUnlocked = unlockedIds.Count > 0;
+            model.statusFlags.coreEffectActive = false;
+            model.statusFlags.unlockedCoreEffectCount = unlockedIds.Count;
+            model.statusFlags.activeCoreEffectCount = 0;
+            model.statusFlags.currentAwakeningNodeLevel = unlockedLevels.DefaultIfEmpty(0).Max();
+            model.statusFlags.nextAwakeningNodeLevel = lockedLevels.DefaultIfEmpty(0).Min();
+
+            model.awakeningPreview ??= new ItemAwakeningPreview();
+            model.awakeningPreview.coreEffectUnlocked = unlockedIds.Count > 0;
+            model.awakeningPreview.coreEffectActive = false;
+            model.awakeningPreview.unlockedCoreEffectCount = unlockedIds.Count;
+            model.awakeningPreview.activeCoreEffectCount = 0;
+            model.awakeningPreview.currentNodeText = FormatPreviewNodeText("当前开窍", unlockedLevels.DefaultIfEmpty(0).Max());
+            model.awakeningPreview.nextNodeText = FormatPreviewNodeText("下一节点", lockedLevels.DefaultIfEmpty(0).Min());
+            model.awakeningPreview.unlockedNodeLevelsText = FormatPreviewLevels(unlockedLevels);
+            model.awakeningPreview.activeNodeLevelsText = "None";
+            model.awakeningPreview.unlockedCoreEffectIdsText = FormatIds(unlockedIds);
+            model.awakeningPreview.activeCoreEffectIdsText = "None";
+            model.awakeningPreview.lockedCoreEffectIdsText = FormatIds(lockedIds);
+        }
+
+        private static string FormatPreviewNodeText(string label, int level)
+        {
+            return (label ?? string.Empty) + "：" + (level > 0 ? "Lv." + level : "None");
+        }
+
+        private static string FormatPreviewLevels(IEnumerable<int> levels)
+        {
+            int[] values = (levels ?? Array.Empty<int>()).Distinct().OrderBy(value => value).ToArray();
+            return values.Length == 0 ? "None" : string.Join(" / ", values.Select(value => "Lv." + value));
         }
 
         private static List<ItemDetailSectionViewModel> BuildPlayerSectionsInPrefabSlotOrder(
@@ -989,7 +1106,8 @@ namespace TalismanBag.ItemSandbox
                 string.IsNullOrWhiteSpace(outputTitle) ? section.title : outputTitle,
                 section.body,
                 outputStateKey,
-                true);
+                true,
+                section.coreEffectRowStates);
         }
 
         private static ItemDetailSectionViewModel FindPlayerSection(
@@ -1094,6 +1212,9 @@ namespace TalismanBag.ItemSandbox
                     instance.Candidate.viewModel.displayCoreEffects,
                     awakening,
                     arrayModifiers);
+                awakeningSection.coreEffectRowStates = BuildCoreRowStates(
+                    instance.Candidate.viewModel.displayCoreEffects,
+                    awakening);
             }
 
             ItemBuildTrackResult faMenTrack = ResolveCandidateTrack(instance, buildItem, true);
@@ -1215,24 +1336,25 @@ namespace TalismanBag.ItemSandbox
             ItemCoreAwakeningItemResult awakening,
             IReadOnlyList<ItemDetailResolvedArrayModifier> arrayModifiers)
         {
-            Dictionary<string, ItemDetailTextLine> lineByCoreId = (values ?? Array.Empty<ItemDetailTextLine>())
-                .Where(value => value != null && !string.IsNullOrWhiteSpace(value.stateKey))
-                .GroupBy(value => value.stateKey, StringComparer.Ordinal)
+            ItemDetailTextLine[] displayLines = (values ?? Array.Empty<ItemDetailTextLine>())
+                .Where(value => value != null && !string.IsNullOrWhiteSpace(value.title))
+                .Take(4)
+                .ToArray();
+            Dictionary<string, ItemCoreAwakeningNodeState> nodeByCoreId = (awakening?.NodeStates
+                    ?? Array.Empty<ItemCoreAwakeningNodeState>())
+                .Where(node => node != null && !string.IsNullOrWhiteSpace(node.coreEffectId))
+                .GroupBy(node => node.coreEffectId, StringComparer.Ordinal)
                 .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
 
-            if (awakening?.NodeStates != null && awakening.NodeStates.Count > 0)
+            if (displayLines.Length > 0)
             {
-                string[] rows = awakening.NodeStates
-                    .OrderBy(node => node.unlockLevel)
-                    .Select(node =>
+                string[] rows = displayLines
+                    .Select(display =>
                     {
-                        ItemDetailTextLine display = lineByCoreId.TryGetValue(node.coreEffectId, out ItemDetailTextLine line)
-                            ? line
-                            : null;
-                        string name = !string.IsNullOrWhiteSpace(display?.title)
-                            ? StripRichText(display.title)
-                            : NonEmpty(node.coreEffectId, node.displayName);
-                        string detail = !string.IsNullOrWhiteSpace(display?.body)
+                        string coreEffectId = display.stateKey ?? string.Empty;
+                        nodeByCoreId.TryGetValue(coreEffectId, out ItemCoreAwakeningNodeState node);
+                        string name = StripRichText(display.title);
+                        string detail = !string.IsNullOrWhiteSpace(display.body)
                             ? display.body
                             : string.Empty;
                         string text = string.IsNullOrWhiteSpace(detail) ? name : name + "：" + detail;
@@ -1241,24 +1363,81 @@ namespace TalismanBag.ItemSandbox
                             FirstArrayModifier(
                                 arrayModifiers,
                                 ItemDetailArrayModifierTargetKind.CoreEffect,
-                                node.coreEffectId));
-                        return "  " + (node.isUnlocked ? text : GreyText(text));
+                                coreEffectId));
+                        return "  " + (node?.isUnlocked == true ? text : GreyText(text));
                     })
                     .ToArray();
                 return rows.Length == 0 ? "  数据校验失败" : string.Join("\n", rows);
             }
 
-            string[] fallback = (values ?? Array.Empty<ItemDetailTextLine>())
-                .Where(value => value != null && !string.IsNullOrWhiteSpace(value.title))
-                .Select(value =>
+            string[] fallback = (awakening?.NodeStates ?? Array.Empty<ItemCoreAwakeningNodeState>())
+                .OrderBy(node => node.unlockLevel)
+                .Take(4)
+                .Select(node =>
                 {
-                    string text = string.IsNullOrWhiteSpace(value.body)
-                        ? value.title
-                        : value.title + "：" + value.body;
-                    return "  " + GreyText(text);
+                    string text = NonEmpty(node.coreEffectId, node.displayName);
+                    return "  " + (node.isUnlocked ? text : GreyText(text));
                 })
                 .ToArray();
             return fallback.Length == 0 ? "  数据校验失败" : string.Join("\n", fallback);
+        }
+
+        private static List<ItemDetailCoreEffectRowState> BuildCoreRowStates(
+            IReadOnlyList<ItemDetailTextLine> values,
+            ItemCoreAwakeningItemResult awakening)
+        {
+            Dictionary<string, ItemCoreAwakeningNodeState> nodeByCoreId = (awakening?.NodeStates
+                    ?? Array.Empty<ItemCoreAwakeningNodeState>())
+                .Where(node => node != null && !string.IsNullOrWhiteSpace(node.coreEffectId))
+                .GroupBy(node => node.coreEffectId, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+            ItemDetailTextLine[] displayLines = (values ?? Array.Empty<ItemDetailTextLine>())
+                .Where(value => value != null && !string.IsNullOrWhiteSpace(value.title))
+                .Take(4)
+                .ToArray();
+            if (displayLines.Length > 0)
+            {
+                return displayLines.Select(display =>
+                {
+                    nodeByCoreId.TryGetValue(display.stateKey ?? string.Empty, out ItemCoreAwakeningNodeState node);
+                    return node?.isActive == true
+                        ? ItemDetailCoreEffectRowState.Active
+                        : node?.isUnlocked == true
+                            ? ItemDetailCoreEffectRowState.UnlockedInactive
+                            : ItemDetailCoreEffectRowState.Locked;
+                }).ToList();
+            }
+
+            return (awakening?.NodeStates ?? Array.Empty<ItemCoreAwakeningNodeState>())
+                .OrderBy(node => node.unlockLevel)
+                .Take(4)
+                .Select(node => node.isActive
+                    ? ItemDetailCoreEffectRowState.Active
+                    : node.isUnlocked
+                        ? ItemDetailCoreEffectRowState.UnlockedInactive
+                        : ItemDetailCoreEffectRowState.Locked)
+                .ToList();
+        }
+
+        private static string BuildCoreUnlockPreviewFacts(
+            IReadOnlyList<ItemDetailTextLine> values,
+            IReadOnlyList<ItemDetailCoreEffectRowState> rowStates)
+        {
+            string[] rows = (values ?? Array.Empty<ItemDetailTextLine>())
+                .Where(value => value != null && !string.IsNullOrWhiteSpace(value.title))
+                .Take(4)
+                .Select((display, index) =>
+                {
+                    string name = StripRichText(display.title);
+                    string detail = display.body ?? string.Empty;
+                    string text = string.IsNullOrWhiteSpace(detail) ? name : name + "：" + detail;
+                    bool unlocked = rowStates != null
+                        && index < rowStates.Count
+                        && rowStates[index] != ItemDetailCoreEffectRowState.Locked;
+                    return "  " + (unlocked ? text : GreyText(text));
+                })
+                .ToArray();
+            return rows.Length == 0 ? "  数据校验失败" : string.Join("\n", rows);
         }
 
         private static ItemDetailResolvedArrayModifier FirstArrayModifier(
@@ -1508,13 +1687,18 @@ namespace TalismanBag.ItemSandbox
         {
             int threshold = ResolveBuildStageThreshold(value);
             bool isActive = currentCount >= threshold;
-            string label = faMen
-                ? FormatBuildStageName(value)
-                : NonEmpty(value?.buildName, FormatBuildStageName(value));
+            string label = FormatBuildStageName(value);
+            string detailText = value?.previewText;
+            if (!faMen
+                && !string.IsNullOrWhiteSpace(value?.buildName)
+                && !string.Equals(value.buildName, label, StringComparison.Ordinal))
+            {
+                detailText = value.buildName + "：" + NonEmpty(detailText, "未配置");
+            }
             string color = isActive ? BuildActiveHex : BuildInactiveHex;
             return indent + BuildColoredText(label + "：", color, true)
                 + "\n" + indent + FormatBuildStageDetail(
-                    value?.previewText,
+                    detailText,
                     isActive,
                     rarity,
                     FindBuildStageArrayModifier(arrayModifiers, faMen, threshold));
@@ -1535,9 +1719,12 @@ namespace TalismanBag.ItemSandbox
                     false);
             }
 
-            return ItemDetailArrayModifierResolver.AppendInlineModifier(
-                HighlightBuildCoreValue(text, RarityColorHex(rarity)),
-                arrayModifier);
+            return BuildColoredText(
+                ItemDetailArrayModifierResolver.AppendInlineModifier(
+                    HighlightBuildCoreValue(text, RarityColorHex(rarity)),
+                    arrayModifier),
+                BuildActiveHex,
+                false);
         }
 
         private static ItemDetailResolvedArrayModifier FindBuildStageArrayModifier(

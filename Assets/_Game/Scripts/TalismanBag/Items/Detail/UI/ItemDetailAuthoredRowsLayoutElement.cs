@@ -113,6 +113,7 @@ namespace TalismanBag.Items.Detail.UI
 
         private float MeasurePreferredHeight()
         {
+            const string staticAuthoredCoreRowsRootName = "CoreEffectRowsRoot";
             RectTransform host = transform as RectTransform;
             if (host == null || rowsRoot == null)
             {
@@ -121,7 +122,9 @@ namespace TalismanBag.Items.Detail.UI
 
             ItemDetailAuthoredRowsVerticalLayoutGroup dynamicRowsLayout =
                 rowsRoot.GetComponent<ItemDetailAuthoredRowsVerticalLayoutGroup>();
-            if (dynamicRowsLayout != null && dynamicRowsLayout.isActiveAndEnabled)
+            if (dynamicRowsLayout != null
+                && dynamicRowsLayout.isActiveAndEnabled
+                && !string.Equals(rowsRoot.name, staticAuthoredCoreRowsRootName, StringComparison.Ordinal))
             {
                 float rowsPreferredHeight = LayoutUtility.GetPreferredHeight(rowsRoot);
                 return Mathf.Max(
