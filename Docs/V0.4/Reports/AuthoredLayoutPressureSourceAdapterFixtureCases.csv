@@ -1,0 +1,17 @@
+caseId,scenario,expectedStatus,completeness,snapshot,result
+P2-01,polluted mask explicit domain usable clause subset,Complete,Complete,present,PASS
+P2-02,eye relocation explicit effective eye,Complete,Complete,present,PASS
+P2-03,connection cut explicit preserved graph,Complete,Complete,present,PASS
+P2-04,three kinds and multiple clauses,Complete,Complete,present,PASS
+P2-05,one required clause no defaults,Complete,Complete,present,PASS
+P2-06,explicit empty usable and graph,Complete,Complete,present,PASS
+P2-07,reversed edge endpoints normalized,Complete,Complete,present,PASS
+P2-08,reversed collections culture repeat deterministic,Complete,Complete,present,PASS
+P2-09,null source,Unknown,Incomplete,null,PASS
+P2-10,incomplete missing pressure id,Unknown,Incomplete,null,PASS
+P2-11,incomplete missing domain eye graph clauses,Unknown,Incomplete,null,PASS
+P2-12,complete required collection null,Unknown,Incomplete,null,PASS
+P2-13,empty required collections missing domain cell or eye,Unknown,Incomplete,null,PASS
+P2-14,undefined enum and duplicate cells kinds clauses,Invalid,Incomplete,null,PASS
+P2-15,invalid board and out-of-bounds coordinates,Invalid,Incomplete,null,PASS
+P2-16,self-loop duplicate undirected edge unusable endpoint,Invalid,Incomplete,null,PASS

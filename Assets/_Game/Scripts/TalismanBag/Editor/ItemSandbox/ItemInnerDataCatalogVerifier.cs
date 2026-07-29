@@ -5,6 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using TalismanBag.ItemSandbox;
+using TalismanBag.Items;
+using TalismanBag.Items.Balance;
+using TalismanBag.Items.Generation;
 using TalismanBag.Items.InnerCatalog;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -19,6 +22,12 @@ namespace TalismanBag.EditorTools.ItemSandbox
         private const string DetailReportPath = "Docs/V0.4/Reports/ItemInnerDataCatalogReport.md";
         private const string SpecCsvPath = "Docs/V0.4/Reports/ItemInnerDataCatalogSpec.csv";
         private const string LeakCheckReportPath = "Docs/V0.4/Reports/ItemInnerDataCatalogLeakCheckReport.md";
+        private const string ShapeFixReportPath = "Docs/V0.4/Reports/I009I029ItemShapeFixReport.md";
+        private const string ShapeFixMarker = "I009_I029_ITEM_SHAPE_FIX01_PASS";
+        private const string WorkbenchCatalogPath =
+            "Assets/_Game/Configs/ItemBalanceWorkbench/ItemBalanceWorkbenchCatalog.asset";
+        private const string ItemDetailPanelViewPath =
+            "Assets/_Game/Scripts/TalismanBag/Items/Detail/UI/ItemDetailPanelView.cs";
 
         private static readonly string[] ExpectedIds =
         {
@@ -78,6 +87,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 if (result.Errors.Count == 0)
                 {
                     Debug.Log("ItemInnerDataCatalog01 verification passed and reports were written.");
+                    Debug.Log(ShapeFixMarker);
                     if (exitWhenBatchMode)
                     {
                         EditorApplication.Exit(0);
@@ -156,11 +166,123 @@ namespace TalismanBag.EditorTools.ItemSandbox
 
             CheckFamilyCounts(items, result);
             CheckLightingSource(items, result);
+            CheckI009Shape(items, result);
+            CheckI009PlacementRotations(result);
+            CheckI029Shape(items, result);
+            CheckI029PlacementRotations(result);
 
             if (result.Errors.Count == 0)
             {
                 result.Notes.Add("Catalog data check passed: 31 items, stable ids, required fields, and coreCellLocal inside shapeCells.");
             }
+        }
+
+        private static void CheckI009Shape(IReadOnlyList<ItemInnerDataDefinition> items, VerificationResult result)
+        {
+            ItemInnerDataDefinition item = items.FirstOrDefault(candidate => candidate.itemId == "I009");
+            if (item == null)
+            {
+                result.Errors.Add("I009 shape invariant failed: catalog item is missing.");
+                return;
+            }
+
+            Vector2Int origin = new(0, 0);
+            bool isSingleCell = string.Equals(item.shapeId, "shape_single_1", StringComparison.Ordinal)
+                && item.defaultLocalCells.Count == 1
+                && item.defaultLocalCells[0] == origin
+                && item.coreCellLocal == origin;
+            if (!isSingleCell)
+            {
+                result.Errors.Add(
+                    $"I009 shape invariant failed: shapeId={item.shapeId}, cells={item.FormatCells()}, core={ItemInnerDataDefinition.FormatCell(item.coreCellLocal)}; expected shape_single_1, (0,0), (0,0).");
+                return;
+            }
+
+            result.Notes.Add("I009 shape invariant passed: shape_single_1, only (0,0) occupied, coreCellLocal (0,0).");
+        }
+
+        private static void CheckI009PlacementRotations(VerificationResult result)
+        {
+            Vector2Int origin = new(0, 0);
+            foreach (int rotation in new[] { 0, 90, 180, 270 })
+            {
+                string placementId = "QA_I009_ROT_" + rotation;
+                ItemSystemSnapshot snapshot = DefaultItemSystemSnapshotProvider.Instance.CreateSnapshot(
+                    new ItemSystemSnapshotInput(new[]
+                    {
+                        new ItemSystemPlacementInput(placementId, "I009", origin, rotation)
+                    }));
+                ItemSystemPlacementSnapshot placement = snapshot.FindPlacement(placementId);
+                bool passed = placement != null
+                    && placement.OccupiedCells.Count == 1
+                    && placement.OccupiedCells[0] == origin
+                    && placement.coreCellWorld == origin;
+                if (!passed)
+                {
+                    string cells = placement == null
+                        ? "missing"
+                        : string.Join(";", placement.OccupiedCells.Select(ItemInnerDataDefinition.FormatCell));
+                    result.Errors.Add(
+                        $"I009 placement invariant failed at rotation {rotation}: cells={cells}, core={ItemInnerDataDefinition.FormatCell(placement?.coreCellWorld ?? origin)}.");
+                    return;
+                }
+            }
+
+            result.Notes.Add("I009 placement invariant passed: rotations 0/90/180/270 each occupy only (0,0).");
+        }
+
+        private static void CheckI029Shape(IReadOnlyList<ItemInnerDataDefinition> items, VerificationResult result)
+        {
+            ItemInnerDataDefinition item = items.FirstOrDefault(candidate => candidate.itemId == "I029");
+            if (item == null)
+            {
+                result.Errors.Add("I029 shape invariant failed: catalog item is missing.");
+                return;
+            }
+
+            Vector2Int origin = new(0, 0);
+            bool isSingleCell = string.Equals(item.shapeId, "shape_single_1", StringComparison.Ordinal)
+                && item.defaultLocalCells.Count == 1
+                && item.defaultLocalCells[0] == origin
+                && item.coreCellLocal == origin;
+            if (!isSingleCell)
+            {
+                result.Errors.Add(
+                    $"I029 shape invariant failed: shapeId={item.shapeId}, cells={item.FormatCells()}, core={ItemInnerDataDefinition.FormatCell(item.coreCellLocal)}; expected shape_single_1, (0,0), (0,0).");
+                return;
+            }
+
+            result.Notes.Add("I029 shape invariant passed: shape_single_1, only (0,0) occupied, coreCellLocal (0,0).");
+        }
+
+        private static void CheckI029PlacementRotations(VerificationResult result)
+        {
+            Vector2Int origin = new(0, 0);
+            foreach (int rotation in new[] { 0, 90, 180, 270 })
+            {
+                string placementId = "QA_I029_ROT_" + rotation;
+                ItemSystemSnapshot snapshot = DefaultItemSystemSnapshotProvider.Instance.CreateSnapshot(
+                    new ItemSystemSnapshotInput(new[]
+                    {
+                        new ItemSystemPlacementInput(placementId, "I029", origin, rotation)
+                    }));
+                ItemSystemPlacementSnapshot placement = snapshot.FindPlacement(placementId);
+                bool passed = placement != null
+                    && placement.OccupiedCells.Count == 1
+                    && placement.OccupiedCells[0] == origin
+                    && placement.coreCellWorld == origin;
+                if (!passed)
+                {
+                    string cells = placement == null
+                        ? "missing"
+                        : string.Join(";", placement.OccupiedCells.Select(ItemInnerDataDefinition.FormatCell));
+                    result.Errors.Add(
+                        $"I029 placement invariant failed at rotation {rotation}: cells={cells}, core={ItemInnerDataDefinition.FormatCell(placement?.coreCellWorld ?? origin)}.");
+                    return;
+                }
+            }
+
+            result.Notes.Add("I029 placement invariant passed: rotations 0/90/180/270 each occupy only (0,0).");
         }
 
         private static void CheckFamilyCounts(IReadOnlyList<ItemInnerDataDefinition> items, VerificationResult result)
@@ -261,6 +383,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             else
             {
                 result.Notes.Add("Scene provider check passed: CatalogProvider exposes 31 readonly entries and no formal system flags.");
+                CheckShapeFixDerivedContracts(provider, result);
             }
 
             if (controller == null)
@@ -278,6 +401,172 @@ namespace TalismanBag.EditorTools.ItemSandbox
             }
 
             CheckHierarchyNames(scene, result);
+            CheckDetailArtworkRoutingContract(result);
+        }
+
+        private static void CheckShapeFixDerivedContracts(
+            ItemInnerDataCatalogProvider provider,
+            VerificationResult result)
+        {
+            ItemBalanceWorkbenchCatalog catalog =
+                AssetDatabase.LoadAssetAtPath<ItemBalanceWorkbenchCatalog>(WorkbenchCatalogPath);
+            if (catalog == null)
+            {
+                result.Errors.Add("I009/I029 shape inheritance failed: ItemBalanceWorkbench catalog is missing.");
+                return;
+            }
+
+            ItemGenerationFoundationSnapshot foundation = ItemRarityInstanceFoundation.Create();
+            if (foundation.ValidationErrors.Count > 0)
+            {
+                result.Errors.Add("I009/I029 shape inheritance failed: ItemRarityInstanceFoundation is invalid: "
+                    + string.Join(" | ", foundation.ValidationErrors.Select(error => error.code + ": " + error.message)));
+                return;
+            }
+
+            ItemBalanceCandidateDetailSandboxAdapter adapter = new(catalog, provider);
+            foreach (string itemId in new[] { "I009", "I029" })
+            {
+                ItemArchetypeIdentitySnapshot archetype = foundation.FindArchetype(itemId);
+                if (archetype == null
+                    || !string.Equals(archetype.shapeId, "shape_single_1", StringComparison.Ordinal))
+                {
+                    result.Errors.Add($"{itemId} rarity inheritance failed: foundation archetype shape is '{archetype?.shapeId ?? "missing"}'.");
+                    continue;
+                }
+
+                ItemBalanceProfile profile = catalog.FindProfile(itemId);
+                const string expectedCandidateShape = "shape_single_1 · 1格 · 核心格(0,0)";
+                if (profile == null)
+                {
+                    result.Errors.Add($"{itemId} Candidate inheritance failed: workbench profile is missing.");
+                    continue;
+                }
+
+                if (!string.Equals(profile.candidateDisplay?.shapeDescription,
+                    expectedCandidateShape, StringComparison.Ordinal))
+                {
+                    result.Errors.Add(
+                        $"{itemId} Candidate shapeDescription failed: actual='{profile.candidateDisplay?.shapeDescription ?? "missing"}', expected='{expectedCandidateShape}'.");
+                }
+
+                bool fiveRarities = profile.rarityVersions != null
+                    && profile.rarityVersions.Count == ItemInstanceRarityCatalog.All.Count
+                    && ItemInstanceRarityCatalog.All.All(definition =>
+                        profile.rarityVersions.Any(version => version != null
+                            && version.rarity == definition.rarity));
+                if (!fiveRarities)
+                {
+                    result.Errors.Add($"{itemId} rarity inheritance failed: expected white/green/blue/purple/orange versions.");
+                    continue;
+                }
+
+                int itemNumber = string.Equals(itemId, "I009", StringComparison.Ordinal) ? 9 : 29;
+                foreach (ItemInstanceRarityDefinition rarity in ItemInstanceRarityCatalog.All)
+                {
+                    long firstSeed = itemNumber * 100000L + rarity.tierIndex * 10L + 1L;
+                    ItemBalanceCandidateDetailResult first = RequestCandidate(adapter, itemId, rarity, firstSeed);
+                    ItemBalanceCandidateDetailResult second = RequestCandidate(adapter, itemId, rarity, firstSeed + 1L);
+                    bool inherited = CandidateUsesSingleCellShape(first, itemId, rarity.rarity, expectedCandidateShape)
+                        && CandidateUsesSingleCellShape(second, itemId, rarity.rarity, expectedCandidateShape);
+                    if (!inherited)
+                    {
+                        string errors = string.Join(" | ", (first?.ValidationErrors ?? Array.Empty<string>())
+                            .Concat(second?.ValidationErrors ?? Array.Empty<string>()));
+                        result.Errors.Add(
+                            $"{itemId}@{rarity.stableKey} Roll/Projection/Detail shape inheritance failed. {errors}");
+                        continue;
+                    }
+
+                    if (string.Equals(first.preview.RollResult.snapshot.itemInstanceId,
+                        second.preview.RollResult.snapshot.itemInstanceId, StringComparison.Ordinal))
+                    {
+                        result.Errors.Add(
+                            $"{itemId}@{rarity.stableKey} different-seed instance check failed: itemInstanceId did not change.");
+                    }
+                }
+
+                if (result.Errors.All(error => !error.StartsWith(itemId, StringComparison.Ordinal)))
+                {
+                    result.Notes.Add(
+                        $"{itemId} derived contract passed: Candidate shapeDescription, five rarities, two seeds per rarity, Roll, Projection, and detail display all inherit shape_single_1.");
+                }
+            }
+        }
+
+        private static ItemBalanceCandidateDetailResult RequestCandidate(
+            ItemBalanceCandidateDetailSandboxAdapter adapter,
+            string itemId,
+            ItemInstanceRarityDefinition rarity,
+            long rootSeed)
+        {
+            return adapter.Request(new ItemBalanceCandidateDetailRequest
+            {
+                baseItemId = itemId,
+                rarityKey = rarity.stableKey,
+                rootSeedText = rootSeed.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            });
+        }
+
+        private static bool CandidateUsesSingleCellShape(
+            ItemBalanceCandidateDetailResult candidate,
+            string itemId,
+            ItemInstanceRarity rarity,
+            string expectedCandidateShape)
+        {
+            return candidate?.isSuccess == true
+                && candidate.preview?.RollResult?.snapshot != null
+                && string.Equals(candidate.preview.RollResult.snapshot.baseItemId, itemId, StringComparison.Ordinal)
+                && candidate.preview.RollResult.snapshot.rarity == rarity
+                && candidate.preview.ProjectionResult?.snapshot != null
+                && string.Equals(candidate.preview.ProjectionResult.snapshot.baseItemId, itemId, StringComparison.Ordinal)
+                && candidate.preview.ProjectionResult.snapshot.rarity == rarity
+                && candidate.detailProjection?.viewModel != null
+                && candidate.detailProjection.viewModel.displayShapeName.Contains("shape_single_1", StringComparison.Ordinal)
+                && string.Equals(candidate.viewModel?.displayShapeName, expectedCandidateShape, StringComparison.Ordinal);
+        }
+
+        private static void CheckDetailArtworkRoutingContract(VerificationResult result)
+        {
+            UnityEngine.UI.Image[] images = Object.FindObjectsOfType<UnityEngine.UI.Image>(true);
+            bool hasSingleSlot = images.Any(image => image != null
+                && string.Equals(image.name, "DaojuSingleCellImage", StringComparison.Ordinal));
+            bool hasMultiSlot = images.Any(image => image != null
+                && string.Equals(image.name, "DaojuMultiCellImage", StringComparison.Ordinal));
+            if (!hasSingleSlot || !hasMultiSlot)
+            {
+                result.Errors.Add(
+                    $"Item detail artwork routing failed: DaojuSingleCellImage={hasSingleSlot}, DaojuMultiCellImage={hasMultiSlot}.");
+                return;
+            }
+
+            if (!File.Exists(ItemDetailPanelViewPath))
+            {
+                result.Errors.Add("Item detail artwork routing failed: ItemDetailPanelView.cs is missing.");
+                return;
+            }
+
+            string source = File.ReadAllText(ItemDetailPanelViewPath, Encoding.UTF8);
+            bool routeContract = source.Contains(
+                    "bool useSingleCellSlot = IsSingleCellArtwork(shapeName);", StringComparison.Ordinal)
+                && source.Contains(
+                    "SetArtworkSlot(singleCellArtworkImageSlot, artworkSprite, hasArtwork && useSingleCellSlot);",
+                    StringComparison.Ordinal)
+                && source.Contains(
+                    "SetArtworkSlot(multiCellArtworkImageSlot, artworkSprite, hasArtwork && !useSingleCellSlot);",
+                    StringComparison.Ordinal)
+                && source.Contains("shapeName.Contains(\"single_1\"", StringComparison.Ordinal)
+                && !source.Contains("\"I009\"", StringComparison.Ordinal)
+                && !source.Contains("\"I029\"", StringComparison.Ordinal);
+            if (!routeContract)
+            {
+                result.Errors.Add(
+                    "Item detail artwork routing failed: single_1 must route to DaojuSingleCellImage without I009/I029 special cases.");
+                return;
+            }
+
+            result.Notes.Add(
+                "Item detail artwork routing passed: I009/I029 displayShapeName resolves through the shared single_1 rule to DaojuSingleCellImage; DaojuMultiCellImage remains the multi-cell route, with no item-id special case.");
         }
 
         private static void CheckHierarchyNames(Scene scene, VerificationResult result)
@@ -333,6 +622,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             File.WriteAllText(DetailReportPath, BuildDetailReport(items, result), new UTF8Encoding(false));
             File.WriteAllText(SpecCsvPath, BuildSpecCsv(items), new UTF8Encoding(false));
             File.WriteAllText(LeakCheckReportPath, BuildLeakCheckReport(result), new UTF8Encoding(false));
+            File.WriteAllText(ShapeFixReportPath, BuildShapeFixReport(result), new UTF8Encoding(false));
             AssetDatabase.Refresh();
         }
 
@@ -344,6 +634,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             builder.AppendLine("- Package: `TASK_START_ITEMINNERDATACATALOG01`");
             builder.AppendLine("- Guard receipt target: `GUARD_PASS_ITEMINNERDATACATALOG01`");
             builder.AppendLine($"- Verification: {(result.Errors.Count == 0 ? "PASS" : "FAIL")}");
+            builder.AppendLine($"- I009/I029 shape fix marker: `{(result.Errors.Count == 0 ? ShapeFixMarker : "FAIL")}`");
             builder.AppendLine("- Scene: `Assets/_Game/Scenes/Scene_TalismanBag_V04_ItemSandbox.unity`");
             builder.AppendLine();
             builder.AppendLine("## Summary");
@@ -368,6 +659,28 @@ namespace TalismanBag.EditorTools.ItemSandbox
             builder.AppendLine();
             AppendResultList(builder, "Notes", result.Notes);
             AppendResultList(builder, "Errors", result.Errors);
+            return builder.ToString();
+        }
+
+        private static string BuildShapeFixReport(VerificationResult result)
+        {
+            StringBuilder builder = new();
+            builder.AppendLine("# I009 / I029 Item Shape Fix Report");
+            builder.AppendLine();
+            builder.AppendLine("- Package: `V0.4-I009AndI029ItemShapeFix01`");
+            builder.AppendLine("- Guard: `GUARD_PASS_I009_I029_ITEM_SHAPE_FIX01`");
+            builder.AppendLine($"- Result: {(result.Errors.Count == 0 ? "PASS" : "FAIL")}");
+            builder.AppendLine("- Expected: `shape_single_1 / cells=(0,0) / coreCellLocal=(0,0)`");
+            builder.AppendLine("- Scope: catalog truth, four rotations, Candidate profile, five rarities, two Roll/Projection seeds per rarity, detail display, shared artwork-slot routing.");
+            builder.AppendLine("- UI layout mutation: NO");
+            builder.AppendLine("- Formal Battle / Reward / RunFlow / Inventory / Save / BuildSettings mutation: NO");
+            builder.AppendLine();
+            AppendResultList(builder, "Verification Notes", result.Notes.Where(note =>
+                note.Contains("I009", StringComparison.Ordinal)
+                || note.Contains("I029", StringComparison.Ordinal)
+                || note.Contains("artwork routing", StringComparison.OrdinalIgnoreCase)).ToList());
+            AppendResultList(builder, "Errors", result.Errors);
+            builder.AppendLine(result.Errors.Count == 0 ? ShapeFixMarker : "I009_I029_ITEM_SHAPE_FIX01_FAIL");
             return builder.ToString();
         }
 

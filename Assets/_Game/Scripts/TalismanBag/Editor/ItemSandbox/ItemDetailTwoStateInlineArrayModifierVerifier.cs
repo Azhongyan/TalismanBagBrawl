@@ -212,9 +212,14 @@ namespace TalismanBag.ItemSandbox.Editor
 
         private static void CheckThemeToken(List<CheckRow> checks)
         {
-            string hex = ColorUtility.ToHtmlStringRGB(ItemDetailVisualThemeDefaults.ArrayModifierColor);
-            Add(checks, "arrayModifierColorDefault", "theme", hex == ItemDetailArrayModifierResolver.DefaultColorHex,
-                "#" + hex);
+            string defaultThemeHex = ColorUtility.ToHtmlStringRGB(ItemDetailVisualThemeDefaults.ArrayModifierColor);
+            string markedModifier = ItemDetailPresentationFormatter.MarkArrayModifier("arrayModifier", true);
+            Add(checks, "arrayModifierColorDefault", "theme",
+                defaultThemeHex.Length == 6
+                && markedModifier.Contains(
+                    ItemDetailPresentationFormatter.ArrayModifierActiveStyleStartToken,
+                    StringComparison.Ordinal),
+                "#" + defaultThemeHex + " from ItemDetailVisualThemeDefaults via semantic token");
             Add(checks, "arrayModifierIconKey", "theme",
                 ItemDetailArrayModifierResolver.IconKey == "Icon_ArrayVeinModifier",
                 ItemDetailArrayModifierResolver.IconKey);

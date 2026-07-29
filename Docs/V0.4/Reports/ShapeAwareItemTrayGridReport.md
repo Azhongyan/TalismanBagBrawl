@@ -1,7 +1,7 @@
 # Shape-Aware ItemTray Grid Report
 
 Package: `V0.4-ShapeAwareItemTrayGrid01`
-Generated: `2026-07-01 19:45:24`
+Generated: `2026-07-21 15:27:50`
 Status: `PASS_DEVONLY_TRAY_GRID_READY`
 Errors: `0`
 Warnings: `0`
@@ -26,7 +26,7 @@ Leak Count: `0`
 | `overlap_rejects_corner3` | `CanPlace` | `overlap_corner3` | `Corner3` | 3 | `0,0` | `0,0;1,0;0,1` | `0;1;5` | `False` | `False` | `CellOccupied` | `HoldingItem` | `False` | `True` | A new item cannot overlap already committed tray cells. |
 | `illegal_commit_keeps_stable_anchor` | `Preview+Commit` | `item_square4` | `Square4` | 4 | `4,7` | `4,7;5,7;4,8;5,8` | `39;40;44;45` | `False` | `False` | `OutOfGrid` | `InvalidPreview` | `False` | `True` | Illegal tray drops do not mutate the committed placement or stable tray anchor. |
 | `legal_move_updates_stable_anchor` | `Preview+Commit` | `item_square4` | `Square4` | 4 | `0,2` | `0,2;1,2;0,3;1,3` | `10;11;15;16` | `True` | `True` | `None` | `Committed` | `True` | `True` | Legal tray moves update the receiver-owned stable tray anchor. |
-| `rotation_normalizes_corner3` | `CanPlace` | `rotated_corner3` | `Corner3` | 3 | `0,0` | `0,0;0,1;1,1` | `0;5;6` | `True` | `True` | `None` | `HoldingItem` | `False` | `True` | Rotated offsets are normalized so the tray anchor remains the top-left stable cell. |
+| `rotation_normalizes_corner3` | `CanPlace` | `rotated_corner3` | `Corner3` | 3 | `0,0` | `0,0;1,0;1,1` | `0;1;6` | `True` | `True` | `None` | `HoldingItem` | `False` | `True` | Rotated offsets are normalized so the tray anchor remains the top-left stable cell. |
 | `screen_point_to_cell` | `ScreenPointToCell` | `` | `` | 0 | `2,3` | `` | `` | `True` | `True` | `None` | `Idle` | `False` | `True` | Screen point maps to a tray cell without reading or writing formal UI layout. |
 
 ## State Authority
@@ -79,7 +79,7 @@ Leak Count: `0`
 | `Info` | `SHAPE_ITEM_TRAY_GRID_SAMPLE_PASS` | overlap_rejects_corner3 action=CanPlace, valid=False, anchor=0,0, cells=0,0;1,0;0,1, reason=CellOccupied. | `V0.4-ShapeAwareItemTrayGrid01` |
 | `Info` | `SHAPE_ITEM_TRAY_GRID_SAMPLE_PASS` | illegal_commit_keeps_stable_anchor action=Preview+Commit, valid=False, anchor=4,7, cells=4,7;5,7;4,8;5,8, reason=OutOfGrid. | `V0.4-ShapeAwareItemTrayGrid01` |
 | `Info` | `SHAPE_ITEM_TRAY_GRID_SAMPLE_PASS` | legal_move_updates_stable_anchor action=Preview+Commit, valid=True, anchor=0,2, cells=0,2;1,2;0,3;1,3, reason=None. | `V0.4-ShapeAwareItemTrayGrid01` |
-| `Info` | `SHAPE_ITEM_TRAY_GRID_SAMPLE_PASS` | rotation_normalizes_corner3 action=CanPlace, valid=True, anchor=0,0, cells=0,0;0,1;1,1, reason=None. | `V0.4-ShapeAwareItemTrayGrid01` |
+| `Info` | `SHAPE_ITEM_TRAY_GRID_SAMPLE_PASS` | rotation_normalizes_corner3 action=CanPlace, valid=True, anchor=0,0, cells=0,0;1,0;1,1, reason=None. | `V0.4-ShapeAwareItemTrayGrid01` |
 | `Info` | `SHAPE_ITEM_TRAY_GRID_SAMPLE_PASS` | screen_point_to_cell action=ScreenPointToCell, valid=True, anchor=2,3, cells=, reason=None. | `V0.4-ShapeAwareItemTrayGrid01` |
 | `Info` | `SHAPE_ITEM_TRAY_GRID_SHAPE_PACKED` | Shape Single1 packs as 1 real tray cell(s). | `V0.4-ShapeAwareItemTrayGrid01` |
 | `Info` | `SHAPE_ITEM_TRAY_GRID_SHAPE_PACKED` | Shape Vertical2 packs as 2 real tray cell(s). | `V0.4-ShapeAwareItemTrayGrid01` |

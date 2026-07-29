@@ -1,0 +1,23 @@
+fixture_id,applicability,p1,p2,expected_status,input_disposition,expected_code,signature_assertion
+fixture.case01.applicable.complete.complete,Applicable,Complete,Complete,Complete,C+C input,none,sha256:a6c950ffc43d022035d3fea1a9796bd1ab82a63d587e6d6cccf0fec89482e69a
+fixture.case02.applicable.unknown.complete,Applicable,Unknown,Complete,Unknown,I+C input,BUILD_SOURCE_UNKNOWN,valid canonical
+fixture.case03.applicable.complete.unknown,Applicable,Complete,Unknown,Unknown,C+I input,PRESSURE_SOURCE_UNKNOWN,valid canonical
+fixture.case04.applicable.unknown.unknown,Applicable,Unknown,Unknown,Unknown,I+I input,BUILD_SOURCE_UNKNOWN and PRESSURE_SOURCE_UNKNOWN,valid canonical
+fixture.case05.applicable.invalid.complete,Applicable,Invalid,Complete,Invalid,null,BUILD_SOURCE_INVALID,valid canonical
+fixture.case06.applicable.complete.invalid,Applicable,Complete,Invalid,Invalid,null,PRESSURE_SOURCE_INVALID,valid canonical
+fixture.case07.applicable.invalid.invalid,Applicable,Invalid,Invalid,Invalid,null,both Invalid issues retained,valid canonical
+fixture.case08.applicable.missing.complete,Applicable,Missing,Complete,Unknown,I+C input,BUILD_SOURCE_MISSING,valid canonical
+fixture.case09.applicable.complete.missing,Applicable,Complete,Missing,Unknown,C+I input,PRESSURE_SOURCE_MISSING,valid canonical
+fixture.case10.applicable.missing.missing,Applicable,Missing,Missing,Unknown,I+I input,both Missing issues,valid canonical
+fixture.case11.explicit-unknown.complete.complete,Unknown,Complete,Complete,Unknown,C+C input,explicit Unknown,valid canonical
+fixture.case12.explicit-unknown.missing.unknown,Unknown,Missing,Unknown,Unknown,I+I input,source incomplete,valid canonical
+fixture.case13.not-applicable.missing.missing,NotApplicable,Missing,Missing,Complete,NotRequired null payloads,none,valid canonical
+fixture.case14.not-applicable.complete.complete,NotApplicable,Complete,Complete,Complete,NotRequired discarded payloads,none,valid canonical
+fixture.case15.not-applicable.invalid,NotApplicable,Invalid,Complete,Invalid,null,BUILD_SOURCE_INVALID,valid canonical
+fixture.case16.not-in-channel,NotInChannel,Complete,Complete,Invalid,null,NOT_IN_CHANNEL_REJECTED,valid canonical
+fixture.case17.applicability-missing,Missing,Complete,Complete,Unknown,null,APPLICABILITY_SOURCE_MISSING,valid canonical
+fixture.case18.assembler-schema-mismatch,Applicable,Complete,Complete,Invalid,null,ASSEMBLER_SCHEMA_MISMATCH,valid canonical
+fixture.case19.n01b-channel-mismatch,Applicable,Complete,Complete,Invalid,null,APPLICABILITY_SOURCE_INVALID,valid canonical
+fixture.case20.requirement-duplicate,Applicable,Complete,Complete,Invalid,null,REQUIREMENT_JOIN_DUPLICATE,valid canonical
+fixture.case21.board-domain-mismatch,Applicable,Complete,Complete,Invalid,null,N01C_VALIDATOR_REJECTED,valid canonical
+fixture.case22.deterministic-baseline,Applicable,Complete,Complete,Complete,C+C input,none,sha256:a6c950ffc43d022035d3fea1a9796bd1ab82a63d587e6d6cccf0fec89482e69a deterministic reversal culture immutable sensitive

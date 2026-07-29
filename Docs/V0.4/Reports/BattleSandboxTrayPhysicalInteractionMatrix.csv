@@ -1,0 +1,9 @@
+itemId,action,observed,extra,result
+"I010","pointer_hit","0;5;6","NO","PASS"
+"I016","pointer_hit","0;5;6","NO","PASS"
+"I010","collision_reservation","0;5;6","NO","PASS"
+"I016","collision_reservation","0;5;6","NO","PASS"
+"I010","drag_source_anchor","0,0;0,1;1,1","anchor=0,0","PASS"
+"I016","drag_source_anchor","0,0;0,1;1,1","anchor=0,0","PASS"
+"I010","return_to_tray","repeat=3","no_drift","PASS"
+"I016","return_to_tray","repeat=3","no_drift","PASS"

@@ -1,0 +1,5 @@
+"actionPatternId","effectRequestId","dueKind","preCastTicks","telegraphTicks","castTicks","resolveOffsetTicks","recoverTicks","interruptPolicy","cueKind","runtimeOwnerBoundary"
+"shougunu.phase1.basic_attack","battle.effect_request.direct_player_damage","BasicDebt","0","400","300","700","600","ReactiveCueFirst","BasicAttack","neutral request only; Battle owns player-side effect"
+"shougunu.phase1.skill1.shell_repair","enemy.effect_request.repair_current_shell","HpThreshold","0","800","400","1200","800","ReactiveCueFirst","Skill1ShellRepair","neutral request only; Battle owns player-side effect"
+"shougunu.phase1.skill2.rope_heavy_strike","battle.effect_request.rope_heavy_strike","HpThreshold","0","1200","500","1700","900","ReactiveCueFirst","Skill2RopeHeavyStrike","neutral request only; Battle owns player-side effect"
+"shougunu.phase1.skill3.ground_seal_burst","battle.effect_request.ground_seal_area_burst","HpThreshold","0","1800","700","2500","1200","ReactiveCueFirst","Skill3GroundSealBurst","neutral request only; Battle owns player-side effect"

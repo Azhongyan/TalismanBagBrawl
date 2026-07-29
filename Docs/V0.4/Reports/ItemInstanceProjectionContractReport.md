@@ -1,13 +1,13 @@
 # ItemInstanceProjectionContract01 Report
 
 - Package: `V0.4-ItemInstanceProjectionContract01`
-- Result: PASS
-- Marker: `ITEM_INSTANCE_PROJECTION_CONTRACT01_PASS`
+- Result: FAIL
+- Marker: `ITEM_INSTANCE_PROJECTION_CONTRACT01_FAIL`
 - Single schema: `ItemInstanceProjectionContractSnapshot.v1`
 - Set schema: `ItemInstanceProjectionSetSnapshot.v1`
 - Source schema: `ItemGeneratedInstanceSnapshot.v1`
 - QA status preserved: `QA_FIXTURE_ONLY|NOT_BALANCE_APPROVED|NOT_FORMAL_GENERATION_DATA`
-- Spec: 156/156 PASS
+- Spec: 155/156 PASS
 - Instances: 6
 - Queries: 9
 - Leak total: 0
@@ -50,7 +50,7 @@ The set stores an Ordinal-sorted read-only projection list, requires unique item
 
 ## Compatibility
 
-- ItemSystem schema remains `ItemSystemSnapshot.v1`; BuildDebugSignature remains present and was not modified by this package.
+- ItemSystem schema remains `ItemSystemSnapshot.v2`; BuildDebugSignature remains present and was not modified by this package.
 - ItemDetailProjectionComplete report remains PASS; no ItemDetailViewModel, Composer, view or prefab modification is made.
 
 ## Formal systems not connected
@@ -64,19 +64,19 @@ The set stores an Ordinal-sorted read-only projection list, requires unique item
 
 ## Historical regressions
 
-- Foundation: PASS
-- StatRange: PASS
-- CorePotential: PASS
-- AffixSchema: PASS
-- RollEngine: PASS
-- DropSandbox: PASS
-- SimulationValidator: PASS
+- Foundation: FAIL
+- StatRange: FAIL
+- CorePotential: FAIL
+- AffixSchema: FAIL
+- RollEngine: FAIL
+- DropSandbox: FAIL
+- SimulationValidator: FAIL
 - ItemInnerDataCatalog: PASS
 - ItemSystemValidatorAndSnapshot: PASS
 - BuildSynergyCore: PASS
-- CoreAwakeningPreview: PASS
+- CoreAwakeningPreview: FAIL
 - ItemSkillTriggerContract: PASS
-- ItemDetailProjectionComplete: PASS
+- ItemDetailProjectionComplete: FAIL
 - JuNian Lighting: PASS
 - ArrayBonus: PASS
 - Foundation: 159/159
@@ -89,4 +89,13 @@ The set stores an Ordinal-sorted read-only projection list, requires unique item
 
 ## Errors
 
-- None.
+- detail-viewmodel-unmodified-contract: expected 'ItemDetailProjectionComplete PASS', actual 'report marker check', code 'ASSERTION_FAILED'.
+- Historical regression report is not PASS: Foundation.
+- Historical regression report is not PASS: StatRange.
+- Historical regression report is not PASS: CorePotential.
+- Historical regression report is not PASS: AffixSchema.
+- Historical regression report is not PASS: RollEngine.
+- Historical regression report is not PASS: DropSandbox.
+- Historical regression report is not PASS: SimulationValidator.
+- Historical regression report is not PASS: CoreAwakeningPreview.
+- Historical regression report is not PASS: ItemDetailProjectionComplete.

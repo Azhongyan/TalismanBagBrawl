@@ -1,0 +1,13 @@
+binding,objectName,status
+"host","EnemyCombatFeedbackRuntime",PASS
+"grid","BuildGridInteractionPreviewRuntime",PASS
+legacyRuntime,(absent in authored Scene),PASS
+legacyManaLoop,(runtime-discovered),PASS
+"feedback","EnemyCombatFeedbackRuntime",PASS
+"HPText","HPText",PASS
+"PlayerHPBar","Fill",PASS
+"EnemyHPText","EnemyHPText",PASS
+"EnemyHPBar","Fill",PASS
+"ShieldText","ShieldText",PASS
+"StateText","StateText",PASS
+"ContinueBattleStartHook","V04BattlePrepareStateButton",PASS

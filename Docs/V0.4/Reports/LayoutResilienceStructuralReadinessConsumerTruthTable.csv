@@ -1,0 +1,15 @@
+p3Status,evaluationInputDisposition,evaluatorCalls,validateResultCalls,consumerStatus,predicateState,rule
+Complete,Applicable Complete/Complete,1,1,Complete,KnownTrue or KnownFalse,Accept only authoritative validated known result
+Complete,NotApplicable NotRequired/NotRequired null/null,1,1,Complete,NotApplicable,Preserve explicit N01B disposition
+Complete,Any other combination,0,0,Invalid,null,Reject disposition mismatch
+Unknown,Unknown with legal Complete/Incomplete sides,1,1,Unknown,Unknown,Do not convert to false
+Unknown,Applicable with at least one Incomplete side,1,1,Unknown,Unknown,Do not synthesize facts
+Unknown,null,0,0,Unknown,null,Do not synthesize N01C result
+Unknown,Combination that can produce Known or NotApplicable,0,0,Invalid,null,Reject disposition mismatch
+Invalid,null,0,0,Invalid,null,Preserve prefixed stable P3 diagnostics
+Invalid,non-null,0,0,Invalid,null,Reject malformed P3 shape
+undefined,any,0,0,Invalid,null,Reject unnamed enum
+missing P3,null,0,0,Unknown,null,Missing source is not false
+evaluator exception,legal non-null input,1,0,Invalid,null,No retry or fallback
+normal null return,legal non-null input,1,1,Invalid,null,Authority validator rejects
+malformed normal return,legal non-null input,1,1,Invalid,null,Authority validator rejects

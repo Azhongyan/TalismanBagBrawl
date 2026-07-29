@@ -1,0 +1,11 @@
+stageId,requestKind,enemyProfileId,bossProfileId,itemRequestAuthority,resultFact,writeSave,grantReward,rewardRows,dropRows,result
+1-1,Normal,bone_aspect.runtime.c1.shattered_host.v1,,ItemCombatEffectRequestSnapshot.v1,C1EnemyLifecycle.Defeated,false,false,0,0,PASS
+1-2,Normal,bone_aspect.runtime.c1.shattered_host.v1,,ItemCombatEffectRequestSnapshot.v1,C1EnemyLifecycle.Defeated,false,false,0,0,PASS
+1-3,Normal,bone_aspect.runtime.c1.shattered_host.v1,,ItemCombatEffectRequestSnapshot.v1,C1EnemyLifecycle.Defeated,false,false,0,0,PASS
+1-4,Normal,bone_aspect.runtime.c1.porcelain_hound.v1,,ItemCombatEffectRequestSnapshot.v1,C1EnemyLifecycle.Defeated,false,false,0,0,PASS
+1-5,Normal,bone_aspect.runtime.c1.porcelain_hound.v1,,ItemCombatEffectRequestSnapshot.v1,C1EnemyLifecycle.Defeated,false,false,0,0,PASS
+1-6,Normal,bone_aspect.runtime.c1.porcelain_hound.v1,,ItemCombatEffectRequestSnapshot.v1,C1EnemyLifecycle.Defeated,false,false,0,0,PASS
+1-7,Normal,bone_aspect.runtime.c1.porcelain_hound.v1,,ItemCombatEffectRequestSnapshot.v1,C1EnemyLifecycle.Defeated,false,false,0,0,PASS
+1-8,Normal,bone_aspect.runtime.c1.shattered_host.v1,,ItemCombatEffectRequestSnapshot.v1,C1EnemyLifecycle.Defeated,false,false,0,0,PASS
+1-9,Normal,bone_aspect.runtime.c1.porcelain_hound.v1,,ItemCombatEffectRequestSnapshot.v1,C1EnemyLifecycle.Defeated,false,false,0,0,PASS
+1-10,ManualBoss,,bone_aspect_boss_c1_bone_guard,I007-I012 exactly one positive real request each + I031 owned and placed before request; authored Button handoff,ShougunuPhase1LifecycleState.Defeated,false,false,0,0,PHASE1_DEV_VERTICAL_SLICE;NOT_CONTENT_FINAL;NOT_FORMAL_BOSS_COMPLETION

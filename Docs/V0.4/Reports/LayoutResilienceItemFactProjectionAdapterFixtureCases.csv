@@ -1,0 +1,16 @@
+caseId,ordinaryCount,i031Count,bindingStatus,expectedStatus,completeness,rowCount,codes
+dev_projection_case_01_complete,2,1,Valid,Complete,Complete,3,NONE
+dev_projection_case_02_reversed,2,1,Valid,Complete,Complete,3,NONE
+dev_projection_case_03_same_base_multiple,2,0,Valid,Complete,Complete,2,NONE
+dev_projection_case_04_empty,0,0,Missing,Complete,Complete,0,NONE
+dev_projection_case_05_i031_only,0,1,Missing,Complete,Complete,1,NONE
+dev_projection_case_06_all_uncounted,1,0,Valid,Complete,Complete,1,NONE
+dev_projection_case_07_item_missing,0,0,Missing,Unknown,Incomplete,0,ITEM_SOURCE_MISSING
+dev_projection_case_08_binding_missing,1,0,Missing,Unknown,Incomplete,1,BINDING_SOURCE_MISSING
+dev_projection_case_09_if01_unknown,1,0,Unknown,Unknown,Incomplete,1,BINDING_SOURCE_UNKNOWN|ORDINARY_PLACEMENT_BINDING_MISSING
+dev_projection_case_10_orphan_binding,1,0,Valid,Unknown,Incomplete,1,BINDING_PLACEMENT_ORPHAN
+dev_projection_case_11_item_invalid,1,0,Missing,Invalid,Incomplete,0,ITEM_SOURCE_INVALID
+dev_projection_case_12_if01_invalid_duplicate,1,0,Invalid,Invalid,Incomplete,0,BINDING_SOURCE_INVALID|BINDING_ITEM_INSTANCE_ID_DUPLICATE
+dev_projection_case_13_base_mismatch,1,0,Valid,Invalid,Incomplete,0,BINDING_BASE_ITEM_ID_MISMATCH
+dev_projection_case_14_i031_forgery,0,1,Valid,Invalid,Incomplete,0,I031_ORDINARY_BINDING_FORBIDDEN
+dev_projection_case_15_immutable_culture,2,1,Valid,Complete,Complete,3,NONE

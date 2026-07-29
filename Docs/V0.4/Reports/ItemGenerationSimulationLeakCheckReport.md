@@ -2,7 +2,7 @@
 
 - Scan source: `Assets/_Game/Scripts/TalismanBag/Editor/ItemGeneration/ItemGenerationSimulationValidator.cs`
 - Scanner ignores comments and string literals; counts executable identifiers only.
-- Result: PASS
+- Result: FAIL
 - Package writes reports only; Scene / Prefab / BuildSettings writes: 0.
 
 | Category | Count |

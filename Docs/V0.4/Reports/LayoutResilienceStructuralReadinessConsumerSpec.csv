@@ -1,0 +1,22 @@
+section,field,type,nullable,rule
+schema,SchemaId,string,false,LayoutResilienceStructuralReadinessConsumer.v1
+schema,SchemaVersion,int,false,1
+input,SchemaId,string,true,Ordinal exact and no normalization
+input,SchemaVersion,int,false,Must equal 1
+input,AssemblerResult,LayoutResilienceEvaluationInputAssemblerResult,true,Only public P3 source
+result,SchemaId,string,false,LayoutResilienceStructuralReadinessConsumer.v1
+result,SchemaVersion,int,false,1
+result,Status,LayoutResilienceStructuralReadinessConsumerStatus,false,Complete Unknown or Invalid
+result,PredicateResult,LayoutResiliencePredicateResultSnapshot,true,Defensive copy of validated N01C result
+result,Issues,IReadOnlyList,false,Ordinal stable defensive copy
+result,CanonicalSignature,string,false,sha256 plus 64 lowercase hex
+issue,Code,string,false,Invariant diagnostic code
+issue,Status,LayoutResilienceStructuralReadinessConsumerStatus,false,Unknown or Invalid only
+issue,Path,string,false,Ordinal exact stable path
+issue,Message,string,false,Invariant diagnostic message
+authority,Evaluator,ILayoutResilienceStructuralPredicateEvaluator,false,Default N01C singleton on public path
+authority,ResultValidator,DefaultLayoutResilienceStructuralPredicateValidator,false,Exactly once after normal return
+authority,P3Validator,DefaultLayoutResilienceEvaluationInputAssemblerValidator,false,Exactly once for non-null P3 result
+canonical,P3Payload,all public fields,true,Presence schema status signature issues and full EvaluationInput
+canonical,N01CResult,all public fields,true,Presence state clauses and source signature
+canonical,Ordering,Ordinal/InvariantCulture,false,Stable placement cell edge clause and issue ordering

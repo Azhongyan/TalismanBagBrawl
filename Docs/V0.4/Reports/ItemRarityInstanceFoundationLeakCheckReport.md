@@ -26,4 +26,4 @@
 
 All categories must remain zero. The cultivation potential profile identifier is an identity-only reserved reference and is intentionally not treated as a formal cultivation implementation.
 
-Verifier errors: 0
+Verifier errors: 1

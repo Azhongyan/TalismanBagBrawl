@@ -1,13 +1,18 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using TalismanBag.ItemSandbox;
+using TalismanBag.Items;
 using TalismanBag.Items.Awakening;
+using TalismanBag.Items.Balance;
 using TalismanBag.Items.Build;
 using TalismanBag.Items.Detail;
+using TalismanBag.Items.Generation;
 using TalismanBag.Items.InnerCatalog;
 using TalismanBag.Items.Lighting;
 using UnityEditor;
@@ -35,23 +40,36 @@ namespace TalismanBag.EditorTools.ItemSandbox
 
         private static readonly string[] ModifiedFilePaths =
         {
-            "Assets/_Game/Scripts/TalismanBag/Items/Awakening.meta",
             "Assets/_Game/Scripts/TalismanBag/Items/Awakening/ItemCoreAwakeningRules.cs",
-            "Assets/_Game/Scripts/TalismanBag/Items/Awakening/ItemCoreAwakeningRules.cs.meta",
-            "Assets/_Game/Scripts/TalismanBag/Items/Detail/ItemDetailViewModel.cs",
-            "Assets/_Game/Scripts/TalismanBag/Items/InnerCatalog/ItemInnerDataCatalogProvider.cs",
-            "Assets/_Game/Scripts/TalismanBag/ItemSandbox/ItemSandboxCoreAwakeningPreviewCatalog.cs",
-            "Assets/_Game/Scripts/TalismanBag/ItemSandbox/ItemSandboxCoreAwakeningPreviewCatalog.cs.meta",
-            "Assets/_Game/Scripts/TalismanBag/ItemSandbox/ItemSandboxLightingDetailProjection.cs",
-            "Assets/_Game/Scripts/TalismanBag/ItemSandbox/ItemSandboxGridPlacementPreviewView.cs",
-            "Assets/_Game/Scripts/TalismanBag/ItemSandbox/ItemSandboxDetailPanelView.cs",
-            "Assets/_Game/Scripts/TalismanBag/ItemSandbox/ItemSandboxDevStubProvider.cs",
             "Assets/_Game/Scripts/TalismanBag/Editor/ItemSandbox/CoreAwakeningPreviewVerifier.cs",
-            "Assets/_Game/Scripts/TalismanBag/Editor/ItemSandbox/CoreAwakeningPreviewVerifier.cs.meta",
             "Docs/V0.4/Reports/CoreAwakeningPreviewReport.md",
             "Docs/V0.4/Reports/CoreAwakeningPreviewSpec.csv",
             "Docs/V0.4/Reports/CoreAwakeningPreviewLeakCheckReport.md"
         };
+
+        private static readonly string[] ProtectedFileHashBaselines =
+        {
+            "Assets/_Game/Scripts/TalismanBag/Items/ItemSystemSnapshot.cs", "794c3a6d9dbe9fb1ff96275c247bcef4d9d248edc1df3eaee6d396dd87969827",
+            "Assets/_Game/Scripts/TalismanBag/Items/Balance/ItemCompleteCandidateContent.cs", "c6be8eb8fdc6011f903652d662b77ca3c2b3e5b853624378bf590b707477c0fb",
+            "Docs/V0.4/Reports/ItemCandidateCoreEffects150.csv", "5a725aa3630aaf2ec6829fda0cc76ecded3a02346b249c16d85e21b06b698188",
+            "Assets/_Game/Configs/ItemBalanceWorkbench/ItemBalanceWorkbenchCatalog.asset", "5cc59ab0bb20e3b054c98b73676a9173fda0451f24441e877e08ba53b2350d45",
+            "Assets/_Game/Scripts/TalismanBag/Items/Generation/Potential/ItemCorePotentialAndBuildEligibilitySchema.cs", "0a3cc80b1dc047dfe6ba6caec83e01a0be69aed78f7697e7666b401ecfac2b99",
+            "Assets/_Game/Scripts/TalismanBag/ItemSandbox/ItemFullDetailBuildSandboxWorkbenchSession.cs", "da81315cdcd71310ea43729a4ae043b9a61cf33f0e889c706bf81d5bcf24871b",
+            "Assets/_Game/Scripts/TalismanBag/ItemSandbox/ItemBalanceCandidateDetailSandboxAdapter.cs", "65ee8a3be9a388e2673944f42822c19d1de27ca3ac7abb3232eec94231c65a84",
+            "Assets/_Game/Scripts/TalismanBag/Items/Detail/ItemDetailProjectionComposer.cs", "5b4017a3d5fd7e2c73c73f88f6d31a7e24824e9e748ff929d74c72333055a782",
+            "Assets/_Game/Scripts/TalismanBag/Items/Detail/ItemDetailViewModel.cs", "ced80cfa99b330ca3f5d67fc22198641de817105608b678603c33343ab555e94",
+            "Assets/_Game/Scripts/TalismanBag/Items/Detail/UI/ItemDetailPanelView.cs", "89c6b3b0b2620ed31edfff7fda5b747849ce5b9939479c0deab8ac24f2140c2d",
+            "Assets/_Game/Scripts/TalismanBag/Items/Detail/UI/ItemDetailSectionView.cs", "957910d33006e8006d855cbe5eac9335685be3d9ce32592e3c362d80e578ec2d",
+            "Assets/_Game/Scripts/TalismanBag/BuildSandbox/ItemSystemBattleSandboxBoardAuthority.cs", "e1add9eddca28802cd297bc8becac378494e8cbcfcec2754ca50c732c78b0359",
+            "Assets/_Game/Scripts/TalismanBag/BuildSandbox/ItemSystemBattleSandboxViewProjection.cs", "ff7eb47f3d609b08ddb9175782b47bd58078e7d505acc4b9ac44351addc0e9ec",
+            "Assets/_Game/Scripts/TalismanBag/BuildSandbox/ItemSystemBattleSandboxItemDetailAdapter.cs", "1c1504948012b94dcbb1cc91310becd2df169bb736003737c5109f19cd72cc06",
+            "Assets/_Game/Scenes/Scene_TalismanBag_V04_ItemSandbox.unity", "8b0ff7c60598fdc112a5ce3e247144388da4790101ba77c2a8f7498cedd6dd29",
+            "Assets/_Game/Scenes/Scene_TalismanBag_V04_BattleSandboxPreview.unity", "4c0927ac8633c004184e232cd5e11efc000a64b456dc9c4ca1be5dac4f5b77d6",
+            "Assets/_Game/Prefabs/TalismanBag/Items/ItemDetailPanel.prefab", "2a6924da0823b74e2639b593926d8c2f8422101b01edbe4073af33cd424e027c",
+            "ProjectSettings/EditorBuildSettings.asset", "08a277e3ca465a44e792318c0d3c210afdba61069f1170b74fa5a1a18598fe59"
+        };
+
+        private const string ProfilesAggregateHash = "a4cbbd2a940b0f6189280c3afca404ebae414bcaf982338f3866912a11ea00b0";
 
         private static readonly string[] ForbiddenSourceTokens =
         {
@@ -98,7 +116,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
 
                 if (result.Errors.Count == 0)
                 {
-                    Debug.Log("CoreAwakeningPreview01 verification passed and reports were written.");
+                    Debug.Log("V0.4-ItemCoreAwakeningCore4NodeExpansion01 verification passed and reports were written.");
                     if (exitWhenBatchMode)
                     {
                         EditorApplication.Exit(0);
@@ -132,6 +150,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
         private static void RunChecks(VerificationResult result, List<CoreAwakeningSpecRow> rows)
         {
             CheckDefaultDefinitionProvider(result, rows);
+            CheckCandidateAuthority(result, rows);
 
             ItemLightingResolutionResult boundaryLighting = CreateBoundaryLightingResult();
             ItemCoreAwakeningResolutionResult boundaryResult = ItemCoreAwakeningResolver.Resolve(
@@ -147,25 +166,179 @@ namespace TalismanBag.EditorTools.ItemSandbox
             CheckBuildAndArrayCannotUnlock(result, rows);
             CheckLightingArrayBuildRegressions(result, rows);
             CheckSnapshotInterface(result, rows);
+            CheckItemSystemSnapshotRoundTrip(result, rows, boundaryResult);
+            CheckProtectedHashes(result, rows);
             CheckSourceScope(result);
+
+            if (result.Errors.Count == 0)
+            {
+                result.Notes.Add("COMPONENT_FIXTURE_PASS");
+                result.Notes.Add("CORE4_NODE_EXPANSION_PASS");
+                result.Notes.Add("UNITY_COMPILE_PASS");
+                result.Notes.Add("LEAKCHECK_PASS");
+                result.Notes.Add("USER_HANDTEST_NOT_APPLICABLE");
+            }
         }
 
         private static void CheckDefaultDefinitionProvider(VerificationResult result, List<CoreAwakeningSpecRow> rows)
         {
-            IReadOnlyList<ItemCoreEffectDefinition> definitions = DefaultItemCoreEffectDefinitionProvider.Instance.GetDefinitions("I001");
-            string[] expectedIds = { "I001_CORE_01", "I001_CORE_02", "I001_CORE_03", "I001_CORE_ULT" };
-            bool ordinaryPassed = definitions.Count == 4
-                && definitions.Select(definition => definition.coreEffectId).SequenceEqual(expectedIds)
-                && definitions.Select(definition => definition.unlockLevel).SequenceEqual(new[] { 10, 20, 30, 40 });
-            bool sourcePassed = DefaultItemCoreEffectDefinitionProvider.Instance.GetDefinitions("I031").Count == 0;
-            bool passed = ordinaryPassed && sourcePassed;
-            if (!passed)
+            HashSet<string> allDefinitionIds = new(StringComparer.Ordinal);
+            bool ordinaryPassed = true;
+            for (int itemIndex = 1; itemIndex <= 30; itemIndex++)
             {
-                result.Errors.Add("Default item core effect definitions failed: ordinary items must emit four item-specific ids and I031 must emit none.");
+                string itemId = "I" + itemIndex.ToString("D3", CultureInfo.InvariantCulture);
+                IReadOnlyList<ItemCoreEffectDefinition> definitions = DefaultItemCoreEffectDefinitionProvider.Instance.GetDefinitions(itemId);
+                string[] expectedIds =
+                {
+                    itemId + "_CORE_01",
+                    itemId + "_CORE_02",
+                    itemId + "_CORE_03",
+                    itemId + "_CORE_04",
+                    itemId + "_CORE_ULT"
+                };
+                ItemCoreAwakeningNodeKind[] expectedKinds =
+                {
+                    ItemCoreAwakeningNodeKind.Core1,
+                    ItemCoreAwakeningNodeKind.Core2,
+                    ItemCoreAwakeningNodeKind.Core3,
+                    ItemCoreAwakeningNodeKind.Core4,
+                    ItemCoreAwakeningNodeKind.Ultimate
+                };
+                int[] expectedLevels = { 10, 20, 30, 40, 40 };
+                string[] expectedRarities = { "white", "green", "blue", "purple", "orange" };
+                bool itemPassed = definitions.Count == 5
+                    && definitions.Select(definition => definition.coreEffectId).SequenceEqual(expectedIds)
+                    && definitions.Select(definition => definition.nodeKind).SequenceEqual(expectedKinds)
+                    && definitions.Select(definition => definition.unlockLevel).SequenceEqual(expectedLevels)
+                    && definitions.Select(definition => definition.requiredRarityKey).SequenceEqual(expectedRarities)
+                    && definitions.All(definition => string.Equals(definition.itemId, itemId, StringComparison.Ordinal));
+                ordinaryPassed &= itemPassed;
+                foreach (ItemCoreEffectDefinition definition in definitions)
+                {
+                    ordinaryPassed &= allDefinitionIds.Add(definition.coreEffectId);
+                }
             }
 
-            rows.Add(new CoreAwakeningSpecRow("definitionProviderDefault", "definitions", "I001", 1, 1, false, true, string.Join("|", expectedIds), "None", 10, "None", "I001 has four item-specific ids; I031 has none", passed ? "PASS" : "FAIL"));
-            result.Notes.Add("Definition provider checked: ordinary item definitions use itemId-specific ids and I031 returns no definitions.");
+            ItemCoreAwakeningNodeKind[] expectedDefaultKinds =
+            {
+                ItemCoreAwakeningNodeKind.Core1,
+                ItemCoreAwakeningNodeKind.Core2,
+                ItemCoreAwakeningNodeKind.Core3,
+                ItemCoreAwakeningNodeKind.Core4,
+                ItemCoreAwakeningNodeKind.Ultimate
+            };
+            bool enumCompatibilityPassed = (int)ItemCoreAwakeningNodeKind.Core1 == 0
+                && (int)ItemCoreAwakeningNodeKind.Core2 == 1
+                && (int)ItemCoreAwakeningNodeKind.Core3 == 2
+                && (int)ItemCoreAwakeningNodeKind.Ultimate == 3
+                && (int)ItemCoreAwakeningNodeKind.Core4 == 4;
+            bool defaultOrderPassed = ItemCoreAwakeningResolver.DefaultNodes.Count == 5
+                && ItemCoreAwakeningResolver.DefaultNodes.Select(node => node.nodeKind).SequenceEqual(expectedDefaultKinds)
+                && !ItemCoreAwakeningResolver.DefaultNodes.Single(node => node.nodeKind == ItemCoreAwakeningNodeKind.Core4).isUltimate
+                && ItemCoreAwakeningResolver.DefaultNodes.Single(node => node.nodeKind == ItemCoreAwakeningNodeKind.Ultimate).isUltimate;
+            bool sourcePassed = DefaultItemCoreEffectDefinitionProvider.Instance.GetDefinitions("I031").Count == 0;
+            bool passed = ordinaryPassed
+                && allDefinitionIds.Count == 150
+                && enumCompatibilityPassed
+                && defaultOrderPassed
+                && sourcePassed;
+            if (!passed)
+            {
+                result.Errors.Add($"Default item core effect definitions failed: expected I001-I030 five-node definitions=150 unique, explicit 01/02/03/04/ULT order, preserved enum values, and I031=0; actual unique={allDefinitionIds.Count}.");
+            }
+
+            rows.Add(new CoreAwakeningSpecRow("definitionProviderI001I030", "definitions", "I001-I030", 1, 1, false, true, allDefinitionIds.Count.ToString(CultureInfo.InvariantCulture), "None", 10, "None", "30 items x 5 explicit ids = 150; I031=0; enum values compatible", passed ? "PASS" : "FAIL"));
+            result.Notes.Add(passed
+                ? "I001_I030_AWAKENING_150_PASS"
+                : "I001_I030_AWAKENING_150_FAIL");
+            result.Notes.Add(sourcePassed ? "I031_EXCLUSION_PASS" : "I031_EXCLUSION_FAIL");
+        }
+
+        private static void CheckCandidateAuthority(VerificationResult result, List<CoreAwakeningSpecRow> rows)
+        {
+            HashSet<string> candidateIds = new(StringComparer.Ordinal);
+            bool passed = true;
+            int candidateCount = 0;
+            for (int itemIndex = 1; itemIndex <= 30; itemIndex++)
+            {
+                string itemId = "I" + itemIndex.ToString("D3", CultureInfo.InvariantCulture);
+                string profilePath = $"Assets/_Game/Configs/ItemBalanceWorkbench/Profiles/ItemBalanceProfile_{itemId}.asset";
+                ItemBalanceProfile profile = AssetDatabase.LoadAssetAtPath<ItemBalanceProfile>(profilePath);
+                IReadOnlyList<ItemBalanceCoreCandidate> candidates = profile?.coreCandidates;
+                candidates ??= Array.Empty<ItemBalanceCoreCandidate>();
+                candidateCount += candidates.Count;
+                passed &= profile != null
+                    && string.Equals(profile.baseItemId, itemId, StringComparison.Ordinal)
+                    && candidates.Count == 5;
+
+                string stem = "candidate_core_" + itemId.ToLowerInvariant();
+                ItemBalanceCoreCandidate core1 = FindCandidate(candidates, stem + "_01");
+                ItemBalanceCoreCandidate core2 = FindCandidate(candidates, stem + "_02");
+                ItemBalanceCoreCandidate core3 = FindCandidate(candidates, stem + "_03");
+                ItemBalanceCoreCandidate core4 = FindCandidate(candidates, stem + "_04");
+                ItemBalanceCoreCandidate ultimate = FindCandidate(candidates, stem + "_ultimate");
+                passed &= CandidateMatches(core1, "Core1", 10, ItemInstanceRarity.White)
+                    && CandidateMatches(core2, "Core2", 20, ItemInstanceRarity.Green)
+                    && CandidateMatches(core3, "Core3", 30, ItemInstanceRarity.Blue)
+                    && CandidateMatches(core4, "Core4", 40, ItemInstanceRarity.Purple)
+                    && core4?.effectPayload?.operation == ItemCandidateEffectOperation.ExtraTrigger
+                    && CandidateMatches(ultimate, "Ultimate", 40, ItemInstanceRarity.Orange)
+                    && ultimate?.effectPayload?.operation == ItemCandidateEffectOperation.Convert;
+
+                foreach (ItemBalanceCoreCandidate candidate in candidates)
+                {
+                    passed &= candidate != null
+                        && !string.IsNullOrWhiteSpace(candidate.coreEffectId)
+                        && candidateIds.Add(candidate.coreEffectId)
+                        && candidate.coreEffectId.StartsWith(stem + "_", StringComparison.Ordinal)
+                        && !candidate.coreEffectId.StartsWith(itemId + "_CORE_", StringComparison.Ordinal);
+                }
+            }
+
+            passed &= candidateCount == 150 && candidateIds.Count == 150;
+            if (!passed)
+            {
+                result.Errors.Add($"Candidate authority regression failed: expected 150 unique Candidate rows with Core4 ExtraTrigger and Ultimate Convert identities; actual rows={candidateCount}, unique={candidateIds.Count}.");
+            }
+
+            rows.Add(new CoreAwakeningSpecRow(
+                "candidateAuthority150",
+                "profiles",
+                "I001-I030",
+                0,
+                0,
+                false,
+                false,
+                candidateIds.Count.ToString(CultureInfo.InvariantCulture),
+                "None",
+                0,
+                "None",
+                "Candidate 150 preserved; Core4=purple/ExtraTrigger; Ultimate=orange/Convert",
+                passed ? "PASS" : "FAIL"));
+            result.Notes.Add(passed
+                ? "Candidate authority checked: 150 unique rows remain byte-protected and semantically distinct from Awakening ids."
+                : "Candidate authority check failed.");
+        }
+
+        private static ItemBalanceCoreCandidate FindCandidate(
+            IReadOnlyList<ItemBalanceCoreCandidate> candidates,
+            string coreEffectId)
+        {
+            return (candidates ?? Array.Empty<ItemBalanceCoreCandidate>())
+                .SingleOrDefault(candidate => candidate != null
+                    && string.Equals(candidate.coreEffectId, coreEffectId, StringComparison.Ordinal));
+        }
+
+        private static bool CandidateMatches(
+            ItemBalanceCoreCandidate candidate,
+            string nodeKind,
+            int unlockLevel,
+            ItemInstanceRarity rarity)
+        {
+            return candidate != null
+                && string.Equals(candidate.nodeKind, nodeKind, StringComparison.Ordinal)
+                && candidate.unlockLevel == unlockLevel
+                && candidate.requiredRarity == rarity;
         }
 
         private static void CheckLevelBoundaries(
@@ -181,8 +354,9 @@ namespace TalismanBag.EditorTools.ItemSandbox
             CheckItem(result, rows, boundaryResult, "levelLv29", "P_LV29", 29, 29, true, true, "I006_CORE_01|I006_CORE_02", "I006_CORE_01|I006_CORE_02", 30, "PASS");
             CheckItem(result, rows, boundaryResult, "levelLv30", "P_LV30", 30, 30, true, true, "I007_CORE_01|I007_CORE_02|I007_CORE_03", "I007_CORE_01|I007_CORE_02|I007_CORE_03", 40, "PASS");
             CheckItem(result, rows, boundaryResult, "levelLv39", "P_LV39", 39, 39, true, true, "I013_CORE_01|I013_CORE_02|I013_CORE_03", "I013_CORE_01|I013_CORE_02|I013_CORE_03", 40, "PASS");
-            CheckItem(result, rows, boundaryResult, "levelLv40", "P_LV40", 40, 40, true, true, "I015_CORE_01|I015_CORE_02|I015_CORE_03|I015_CORE_ULT", "I015_CORE_01|I015_CORE_02|I015_CORE_03|I015_CORE_ULT", 0, "PASS");
-            result.Notes.Add("Level boundaries checked: Lv1, Lv9/10, Lv19/20, Lv29/30, and Lv39/40 unlock only by resolvedLevel thresholds.");
+            CheckItem(result, rows, boundaryResult, "levelLv40", "P_LV40", 40, 40, true, true, "I015_CORE_01|I015_CORE_02|I015_CORE_03|I015_CORE_04|I015_CORE_ULT", "I015_CORE_01|I015_CORE_02|I015_CORE_03|I015_CORE_04|I015_CORE_ULT", 0, "PASS");
+            CheckItem(result, rows, boundaryResult, "unlitLevelLv40", "P_UNLIT_LV40", 40, 40, false, true, "I016_CORE_01|I016_CORE_02|I016_CORE_03|I016_CORE_04|I016_CORE_ULT", "None", 0, "PASS");
+            result.Notes.Add("Level boundaries checked: Lv1, Lv9/10, Lv19/20, Lv29/30, and Lv39/40 unlock only by resolvedLevel thresholds; Core4 and Ultimate remain separate at Lv40.");
         }
 
         private static void CheckHighRarityReservedOnly(
@@ -192,20 +366,24 @@ namespace TalismanBag.EditorTools.ItemSandbox
         {
             ItemCoreAwakeningItemResult item = boundaryResult.FindPlacementResult("P_HIGH_RARITY_LV1");
             ItemCoreAwakeningNodeState ultimate = item?.NodeStates.FirstOrDefault(node => node.nodeKind == ItemCoreAwakeningNodeKind.Ultimate);
+            ItemCoreAwakeningNodeState core4 = item?.NodeStates.FirstOrDefault(node => node.nodeKind == ItemCoreAwakeningNodeKind.Core4);
             bool passed = item != null
                 && item.inputLevel == 1
                 && item.resolvedLevel == 1
                 && item.highRarityUltimatePreview
                 && ultimate != null
                 && !ultimate.isUnlocked
-                && ultimate.blockedReason == ItemCoreAwakeningBlockedReason.ReservedRarityGate.ToString();
+                && ultimate.blockedReason == ItemCoreAwakeningBlockedReason.ReservedRarityGate.ToString()
+                && core4 != null
+                && !core4.isUnlocked
+                && core4.blockedReason == ItemCoreAwakeningBlockedReason.LevelTooLow.ToString();
             if (!passed)
             {
-                result.Errors.Add("Lv1 highRarityUltimatePreview=true incorrectly unlocked or failed to mark Ultimate as reserved.");
+                result.Errors.Add("Lv1 highRarityUltimatePreview=true incorrectly unlocked nodes, failed to mark Ultimate as reserved, or leaked Ultimate-only behavior into Core4.");
             }
 
-            rows.Add(RowFromItem("highRarityReservedOnly", item, "Ultimate remains locked with ReservedRarityGate", passed ? "PASS" : "FAIL"));
-            result.Notes.Add("High-rarity preview checked: reserved rarity fields do not unlock Ultimate.");
+            rows.Add(RowFromItem("highRarityReservedOnly", item, "Ultimate remains ReservedRarityGate while Core4 remains LevelTooLow", passed ? "PASS" : "FAIL"));
+            result.Notes.Add("High-rarity preview checked: reserved preview remains Ultimate-only and does not unlock or reclassify Core4.");
         }
 
         private static void CheckSourceUnsupported(
@@ -284,6 +462,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 Def("I001", "I001_CORE_DUP", ItemCoreAwakeningNodeKind.Core1, 10),
                 Def("I001", "I001_CORE_DUP", ItemCoreAwakeningNodeKind.Core2, 20),
                 Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_04", ItemCoreAwakeningNodeKind.Core4, 40),
                 Def("I001", "I001_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40)
             }), "duplicate coreEffectId");
             CheckDefinitionCase(result, rows, "duplicateNodeKind", lighting, inputs, new StaticDefinitionProvider(new[]
@@ -292,6 +471,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 Def("I001", "I001_CORE_01B", ItemCoreAwakeningNodeKind.Core1, 10),
                 Def("I001", "I001_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20),
                 Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_04", ItemCoreAwakeningNodeKind.Core4, 40),
                 Def("I001", "I001_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40)
             }), "duplicate nodeKind");
             CheckDefinitionCase(result, rows, "wrongNodeLevel", lighting, inputs, new StaticDefinitionProvider(new[]
@@ -299,6 +479,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 Def("I001", "I001_CORE_01", ItemCoreAwakeningNodeKind.Core1, 10),
                 Def("I001", "I001_CORE_02", ItemCoreAwakeningNodeKind.Core2, 21),
                 Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_04", ItemCoreAwakeningNodeKind.Core4, 40),
                 Def("I001", "I001_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40)
             }), "unlockLevel mismatch");
             CheckDefinitionCase(result, rows, "definitionItemMismatch", lighting, inputs, new StaticDefinitionProvider(new[]
@@ -306,6 +487,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 Def("I999", "I001_CORE_01", ItemCoreAwakeningNodeKind.Core1, 10),
                 Def("I001", "I001_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20),
                 Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_04", ItemCoreAwakeningNodeKind.Core4, 40),
                 Def("I001", "I001_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40)
             }), "itemId mismatch");
             CheckDefinitionCase(result, rows, "emptyCoreEffectId", lighting, inputs, new StaticDefinitionProvider(new[]
@@ -313,6 +495,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 Def("I001", string.Empty, ItemCoreAwakeningNodeKind.Core1, 10),
                 Def("I001", "I001_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20),
                 Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_04", ItemCoreAwakeningNodeKind.Core4, 40),
                 Def("I001", "I001_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40)
             }), "empty coreEffectId");
             CheckDefinitionCase(result, rows, "nullDefinition", lighting, inputs, new StaticDefinitionProvider(new ItemCoreEffectDefinition[]
@@ -321,10 +504,52 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 Def("I001", "I001_CORE_01", ItemCoreAwakeningNodeKind.Core1, 10),
                 Def("I001", "I001_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20),
                 Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_04", ItemCoreAwakeningNodeKind.Core4, 40),
                 Def("I001", "I001_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40)
             }), "null core effect definition");
+            CheckDefinitionCase(result, rows, "missingCore4", lighting, inputs, new StaticDefinitionProvider(new[]
+            {
+                Def("I001", "I001_CORE_01", ItemCoreAwakeningNodeKind.Core1, 10),
+                Def("I001", "I001_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20),
+                Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40)
+            }), "nodeKind 'Core4'");
+            CheckDefinitionCase(result, rows, "duplicateCore4Kind", lighting, inputs, new StaticDefinitionProvider(new[]
+            {
+                Def("I001", "I001_CORE_01", ItemCoreAwakeningNodeKind.Core1, 10),
+                Def("I001", "I001_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20),
+                Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_04", ItemCoreAwakeningNodeKind.Core4, 40),
+                Def("I001", "I001_CORE_04B", ItemCoreAwakeningNodeKind.Core4, 40),
+                Def("I001", "I001_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40)
+            }), "duplicate nodeKind 'Core4'");
+            CheckDefinitionCase(result, rows, "wrongCore4Level", lighting, inputs, new StaticDefinitionProvider(new[]
+            {
+                Def("I001", "I001_CORE_01", ItemCoreAwakeningNodeKind.Core1, 10),
+                Def("I001", "I001_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20),
+                Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_04", ItemCoreAwakeningNodeKind.Core4, 39),
+                Def("I001", "I001_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40)
+            }), "nodeKind 'Core4' unlockLevel mismatch");
+            CheckDefinitionCase(result, rows, "sharedCore4UltimateId", lighting, inputs, new StaticDefinitionProvider(new[]
+            {
+                Def("I001", "I001_CORE_01", ItemCoreAwakeningNodeKind.Core1, 10),
+                Def("I001", "I001_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20),
+                Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_SHARED", ItemCoreAwakeningNodeKind.Core4, 40),
+                Def("I001", "I001_CORE_SHARED", ItemCoreAwakeningNodeKind.Ultimate, 40)
+            }), "duplicate coreEffectId");
+            CheckDefinitionCase(result, rows, "core4IdMappedToUltimateKind", lighting, inputs, new StaticDefinitionProvider(new[]
+            {
+                Def("I001", "I001_CORE_01", ItemCoreAwakeningNodeKind.Core1, 10),
+                Def("I001", "I001_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20),
+                Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_04", ItemCoreAwakeningNodeKind.Ultimate, 40),
+                Def("I001", "I001_CORE_ULT", ItemCoreAwakeningNodeKind.Core4, 40)
+            }), "coreEffectId mismatch");
             CheckDefinitionCase(result, rows, "nullDefinitionProvider", lighting, inputs, null, "definitionProvider is null");
-            result.Notes.Add("Definition validation checked: missing, duplicate id, duplicate nodeKind, wrong level, item mismatch, empty id, null definition, and null provider.");
+            CheckReversedDefinitionOrder(result, rows, lighting, inputs);
+            result.Notes.Add("Definition validation checked: Core4 missing/duplicate/wrong-level/shared-id isolation plus existing id, nodeKind, item, null and reversed-order cases.");
         }
 
         private static void CheckDefinitionCase(
@@ -340,13 +565,45 @@ namespace TalismanBag.EditorTools.ItemSandbox
             ItemCoreAwakeningItemResult item = resolution.FindPlacementResult("P_DEF");
             bool passed = resolution.ValidationErrors.Any(error => ContainsOrdinal(error, expectedError))
                 && item != null
-                && item.NodeStates.Count <= 4;
+                && item.NodeStates.Count <= 5;
             if (!passed)
             {
                 result.Errors.Add($"{caseId} did not emit expected validation error containing '{expectedError}'.");
             }
 
             rows.Add(RowFromItem(caseId, item, $"validationErrors contains {expectedError}", passed ? "PASS" : "FAIL"));
+        }
+
+        private static void CheckReversedDefinitionOrder(
+            VerificationResult result,
+            List<CoreAwakeningSpecRow> rows,
+            ItemLightingResolutionResult lighting,
+            IReadOnlyList<ItemCoreAwakeningInput> inputs)
+        {
+            ItemCoreEffectDefinition[] definitions =
+            {
+                Def("I001", "I001_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40),
+                Def("I001", "I001_CORE_04", ItemCoreAwakeningNodeKind.Core4, 40),
+                Def("I001", "I001_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
+                Def("I001", "I001_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20),
+                Def("I001", "I001_CORE_01", ItemCoreAwakeningNodeKind.Core1, 10)
+            };
+            ItemCoreAwakeningResolutionResult resolution = ItemCoreAwakeningResolver.Resolve(
+                lighting,
+                inputs,
+                new StaticDefinitionProvider(definitions));
+            ItemCoreAwakeningItemResult item = resolution.FindPlacementResult("P_DEF");
+            string expectedIds = "I001_CORE_01|I001_CORE_02|I001_CORE_03|I001_CORE_04|I001_CORE_ULT";
+            bool passed = resolution.ValidationErrors.Count == 0
+                && item != null
+                && item.NodeStates.Count == 5
+                && ItemCoreAwakeningResolver.FormatIds(item.NodeStates.Select(node => node.coreEffectId).ToArray()) == expectedIds;
+            if (!passed)
+            {
+                result.Errors.Add("Reversed definition input order did not resolve to explicit Core1/Core2/Core3/Core4/Ultimate output order.");
+            }
+
+            rows.Add(RowFromItem("reversedDefinitionOrder", item, expectedIds, passed ? "PASS" : "FAIL"));
         }
 
         private static void CheckViewModelProjection(
@@ -367,8 +624,10 @@ namespace TalismanBag.EditorTools.ItemSandbox
                     && projected.statusFlags.resolvedLevel == 40
                     && projected.statusFlags.coreEffectUnlocked
                     && projected.statusFlags.coreEffectActive
-                    && projected.displayCoreEffects.Count == 4
+                    && projected.displayCoreEffects.Count == 5
+                    && projected.displayCoreEffects.Any(line => ContainsOrdinal(line.body, "coreEffectId=I015_CORE_04"))
                     && projected.displayCoreEffects.Any(line => ContainsOrdinal(line.body, "coreEffectId=I015_CORE_ULT"))
+                    && projected.awakeningPreview.activeCoreEffectIdsText.Contains("I015_CORE_04")
                     && projected.awakeningPreview.activeCoreEffectIdsText.Contains("I015_CORE_ULT");
                 if (!passed)
                 {
@@ -510,6 +769,138 @@ namespace TalismanBag.EditorTools.ItemSandbox
             result.Notes.Add("Interfaces checked: future systems can request read-only inputs, resolved snapshots, and item-specific core effect definitions.");
         }
 
+        private static void CheckItemSystemSnapshotRoundTrip(
+            VerificationResult result,
+            List<CoreAwakeningSpecRow> rows,
+            ItemCoreAwakeningResolutionResult boundaryResult)
+        {
+            ItemCoreAwakeningItemResult lit = boundaryResult.FindPlacementResult("P_LV40");
+            ItemCoreAwakeningItemResult unlit = boundaryResult.FindPlacementResult("P_UNLIT_LV40");
+            ItemCoreAwakeningItemResult source = boundaryResult.FindPlacementResult("P_SOURCE");
+            ItemSystemSnapshot snapshot = new(
+                5,
+                Vector2Int.zero,
+                Array.Empty<Vector2Int>(),
+                Array.Empty<ItemSystemCatalogItemSnapshot>(),
+                Array.Empty<ItemSystemPlacementSnapshot>(),
+                Array.Empty<Vector2Int>(),
+                Array.Empty<ItemSystemLightingResultSnapshot>(),
+                Array.Empty<ItemSystemArrayBonusResultSnapshot>(),
+                new ItemSystemBuildSnapshot(null),
+                new[]
+                {
+                    new ItemSystemAwakeningResultSnapshot(lit),
+                    new ItemSystemAwakeningResultSnapshot(unlit),
+                    new ItemSystemAwakeningResultSnapshot(source)
+                },
+                new ItemSystemSkillMonitorSnapshot(null),
+                string.Empty,
+                false,
+                "Core4NodeExpansionVerifier",
+                Array.Empty<ItemSystemValidationError>());
+
+            ItemCoreAwakeningResolutionResult roundTrip = snapshot.ToCoreAwakeningResolutionResult();
+            ItemCoreAwakeningItemResult roundTripLit = roundTrip.FindPlacementResult("P_LV40");
+            ItemCoreAwakeningItemResult roundTripUnlit = roundTrip.FindPlacementResult("P_UNLIT_LV40");
+            ItemCoreAwakeningItemResult roundTripSource = roundTrip.FindPlacementResult("P_SOURCE");
+            ItemCoreAwakeningNodeState litCore4 = roundTripLit?.NodeStates.SingleOrDefault(node => node.nodeKind == ItemCoreAwakeningNodeKind.Core4);
+            ItemCoreAwakeningNodeState litUltimate = roundTripLit?.NodeStates.SingleOrDefault(node => node.nodeKind == ItemCoreAwakeningNodeKind.Ultimate);
+            ItemCoreAwakeningNodeState unlitCore4 = roundTripUnlit?.NodeStates.SingleOrDefault(node => node.nodeKind == ItemCoreAwakeningNodeKind.Core4);
+            ItemCoreAwakeningNodeState unlitUltimate = roundTripUnlit?.NodeStates.SingleOrDefault(node => node.nodeKind == ItemCoreAwakeningNodeKind.Ultimate);
+            string expectedIds = "I015_CORE_01|I015_CORE_02|I015_CORE_03|I015_CORE_04|I015_CORE_ULT";
+            bool passed = snapshot.schemaVersion == ItemSystemSnapshot.CurrentSchemaVersion
+                && roundTripLit?.NodeStates.Count == 5
+                && ItemCoreAwakeningResolver.FormatIds(roundTripLit?.NodeStates.Select(node => node.coreEffectId).ToArray()) == expectedIds
+                && litCore4?.coreEffectId == "I015_CORE_04"
+                && litCore4.isUnlocked
+                && litCore4.isActive
+                && litCore4.requiredRarityKey == "purple"
+                && litUltimate?.coreEffectId == "I015_CORE_ULT"
+                && litUltimate.isUnlocked
+                && litUltimate.isActive
+                && litUltimate.requiredRarityKey == "orange"
+                && !string.Equals(litCore4.coreEffectId, litUltimate.coreEffectId, StringComparison.Ordinal)
+                && roundTripUnlit?.NodeStates.Count == 5
+                && unlitCore4?.isUnlocked == true
+                && unlitCore4.isActive == false
+                && unlitUltimate?.isUnlocked == true
+                && unlitUltimate.isActive == false
+                && roundTripSource?.itemId == "I031"
+                && roundTripSource.NodeStates.Count == 0;
+            if (!passed)
+            {
+                result.Errors.Add("ItemSystemSnapshot.v2 five-node round-trip lost, merged, renamed or changed Core4/Ultimate state.");
+            }
+
+            rows.Add(RowFromItem("itemSystemSnapshotFiveNodeRoundTrip", roundTripLit, expectedIds + "; I031=0", passed ? "PASS" : "FAIL"));
+            result.Notes.Add(passed
+                ? "ITEMSYSTEM_SNAPSHOT_ROUNDTRIP_PASS"
+                : "ITEMSYSTEM_SNAPSHOT_ROUNDTRIP_FAIL");
+        }
+
+        private static void CheckProtectedHashes(VerificationResult result, List<CoreAwakeningSpecRow> rows)
+        {
+            bool passed = true;
+            for (int index = 0; index < ProtectedFileHashBaselines.Length; index += 2)
+            {
+                string path = ProtectedFileHashBaselines[index];
+                string expectedHash = ProtectedFileHashBaselines[index + 1];
+                if (!File.Exists(path))
+                {
+                    result.Errors.Add($"Protected file missing: {path}.");
+                    passed = false;
+                    continue;
+                }
+
+                string actualHash = ComputeSha256(path);
+                if (!string.Equals(actualHash, expectedHash, StringComparison.Ordinal))
+                {
+                    result.Errors.Add($"Protected hash mismatch for {path}: expected {expectedHash}, actual {actualHash}.");
+                    passed = false;
+                }
+            }
+
+            const string profileDirectory = "Assets/_Game/Configs/ItemBalanceWorkbench/Profiles";
+            string[] profilePaths = Directory.Exists(profileDirectory)
+                ? Directory.GetFiles(profileDirectory, "ItemBalanceProfile_I*.asset", SearchOption.TopDirectoryOnly)
+                    .OrderBy(path => Path.GetFileName(path), StringComparer.Ordinal)
+                    .ToArray()
+                : Array.Empty<string>();
+            StringBuilder manifest = new();
+            foreach (string profilePath in profilePaths)
+            {
+                string relativePath = profileDirectory + "/" + Path.GetFileName(profilePath);
+                manifest.Append(relativePath)
+                    .Append('|')
+                    .Append(ComputeSha256(profilePath))
+                    .Append('\n');
+            }
+
+            string actualProfilesHash = ComputeSha256(Encoding.UTF8.GetBytes(manifest.ToString()));
+            if (profilePaths.Length != 30
+                || !string.Equals(actualProfilesHash, ProfilesAggregateHash, StringComparison.Ordinal))
+            {
+                result.Errors.Add($"Protected Profiles30 aggregate mismatch: expected files=30/hash={ProfilesAggregateHash}, actual files={profilePaths.Length}/hash={actualProfilesHash}.");
+                passed = false;
+            }
+
+            rows.Add(new CoreAwakeningSpecRow(
+                "protectedTaskStartHashes",
+                "disk",
+                "all",
+                0,
+                0,
+                false,
+                false,
+                profilePaths.Length.ToString(CultureInfo.InvariantCulture),
+                "None",
+                0,
+                passed ? "None" : "See report errors",
+                "18 protected files plus Profiles30 aggregate remain byte-identical",
+                passed ? "PASS" : "FAIL"));
+            result.Notes.Add(passed ? "PROTECTED_HASHES_PASS" : "PROTECTED_HASHES_FAIL");
+        }
+
         private static void CheckSourceScope(VerificationResult result)
         {
             foreach (string sourcePath in ScopedSourcePaths)
@@ -610,7 +1001,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
                     Lit("I001", "Input 0", "P_INPUT0", false, true, "P_SOURCE", 0),
                     Lit("I004", "Input 41", "P_INPUT41", false, true, "P_SOURCE", 0),
                     Lit("I007", "High rarity Lv1", "P_HIGH_RARITY_LV1", false, true, "P_SOURCE", 0),
-                    Unlit("I015", "Unlit Lv20", "P_UNLIT_LV20"),
+                    Unlit("I016", "Unlit Lv40", "P_UNLIT_LV40"),
                     Lit("I031", "JuNian source", "P_SOURCE", true, true, "P_SOURCE", 0),
                     Lit("I013", "Missing input", "P_MISSING_INPUT", false, true, "P_SOURCE", 0)
                 });
@@ -632,7 +1023,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 Input("I001", "P_INPUT0", 0),
                 Input("I004", "P_INPUT41", 41),
                 new ItemCoreAwakeningInput("I007", "P_HIGH_RARITY_LV1", 1, true, "VerifierHighRarityReserved", "Reserved"),
-                Input("I015", "P_UNLIT_LV20", 20),
+                Input("I016", "P_UNLIT_LV40", 40),
                 Input("I031", "P_SOURCE", 40)
             };
         }
@@ -760,23 +1151,28 @@ namespace TalismanBag.EditorTools.ItemSandbox
         private static string BuildDetailReport(VerificationResult result)
         {
             StringBuilder builder = new();
-            builder.AppendLine("# CoreAwakeningPreview01 Report");
+            builder.AppendLine("# ItemCoreAwakeningCore4NodeExpansion01 Report");
             builder.AppendLine();
-            builder.AppendLine("- Package: `CoreAwakeningPreview01`");
-            builder.AppendLine("- Guard receipt target: `GUARD_PASS_COREAWAKENINGPREVIEW01`");
+            builder.AppendLine("- Package: `V0.4-ItemCoreAwakeningCore4NodeExpansion01`");
+            builder.AppendLine("- Guard receipt: `ITEM_GUARD_PASS_ITEMCOREAWAKENINGCORE4NODEEXPANSION01`");
             builder.AppendLine($"- Verification: {(result.Errors.Count == 0 ? "PASS" : "FAIL")}");
             builder.AppendLine("- Scope: independent Item Sandbox only.");
             builder.AppendLine();
             builder.AppendLine("## Implemented");
+            builder.AppendLine("- `I001-I030` expose five explicit item-specific Awakening definitions each: Core1/Core2/Core3/Core4/Ultimate (`150` unique definitions total).");
+            builder.AppendLine("- Core4 is `{itemId}_CORE_04`, `nodeKind=Core4`, `unlockLevel=40`, `requiredRarityKey=purple`; Ultimate remains independent as `{itemId}_CORE_ULT` with orange metadata.");
+            builder.AppendLine("- Existing enum identities remain `Core1=0`, `Core2=1`, `Core3=2`, `Ultimate=3`; `Core4=4` is appended while explicit node output remains `01/02/03/04/ULT`.");
             builder.AppendLine("- Levels resolve as `resolvedLevel = Clamp(inputLevel, 1, 40)` while preserving raw `inputLevel`.");
             builder.AppendLine("- Missing placement input defaults to Lv1 with `inputSource=MissingInputDefaultLv1` and validationErrors.");
-            builder.AppendLine("- High-rarity fields are reserved only; Ultimate unlocks only at resolvedLevel >= 40.");
-            builder.AppendLine("- Core effect definitions are item-specific: `{itemId}_CORE_01`, `{itemId}_CORE_02`, `{itemId}_CORE_03`, `{itemId}_CORE_ULT`.");
+            builder.AppendLine("- High-rarity preview behavior remains Ultimate-only; rarity metadata does not unlock either Lv40 node.");
+            builder.AppendLine("- Core4 and Ultimate both unlock at resolvedLevel >= 40 but remain independent identities and states.");
             builder.AppendLine("- `IItemCoreEffectDefinitionProvider` provides read-only definitions and I031 returns none.");
-            builder.AppendLine("- Definition validation covers missing, duplicate id, duplicate nodeKind, wrong level, item mismatch, empty id, null definition, and null provider.");
+            builder.AppendLine("- Definition validation covers Core4 missing/duplicate/wrong-level/swapped/shared-id cases plus existing missing, duplicate, mismatch, empty and null cases.");
+            builder.AppendLine("- `ItemSystemSnapshot.v2` five-node round-trip preserves independent Core4/Ultimate state without modifying the snapshot schema.");
+            builder.AppendLine("- Candidate profiles remain the protected semantic authority for ExtraTrigger/Convert content and stay at 150 unique rows.");
             builder.AppendLine("- Node output includes coreEffectId, itemId, nodeKind, unlockLevel, isUnlocked, isActive, stateKey, and blockedReason.");
             builder.AppendLine("- Build, array bonus, selected main Build, and monitor slots do not participate in awakening unlocks.");
-            builder.AppendLine("- No formal upgrade, experience, rarity unlock, core numeric effect, combat execution, save, reward, boss, bridge, run flow, or BuildSettings work.");
+            builder.AppendLine("- No ExtraTrigger/Convert execution, formal upgrade, rarity unlock, core numeric effect, combat execution, save, reward, boss, bridge, run flow, UI, Scene, Prefab or BuildSettings work.");
             builder.AppendLine();
             AppendResultList(builder, "Notes", result.Notes);
             AppendResultList(builder, "Errors", result.Errors);
@@ -800,13 +1196,13 @@ namespace TalismanBag.EditorTools.ItemSandbox
                     row.caseId,
                     row.placementId,
                     row.itemId,
-                    row.inputLevel.ToString(),
-                    row.resolvedLevel.ToString(),
+                    row.inputLevel.ToString(CultureInfo.InvariantCulture),
+                    row.resolvedLevel.ToString(CultureInfo.InvariantCulture),
                     row.isLit ? "true" : "false",
                     row.supportsAwakening ? "true" : "false",
                     row.unlockedCoreEffectIds,
                     row.activeCoreEffectIds,
-                    row.nextUnlockLevel.ToString(),
+                    row.nextUnlockLevel.ToString(CultureInfo.InvariantCulture),
                     row.validationErrors,
                     row.expectedResult,
                     row.actualResult
@@ -820,13 +1216,15 @@ namespace TalismanBag.EditorTools.ItemSandbox
         private static string BuildLeakCheckReport(VerificationResult result)
         {
             StringBuilder builder = new();
-            builder.AppendLine("# CoreAwakeningPreview01 Leak Check Report");
+            builder.AppendLine("# ItemCoreAwakeningCore4NodeExpansion01 Leak Check Report");
             builder.AppendLine();
+            builder.AppendLine("- Package: `V0.4-ItemCoreAwakeningCore4NodeExpansion01`");
             builder.AppendLine($"- Result: {(result.Errors.Count == 0 ? "PASS" : "FAIL")}");
-            builder.AppendLine("- Scope: independent Item Sandbox core awakening preview resolver, definition provider, detail projection, and greybox UI text.");
+            builder.AppendLine("- Scope: existing Item Core Awakening resolver/definition provider and verifier only; reports are regenerated in place.");
             builder.AppendLine("- BuildSettings: no writes; Item Sandbox remains manual-only.");
             builder.AppendLine("- Forbidden integrations: formal battle resolver, bridge, run flow, save data, rewards, drops, boss data, formal upgrade systems, main Build selection, monitor slots, and BuildSettings writers.");
-            builder.AppendLine("- Not implemented: formal item upgrade, experience, rarity evolution, storage, save serialization, combat skill release, damage/heal/shield/status settlement, rewards, drops, boss logic, selected main Build, MonitorSlots, or ItemSkillMonitorSlot.");
+            builder.AppendLine("- Not implemented: ExtraTrigger/Convert execution, formal item upgrade, experience, rarity evolution, storage, save serialization, combat skill release, damage/heal/shield/status settlement, rewards, drops, boss logic, selected main Build, MonitorSlots, or ItemSkillMonitorSlot.");
+            builder.AppendLine("- ItemSystemSnapshot.v2, Candidate content, Item Detail UI, Scene, Prefab and BuildSettings remain protected and byte-identical.");
             builder.AppendLine("- Known unrelated dirty files intentionally untouched are outside this verifier's source scope.");
             builder.AppendLine();
             AppendResultList(builder, "Passed Checks / Notes", result.Notes);
@@ -850,6 +1248,18 @@ namespace TalismanBag.EditorTools.ItemSandbox
             }
 
             builder.AppendLine();
+        }
+
+        private static string ComputeSha256(string path)
+        {
+            return ComputeSha256(File.ReadAllBytes(path));
+        }
+
+        private static string ComputeSha256(byte[] bytes)
+        {
+            using SHA256 sha256 = SHA256.Create();
+            return string.Concat(sha256.ComputeHash(bytes ?? Array.Empty<byte>())
+                .Select(value => value.ToString("x2", CultureInfo.InvariantCulture)));
         }
 
         private static string EscapeCsv(string value)

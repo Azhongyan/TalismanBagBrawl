@@ -172,6 +172,66 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 + "; disabledDrivers=" + enabledDriverCount);
         }
 
+        [MenuItem("TalismanBag/Item Sandbox/Add Item Artwork Shadows (Once)")]
+        public static void AddItemArtworkShadowsOnce()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                throw new InvalidOperationException("Exit Play Mode before adding authored artwork shadows.");
+            }
+
+            Scene scene = SceneManager.GetActiveScene();
+            if (!scene.IsValid()
+                || !scene.isLoaded
+                || !string.Equals(scene.path, ScenePath, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("Open the ItemSandbox scene before adding artwork shadows.");
+            }
+
+            Transform panel = FindScenePath(scene, PanelPath)
+                ?? throw new InvalidOperationException("ItemDetailPanel scene root not found: " + PanelPath);
+            int addedCount = AddArtworkShadows(panel);
+            if (addedCount > 0)
+            {
+                EditorSceneManager.MarkSceneDirty(scene);
+            }
+
+            Debug.Log(
+                "ITEM_DETAIL_ARTWORK_SHADOWS_PASS: added=" + addedCount
+                + "; existing=" + (2 - addedCount)
+                + "; sceneSaved=false");
+        }
+
+        private static int AddArtworkShadows(Transform panel)
+        {
+            Transform daoju = Require(panel, "ItemDetailHeader/ItemArtworkFrame/daoju");
+            Image singleCellImage = Require(daoju, "DaojuSingleCellImage").GetComponent<Image>()
+                ?? throw new InvalidOperationException("DaojuSingleCellImage Image component missing.");
+            Image multiCellImage = Require(daoju, "DaojuMultiCellImage").GetComponent<Image>()
+                ?? throw new InvalidOperationException("DaojuMultiCellImage Image component missing.");
+
+            int addedCount = 0;
+            addedCount += EnsureArtworkShadow(singleCellImage) ? 1 : 0;
+            addedCount += EnsureArtworkShadow(multiCellImage) ? 1 : 0;
+            return addedCount;
+        }
+
+        private static bool EnsureArtworkShadow(Image image)
+        {
+            Shadow shadow = image.GetComponent<Shadow>();
+            if (shadow != null)
+            {
+                return false;
+            }
+
+            shadow = Undo.AddComponent<Shadow>(image.gameObject);
+            shadow.effectColor = new Color32(0, 0, 0, 0x70);
+            shadow.effectDistance = new Vector2(4f, -5f);
+            shadow.useGraphicAlpha = true;
+            EditorUtility.SetDirty(shadow);
+            return true;
+        }
+
         private static void DisableDrivers<T>(IEnumerable<T> drivers)
             where T : Behaviour
         {

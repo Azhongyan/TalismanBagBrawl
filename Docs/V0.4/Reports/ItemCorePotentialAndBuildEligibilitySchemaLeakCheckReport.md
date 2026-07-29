@@ -33,4 +33,4 @@
 | BuildSettings | 0 |
 
 Allowed Schema terms include BuildQualification, eligibleCoreEffectIds, visibleCoreEffectIds, cultivationPotentialProfileId, allowsUltimateCoreEffect, Unresolved, and ProbabilityUnresolved.
-Verifier errors: 0
+Verifier errors: 3

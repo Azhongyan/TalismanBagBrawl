@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TalismanBag.Items.Detail;
 using UnityEngine;
 using UnityEngine.UI;
@@ -97,11 +98,19 @@ namespace TalismanBag.Items.Detail.UI
             new Dictionary<string, Sprite>(StringComparer.Ordinal);
         private static readonly Dictionary<string, Sprite> CachedQiLeiBuildIconSprites =
             new Dictionary<string, Sprite>(StringComparer.Ordinal);
-        private static readonly Color NarrativeTextColor = new Color32(0x7E, 0x68, 0x45, 0xFF);
+        private static readonly string[] SemanticStyleStartTokens =
+        {
+            ItemDetailPresentationFormatter.InactiveStyleStartToken,
+            ItemDetailPresentationFormatter.ArrayModifierActiveStyleStartToken,
+            ItemDetailPresentationFormatter.ArrayModifierInactiveStyleStartToken
+        };
         private readonly List<Image> arrayModifierIconImages = new();
-        private Color rarityValueColor = new Color32(135, 182, 106, 255);
+        private readonly Dictionary<Transform, bool> authoredActiveSelfByTransform = new();
+        private Color rarityValueColor = ItemDetailVisualThemeDefaults.RarityGreen;
         private bool currentSectionIsDivider;
         private bool currentDividerIsLarge;
+        private bool preserveAuthoredVisualStyle;
+        private bool hasCapturedAuthoredActiveStates;
         private string currentRenderedBody = string.Empty;
         private string currentRarityKey = string.Empty;
         private string currentRarityDisplayName = string.Empty;
@@ -147,6 +156,24 @@ namespace TalismanBag.Items.Detail.UI
             visualTheme = configuredTheme;
         }
 
+        public void SetPreserveAuthoredVisualStyle(bool preserve)
+        {
+            if (preserve)
+            {
+                if (!preserveAuthoredVisualStyle || !hasCapturedAuthoredActiveStates)
+                {
+                    CaptureAuthoredActiveStates();
+                }
+
+                preserveAuthoredVisualStyle = true;
+                return;
+            }
+
+            preserveAuthoredVisualStyle = false;
+            authoredActiveSelfByTransform.Clear();
+            hasCapturedAuthoredActiveStates = false;
+        }
+
         public void SetRarityColor(Color rarityColor)
         {
             rarityValueColor = rarityColor;
@@ -170,6 +197,52 @@ namespace TalismanBag.Items.Detail.UI
             currentQiLeiName = qiLeiName ?? string.Empty;
         }
 
+        private void CaptureAuthoredActiveStates()
+        {
+            authoredActiveSelfByTransform.Clear();
+            foreach (Transform target in GetComponentsInChildren<Transform>(true))
+            {
+                if (target != null)
+                {
+                    authoredActiveSelfByTransform[target] = target.gameObject.activeSelf;
+                }
+            }
+
+            hasCapturedAuthoredActiveStates = true;
+        }
+
+        private bool WasAuthoredInactive(GameObject target)
+        {
+            if (!preserveAuthoredVisualStyle || target == null)
+            {
+                return false;
+            }
+
+            if (!hasCapturedAuthoredActiveStates)
+            {
+                CaptureAuthoredActiveStates();
+            }
+
+            return authoredActiveSelfByTransform.TryGetValue(target.transform, out bool authoredActive)
+                && !authoredActive;
+        }
+
+        private void SetAuthoredAwareActive(GameObject target, bool active)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            bool resolvedActive = active && WasAuthoredInactive(target)
+                ? false
+                : active;
+            if (target.activeSelf != resolvedActive)
+            {
+                target.SetActive(resolvedActive);
+            }
+        }
+
         public void SetContent(ItemDetailSectionViewModel model)
         {
             if (model == null)
@@ -180,7 +253,7 @@ namespace TalismanBag.Items.Detail.UI
 
             SetSectionDisplayMode(model.stateKey);
             bool hasBody = !string.IsNullOrWhiteSpace(model.body);
-            gameObject.SetActive(hasBody || model.keepWhenEmpty);
+            SetAuthoredAwareActive(gameObject, hasBody || model.keepWhenEmpty);
             ApplySectionChromeVisibility();
             if (titleText != null)
             {
@@ -191,6 +264,7 @@ namespace TalismanBag.Items.Detail.UI
             {
                 string styledBody = StyleBody(model.stateKey, model.body);
                 currentRenderedBody = RemoveArrayModifierIconToken(styledBody);
+                PrepareBodyPresentation(hasBody);
                 bool usesBaseStatRows = ApplyAuthoredBaseStatRows(model.stateKey, styledBody);
                 bool usesAffixRows = ApplyAuthoredAffixRows(model.stateKey, styledBody);
                 bool usesCoreEffectRows = ApplyAuthoredCoreEffectRows(
@@ -206,16 +280,9 @@ namespace TalismanBag.Items.Detail.UI
                     || usesFaMenBuildRows
                     || usesQiLeiBuildRows
                     || usesNarrativeRows;
-                if (usesFaMenBuildRows || usesQiLeiBuildRows)
-                {
-                    // Keep the source body available to diagnostics while the disabled BodyText
-                    // graphic delegates visible rendering to the three authored stage rows.
-                    bodyText.text = currentRenderedBody;
-                }
-
+                bodyText.text = currentRenderedBody;
                 if (!usesAuthoredRows)
                 {
-                    bodyText.text = currentRenderedBody;
                     ApplyBaseStatIconSlots(model.stateKey, styledBody);
                 }
 
@@ -235,7 +302,14 @@ namespace TalismanBag.Items.Detail.UI
                 {
                     ApplyDetailLineIconSlots(model.stateKey, styledBody);
                 }
+
+                bool authoredRowsVisible = hasBody && HasActiveAuthoredRowText();
+                if (authoredRowsVisible || !hasBody)
+                {
+                    ClearPlainBodyIconSlots();
+                }
                 ApplyInlineArrayModifierIcons(styledBody);
+                FinalizeBodyPresentation(hasBody, authoredRowsVisible);
             }
         }
 
@@ -243,7 +317,7 @@ namespace TalismanBag.Items.Detail.UI
         {
             SetSectionDisplayMode(string.Empty);
             bool hasBody = !string.IsNullOrWhiteSpace(body);
-            gameObject.SetActive(hasBody || keepWhenEmpty);
+            SetAuthoredAwareActive(gameObject, hasBody || keepWhenEmpty);
             ApplySectionChromeVisibility();
 
             if (titleText != null)
@@ -254,6 +328,7 @@ namespace TalismanBag.Items.Detail.UI
             if (bodyText != null)
             {
                 currentRenderedBody = RemoveArrayModifierIconToken(body);
+                PrepareBodyPresentation(hasBody);
                 string authoredRowStateKey = ResolveAuthoredRowStateKey();
                 bool usesBaseStatRows = ApplyAuthoredBaseStatRows(authoredRowStateKey, body);
                 bool usesAffixRows = ApplyAuthoredAffixRows(authoredRowStateKey, body);
@@ -267,14 +342,9 @@ namespace TalismanBag.Items.Detail.UI
                     || usesFaMenBuildRows
                     || usesQiLeiBuildRows
                     || usesNarrativeRows;
-                if (usesFaMenBuildRows || usesQiLeiBuildRows)
-                {
-                    bodyText.text = currentRenderedBody;
-                }
-
+                bodyText.text = currentRenderedBody;
                 if (!usesAuthoredRows)
                 {
-                    bodyText.text = currentRenderedBody;
                     ApplyBaseStatIconSlots(string.Empty, body);
                 }
 
@@ -294,8 +364,108 @@ namespace TalismanBag.Items.Detail.UI
                 {
                     ApplyDetailLineIconSlots(string.Empty, body);
                 }
+
+                bool authoredRowsVisible = hasBody && HasActiveAuthoredRowText();
+                if (authoredRowsVisible || !hasBody)
+                {
+                    ClearPlainBodyIconSlots();
+                }
                 ApplyInlineArrayModifierIcons(body);
+                FinalizeBodyPresentation(hasBody, authoredRowsVisible);
             }
+        }
+
+        private void PrepareBodyPresentation(bool hasBody)
+        {
+            if (bodyText == null)
+            {
+                return;
+            }
+
+            bodyText.enabled = false;
+            if (bodyText.gameObject.activeSelf != hasBody)
+            {
+                SetAuthoredAwareActive(bodyText.gameObject, hasBody);
+            }
+
+            if (!hasBody)
+            {
+                bodyText.text = string.Empty;
+            }
+        }
+
+        private void FinalizeBodyPresentation(bool hasBody, bool authoredRowsVisible)
+        {
+            if (bodyText == null)
+            {
+                return;
+            }
+
+            if (!hasBody)
+            {
+                bodyText.text = string.Empty;
+                bodyText.enabled = false;
+                if (bodyText.gameObject.activeSelf)
+                {
+                    SetAuthoredAwareActive(bodyText.gameObject, false);
+                }
+                return;
+            }
+
+            if (!bodyText.gameObject.activeSelf)
+            {
+                SetAuthoredAwareActive(bodyText.gameObject, true);
+            }
+            bodyText.enabled = !authoredRowsVisible;
+        }
+
+        private bool HasActiveAuthoredRowText()
+        {
+            if (bodyText == null)
+            {
+                return false;
+            }
+
+            foreach (Text text in bodyText.GetComponentsInChildren<Text>(true))
+            {
+                if (text == null || ReferenceEquals(text, bodyText)
+                    || !text.enabled || text.color.a <= 0.001f
+                    || string.IsNullOrWhiteSpace(text.text)
+                    || !IsActiveSelfWithinBody(text.transform))
+                {
+                    continue;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool IsActiveSelfWithinBody(Transform target)
+        {
+            for (Transform current = target; current != null; current = current.parent)
+            {
+                if (!current.gameObject.activeSelf)
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(current, bodyText.transform))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void ClearPlainBodyIconSlots()
+        {
+            HideBaseStatIconSlotsFrom(0);
+            HideLineIconSlotsFrom(FixedAffixIconSlotNamePrefix, 0);
+            HideLineIconSlotsFrom(RandomAffixIconSlotNamePrefix, 0);
+            HideDetailLineIconSlotsExcept();
         }
 
         private void SetSectionDisplayMode(string stateKey)
@@ -313,19 +483,19 @@ namespace TalismanBag.Items.Detail.UI
             ApplyEditableDividerVisibility();
         }
 
-        private static void SetGraphicVisible(Graphic graphic, bool visible)
+        private void SetGraphicVisible(Graphic graphic, bool visible)
         {
             if (graphic != null && graphic.gameObject.activeSelf != visible)
             {
-                graphic.gameObject.SetActive(visible);
+                SetAuthoredAwareActive(graphic.gameObject, visible);
             }
         }
 
-        private static void SetTransformVisible(Transform target, bool visible)
+        private void SetTransformVisible(Transform target, bool visible)
         {
             if (target != null && target.gameObject.activeSelf != visible)
             {
-                target.gameObject.SetActive(visible);
+                SetAuthoredAwareActive(target.gameObject, visible);
             }
         }
 
@@ -375,7 +545,7 @@ namespace TalismanBag.Items.Detail.UI
 
             if (!dividerImage.gameObject.activeSelf)
             {
-                dividerImage.gameObject.SetActive(true);
+                SetAuthoredAwareActive(dividerImage.gameObject, true);
             }
 
         }
@@ -540,12 +710,12 @@ namespace TalismanBag.Items.Detail.UI
                         icon.sprite = resolvedSprite;
                     }
 
-                    icon.gameObject.SetActive(icon.sprite != null);
+                    SetAuthoredAwareActive(icon.gameObject, icon.sprite != null);
                 }
 
                 if (!row.gameObject.activeSelf)
                 {
-                    row.gameObject.SetActive(true);
+                    SetAuthoredAwareActive(row.gameObject, true);
                 }
 
                 slotIndex++;
@@ -670,7 +840,7 @@ namespace TalismanBag.Items.Detail.UI
                 bool hasExplicitState = rowStates != null && slotIndex < rowStates.Count;
                 bool coreEffectUnlocked = hasExplicitState
                     ? rowStates[slotIndex] != ItemDetailCoreEffectRowState.Locked
-                    : !IsInactiveArrayModifierLine(line);
+                    : !IsInactivePresentationLine(line);
 
                 Transform row = rowsRoot.Find(CoreEffectRowNamePrefix + slotIndex);
                 if (row == null)
@@ -694,11 +864,11 @@ namespace TalismanBag.Items.Detail.UI
                 {
                     Sprite coreSprite = ResolveCoreEffectIconSprite(slotIndex);
                     icon.sprite = coreSprite;
-                    icon.color = Color.white;
+                    icon.color = ThemeIconTint;
                     icon.enabled = coreSprite != null;
                     if (!icon.gameObject.activeSelf)
                     {
-                        icon.gameObject.SetActive(true);
+                        SetAuthoredAwareActive(icon.gameObject, true);
                     }
 
                     SetCoreEffectStateOverlayVisible(
@@ -710,7 +880,7 @@ namespace TalismanBag.Items.Detail.UI
 
                 if (!row.gameObject.activeSelf)
                 {
-                    row.gameObject.SetActive(true);
+                    SetAuthoredAwareActive(row.gameObject, true);
                 }
 
                 slotIndex++;
@@ -721,7 +891,7 @@ namespace TalismanBag.Items.Detail.UI
             return true;
         }
 
-        private static void SetCoreEffectStateOverlayVisible(
+        private void SetCoreEffectStateOverlayVisible(
             Transform iconSlot,
             int slotIndex,
             Sprite coreSprite,
@@ -743,7 +913,7 @@ namespace TalismanBag.Items.Detail.UI
 
             if (overlay.gameObject.activeSelf != visible)
             {
-                overlay.gameObject.SetActive(visible);
+                SetAuthoredAwareActive(overlay.gameObject, visible);
             }
         }
 
@@ -772,7 +942,7 @@ namespace TalismanBag.Items.Detail.UI
                 return true;
             }
 
-            string[] rawLines = body.Replace("\r", string.Empty).Split('\n');
+            string[] rawLines = ExpandCombinedBuildStageLines(body, true);
             int firstStageLineIndex = rawLines.Length;
             for (int lineIndex = 0; lineIndex < rawLines.Length; lineIndex++)
             {
@@ -820,11 +990,11 @@ namespace TalismanBag.Items.Detail.UI
                 if (icon != null)
                 {
                     Sprite skillSprite = ResolveFaMenBuildStageIconSprite(slotIndex);
-                    bool isActive = !rawLines[lineIndex].Contains("#8A8A8A", StringComparison.OrdinalIgnoreCase);
+                    bool isActive = !IsInactivePresentationLine(rawLines[lineIndex]);
                     icon.sprite = skillSprite;
-                    icon.color = Color.white;
+                    icon.color = ThemeIconTint;
                     icon.enabled = skillSprite != null;
-                    icon.gameObject.SetActive(skillSprite != null);
+                    SetAuthoredAwareActive(icon.gameObject, skillSprite != null);
                     SetFaMenBuildStateOverlayVisible(
                         icon.transform,
                         slotIndex,
@@ -834,7 +1004,7 @@ namespace TalismanBag.Items.Detail.UI
 
                 if (!row.gameObject.activeSelf)
                 {
-                    row.gameObject.SetActive(true);
+                    SetAuthoredAwareActive(row.gameObject, true);
                 }
 
                 slotIndex++;
@@ -846,7 +1016,7 @@ namespace TalismanBag.Items.Detail.UI
             return true;
         }
 
-        private static void SetFaMenBuildStateOverlayVisible(
+        private void SetFaMenBuildStateOverlayVisible(
             Transform iconSlot,
             int slotIndex,
             Sprite skillSprite,
@@ -868,7 +1038,7 @@ namespace TalismanBag.Items.Detail.UI
 
             if (overlay.gameObject.activeSelf != visible)
             {
-                overlay.gameObject.SetActive(visible);
+                SetAuthoredAwareActive(overlay.gameObject, visible);
             }
         }
 
@@ -897,7 +1067,8 @@ namespace TalismanBag.Items.Detail.UI
 
             if (overviewLines.Count == 0)
             {
-                overviewRow.gameObject.SetActive(false);
+                overviewText.text = string.Empty;
+                SetAuthoredAwareActive(overviewRow.gameObject, false);
                 return;
             }
 
@@ -924,7 +1095,7 @@ namespace TalismanBag.Items.Detail.UI
             overviewText.text = overviewBody.ToString();
             if (!overviewRow.gameObject.activeSelf)
             {
-                overviewRow.gameObject.SetActive(true);
+                SetAuthoredAwareActive(overviewRow.gameObject, true);
             }
         }
 
@@ -958,12 +1129,22 @@ namespace TalismanBag.Items.Detail.UI
                 : string.Empty;
         }
 
-        private static void SetAuthoredFaMenBuildOverviewVisible(Transform rowsRoot, bool visible)
+        private void SetAuthoredFaMenBuildOverviewVisible(Transform rowsRoot, bool visible)
         {
             Transform overviewRow = rowsRoot?.Find(FaMenBuildOverviewRowName);
+            if (!visible)
+            {
+                Text overviewText = overviewRow
+                    ?.Find(FaMenBuildOverviewTextName)
+                    ?.GetComponent<Text>();
+                if (overviewText != null)
+                {
+                    overviewText.text = string.Empty;
+                }
+            }
             if (overviewRow != null && overviewRow.gameObject.activeSelf != visible)
             {
-                overviewRow.gameObject.SetActive(visible);
+                SetAuthoredAwareActive(overviewRow.gameObject, visible);
             }
         }
 
@@ -992,7 +1173,7 @@ namespace TalismanBag.Items.Detail.UI
                 return true;
             }
 
-            string[] rawLines = body.Replace("\r", string.Empty).Split('\n');
+            string[] rawLines = ExpandCombinedBuildStageLines(body, false);
             int firstStageLineIndex = rawLines.Length;
             for (int lineIndex = 0; lineIndex < rawLines.Length; lineIndex++)
             {
@@ -1040,11 +1221,11 @@ namespace TalismanBag.Items.Detail.UI
                 if (icon != null)
                 {
                     Sprite qiLeiSprite = ResolveQiLeiBuildIconSprite(slotIndex);
-                    bool isActive = !rawLines[lineIndex].Contains("#8A8A8A", StringComparison.OrdinalIgnoreCase);
+                    bool isActive = !IsInactivePresentationLine(rawLines[lineIndex]);
                     icon.sprite = qiLeiSprite;
-                    icon.color = Color.white;
+                    icon.color = ThemeIconTint;
                     icon.enabled = qiLeiSprite != null;
-                    icon.gameObject.SetActive(qiLeiSprite != null);
+                    SetAuthoredAwareActive(icon.gameObject, qiLeiSprite != null);
                     SetQiLeiBuildStateOverlayVisible(
                         icon.transform,
                         slotIndex,
@@ -1054,7 +1235,7 @@ namespace TalismanBag.Items.Detail.UI
 
                 if (!row.gameObject.activeSelf)
                 {
-                    row.gameObject.SetActive(true);
+                    SetAuthoredAwareActive(row.gameObject, true);
                 }
 
                 slotIndex++;
@@ -1091,7 +1272,8 @@ namespace TalismanBag.Items.Detail.UI
 
             if (string.IsNullOrWhiteSpace(overviewLine))
             {
-                overviewRow.gameObject.SetActive(false);
+                overviewText.text = string.Empty;
+                SetAuthoredAwareActive(overviewRow.gameObject, false);
                 return;
             }
 
@@ -1105,20 +1287,30 @@ namespace TalismanBag.Items.Detail.UI
             overviewText.text = Rich(displayText, ThemeBuildActive, SectionBodyFontSize, true);
             if (!overviewRow.gameObject.activeSelf)
             {
-                overviewRow.gameObject.SetActive(true);
+                SetAuthoredAwareActive(overviewRow.gameObject, true);
             }
         }
 
-        private static void SetAuthoredQiLeiBuildOverviewVisible(Transform rowsRoot, bool visible)
+        private void SetAuthoredQiLeiBuildOverviewVisible(Transform rowsRoot, bool visible)
         {
             Transform overviewRow = rowsRoot?.Find(QiLeiBuildOverviewRowName);
+            if (!visible)
+            {
+                Text overviewText = overviewRow
+                    ?.Find(QiLeiBuildOverviewTextName)
+                    ?.GetComponent<Text>();
+                if (overviewText != null)
+                {
+                    overviewText.text = string.Empty;
+                }
+            }
             if (overviewRow != null && overviewRow.gameObject.activeSelf != visible)
             {
-                overviewRow.gameObject.SetActive(visible);
+                SetAuthoredAwareActive(overviewRow.gameObject, visible);
             }
         }
 
-        private static void SetQiLeiBuildStateOverlayVisible(
+        private void SetQiLeiBuildStateOverlayVisible(
             Transform iconSlot,
             int slotIndex,
             Sprite qiLeiSprite,
@@ -1138,7 +1330,7 @@ namespace TalismanBag.Items.Detail.UI
 
             if (overlay.gameObject.activeSelf != visible)
             {
-                overlay.gameObject.SetActive(visible);
+                SetAuthoredAwareActive(overlay.gameObject, visible);
             }
         }
 
@@ -1421,7 +1613,7 @@ namespace TalismanBag.Items.Detail.UI
                     {
                         icon.sprite = raritySprite;
                         icon.enabled = raritySprite != null;
-                        icon.gameObject.SetActive(raritySprite != null);
+                        SetAuthoredAwareActive(icon.gameObject, raritySprite != null);
                     }
                     else
                     {
@@ -1429,13 +1621,13 @@ namespace TalismanBag.Items.Detail.UI
                         // Keep the authored Image active so its RectTransform and grey placeholder
                         // remain visible and freely editable in both Edit Mode and Play Mode.
                         icon.enabled = true;
-                        icon.gameObject.SetActive(true);
+                        SetAuthoredAwareActive(icon.gameObject, true);
                     }
                 }
 
                 if (!row.gameObject.activeSelf)
                 {
-                    row.gameObject.SetActive(true);
+                    SetAuthoredAwareActive(row.gameObject, true);
                 }
 
                 slotIndex++;
@@ -1503,7 +1695,7 @@ namespace TalismanBag.Items.Detail.UI
 
                     coloredBody.Append(Rich(
                         StripRichTextTags(rawLines[lineIndex]).TrimStart(),
-                        NarrativeTextColor,
+                        ThemeNarrativeText,
                         SectionBodyFontSize,
                         false));
                 }
@@ -1516,12 +1708,12 @@ namespace TalismanBag.Items.Detail.UI
             if (icon != null)
             {
                 icon.enabled = icon.sprite != null;
-                icon.gameObject.SetActive(icon.sprite != null);
+                SetAuthoredAwareActive(icon.gameObject, icon.sprite != null);
             }
 
             if (!row.gameObject.activeSelf)
             {
-                row.gameObject.SetActive(true);
+                SetAuthoredAwareActive(row.gameObject, true);
             }
 
             SetAuthoredAffixRowsVisibleFrom(rowsRoot, rowNamePrefix, 1, false);
@@ -1548,7 +1740,7 @@ namespace TalismanBag.Items.Detail.UI
             }
         }
 
-        private static void SetAuthoredAffixRowsVisibleFrom(
+        private void SetAuthoredAffixRowsVisibleFrom(
             Transform rowsRoot,
             string rowNamePrefix,
             int firstRow,
@@ -1575,7 +1767,17 @@ namespace TalismanBag.Items.Detail.UI
 
                 if (row.gameObject.activeSelf != visible)
                 {
-                    row.gameObject.SetActive(visible);
+                    SetAuthoredAwareActive(row.gameObject, visible);
+                }
+                if (!visible)
+                {
+                    foreach (Text text in row.GetComponentsInChildren<Text>(true))
+                    {
+                        if (text != null)
+                        {
+                            text.text = string.Empty;
+                        }
+                    }
                 }
             }
         }
@@ -1623,7 +1825,7 @@ namespace TalismanBag.Items.Detail.UI
             return "凡";
         }
 
-        private static void SetAuthoredBaseStatRowsVisibleFrom(
+        private void SetAuthoredBaseStatRowsVisibleFrom(
             Transform rowsRoot,
             int firstRow,
             bool visible)
@@ -1649,7 +1851,17 @@ namespace TalismanBag.Items.Detail.UI
 
                 if (row.gameObject.activeSelf != visible)
                 {
-                    row.gameObject.SetActive(visible);
+                    SetAuthoredAwareActive(row.gameObject, visible);
+                }
+                if (!visible)
+                {
+                    foreach (Text text in row.GetComponentsInChildren<Text>(true))
+                    {
+                        if (text != null)
+                        {
+                            text.text = string.Empty;
+                        }
+                    }
                 }
             }
         }
@@ -1697,7 +1909,7 @@ namespace TalismanBag.Items.Detail.UI
 
                     if (!slot.gameObject.activeSelf)
                     {
-                        slot.gameObject.SetActive(true);
+                        SetAuthoredAwareActive(slot.gameObject, true);
                     }
                 }
 
@@ -1833,7 +2045,7 @@ namespace TalismanBag.Items.Detail.UI
                     out _);
                 if (slot != null && !slot.gameObject.activeSelf)
                 {
-                    slot.gameObject.SetActive(true);
+                    SetAuthoredAwareActive(slot.gameObject, true);
                 }
 
                 slotIndex++;
@@ -1935,7 +2147,7 @@ namespace TalismanBag.Items.Detail.UI
                     out _);
                 if (slot != null && !slot.gameObject.activeSelf)
                 {
-                    slot.gameObject.SetActive(true);
+                    SetAuthoredAwareActive(slot.gameObject, true);
                 }
 
                 slotIndex++;
@@ -2034,7 +2246,7 @@ namespace TalismanBag.Items.Detail.UI
 
                 if (child.gameObject.activeSelf)
                 {
-                    child.gameObject.SetActive(false);
+                    SetAuthoredAwareActive(child.gameObject, false);
                 }
             }
         }
@@ -2105,8 +2317,86 @@ namespace TalismanBag.Items.Detail.UI
         private static bool StartsWithBuildStage(string plain, string stage)
         {
             return plain.StartsWith(stage, StringComparison.Ordinal)
+                || plain.StartsWith("Build" + stage, StringComparison.OrdinalIgnoreCase)
+                || plain.StartsWith("Build " + stage, StringComparison.OrdinalIgnoreCase)
                 || plain.StartsWith("(" + stage, StringComparison.Ordinal)
                 || plain.StartsWith("（" + stage, StringComparison.Ordinal);
+        }
+
+        private string[] ExpandCombinedBuildStageLines(string body, bool faMen)
+        {
+            string[] rawLines = (body ?? string.Empty)
+                .Replace("\r", string.Empty)
+                .Split('\n');
+            List<string> expanded = new();
+            string[] stages = faMen
+                ? new[] { "2", "4", "6" }
+                : new[] { "2", "4" };
+            foreach (string rawLine in rawLines)
+            {
+                if (IsBuildStageIconLine(rawLine, faMen))
+                {
+                    expanded.Add(rawLine);
+                    continue;
+                }
+
+                string plain = StripRichTextTags(rawLine).Trim();
+                List<(int Position, string Stage)> markers = new();
+                foreach (string stage in stages)
+                {
+                    int marker = plain.IndexOf(
+                        "Build" + stage,
+                        StringComparison.OrdinalIgnoreCase);
+                    if (marker >= 0)
+                    {
+                        markers.Add((marker, stage));
+                    }
+                }
+
+                markers.Sort((left, right) => left.Position.CompareTo(right.Position));
+                if (markers.Count != stages.Length)
+                {
+                    expanded.Add(rawLine);
+                    continue;
+                }
+
+                for (int index = 0; index < markers.Count; index++)
+                {
+                    int start = markers[index].Position;
+                    int end = index + 1 < markers.Count
+                        ? markers[index + 1].Position
+                        : plain.Length;
+                    string stageLine = plain.Substring(start, end - start)
+                        .Trim().TrimEnd('/', '／', '|', '｜', '、', ';', '；').Trim();
+                    expanded.Add(StyleLine(
+                        faMen ? "famenBuild" : "qileiBuild",
+                        stageLine,
+                        index));
+                }
+            }
+
+            if (!expanded.Any(line => IsBuildStageIconLine(line, faMen)))
+            {
+                string fallbackBody = StripRichTextTags(body).Trim();
+                bool explicitlyNotApplicable = fallbackBody.Contains(
+                        "不适用", StringComparison.Ordinal)
+                    || fallbackBody.Contains(
+                        "不提供", StringComparison.Ordinal);
+                if (!string.IsNullOrWhiteSpace(fallbackBody)
+                    && !explicitlyNotApplicable)
+                {
+                    for (int index = 0; index < stages.Length; index++)
+                    {
+                        string stageLine = stages[index] + "件：" + fallbackBody;
+                        expanded.Add(StyleLine(
+                            faMen ? "famenBuild" : "qileiBuild",
+                            stageLine,
+                            index));
+                    }
+                }
+            }
+
+            return expanded.ToArray();
         }
 
         private void ApplyInlineArrayModifierIcons(string body)
@@ -2122,7 +2412,7 @@ namespace TalismanBag.Items.Detail.UI
                 Transform legacyInlineIcon = bodyText.transform.Find(InlineArrayModifierIconNamePrefix + "0");
                 if (legacyInlineIcon != null && legacyInlineIcon.gameObject.activeSelf)
                 {
-                    legacyInlineIcon.gameObject.SetActive(false);
+                    SetAuthoredAwareActive(legacyInlineIcon.gameObject, false);
                 }
                 return;
             }
@@ -2148,7 +2438,7 @@ namespace TalismanBag.Items.Detail.UI
                     continue;
                 }
 
-                bool inactiveLine = IsInactiveArrayModifierLine(rawLines[lineIndex]);
+                bool inactiveLine = IsInactivePresentationLine(rawLines[lineIndex]);
                 Transform slot = bodyText.transform.Find(
                     InlineArrayModifierIconNamePrefix + arrayModifierIconImages.Count);
                 Image icon = slot != null ? slot.GetComponent<Image>() : null;
@@ -2159,7 +2449,7 @@ namespace TalismanBag.Items.Detail.UI
 
                 icon.sprite = ResolveArrayModifierIconSprite();
                 icon.color = inactiveLine ? ThemeBuildInactive : ThemeArrayModifier;
-                icon.gameObject.SetActive(icon.sprite != null);
+                SetAuthoredAwareActive(icon.gameObject, icon.sprite != null);
                 arrayModifierIconImages.Add(icon);
             }
         }
@@ -2184,7 +2474,7 @@ namespace TalismanBag.Items.Detail.UI
                 Transform slot = row.Find(InlineArrayModifierIconNamePrefix + suffix);
                 if (slot != null && slot.gameObject.activeSelf)
                 {
-                    slot.gameObject.SetActive(false);
+                    SetAuthoredAwareActive(slot.gameObject, false);
                 }
             }
 
@@ -2213,10 +2503,10 @@ namespace TalismanBag.Items.Detail.UI
                     if (icon != null)
                     {
                         icon.sprite = ResolveArrayModifierIconSprite();
-                        icon.color = IsInactiveArrayModifierLine(line)
+                        icon.color = IsInactivePresentationLine(line)
                             ? ThemeBuildInactive
                             : ThemeArrayModifier;
-                        icon.gameObject.SetActive(icon.sprite != null);
+                        SetAuthoredAwareActive(icon.gameObject, icon.sprite != null);
                         arrayModifierIconImages.Add(icon);
                     }
                 }
@@ -2233,7 +2523,7 @@ namespace TalismanBag.Items.Detail.UI
             {
                 if (icon != null)
                 {
-                    icon.gameObject.SetActive(false);
+                    SetAuthoredAwareActive(icon.gameObject, false);
                 }
             }
 
@@ -2257,22 +2547,185 @@ namespace TalismanBag.Items.Detail.UI
 
         private static string RemoveArrayModifierIconToken(string value)
         {
-            return string.IsNullOrEmpty(value)
-                ? value ?? string.Empty
-                : value.Replace(ArrayModifierIconToken, "  ");
+            if (string.IsNullOrEmpty(value))
+            {
+                return value ?? string.Empty;
+            }
+
+            return ItemDetailPresentationFormatter.StripSemanticStyleTokens(
+                value.Replace(ArrayModifierIconToken, "  "));
         }
 
-        private static bool IsInactiveArrayModifierLine(string value)
+        private bool IsInactivePresentationLine(string value)
         {
-            return !string.IsNullOrEmpty(value)
-                && value.Contains("<color=#8A8A8A>", StringComparison.OrdinalIgnoreCase);
+            return ItemDetailPresentationFormatter.ContainsInactiveStyle(value)
+                || ContainsThemeRichColor(value, ThemeBuildInactive);
         }
 
-        private static bool IsWholeLineLockedGreyRichText(string value)
+        private bool IsWholeLineInactivePresentation(string value)
         {
             string content = (value ?? string.Empty).Trim();
-            return content.StartsWith("<color=#8A8A8A>", StringComparison.OrdinalIgnoreCase)
-                && content.EndsWith("</color>", StringComparison.OrdinalIgnoreCase);
+            return ItemDetailPresentationFormatter.IsWholeLineInactiveStyle(content)
+                || (StartsWithThemeRichColor(content, ThemeBuildInactive)
+                    && content.EndsWith("</color>", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool ContainsThemeRichColor(string value, Color color)
+        {
+            return !string.IsNullOrEmpty(value)
+                && value.Contains(RichColorPrefix(color), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool StartsWithThemeRichColor(string value, Color color)
+        {
+            return !string.IsNullOrEmpty(value)
+                && value.StartsWith(RichColorPrefix(color), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string RichColorPrefix(Color color)
+        {
+            return "<color=#" + ColorUtility.ToHtmlStringRGB(color) + ">";
+        }
+
+        private string RenderSemanticRichText(string text, Color defaultColor, int size, bool bold)
+        {
+            string source = text ?? string.Empty;
+            if (!ContainsSemanticStyleToken(source))
+            {
+                return Rich(source, defaultColor, size, bold);
+            }
+
+            System.Text.StringBuilder builder = new(source.Length + 64);
+            int index = 0;
+            while (index < source.Length)
+            {
+                int styleStart = FindNextSemanticStyleStart(source, index, out string styleToken);
+                if (styleStart < 0)
+                {
+                    AppendRichSegment(builder, source.Substring(index), defaultColor, size, bold);
+                    break;
+                }
+
+                if (styleStart > index)
+                {
+                    AppendRichSegment(builder, source.Substring(index, styleStart - index), defaultColor, size, bold);
+                }
+
+                int segmentStart = styleStart + styleToken.Length;
+                int segmentEnd = source.IndexOf(
+                    ItemDetailPresentationFormatter.StyleEndToken,
+                    segmentStart,
+                    StringComparison.Ordinal);
+                if (segmentEnd < 0)
+                {
+                    AppendRichSegment(
+                        builder,
+                        ItemDetailPresentationFormatter.StripSemanticStyleTokens(source.Substring(styleStart)),
+                        defaultColor,
+                        size,
+                        bold);
+                    break;
+                }
+
+                string segment = source.Substring(segmentStart, segmentEnd - segmentStart);
+                ResolveSemanticStyle(styleToken, defaultColor, bold, out Color segmentColor, out bool segmentBold);
+                AppendRichSegment(
+                    builder,
+                    ItemDetailPresentationFormatter.StripSemanticStyleTokens(segment),
+                    segmentColor,
+                    size,
+                    segmentBold);
+                index = segmentEnd + ItemDetailPresentationFormatter.StyleEndToken.Length;
+            }
+
+            return builder.ToString();
+        }
+
+        private static bool ContainsSemanticStyleToken(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return false;
+            }
+
+            foreach (string token in SemanticStyleStartTokens)
+            {
+                if (value.Contains(token, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static int FindNextSemanticStyleStart(string value, int startIndex, out string styleToken)
+        {
+            int bestIndex = -1;
+            styleToken = string.Empty;
+            foreach (string token in SemanticStyleStartTokens)
+            {
+                int tokenIndex = value.IndexOf(token, startIndex, StringComparison.Ordinal);
+                if (tokenIndex < 0 || (bestIndex >= 0 && tokenIndex >= bestIndex))
+                {
+                    continue;
+                }
+
+                bestIndex = tokenIndex;
+                styleToken = token;
+            }
+
+            return bestIndex;
+        }
+
+        private void ResolveSemanticStyle(
+            string styleToken,
+            Color defaultColor,
+            bool defaultBold,
+            out Color color,
+            out bool bold)
+        {
+            if (string.Equals(
+                    styleToken,
+                    ItemDetailPresentationFormatter.ArrayModifierActiveStyleStartToken,
+                    StringComparison.Ordinal))
+            {
+                color = ThemeArrayModifier;
+                bold = true;
+                return;
+            }
+
+            if (string.Equals(
+                    styleToken,
+                    ItemDetailPresentationFormatter.ArrayModifierInactiveStyleStartToken,
+                    StringComparison.Ordinal)
+                || string.Equals(
+                    styleToken,
+                    ItemDetailPresentationFormatter.InactiveStyleStartToken,
+                    StringComparison.Ordinal))
+            {
+                color = ThemeBuildInactive;
+                bold = false;
+                return;
+            }
+
+            color = defaultColor;
+            bold = defaultBold;
+        }
+
+        private static void AppendRichSegment(
+            System.Text.StringBuilder builder,
+            string segment,
+            Color color,
+            int size,
+            bool bold)
+        {
+            if (builder == null || string.IsNullOrEmpty(segment))
+            {
+                return;
+            }
+
+            builder.Append(Rich(segment, color, size, bold));
         }
 
         private static string StripRichTextTags(string value)
@@ -2304,7 +2757,7 @@ namespace TalismanBag.Items.Detail.UI
                 }
             }
 
-            return builder.ToString();
+            return ItemDetailPresentationFormatter.StripSemanticStyleTokens(builder.ToString());
         }
 
         private static string RemoveRichTextSizeTags(string value)
@@ -2336,7 +2789,7 @@ namespace TalismanBag.Items.Detail.UI
                 index++;
             }
 
-            return builder.ToString();
+            return ItemDetailPresentationFormatter.StripSemanticStyleTokens(builder.ToString());
         }
 
         private string StyleLine(string stateKey, string line, int lineIndex)
@@ -2367,7 +2820,7 @@ namespace TalismanBag.Items.Detail.UI
             {
                 return indent + Rich(
                     StripRichTextTags(content),
-                    NarrativeTextColor,
+                    ThemeNarrativeText,
                     SectionBodyFontSize,
                     false);
             }
@@ -2375,6 +2828,20 @@ namespace TalismanBag.Items.Detail.UI
             if (stateKey.Contains("Build", StringComparison.OrdinalIgnoreCase)
                 || stateKey.Equals("skillMonitor", StringComparison.OrdinalIgnoreCase))
             {
+                if (IsWholeLineInactivePresentation(content))
+                {
+                    return indent
+                        + detailLinePadding
+                        + RenderSemanticRichText(content, ThemeBuildInactive, SectionInactiveFontSize, false);
+                }
+
+                if (ContainsSemanticStyleToken(content))
+                {
+                    return indent
+                        + detailLinePadding
+                        + RenderSemanticRichText(content, ThemeBuildNearActive, SectionBodyFontSize, true);
+                }
+
                 if (content.Contains("<color=", StringComparison.OrdinalIgnoreCase)
                     || content.Contains("<b>", StringComparison.OrdinalIgnoreCase))
                 {
@@ -2416,8 +2883,8 @@ namespace TalismanBag.Items.Detail.UI
                     return indent
                         + LineIconTextPadding
                         + Rich(label, ThemeBody, SectionBodyFontSize, false)
-                        + Rich(mainValue, valueColor, valueSize, emphasized)
-                        + (string.IsNullOrEmpty(hint) ? string.Empty : Rich(hint, ThemeSecondaryText, SectionInactiveFontSize, false));
+                        + RenderSemanticRichText(mainValue, valueColor, valueSize, emphasized)
+                        + (string.IsNullOrEmpty(hint) ? string.Empty : RenderSemanticRichText(hint, ThemeSecondaryText, SectionInactiveFontSize, false));
                 }
             }
 
@@ -2432,19 +2899,21 @@ namespace TalismanBag.Items.Detail.UI
                     return indent
                         + LineIconTextPadding
                         + Rich(label, rarityValueColor, SectionDetailFontSize, true)
-                        + Rich(detail, ThemeBody, SectionDetailFontSize, false);
+                        + RenderSemanticRichText(detail, ThemeBody, SectionDetailFontSize, false);
                 }
 
                 return indent
                     + LineIconTextPadding
-                    + Rich(content, ThemeBody, SectionDetailFontSize, false);
+                    + RenderSemanticRichText(content, ThemeBody, SectionDetailFontSize, false);
             }
 
             if ((stateKey.Equals("awakening", StringComparison.OrdinalIgnoreCase)
                     || stateKey.Equals("coreEffect", StringComparison.OrdinalIgnoreCase))
-                && IsWholeLineLockedGreyRichText(content))
+                && IsWholeLineInactivePresentation(content))
             {
-                return indent + detailLinePadding + content;
+                return indent
+                    + detailLinePadding
+                    + RenderSemanticRichText(content, ThemeBuildInactive, SectionInactiveFontSize, false);
             }
 
             if (stateKey.Equals("awakening", StringComparison.OrdinalIgnoreCase)
@@ -2461,14 +2930,14 @@ namespace TalismanBag.Items.Detail.UI
                     return indent
                         + detailLinePadding
                         + Rich(label, rarityValueColor, SectionDetailFontSize, true)
-                        + Rich(detail, ThemeBody, SectionDetailFontSize, false);
+                        + RenderSemanticRichText(detail, ThemeBody, SectionDetailFontSize, false);
                 }
             }
 
             int size = stateKey.Equals("trigger", StringComparison.OrdinalIgnoreCase)
                 ? SectionDetailFontSize
                 : SectionBodyFontSize;
-            return indent + detailLinePadding + Rich(content, ThemeBody, size, false);
+            return indent + detailLinePadding + RenderSemanticRichText(content, ThemeBody, size, false);
         }
 
         private static string RemoveGenericAffixFieldPrefix(string stateKey, string content)
@@ -2543,10 +3012,12 @@ namespace TalismanBag.Items.Detail.UI
         private Color ThemeSecondaryText => visualTheme != null ? visualTheme.secondaryText : ItemDetailVisualThemeDefaults.SecondaryText;
         private Color ThemeWeak => visualTheme != null ? visualTheme.weakText : ItemDetailVisualThemeDefaults.WeakText;
         private Color ThemeRestriction => visualTheme != null ? visualTheme.restrictionText : ItemDetailVisualThemeDefaults.RestrictionText;
+        private Color ThemeNarrativeText => visualTheme != null ? visualTheme.narrativeText : ItemDetailVisualThemeDefaults.NarrativeText;
         private Color ThemeBuildActive => visualTheme != null ? visualTheme.buildActive : ItemDetailVisualThemeDefaults.BuildActive;
         private Color ThemeBuildNearActive => visualTheme != null ? visualTheme.buildNearActive : ItemDetailVisualThemeDefaults.BuildNearActive;
         private Color ThemeBuildInactive => visualTheme != null ? visualTheme.buildInactive : ItemDetailVisualThemeDefaults.BuildInactive;
         private Color ThemeArrayModifier => visualTheme != null ? visualTheme.arrayModifierColor : ItemDetailVisualThemeDefaults.ArrayModifierColor;
+        private Color ThemeIconTint => visualTheme != null ? visualTheme.iconTint : ItemDetailVisualThemeDefaults.IconTint;
         private Color ThemeRarityOrange => visualTheme != null ? visualTheme.rarityOrange : ItemDetailVisualThemeDefaults.RarityOrange;
 
         private static string Rich(string text, Color color, int size, bool bold)

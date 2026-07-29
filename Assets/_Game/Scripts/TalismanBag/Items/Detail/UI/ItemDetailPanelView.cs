@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace TalismanBag.Items.Detail.UI
@@ -18,6 +19,19 @@ namespace TalismanBag.Items.Detail.UI
         private const string RarityIconResourcePrefix = "item/品阶icon/品阶icon_";
         private const string RarityBackgroundResourcePrefix = "item/弹窗背景/background-";
         private const string DetailArtworkResourcePrefix = "item_daoju/";
+        private const string LegacyTextFontResourceName = "LegacyRuntime.ttf";
+        private const string LegacyTextFontFailureCode =
+            "ITEM_DETAIL_LEGACY_TEXT_FONT_RESOLVE_FAILED";
+        private const string PreferredChineseOsFontName = "SimSun";
+        private const int RuntimeChineseFontSize = 20;
+        private static readonly Color LegacyBuildInactiveColor =
+            new Color32(0x8a, 0x8a, 0x8a, 0xff);
+        private static readonly string[] ApprovedChineseFallbackFontNames =
+        {
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "Droid Sans Fallback"
+        };
 
         [SerializeField] private Text itemNameText;
         [SerializeField] private Text metaText;
@@ -53,12 +67,30 @@ namespace TalismanBag.Items.Detail.UI
         private int activeTouchFingerId = int.MinValue;
         private bool touchScrolling;
         private bool preserveAuthoredVisualStyle;
+        private bool hasCapturedAuthoredActiveStates;
         private Sprite lightingStatusLitSprite;
         private Sprite lightingStatusUnlitSprite;
         private Sprite arrayStatusLitSprite;
         private Sprite arrayStatusUnlitSprite;
         private Image singleCellArtworkImageSlot;
         private Image multiCellArtworkImageSlot;
+        private bool legacyTextFontFailureLogged;
+        private bool legacyTextFontResolutionAttempted;
+        private bool ownsCachedLegacyTextFont;
+        private int legacyTextFontResolutionCount;
+        private Font cachedLegacyTextFont;
+        private ItemDetailVisualTheme legacyBuildPresentationTheme;
+        private ItemDetailVisualTheme legacyBuildPresentationThemeSource;
+        private ItemDetailOutsideDismissInputBlocker outsideDismissInputBlocker;
+        private string cachedLegacyTextFontSource = string.Empty;
+        private string cachedLegacyTextFontFallbackReason = string.Empty;
+        private readonly Dictionary<Transform, bool> authoredActiveSelfByTransform = new();
+
+        public Font CachedLegacyTextFont => cachedLegacyTextFont;
+        public string CachedLegacyTextFontSource => cachedLegacyTextFontSource;
+        public string CachedLegacyTextFontFallbackReason =>
+            cachedLegacyTextFontFallbackReason;
+        public int LegacyTextFontResolutionCount => legacyTextFontResolutionCount;
 
 #if UNITY_EDITOR
         public void ConfigureEditor(
@@ -116,6 +148,7 @@ namespace TalismanBag.Items.Detail.UI
 
         public void ConfigureThemeEditor(ItemDetailVisualTheme configuredTheme)
         {
+            ReleaseLegacyBuildPresentationTheme();
             visualTheme = configuredTheme;
             ApplySectionTheme(playerSections);
             ApplySectionTheme(debugSections);
@@ -126,6 +159,7 @@ namespace TalismanBag.Items.Detail.UI
         {
             ResolveIdentityIconImages();
             ResolveArtworkImageSlot();
+            EnsureOutsideDismissInputBlocker();
             BindTabs();
         }
 
@@ -133,6 +167,30 @@ namespace TalismanBag.Items.Detail.UI
         {
             activeTouchFingerId = int.MinValue;
             touchScrolling = false;
+            outsideDismissInputBlocker?.SetPanelVisible(false);
+        }
+
+        private void OnDestroy()
+        {
+            outsideDismissInputBlocker?.Release(this);
+            outsideDismissInputBlocker = null;
+            ReleaseLegacyBuildPresentationTheme();
+            if (!ownsCachedLegacyTextFont || cachedLegacyTextFont == null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(cachedLegacyTextFont);
+            }
+            else
+            {
+                DestroyImmediate(cachedLegacyTextFont);
+            }
+
+            cachedLegacyTextFont = null;
+            ownsCachedLegacyTextFont = false;
         }
 
         private void Update()
@@ -147,6 +205,12 @@ namespace TalismanBag.Items.Detail.UI
 
         public void Bind(ItemDetailViewModel model, Sprite artworkSprite)
         {
+            if (!RecoverMissingLegacyTextFonts())
+            {
+                SetVisible(false);
+                return;
+            }
+
             if (model == null)
             {
                 currentModelIdentity = string.Empty;
@@ -158,6 +222,7 @@ namespace TalismanBag.Items.Detail.UI
                 SetPlayerSections(playerSections, null);
                 SetSections(debugSections, null);
                 ShowPlayerDetailTab();
+                CompleteLegacyTextBinding();
                 return;
             }
 
@@ -206,6 +271,8 @@ namespace TalismanBag.Items.Detail.UI
             {
                 ApplyTabState();
             }
+
+            CompleteLegacyTextBinding();
         }
 
         public void ShowPlayerDetailTab()
@@ -230,12 +297,100 @@ namespace TalismanBag.Items.Detail.UI
 
         public void SetVisible(bool visible)
         {
-            gameObject.SetActive(visible);
+            if (visible)
+            {
+                EnsureOutsideDismissInputBlocker();
+                gameObject.SetActive(true);
+                outsideDismissInputBlocker?.SetPanelVisible(true);
+                return;
+            }
+
+            outsideDismissInputBlocker?.SetPanelVisible(false);
+            gameObject.SetActive(false);
         }
 
         public void SetPreserveAuthoredVisualStyle(bool preserve)
         {
-            preserveAuthoredVisualStyle = preserve;
+            if (preserve)
+            {
+                if (!preserveAuthoredVisualStyle || !hasCapturedAuthoredActiveStates)
+                {
+                    CaptureAuthoredActiveStates();
+                }
+
+                preserveAuthoredVisualStyle = true;
+                SetSectionsPreserveAuthoredVisualStyle(playerSections, true);
+                SetSectionsPreserveAuthoredVisualStyle(debugSections, true);
+                SetBuildSectionsRuntimeStateWritable();
+                return;
+            }
+
+            preserveAuthoredVisualStyle = false;
+            authoredActiveSelfByTransform.Clear();
+            hasCapturedAuthoredActiveStates = false;
+            SetSectionsPreserveAuthoredVisualStyle(playerSections, preserve);
+            SetSectionsPreserveAuthoredVisualStyle(debugSections, preserve);
+        }
+
+        private void SetBuildSectionsRuntimeStateWritable()
+        {
+            foreach (ItemDetailSectionView section in
+                     playerSections ?? Array.Empty<ItemDetailSectionView>())
+            {
+                if (section != null
+                    && IsBuildSection(section))
+                {
+                    section.SetPreserveAuthoredVisualStyle(false);
+                }
+            }
+        }
+
+        private void CaptureAuthoredActiveStates()
+        {
+            authoredActiveSelfByTransform.Clear();
+            foreach (Transform target in GetComponentsInChildren<Transform>(true))
+            {
+                if (target != null)
+                {
+                    authoredActiveSelfByTransform[target] = target.gameObject.activeSelf;
+                }
+            }
+
+            hasCapturedAuthoredActiveStates = true;
+        }
+
+        private bool WasAuthoredInactive(GameObject target)
+        {
+            if (!preserveAuthoredVisualStyle
+                || target == null
+                || ReferenceEquals(target, gameObject))
+            {
+                return false;
+            }
+
+            if (!hasCapturedAuthoredActiveStates)
+            {
+                CaptureAuthoredActiveStates();
+            }
+
+            return authoredActiveSelfByTransform.TryGetValue(target.transform, out bool authoredActive)
+                && !authoredActive;
+        }
+
+        private void SetAuthoredAwareActive(GameObject target, bool active)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            bool resolvedActive = active && WasAuthoredInactive(target)
+                ? false
+                : active;
+            if (target.activeSelf != resolvedActive)
+            {
+                target.SetActive(resolvedActive);
+            }
         }
 
         public void SetStatusBadgeSprites(
@@ -253,6 +408,251 @@ namespace TalismanBag.Items.Detail.UI
         public void Close()
         {
             SetVisible(false);
+        }
+
+        public bool ContainsPopupContentScreenPoint(
+            Vector2 screenPosition,
+            Camera eventCamera = null)
+        {
+            if (!gameObject.activeInHierarchy)
+            {
+                return false;
+            }
+
+            Camera resolvedCamera = eventCamera != null
+                ? eventCamera
+                : ResolveEventCamera();
+            RectTransform popupFrame = cardBackgroundImage != null
+                ? cardBackgroundImage.rectTransform
+                : transform as RectTransform;
+            return popupFrame != null
+                && popupFrame.gameObject.activeInHierarchy
+                && RectTransformUtility.RectangleContainsScreenPoint(
+                    popupFrame,
+                    screenPosition,
+                    resolvedCamera);
+        }
+
+        private void CompleteLegacyTextBinding()
+        {
+            if (!RecoverMissingLegacyTextFonts())
+            {
+                SetVisible(false);
+                return;
+            }
+
+            RebuildExistingLayoutMeasurements();
+        }
+
+        private bool RecoverMissingLegacyTextFonts()
+        {
+            Text[] descendants = GetComponentsInChildren<Text>(true);
+            Font resolvedFont = ResolveCachedLegacyTextFont(descendants);
+            if (resolvedFont == null)
+            {
+                if (!legacyTextFontFailureLogged)
+                {
+                    Debug.LogError(
+                        "[ItemDetailPanelView][" + LegacyTextFontFailureCode
+                        + "] 无法为道具详情解析可用的旧版文字字体，面板已保持隐藏。",
+                        this);
+                    legacyTextFontFailureLogged = true;
+                }
+
+                return false;
+            }
+
+            foreach (Text text in descendants)
+            {
+                if (text != null && text.font == null)
+                {
+                    text.font = resolvedFont;
+                }
+            }
+
+            legacyTextFontFailureLogged = false;
+            return true;
+        }
+
+        private Font ResolveCachedLegacyTextFont(IReadOnlyList<Text> descendants)
+        {
+            if (legacyTextFontResolutionAttempted)
+            {
+                return cachedLegacyTextFont;
+            }
+
+            legacyTextFontResolutionAttempted = true;
+            legacyTextFontResolutionCount++;
+            cachedLegacyTextFont = ResolveLegacyTextFont(
+                descendants,
+                out ownsCachedLegacyTextFont,
+                out cachedLegacyTextFontSource,
+                out cachedLegacyTextFontFallbackReason);
+            if (cachedLegacyTextFont != null && ownsCachedLegacyTextFont)
+            {
+                cachedLegacyTextFont.hideFlags = HideFlags.DontSave;
+            }
+
+            if (cachedLegacyTextFont != null
+                && !string.IsNullOrWhiteSpace(cachedLegacyTextFontFallbackReason))
+            {
+                Debug.Log(
+                    "[ItemDetailPanelView][ITEM_DETAIL_LEGACY_TEXT_FONT_FALLBACK] "
+                    + cachedLegacyTextFontFallbackReason
+                    + "；实际字体：" + cachedLegacyTextFont.name + "。",
+                    this);
+            }
+
+            return cachedLegacyTextFont;
+        }
+
+        private Font ResolveLegacyTextFont(
+            IReadOnlyList<Text> descendants,
+            out bool ownsRuntimeFont,
+            out string source,
+            out string fallbackReason)
+        {
+            ownsRuntimeFont = false;
+            source = string.Empty;
+            fallbackReason = string.Empty;
+            if (chineseTextFont != null)
+            {
+                source = "serialized chineseTextFont";
+                return chineseTextFont;
+            }
+
+            if (descendants != null)
+            {
+                for (int index = 0; index < descendants.Count; index++)
+                {
+                    Font descendantFont = descendants[index] != null
+                        ? descendants[index].font
+                        : null;
+                    if (descendantFont != null)
+                    {
+                        source = "authored descendant Font: " + descendantFont.name;
+                        return descendantFont;
+                    }
+                }
+            }
+
+            string[] installedFontNames;
+            try
+            {
+                installedFontNames = Font.GetOSInstalledFontNames()
+                    ?? Array.Empty<string>();
+            }
+            catch (Exception)
+            {
+                installedFontNames = Array.Empty<string>();
+            }
+
+            Font simSun = TryCreateInstalledFont(
+                installedFontNames,
+                PreferredChineseOsFontName);
+            if (simSun != null)
+            {
+                ownsRuntimeFont = true;
+                source = "installed OS Font: " + PreferredChineseOsFontName;
+                return simSun;
+            }
+
+            for (int index = 0;
+                 index < ApprovedChineseFallbackFontNames.Length;
+                 index++)
+            {
+                string fallbackName = ApprovedChineseFallbackFontNames[index];
+                Font fallback = TryCreateInstalledFont(
+                    installedFontNames,
+                    fallbackName);
+                if (fallback == null)
+                {
+                    continue;
+                }
+
+                ownsRuntimeFont = true;
+                source = "installed Chinese fallback: " + fallbackName;
+                fallbackReason = "未检测到可创建的 SimSun，按批准顺序回退到 "
+                    + fallbackName;
+                return fallback;
+            }
+
+            try
+            {
+                Font builtin = Resources.GetBuiltinResource<Font>(
+                    LegacyTextFontResourceName);
+                if (builtin != null)
+                {
+                    source = "built-in Resource: " + LegacyTextFontResourceName;
+                    fallbackReason = "未检测到可创建的 SimSun 或批准的中文系统字体，"
+                        + "使用最后兜底 " + LegacyTextFontResourceName;
+                }
+                return builtin;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private static Font TryCreateInstalledFont(
+            IReadOnlyList<string> installedFontNames,
+            string requestedName)
+        {
+            if (installedFontNames == null
+                || string.IsNullOrWhiteSpace(requestedName))
+            {
+                return null;
+            }
+
+            string installedName = null;
+            for (int index = 0; index < installedFontNames.Count; index++)
+            {
+                if (string.Equals(
+                        installedFontNames[index],
+                        requestedName,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    installedName = installedFontNames[index];
+                    break;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(installedName))
+            {
+                return null;
+            }
+
+            try
+            {
+                return Font.CreateDynamicFontFromOSFont(
+                    installedName,
+                    RuntimeChineseFontSize);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private void RebuildExistingLayoutMeasurements()
+        {
+            Canvas.ForceUpdateCanvases();
+            ForceRebuildLayout(detailScrollRect != null ? detailScrollRect.content : null);
+            ForceRebuildLayout(debugScrollRect != null ? debugScrollRect.content : null);
+            ForceRebuildLayout(transform as RectTransform);
+            Canvas.ForceUpdateCanvases();
+        }
+
+        private static void ForceRebuildLayout(RectTransform target)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            LayoutRebuilder.MarkLayoutForRebuild(target);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(target);
         }
 
         private void BindTabs()
@@ -303,7 +703,9 @@ namespace TalismanBag.Items.Detail.UI
 
         private ScrollRect ActiveScrollRect()
         {
-            return activeTab == DetailTab.Detail ? detailScrollRect : debugScrollRect;
+            return activeTab == DetailTab.Detail
+                ? detailScrollRect
+                : debugScrollRect;
         }
 
         private bool CanDirectScroll(ScrollRect scrollRect)
@@ -316,14 +718,16 @@ namespace TalismanBag.Items.Detail.UI
 
         private void HandleMouseWheelScroll(ScrollRect scrollRect)
         {
-            float wheel = Input.mouseScrollDelta.y;
-            if (Mathf.Abs(wheel) <= Mathf.Epsilon
+            float wheelDelta = Input.mouseScrollDelta.y;
+            if (Mathf.Abs(wheelDelta) <= Mathf.Epsilon
                 || !ContainsScreenPoint(Input.mousePosition))
             {
                 return;
             }
 
-            ApplyNormalizedScroll(scrollRect, wheel * MouseWheelNormalizedStep);
+            ApplyNormalizedScroll(
+                scrollRect,
+                wheelDelta * MouseWheelNormalizedStep);
         }
 
         private void HandleTouchDragScroll(ScrollRect scrollRect)
@@ -349,7 +753,8 @@ namespace TalismanBag.Items.Detail.UI
                 return;
             }
 
-            if (touch.phase == TouchPhase.Canceled || touch.phase == TouchPhase.Ended)
+            if (touch.phase == TouchPhase.Canceled
+                || touch.phase == TouchPhase.Ended)
             {
                 activeTouchFingerId = int.MinValue;
                 touchScrolling = false;
@@ -361,14 +766,17 @@ namespace TalismanBag.Items.Detail.UI
                 return;
             }
 
-            float deltaY = touch.deltaPosition.y;
-            if (!touchScrolling && Mathf.Abs(deltaY) < TouchDragDeadZonePixels)
+            float delta = touch.deltaPosition.y;
+            if (!touchScrolling
+                && Mathf.Abs(delta) < TouchDragDeadZonePixels)
             {
                 return;
             }
 
             touchScrolling = true;
-            ApplyNormalizedScroll(scrollRect, -deltaY / ResolveScrollableHeight(scrollRect));
+            ApplyNormalizedScroll(
+                scrollRect,
+                -delta / ResolveScrollableHeight(scrollRect));
         }
 
         private Touch FindActiveTouch()
@@ -396,18 +804,48 @@ namespace TalismanBag.Items.Detail.UI
         {
             RectTransform rect = transform as RectTransform;
             return rect != null
-                && RectTransformUtility.RectangleContainsScreenPoint(rect, screenPosition, ResolveEventCamera());
+                && RectTransformUtility.RectangleContainsScreenPoint(
+                    rect,
+                    screenPosition,
+                    ResolveEventCamera());
         }
 
-        private Camera ResolveEventCamera()
+        private void EnsureOutsideDismissInputBlocker()
         {
-            Canvas canvas = GetComponentInParent<Canvas>();
-            return canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
-                ? canvas.worldCamera
+            Canvas detailCanvas = GetComponentInParent<Canvas>();
+            Image outsideSurface = detailCanvas != null
+                ? detailCanvas.GetComponent<Image>()
                 : null;
+            if (detailCanvas == null || outsideSurface == null)
+            {
+                return;
+            }
+
+            if (detailCanvas.GetComponent<GraphicRaycaster>() == null)
+            {
+                GraphicRaycaster raycaster =
+                    detailCanvas.gameObject.AddComponent<GraphicRaycaster>();
+                raycaster.hideFlags =
+                    HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            }
+
+            outsideDismissInputBlocker =
+                detailCanvas.GetComponent<ItemDetailOutsideDismissInputBlocker>();
+            if (outsideDismissInputBlocker == null)
+            {
+                outsideDismissInputBlocker =
+                    detailCanvas.gameObject
+                        .AddComponent<ItemDetailOutsideDismissInputBlocker>();
+                outsideDismissInputBlocker.hideFlags =
+                    HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            }
+
+            outsideDismissInputBlocker.Configure(this, outsideSurface);
         }
 
-        private static void ApplyNormalizedScroll(ScrollRect scrollRect, float normalizedDelta)
+        private static void ApplyNormalizedScroll(
+            ScrollRect scrollRect,
+            float normalizedDelta)
         {
             scrollRect.StopMovement();
             scrollRect.velocity = Vector2.zero;
@@ -425,7 +863,21 @@ namespace TalismanBag.Items.Detail.UI
                 return 0f;
             }
 
-            return Mathf.Max(0f, scrollRect.content.rect.height - viewport.rect.height);
+            return Mathf.Max(
+                0f,
+                scrollRect.content.rect.height - viewport.rect.height);
+        }
+
+        private Camera ResolveEventCamera()
+        {
+            Canvas canvas = GetComponentInParent<Canvas>();
+            Canvas eventCanvas = canvas != null && canvas.rootCanvas != null
+                ? canvas.rootCanvas
+                : canvas;
+            return eventCanvas != null
+                && eventCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                    ? eventCanvas.worldCamera
+                    : null;
         }
 
         private static void SetSections(
@@ -486,6 +938,22 @@ namespace TalismanBag.Items.Detail.UI
                     }
 
                     continue;
+                }
+
+                if (stateKeys.Any(stateKey =>
+                        string.Equals(
+                            stateKey,
+                            "famenBuild",
+                            StringComparison.Ordinal)
+                        || string.Equals(
+                            stateKey,
+                            "qileiBuild",
+                            StringComparison.Ordinal)))
+                {
+                    // Build stage rows and their active-state masks are live
+                    // qualified presentation. Keep the authored hierarchy and
+                    // styling, but never freeze their runtime visibility.
+                    target.SetPreserveAuthoredVisualStyle(false);
                 }
 
                 ItemDetailSectionViewModel source = FindPlayerSection(sourceSections, stateKeys);
@@ -618,7 +1086,7 @@ namespace TalismanBag.Items.Detail.UI
                 artworkImageSlot.enabled = hasArtwork;
                 if (!preserveAuthoredVisualStyle)
                 {
-                    artworkImageSlot.color = Color.white;
+                    artworkImageSlot.color = ThemeArtworkTint;
                 }
             }
 
@@ -649,12 +1117,12 @@ namespace TalismanBag.Items.Detail.UI
             target.enabled = visible;
             if (target.gameObject.activeSelf != visible)
             {
-                target.gameObject.SetActive(visible);
+                SetAuthoredAwareActive(target.gameObject, visible);
             }
 
             if (!preserveAuthoredVisualStyle)
             {
-                target.color = Color.white;
+                target.color = ThemeIconTint;
             }
         }
 
@@ -683,6 +1151,9 @@ namespace TalismanBag.Items.Detail.UI
             {
                 >= 1 and <= 6 => "震雷法",
                 >= 7 and <= 12 => "离火法",
+                >= 13 and <= 18 => "中岳法",
+                >= 19 and <= 24 => "玄水法",
+                >= 25 and <= 30 => "太白法",
                 _ => string.Empty
             };
             int rarityIndex = rarityDisplayName switch
@@ -937,7 +1408,7 @@ namespace TalismanBag.Items.Detail.UI
                 && index < statusBadgeImages.Length
                 && statusBadgeImages[index] != null)
             {
-                statusBadgeImages[index].color = Color.clear;
+                statusBadgeImages[index].color = ThemeClearedStatusBadgeTint;
             }
 
             if (statusBadgeTexts != null && index >= 0 && index < statusBadgeTexts.Length && statusBadgeTexts[index] != null)
@@ -1020,12 +1491,12 @@ namespace TalismanBag.Items.Detail.UI
 
             if (artworkFrameImage != null)
             {
-                artworkFrameImage.color = new Color(rarityColor.r, rarityColor.g, rarityColor.b, 0.28f);
+                artworkFrameImage.color = WithAlpha(rarityColor, ThemeRarityArtworkFrameAlpha);
             }
 
             if (rarityBadgeImage != null)
             {
-                rarityBadgeImage.color = new Color(rarityColor.r, rarityColor.g, rarityColor.b, 0.30f);
+                rarityBadgeImage.color = WithAlpha(rarityColor, ThemeRarityBadgeAlpha);
             }
 
             if (rarityBadgeText != null)
@@ -1035,7 +1506,7 @@ namespace TalismanBag.Items.Detail.UI
 
             if (rarityAccentImage != null)
             {
-                rarityAccentImage.color = new Color(rarityColor.r, rarityColor.g, rarityColor.b, 0.75f);
+                rarityAccentImage.color = WithAlpha(rarityColor, ThemeRarityAccentAlpha);
             }
 
             if (cardBackgroundImage != null)
@@ -1044,11 +1515,11 @@ namespace TalismanBag.Items.Detail.UI
             }
         }
 
-        private static void SetActive(GameObject target, bool active)
+        private void SetActive(GameObject target, bool active)
         {
             if (target != null)
             {
-                target.SetActive(active);
+                SetAuthoredAwareActive(target, active);
             }
         }
 
@@ -1139,7 +1610,82 @@ namespace TalismanBag.Items.Detail.UI
 
             foreach (ItemDetailSectionView section in sections)
             {
-                section?.SetVisualTheme(visualTheme);
+                section?.SetVisualTheme(
+                    IsBuildSection(section)
+                        ? ResolveLegacyBuildPresentationTheme()
+                        : visualTheme);
+            }
+        }
+
+        private ItemDetailVisualTheme ResolveLegacyBuildPresentationTheme()
+        {
+            if (legacyBuildPresentationTheme != null
+                && ReferenceEquals(
+                    legacyBuildPresentationThemeSource,
+                    visualTheme))
+            {
+                return legacyBuildPresentationTheme;
+            }
+
+            ReleaseLegacyBuildPresentationTheme();
+            legacyBuildPresentationTheme = visualTheme != null
+                ? Instantiate(visualTheme)
+                : ScriptableObject.CreateInstance<ItemDetailVisualTheme>();
+            legacyBuildPresentationTheme.name =
+                "ItemDetailLegacyBuildPresentationTheme";
+            legacyBuildPresentationTheme.hideFlags =
+                HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            legacyBuildPresentationTheme.buildInactive =
+                LegacyBuildInactiveColor;
+            legacyBuildPresentationThemeSource = visualTheme;
+            return legacyBuildPresentationTheme;
+        }
+
+        private void ReleaseLegacyBuildPresentationTheme()
+        {
+            ItemDetailVisualTheme theme = legacyBuildPresentationTheme;
+            legacyBuildPresentationTheme = null;
+            legacyBuildPresentationThemeSource = null;
+            if (theme == null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(theme);
+            }
+            else
+            {
+                DestroyImmediate(theme);
+            }
+        }
+
+        private static bool IsBuildSection(ItemDetailSectionView section)
+        {
+            return section != null
+                && (string.Equals(
+                        section.gameObject.name,
+                        "FaMenBuildSection",
+                        StringComparison.Ordinal)
+                    || string.Equals(
+                        section.gameObject.name,
+                        "QiLeiBuildSection",
+                        StringComparison.Ordinal));
+        }
+
+        private static void SetSectionsPreserveAuthoredVisualStyle(
+            ItemDetailSectionView[] sections,
+            bool preserve)
+        {
+            if (sections == null)
+            {
+                return;
+            }
+
+            foreach (ItemDetailSectionView section in sections)
+            {
+                section?.SetPreserveAuthoredVisualStyle(preserve);
             }
         }
 
@@ -1227,11 +1773,22 @@ namespace TalismanBag.Items.Detail.UI
         private Color ThemeBuildActive => visualTheme != null ? visualTheme.buildActive : ItemDetailVisualThemeDefaults.BuildActive;
         private Color ThemeBuildNearActive => visualTheme != null ? visualTheme.buildNearActive : ItemDetailVisualThemeDefaults.BuildNearActive;
         private Color ThemeArrayModifier => visualTheme != null ? visualTheme.arrayModifierColor : ItemDetailVisualThemeDefaults.ArrayModifierColor;
+        private Color ThemeArtworkTint => visualTheme != null ? visualTheme.artworkTint : ItemDetailVisualThemeDefaults.ArtworkTint;
+        private Color ThemeIconTint => visualTheme != null ? visualTheme.iconTint : ItemDetailVisualThemeDefaults.IconTint;
+        private Color ThemeClearedStatusBadgeTint => visualTheme != null ? visualTheme.clearedStatusBadgeTint : ItemDetailVisualThemeDefaults.ClearedStatusBadgeTint;
         private Color ThemeRarityWhite => visualTheme != null ? visualTheme.rarityWhite : ItemDetailVisualThemeDefaults.RarityWhite;
         private Color ThemeRarityGreen => visualTheme != null ? visualTheme.rarityGreen : ItemDetailVisualThemeDefaults.RarityGreen;
         private Color ThemeRarityBlue => visualTheme != null ? visualTheme.rarityBlue : ItemDetailVisualThemeDefaults.RarityBlue;
         private Color ThemeRarityPurple => visualTheme != null ? visualTheme.rarityPurple : ItemDetailVisualThemeDefaults.RarityPurple;
         private Color ThemeRarityOrange => visualTheme != null ? visualTheme.rarityOrange : ItemDetailVisualThemeDefaults.RarityOrange;
+        private float ThemeRarityArtworkFrameAlpha => visualTheme != null ? visualTheme.rarityArtworkFrameAlpha : ItemDetailVisualThemeDefaults.RarityArtworkFrameAlpha;
+        private float ThemeRarityBadgeAlpha => visualTheme != null ? visualTheme.rarityBadgeAlpha : ItemDetailVisualThemeDefaults.RarityBadgeAlpha;
+        private float ThemeRarityAccentAlpha => visualTheme != null ? visualTheme.rarityAccentAlpha : ItemDetailVisualThemeDefaults.RarityAccentAlpha;
+
+        private static Color WithAlpha(Color color, float alpha)
+        {
+            return new Color(color.r, color.g, color.b, alpha);
+        }
 
         private static string ResolveRarityDisplayName(string rarityKey, string displayRarityName)
         {
@@ -1320,6 +1877,193 @@ namespace TalismanBag.Items.Detail.UI
         {
             Detail,
             Debug
+        }
+    }
+
+    internal sealed class ItemDetailOutsideDismissInputBlocker :
+        MonoBehaviour,
+        IPointerDownHandler
+    {
+        private ItemDetailPanelView ownerPanel;
+        private Image outsideSurface;
+        private bool originalRaycastTarget;
+        private bool hasOriginalRaycastTarget;
+        private Vector4 originalRaycastPadding;
+        private Vector4 expandedRaycastPadding;
+        private bool panelVisible;
+        private bool captureUntilPointerRelease;
+
+        public void Configure(
+            ItemDetailPanelView panel,
+            Image configuredOutsideSurface)
+        {
+            if (outsideSurface != null
+                && !ReferenceEquals(outsideSurface, configuredOutsideSurface)
+                && hasOriginalRaycastTarget)
+            {
+                outsideSurface.raycastTarget = originalRaycastTarget;
+                outsideSurface.raycastPadding = originalRaycastPadding;
+            }
+
+            ownerPanel = panel;
+            outsideSurface = configuredOutsideSurface;
+            if (outsideSurface != null && !hasOriginalRaycastTarget)
+            {
+                originalRaycastTarget = outsideSurface.raycastTarget;
+                originalRaycastPadding = outsideSurface.raycastPadding;
+                hasOriginalRaycastTarget = true;
+            }
+            expandedRaycastPadding =
+                ResolveRootCanvasRaycastPadding(outsideSurface);
+
+            panelVisible = ownerPanel != null
+                && ownerPanel.gameObject.activeInHierarchy;
+            ApplyRaycastState();
+        }
+
+        public void SetPanelVisible(bool visible)
+        {
+            panelVisible = visible;
+            if (!visible && IsPointerPressed())
+            {
+                captureUntilPointerRelease = true;
+            }
+
+            ApplyRaycastState();
+        }
+
+        public void Release(ItemDetailPanelView panel)
+        {
+            if (!ReferenceEquals(ownerPanel, panel))
+            {
+                return;
+            }
+
+            panelVisible = false;
+            captureUntilPointerRelease = false;
+            if (outsideSurface != null && hasOriginalRaycastTarget)
+            {
+                outsideSurface.raycastTarget = originalRaycastTarget;
+                outsideSurface.raycastPadding = originalRaycastPadding;
+            }
+
+            ownerPanel = null;
+            outsideSurface = null;
+            enabled = false;
+        }
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (eventData == null
+                || eventData.button != PointerEventData.InputButton.Left
+                || ownerPanel == null
+                || !panelVisible
+                || ownerPanel.ContainsPopupContentScreenPoint(
+                    eventData.position,
+                    eventData.pressEventCamera))
+            {
+                return;
+            }
+
+            captureUntilPointerRelease = true;
+            ApplyRaycastState();
+            eventData.Use();
+            ownerPanel.Close();
+        }
+
+        private void Update()
+        {
+            if (!captureUntilPointerRelease || IsPointerPressed())
+            {
+                return;
+            }
+
+            captureUntilPointerRelease = false;
+            ApplyRaycastState();
+        }
+
+        private void ApplyRaycastState()
+        {
+            bool shouldCapture = panelVisible || captureUntilPointerRelease;
+            if (outsideSurface != null)
+            {
+                outsideSurface.raycastTarget = shouldCapture
+                    ? true
+                    : originalRaycastTarget;
+                outsideSurface.raycastPadding = shouldCapture
+                    ? expandedRaycastPadding
+                    : originalRaycastPadding;
+            }
+
+            enabled = shouldCapture;
+        }
+
+        private static bool IsPointerPressed()
+        {
+            if (Input.GetMouseButton(0))
+            {
+                return true;
+            }
+
+            for (int index = 0; index < Input.touchCount; index++)
+            {
+                TouchPhase phase = Input.GetTouch(index).phase;
+                if (phase != TouchPhase.Ended && phase != TouchPhase.Canceled)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private Vector4 ResolveRootCanvasRaycastPadding(Image surface)
+        {
+            RectTransform surfaceRect = surface != null
+                ? surface.rectTransform
+                : null;
+            Canvas surfaceCanvas = surface != null
+                ? surface.GetComponentInParent<Canvas>()
+                : null;
+            RectTransform rootRect = surfaceCanvas != null
+                ? surfaceCanvas.rootCanvas.transform as RectTransform
+                : null;
+            if (surfaceRect == null || rootRect == null)
+            {
+                return originalRaycastPadding;
+            }
+
+            Vector3[] rootCorners = new Vector3[4];
+            rootRect.GetWorldCorners(rootCorners);
+            Vector3 first = surfaceRect.InverseTransformPoint(rootCorners[0]);
+            float xMin = first.x;
+            float yMin = first.y;
+            float xMax = first.x;
+            float yMax = first.y;
+            for (int index = 1; index < rootCorners.Length; index++)
+            {
+                Vector3 local =
+                    surfaceRect.InverseTransformPoint(rootCorners[index]);
+                xMin = Mathf.Min(xMin, local.x);
+                yMin = Mathf.Min(yMin, local.y);
+                xMax = Mathf.Max(xMax, local.x);
+                yMax = Mathf.Max(yMax, local.y);
+            }
+
+            Rect surfaceBounds = surfaceRect.rect;
+            return new Vector4(
+                Mathf.Min(
+                    originalRaycastPadding.x,
+                    xMin - surfaceBounds.xMin),
+                Mathf.Min(
+                    originalRaycastPadding.y,
+                    yMin - surfaceBounds.yMin),
+                Mathf.Min(
+                    originalRaycastPadding.z,
+                    surfaceBounds.xMax - xMax),
+                Mathf.Min(
+                    originalRaycastPadding.w,
+                    surfaceBounds.yMax - yMax));
         }
     }
 }

@@ -103,7 +103,7 @@ namespace TalismanBag.Items.Balance
                     errors.Add("RANDOM_POOL_INVALID: " + profile.baseItemId + " must have at least six positive entries.");
                 if (profile.randomAffixes.Any(value => value != null && value.affixId == profile.fixedAffixId))
                     errors.Add("AFFIX_REPEAT_INVALID: " + profile.baseItemId + " fixed affix appears in random pool.");
-                if (profile.coreCandidates.Count != 5)
+                if (profile.coreCandidates.Count != 4)
                     errors.Add("CORE_CANDIDATE_COUNT_INVALID: " + profile.baseItemId);
                 if (profile.signatureAffix == null || !ValidAffix(profile.signatureAffix))
                     errors.Add("SIGNATURE_AFFIX_INVALID: " + profile.baseItemId);
@@ -143,7 +143,15 @@ namespace TalismanBag.Items.Balance
                             errors.Add("STAT_RANGE_INVALID: " + version.versionKey + "@" + range.statId);
                     }
 
-                    int expectedCoreCount = rarity.tierIndex + 1;
+                    int expectedCoreCount = rarity.rarity switch
+                    {
+                        ItemInstanceRarity.White => 1,
+                        ItemInstanceRarity.Green => 2,
+                        ItemInstanceRarity.Blue => 3,
+                        ItemInstanceRarity.Purple => 3,
+                        ItemInstanceRarity.Orange => 4,
+                        _ => 0
+                    };
                     if (version.eligibleCoreEffectIds.Count != expectedCoreCount
                         || version.visibleCoreEffectIds.Count != expectedCoreCount)
                         errors.Add("CORE_PROFILE_INVALID: " + version.versionKey);

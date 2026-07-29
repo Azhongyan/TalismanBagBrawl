@@ -18055,6 +18055,9 @@ MonoBehaviour:
   writesFormalUi: 0
   touchesFormalScene: 0
   showsCompleteAnswers: 0
+  battleStateYOffset: -320
+  battlePrepareTransitionSequencePlayer: {fileID: 0}
+  characterIdlePreview: {fileID: 0}
   triangleTrayArtworkRotationOffsetDegrees: 0
   triangleDragGhostArtworkRotationOffsetDegrees: 0
   triangleBoardPlacedArtworkRotationOffsetDegrees: 0
@@ -18097,6 +18100,7 @@ MonoBehaviour:
   itemInfoPanel: {fileID: 0}
   resetPreviewButton: {fileID: 8129017319811051136}
   rotatePreviewButton: {fileID: 5814130192975398750}
+  trayArrangeButton: {fileID: 0}
   dragGhostRoot: {fileID: 3228939089655362312}
   dragGhostText: {fileID: 1336799807371983423}
   battlePrepareMotionRoot: {fileID: 0}

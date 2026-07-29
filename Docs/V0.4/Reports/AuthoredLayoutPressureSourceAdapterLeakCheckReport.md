@@ -1,0 +1,25 @@
+# Authored Layout Pressure Source Adapter Leak Check Report
+
+- Result: `PASS`
+- Package allowlist files: `14/14`
+- Modified existing files: `0`
+- N01C Validator calls: `1` static call site
+- N01C Evaluator symbol/calls: `0`
+- Applicability public input/output fields: `0`
+- Applicability authored/migrated rows: `0`
+- P1 Item/Build namespace/type/path references: `0`
+- Real MapRule rows: `0`
+- Real Encounter rows: `0`
+- Real requirement rows: `0`
+- Real readiness rows: `0`
+- Scene/Prefab/Board/Map/Battle/UI/BuildSettings connections: `0`
+- map simulation/pathfinding/optimal-layout logic: `0`
+- BP/score/count conversion: `0`
+- Runtime Producer connections: `0`
+- C02 blocked rows changed: `0`
+- Actual Unknown reduction: `0`
+- Next-package implementation: `0`
+- Leak Count: `0`
+- GUID conflicts: `0`
+- Trailing whitespace: `0`
+- Forbidden scope touched: `0`

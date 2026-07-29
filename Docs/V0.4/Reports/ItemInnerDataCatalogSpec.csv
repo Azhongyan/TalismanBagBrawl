@@ -7,7 +7,7 @@ I005,照壳雷镜,famenCombat,zhenlei,jing,shape_line2_v,"(0,0);(0,1)","(0,1)",�
 I006,天鼓槌,famenCombat,zhenlei,fa,shape_line2_h,"(0,0);(1,0)","(0,0)",紫,zi,bai|qing|lan|zi|cheng,,false,i006_placeholder,PASS
 I007,离火符,famenCombat,lihuo,fu,shape_single_1,"(0,0)","(0,0)",白,bai,bai|qing|lan|zi|cheng,,false,i007_placeholder,PASS
 I008,焚邪长符,famenCombat,lihuo,fu,shape_line2_v,"(0,0);(0,1)","(0,0)",青,qing,bai|qing|lan|zi|cheng,,false,i008_placeholder,PASS
-I009,离火焚邪印,famenCombat,lihuo,yin,shape_line2_h,"(0,0);(1,0)","(0,0)",蓝,lan,bai|qing|lan|zi|cheng,,false,i009_placeholder,PASS
+I009,离火焚邪印,famenCombat,lihuo,yin,shape_single_1,"(0,0)","(0,0)",蓝,lan,bai|qing|lan|zi|cheng,,false,i009_placeholder,PASS
 I010,风火令旗,famenCombat,lihuo,ling,shape_line2_v,"(0,0);(0,1)","(0,1)",蓝,lan,bai|qing|lan|zi|cheng,,false,i010_placeholder,PASS
 I011,照焚铜镜,famenCombat,lihuo,jing,shape_line2_h,"(0,0);(1,0)","(1,0)",蓝,lan,bai|qing|lan|zi|cheng,,false,i011_placeholder,PASS
 I012,长明灯,famenCombat,lihuo,fa,shape_line2_v,"(0,0);(0,1)","(0,0)",紫,zi,bai|qing|lan|zi|cheng,,false,i012_placeholder,PASS
@@ -27,6 +27,6 @@ I025,封煞符,famenCombat,taibai,fu,shape_single_1,"(0,0)","(0,0)",白,bai,bai|
 I026,太白斩符,famenCombat,taibai,fu,shape_line2_h,"(0,0);(1,0)","(0,0)",青,qing,bai|qing|lan|zi|cheng,,false,i026_placeholder,PASS
 I027,太白斩煞印,famenCombat,taibai,yin,shape_line2_v,"(0,0);(0,1)","(0,0)",蓝,lan,bai|qing|lan|zi|cheng,,false,i027_placeholder,PASS
 I028,断煞令,famenCombat,taibai,ling,shape_line2_h,"(0,0);(1,0)","(1,0)",蓝,lan,bai|qing|lan|zi|cheng,,false,i028_placeholder,PASS
-I029,照煞镜,famenCombat,taibai,jing,shape_line2_v,"(0,0);(0,1)","(0,1)",蓝,lan,bai|qing|lan|zi|cheng,,false,i029_placeholder,PASS
+I029,照煞镜,famenCombat,taibai,jing,shape_single_1,"(0,0)","(0,0)",蓝,lan,bai|qing|lan|zi|cheng,,false,i029_placeholder,PASS
 I030,桃木剑,famenCombat,taibai,fa,shape_line3_h,"(0,0);(1,0);(2,0)","(1,0)",紫,zi,bai|qing|lan|zi|cheng,,false,i030_placeholder,PASS
 I031,聚念石,zhonggongSource,zhonggong,zhonggongQi,shape_single_1,"(0,0)","(0,0)",青,qing,bai|qing|lan|zi|cheng,,true,i031_junian_stone_placeholder,PASS

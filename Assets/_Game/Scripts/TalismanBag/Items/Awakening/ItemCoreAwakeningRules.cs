@@ -22,10 +22,11 @@ namespace TalismanBag.Items.Awakening
 
     public enum ItemCoreAwakeningNodeKind
     {
-        Core1,
-        Core2,
-        Core3,
-        Ultimate
+        Core1 = 0,
+        Core2 = 1,
+        Core3 = 2,
+        Ultimate = 3,
+        Core4 = 4
     }
 
     public enum ItemCoreAwakeningStateKey
@@ -86,10 +87,10 @@ namespace TalismanBag.Items.Awakening
             string stableItemId = itemId.Trim();
             return new[]
             {
-                new ItemCoreEffectDefinition(stableItemId, $"{stableItemId}_CORE_01", ItemCoreAwakeningNodeKind.Core1, 10),
-                new ItemCoreEffectDefinition(stableItemId, $"{stableItemId}_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20),
-                new ItemCoreEffectDefinition(stableItemId, $"{stableItemId}_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30),
-                new ItemCoreEffectDefinition(stableItemId, $"{stableItemId}_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40, "Preview Reserved", "Reserved")
+                new ItemCoreEffectDefinition(stableItemId, $"{stableItemId}_CORE_01", ItemCoreAwakeningNodeKind.Core1, 10, "Preview Reserved", "white"),
+                new ItemCoreEffectDefinition(stableItemId, $"{stableItemId}_CORE_02", ItemCoreAwakeningNodeKind.Core2, 20, "Preview Reserved", "green"),
+                new ItemCoreEffectDefinition(stableItemId, $"{stableItemId}_CORE_03", ItemCoreAwakeningNodeKind.Core3, 30, "Preview Reserved", "blue"),
+                new ItemCoreEffectDefinition(stableItemId, $"{stableItemId}_CORE_ULT", ItemCoreAwakeningNodeKind.Ultimate, 40, "Preview Reserved", "orange")
             };
         }
     }
@@ -524,7 +525,7 @@ namespace TalismanBag.Items.Awakening
             string errors = result.ValidationErrors.Count == 0
                 ? "None"
                 : string.Join(" | ", result.ValidationErrors);
-            return $"CoreAwakening overview: nodes Lv10/Lv20/Lv30/Lv40; unlocked placements={unlocked}; active placements={active}; validationErrors={errors}.";
+            return $"CoreAwakening overview: nodes Core1/Core2/Core3/Ultimate at Lv10/Lv20/Lv30/Lv40; unlocked placements={unlocked}; active placements={active}; validationErrors={errors}.";
         }
 
         public static string FormatNodeLevels(IReadOnlyList<int> levels)
@@ -551,6 +552,7 @@ namespace TalismanBag.Items.Awakening
                 ItemCoreAwakeningNodeKind.Core1 => 10,
                 ItemCoreAwakeningNodeKind.Core2 => 20,
                 ItemCoreAwakeningNodeKind.Core3 => 30,
+                ItemCoreAwakeningNodeKind.Core4 => 40,
                 ItemCoreAwakeningNodeKind.Ultimate => 40,
                 _ => 0
             };
@@ -608,6 +610,7 @@ namespace TalismanBag.Items.Awakening
 
             List<ItemCoreEffectDefinition> validDefinitions = new();
             HashSet<string> seenEffectIds = new(StringComparer.Ordinal);
+            HashSet<ItemCoreAwakeningNodeKind> seenNodeKinds = new();
             foreach (ItemCoreEffectDefinition definition in StableDefinitionOrder(definitions))
             {
                 if (definition == null)
@@ -634,6 +637,19 @@ namespace TalismanBag.Items.Awakening
                     continue;
                 }
 
+                if (!seenNodeKinds.Add(definition.nodeKind))
+                {
+                    validationErrors.Add($"duplicate nodeKind '{definition.nodeKind}' for itemId '{itemId}' ignored after stable first definition.");
+                    continue;
+                }
+
+                if (definition.nodeKind == ItemCoreAwakeningNodeKind.Core4)
+                {
+                    validationErrors.Add(
+                        $"SUPERSEDED_EXPANSION_DRIFT: nodeKind 'Core4' for itemId '{itemId}' is deprecated/reserved compatibility evidence and is not a formal Awakening producer.");
+                    continue;
+                }
+
                 int expectedUnlockLevel = ExpectedUnlockLevel(definition.nodeKind);
                 if (definition.unlockLevel != expectedUnlockLevel)
                 {
@@ -641,11 +657,18 @@ namespace TalismanBag.Items.Awakening
                     continue;
                 }
 
+                string expectedCoreEffectId = ExpectedCoreEffectId(itemId, definition.nodeKind);
+                if (!string.Equals(definition.coreEffectId, expectedCoreEffectId, StringComparison.Ordinal))
+                {
+                    validationErrors.Add($"nodeKind '{definition.nodeKind}' coreEffectId mismatch for itemId '{itemId}': expected '{expectedCoreEffectId}', actual '{definition.coreEffectId}'.");
+                    continue;
+                }
+
                 validDefinitions.Add(definition);
             }
 
             foreach (ItemCoreEffectDefinition definition in validDefinitions
-                .OrderBy(definition => definition.nodeKind)
+                .OrderBy(definition => FormalNodeRank(definition.nodeKind))
                 .ThenBy(definition => definition.unlockLevel)
                 .ThenBy(definition => definition.coreEffectId, StringComparer.Ordinal))
             {
@@ -674,15 +697,44 @@ namespace TalismanBag.Items.Awakening
             return byKind;
         }
 
+        private static string ExpectedCoreEffectId(string itemId, ItemCoreAwakeningNodeKind nodeKind)
+        {
+            string suffix = nodeKind switch
+            {
+                ItemCoreAwakeningNodeKind.Core1 => "_CORE_01",
+                ItemCoreAwakeningNodeKind.Core2 => "_CORE_02",
+                ItemCoreAwakeningNodeKind.Core3 => "_CORE_03",
+                ItemCoreAwakeningNodeKind.Core4 => "_CORE_04",
+                ItemCoreAwakeningNodeKind.Ultimate => "_CORE_ULT",
+                _ => string.Empty
+            };
+            return (itemId ?? string.Empty) + suffix;
+        }
+
         private static IEnumerable<ItemCoreEffectDefinition> StableDefinitionOrder(IReadOnlyList<ItemCoreEffectDefinition> definitions)
         {
             return (definitions ?? Array.Empty<ItemCoreEffectDefinition>())
                 .Select((definition, index) => new { definition, index })
                 .OrderBy(item => item.definition?.coreEffectId ?? string.Empty, StringComparer.Ordinal)
-                .ThenBy(item => item.definition?.nodeKind ?? ItemCoreAwakeningNodeKind.Core1)
+                .ThenBy(item => FormalNodeRank(
+                    item.definition?.nodeKind ?? ItemCoreAwakeningNodeKind.Core1))
                 .ThenBy(item => item.definition?.unlockLevel ?? 0)
                 .ThenBy(item => item.index)
                 .Select(item => item.definition);
+        }
+
+        private static int FormalNodeRank(
+            ItemCoreAwakeningNodeKind nodeKind)
+        {
+            return nodeKind switch
+            {
+                ItemCoreAwakeningNodeKind.Core1 => 0,
+                ItemCoreAwakeningNodeKind.Core2 => 1,
+                ItemCoreAwakeningNodeKind.Core3 => 2,
+                ItemCoreAwakeningNodeKind.Ultimate => 3,
+                ItemCoreAwakeningNodeKind.Core4 => int.MaxValue,
+                _ => int.MaxValue
+            };
         }
 
         private static ItemCoreAwakeningNodeState BuildMissingDefinitionNode(

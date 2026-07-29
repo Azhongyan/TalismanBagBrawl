@@ -1,9 +1,9 @@
 # ItemDropGenerationSandbox01 Report
 
 - Package: `V0.4-ItemDropGenerationSandbox01`
-- Run time (UTC): `2026-07-16T08:55:14.2959557Z`
-- Result: PASS
-- Marker: `ITEM_DROP_GENERATION_SANDBOX01_PASS`
+- Run time (UTC): `2026-07-21T07:30:04.9977097Z`
+- Result: FAIL
+- Marker: `ITEM_DROP_GENERATION_SANDBOX01_FAIL`
 - Algorithm ID: `item-drop-generation-v1`
 - generationVersion: `1`
 - Stage 1-10 rarity policy: `LOCKED_STAGE_1_10_WHITE`; no rarity stream is created.
@@ -28,17 +28,17 @@
 
 ## Historical Regressions
 
-- Foundation: PASS
-- StatRange: PASS
-- CorePotential: PASS
-- AffixSchema: PASS
-- RollEngine: PASS
+- Foundation: FAIL
+- StatRange: FAIL
+- CorePotential: FAIL
+- AffixSchema: FAIL
+- RollEngine: FAIL
 - ItemInnerDataCatalog: PASS
 - ItemSystemValidatorAndSnapshot: PASS
 - BuildSynergyCore: PASS
 - CoreAwakeningPreview: PASS
 - ItemSkillTriggerContract: PASS
-- ItemDetailProjectionComplete: PASS
+- ItemDetailProjectionComplete: FAIL
 - JuNian Lighting: PASS
 - ArrayBonus: PASS
 - Foundation: 159/159
@@ -53,4 +53,9 @@
 
 ## Errors
 
-- None.
+- Historical regression report is not PASS: Foundation.
+- Historical regression report is not PASS: StatRange.
+- Historical regression report is not PASS: CorePotential.
+- Historical regression report is not PASS: AffixSchema.
+- Historical regression report is not PASS: RollEngine.
+- Historical regression report is not PASS: ItemDetailProjectionComplete.

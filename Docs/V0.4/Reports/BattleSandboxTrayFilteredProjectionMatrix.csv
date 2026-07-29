@@ -1,0 +1,4 @@
+﻿case,status
+all-five-categories-all,FAIL
+atomic-snapshot-publication,FAIL
+empty-filter-does-not-show-master,FAIL

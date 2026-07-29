@@ -1,0 +1,15 @@
+fixture,decision,reason,damageApplied,acceptedDamageApplicationCount,status
+"duplicate_request","Rejected","DUPLICATE_REQUEST_REJECTED",0,1,PASS
+"duplicate_application","Rejected","DUPLICATE_APPLICATION_REJECTED",0,1,PASS
+"stale_reset_generation","Rejected","STALE_RESET_GENERATION_REJECTED",0,0,PASS
+"stale_enemy_revision","Rejected","STALE_ENEMY_REVISION_REJECTED",0,0,PASS
+"wrong_target","Rejected","INVALID_TARGET_REJECTED",0,0,PASS
+"formal_request","Rejected","FORMAL_ITEM_REQUEST_REJECTED",0,0,PASS
+"non_dev_request","Rejected","ITEM_SNAPSHOT_NOT_DEV_ONLY",0,0,PASS
+"zero_damage","Rejected","ZERO_DAMAGE_REJECTED",0,0,PASS
+"negative_damage","Rejected","NEGATIVE_DAMAGE_REJECTED",0,0,PASS
+"forged_qualified_truth","Rejected","ITEM_ROW_NOT_FROM_TERMINAL_SNAPSHOT",0,0,PASS
+"unsupported_Unknown_Missing","IgnoredDiagnosticOnly","UNSUPPORTED_TELEMETRY_DIAGNOSTIC_ONLY:Unknown:Missing",0,0,PASS
+"unsupported_NotExecuted_Present","IgnoredDiagnosticOnly","UNSUPPORTED_TELEMETRY_DIAGNOSTIC_ONLY:NotExecuted:Present",0,0,PASS
+"unsupported_Rejected_Conflicted","IgnoredDiagnosticOnly","UNSUPPORTED_TELEMETRY_DIAGNOSTIC_ONLY:Rejected:Conflicted",0,0,PASS
+"old_generation_replay","Rejected","STALE_RESET_GENERATION_REJECTED",0,0,PASS

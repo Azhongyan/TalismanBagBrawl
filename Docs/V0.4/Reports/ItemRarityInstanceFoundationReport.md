@@ -1,8 +1,8 @@
 # ItemRarityInstanceFoundation01 Report
 
 - Package: `V0.4-ItemRarityInstanceFoundation01`
-- Run time (UTC): `2026-07-16T08:55:14.0783696Z`
-- Verification: PASS
+- Run time (UTC): `2026-07-21T07:30:04.7810979Z`
+- Verification: FAIL
 - Ordinary archetypes: 30
 - System items: 1
 - Rarity stable keys: white / green / blue / purple / orange
@@ -26,13 +26,13 @@
 - BuildSynergyCore verifier: PASS
 - CoreAwakeningPreview verifier: PASS
 - ItemSkillTriggerContract verifier: PASS
-- ItemDetailProjectionComplete verifier: PASS
+- ItemDetailProjectionComplete verifier: FAIL
 - JuNian Lighting verifier: PASS
 - ArrayBonus verifier: PASS
 
 ## Errors
 
-- None
+- Historical regression failed or did not write its PASS marker: ItemDetailProjectionComplete verifier.
 
 ## Warnings
 

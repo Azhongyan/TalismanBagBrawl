@@ -28,7 +28,7 @@ affixId,displayName,description,effectCategory,operation,triggerEventId,conditio
 "affix_heal_up","回复提升","回复效果提高X%。","NumericModifier","AddPercent","always","NONE","heal","basisPoint","300","0","NONE","NO_DUPLICATE","BALANCE_CANDIDATE"
 "affix_isolated_power","独阵","无相邻道具时基础效果提高X%。","SpatialEffect","AddPercent","on_layout_evaluate","adjacent_count_0","basicEffect","basisPoint","700","0","NONE","NO_DUPLICATE","BALANCE_CANDIDATE"
 "affix_low_health_power","危时","生命低于阈值时基础效果提高X%。","ConditionalModifier","AddPercent","on_trigger","owner_low_health","basicEffect","basisPoint","800","0","NONE","NO_DUPLICATE","BALANCE_CANDIDATE"
-"affix_nian_efficiency","省念","耗念降低X点。","ResourceEffect","ReduceFlat","before_trigger","nian_cost_gt_0","nianCost","point","1","0","NONE","NO_DUPLICATE","BALANCE_CANDIDATE"
+"affix_nian_efficiency","省念","耗念降低X%。","ResourceEffect","ReducePercent","before_trigger","nian_cost_gt_0","nianCost","basisPoint","200","0","NONE","NO_DUPLICATE","BALANCE_CANDIDATE"
 "affix_overheal_to_guard","盈疗成护","治疗溢出转为护势。","MechanicConversion","Convert","on_overheal","overheal_gt_0","heal_to_guard","basisPoint","5000","0","NONE","NO_DUPLICATE","BALANCE_CANDIDATE"
 "affix_qilei2_power","器类成对","器类Build2激活时关键数值提高X%。","BuildSynergyEffect","AddPercent","on_build_change","qilei_stage_2","primaryStat","basisPoint","500","0","NONE","NO_DUPLICATE","BALANCE_CANDIDATE"
 "affix_qilei4_target","器类合阵","器类Build4激活时额外影响X个目标。","BuildSynergyEffect","ExtraTarget","on_trigger","qilei_stage_4","targetCount","count","1","0","NONE","NO_DUPLICATE","BALANCE_CANDIDATE"

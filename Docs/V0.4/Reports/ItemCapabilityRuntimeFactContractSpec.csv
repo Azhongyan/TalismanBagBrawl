@@ -1,0 +1,19 @@
+scenarioId,expected,actual,status,validationCode,factCount,pass
+"first-trigger","KnownTrue","KnownTrue",KnownTrue,"NONE",1,PASS
+"later-trigger","KnownFalse","KnownFalse",KnownFalse,"NONE",1,PASS
+"cross-session-reset","KnownTrue ordinal=1","KnownTrue ordinal=1",KnownTrue,"NONE",1,PASS
+"trigger-failure","KnownFalse","KnownFalse",KnownFalse,"NONE",1,PASS
+"cleanse-success-extra-stack","KnownTrue stack=2","KnownTrue stack=2",KnownTrue,"NONE",1,PASS
+"chain-count-two","KnownFalse count=2","KnownFalse count=2",KnownFalse,"NONE",1,PASS
+"chain-count-three","KnownTrue count=3","KnownTrue count=3",KnownTrue,"NONE",1,PASS
+"nian-before-after-refund","10/8/2 point","10/8/2",KnownTrue,"NONE",1,PASS
+"incomplete-is-unknown","Unknown","Unknown",Unknown,"FACT_INCOMPLETE",1,PASS
+"explicit-false","KnownFalse","KnownFalse",KnownFalse,"NONE",1,PASS
+"identity-missing","Unknown","Unknown",Unknown,"IDENTITY_MISSING",0,PASS
+"identity-mismatch","Invalid","Invalid",Invalid,"IDENTITY_MISMATCH",0,PASS
+"i031-rejected","Invalid","Invalid",Invalid,"I031_RUNTIME_FACT_FORBIDDEN",0,PASS
+"duplicate-event-id","Invalid","Invalid",Invalid,"EVENT_ID_DUPLICATE",0,PASS
+"duplicate-sequence","Invalid","Invalid",Invalid,"EVENT_SEQUENCE_DUPLICATE",0,PASS
+"ordinal-regression","Invalid","Invalid",Invalid,"TRIGGER_ORDINAL_REGRESSION",3,PASS
+"negative-value","Invalid","Invalid",Invalid,"NEGATIVE_VALUE",1,PASS
+"unit-conflict","Invalid","Invalid",Invalid,"UNIT_CONFLICT",1,PASS

@@ -1,0 +1,13 @@
+authority,expectedCalls,scope,actualResult
+P5_M_OVERLAY,1,pipeline,PASS
+P1_PROJECT,1,pipeline,PASS
+P5_A_SOURCE,1,pipeline,PASS
+P2_OVERLAY_TRANSITIVE,4,P5-M,PASS
+P2_PIPELINE_EXTRA,4,pipeline,PASS
+P2_TOTAL,8,normal evaluation,PASS
+P3_ASSEMBLE,4,pipeline,PASS
+P4_CONSUME,4,pipeline,PASS
+N01C_VALIDATE,16,transitive total,PASS
+P3_RESULT_VALIDATOR,8,transitive total,PASS
+N01C_RESULT_VALIDATOR,8,transitive total,PASS
+P4_RESULT_VALIDATOR,4,pipeline,PASS

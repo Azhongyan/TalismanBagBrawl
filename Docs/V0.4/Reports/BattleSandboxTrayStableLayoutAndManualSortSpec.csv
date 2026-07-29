@@ -1,0 +1,8 @@
+﻿contract,value
+master,stable
+filter,transient-atomic
+filter-active-removal,stable-one-item
+artwork-visibility,publication-owned
+scroll,row-pitch-settle
+scroll-observer,serialized-scrollrect
+arrange,manual-atomic

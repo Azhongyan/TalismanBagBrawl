@@ -1,0 +1,313 @@
+statementId,artSourceId,sourceRegion,statementKind,sourceTextExact,transcriptionStatus,contentId,chapterId,sourceOrder,notesDeveloperOnly
+BA-ART-01-S001,BA-ART-01,top.title,TITLE,《符箓背包》V0.2 首版本《骨相》怪物概念设定总览,TRANSCRIPTION_EXACT,,,1,
+BA-ART-01-S002,BA-ART-01,top.summary,SUMMARY_COUNT,12 种小怪,TRANSCRIPTION_EXACT,,,2,
+BA-ART-01-S003,BA-ART-01,top.summary,SUMMARY_COUNT,4 位Boss,TRANSCRIPTION_EXACT,,,3,
+BA-ART-01-S004,BA-ART-01,top.summary,SUMMARY_COUNT,4章主线,TRANSCRIPTION_EXACT,,,4,
+BA-ART-01-S005,BA-ART-01,top.summary,SUMMARY_COUNT,12个场景节点,TRANSCRIPTION_EXACT,,,5,
+BA-ART-01-S006,BA-ART-01,top.palette,MATERIAL_STATEMENT,骨瓷白 / 旧木褐 / 朱砂暗红 / 契纸黄 / 阵石灰 / 灵光青,TRANSCRIPTION_EXACT,,,6,
+BA-ART-01-S007,BA-ART-01,row1.chapter,CHAPTER_FAMILY,骨铺初现,TRANSCRIPTION_EXACT,,bone_aspect_chapter_1,7,
+BA-ART-01-S008,BA-ART-01,row1.chapter,NARRATIVE_STATEMENT,青石坊老街第一次露出骨相异变。,TRANSCRIPTION_EXACT,,bone_aspect_chapter_1,8,
+BA-ART-01-S009,BA-ART-01,row2.chapter,CHAPTER_FAMILY,骨相拍卖,TRANSCRIPTION_EXACT,,bone_aspect_chapter_2,9,
+BA-ART-01-S010,BA-ART-01,row2.chapter,NARRATIVE_STATEMENT,罗刹海市把身份与命运摆上交易桌。,TRANSCRIPTION_EXACT,,bone_aspect_chapter_2,10,
+BA-ART-01-S011,BA-ART-01,row3.chapter,CHAPTER_FAMILY,骨相由来,TRANSCRIPTION_EXACT,,bone_aspect_chapter_3,11,
+BA-ART-01-S012,BA-ART-01,row3.chapter,NARRATIVE_STATEMENT,明箓山旧阵揭开林照灯过往的一角。,TRANSCRIPTION_UNCERTAIN,,bone_aspect_chapter_3,12,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-01-S013,BA-ART-01,row4.chapter,CHAPTER_FAMILY,万相归骨,TRANSCRIPTION_EXACT,,bone_aspect_chapter_4,13,
+BA-ART-01-S014,BA-ART-01,row4.chapter,NARRATIVE_STATEMENT,青石坊终局，所有被交易的骨相反噬归来。,TRANSCRIPTION_EXACT,,bone_aspect_chapter_4,14,
+BA-ART-01-S015,BA-ART-01,row1.nodes,ENCOUNTER_NODE,青石坊丁巷外街,TRANSCRIPTION_EXACT,,bone_aspect_chapter_1,15,
+BA-ART-01-S016,BA-ART-01,row1.nodes,ENCOUNTER_NODE,骨铺外巷,TRANSCRIPTION_EXACT,,bone_aspect_chapter_1,16,
+BA-ART-01-S017,BA-ART-01,row1.nodes,ENCOUNTER_NODE,骨铺内堂,TRANSCRIPTION_EXACT,,bone_aspect_chapter_1,17,
+BA-ART-01-S018,BA-ART-01,row2.nodes,ENCOUNTER_NODE,地下停车场入口,TRANSCRIPTION_EXACT,,bone_aspect_chapter_2,18,
+BA-ART-01-S019,BA-ART-01,row2.nodes,ENCOUNTER_NODE,罗刹海市内街,TRANSCRIPTION_EXACT,,bone_aspect_chapter_2,19,
+BA-ART-01-S020,BA-ART-01,row2.nodes,ENCOUNTER_NODE,骨相拍卖厅,TRANSCRIPTION_EXACT,,bone_aspect_chapter_2,20,
+BA-ART-01-S021,BA-ART-01,row3.nodes,ENCOUNTER_NODE,荒废山道,TRANSCRIPTION_EXACT,,bone_aspect_chapter_3,21,
+BA-ART-01-S022,BA-ART-01,row3.nodes,ENCOUNTER_NODE,倒塌山门,TRANSCRIPTION_EXACT,,bone_aspect_chapter_3,22,
+BA-ART-01-S023,BA-ART-01,row3.nodes,ENCOUNTER_NODE,记忆大殿·阵眼层,TRANSCRIPTION_EXACT,,bone_aspect_chapter_3,23,
+BA-ART-01-S024,BA-ART-01,row4.nodes,ENCOUNTER_NODE,封锁丁巷·街坊防线,TRANSCRIPTION_EXACT,,bone_aspect_chapter_4,24,
+BA-ART-01-S025,BA-ART-01,row4.nodes,ENCOUNTER_NODE,异化骨铺,TRANSCRIPTION_EXACT,,bone_aspect_chapter_4,25,
+BA-ART-01-S026,BA-ART-01,row4.nodes,ENCOUNTER_NODE,万相骨腹,TRANSCRIPTION_EXACT,,bone_aspect_chapter_4,26,
+BA-ART-01-S027,BA-ART-01,row1.enemy1,IDENTITY_NAME,碎骨附身者,TRANSCRIPTION_EXACT,bone_aspect_enemy_c1_01_shattered_host,bone_aspect_chapter_1,27,
+BA-ART-01-S028,BA-ART-01,row1.enemy1,MECHANIC_MARKER,附身 / 骨粉残留,TRANSCRIPTION_EXACT,bone_aspect_enemy_c1_01_shattered_host,bone_aspect_chapter_1,28,
+BA-ART-01-S029,BA-ART-01,row1.enemy2,IDENTITY_NAME,骨瓷犬,TRANSCRIPTION_EXACT,bone_aspect_enemy_c1_02_porcelain_hound,bone_aspect_chapter_1,29,
+BA-ART-01-S030,BA-ART-01,row1.enemy2,MECHANIC_MARKER,护壳 / 冲撞 / 破壳虚弱,TRANSCRIPTION_EXACT,bone_aspect_enemy_c1_02_porcelain_hound,bone_aspect_chapter_1,30,
+BA-ART-01-S031,BA-ART-01,row1.enemy3,IDENTITY_NAME,换骨残相,TRANSCRIPTION_EXACT,bone_aspect_enemy_c1_03_bone_swap_remnant,bone_aspect_chapter_1,31,
+BA-ART-01-S032,BA-ART-01,row1.enemy3,MECHANIC_MARKER,分裂 / 状态叠加,TRANSCRIPTION_EXACT,bone_aspect_enemy_c1_03_bone_swap_remnant,bone_aspect_chapter_1,32,
+BA-ART-01-S033,BA-ART-01,row2.enemy1,IDENTITY_NAME,假相浮骨,TRANSCRIPTION_EXACT,bone_aspect_enemy_c2_01_false_identity_bone,bone_aspect_chapter_2,33,
+BA-ART-01-S034,BA-ART-01,row2.enemy1,MECHANIC_MARKER,真假目标 / 诱导,TRANSCRIPTION_EXACT,bone_aspect_enemy_c2_01_false_identity_bone,bone_aspect_chapter_2,34,
+BA-ART-01-S035,BA-ART-01,row2.enemy2,IDENTITY_NAME,契纸吏,TRANSCRIPTION_EXACT,bone_aspect_enemy_c2_02_contract_clerk,bone_aspect_chapter_2,35,
+BA-ART-01-S036,BA-ART-01,row2.enemy2,MECHANIC_MARKER,读条 / 封招 / 打断,TRANSCRIPTION_EXACT,bone_aspect_enemy_c2_02_contract_clerk,bone_aspect_chapter_2,36,
+BA-ART-01-S037,BA-ART-01,row2.enemy3,IDENTITY_NAME,竞骨客,TRANSCRIPTION_EXACT,bone_aspect_enemy_c2_03_bone_bidder,bone_aspect_chapter_2,37,
+BA-ART-01-S038,BA-ART-01,row2.enemy3,MECHANIC_MARKER,争夺 / 抢夺 / 标记,TRANSCRIPTION_EXACT,bone_aspect_enemy_c2_03_bone_bidder,bone_aspect_chapter_2,38,
+BA-ART-01-S039,BA-ART-01,row3.enemy1,IDENTITY_NAME,残阵石傀,TRANSCRIPTION_EXACT,bone_aspect_enemy_c3_01_array_stone_puppet,bone_aspect_chapter_3,39,
+BA-ART-01-S040,BA-ART-01,row3.enemy1,MECHANIC_MARKER,耐护盾 / 破防前难处理,TRANSCRIPTION_EXACT,bone_aspect_enemy_c3_01_array_stone_puppet,bone_aspect_chapter_3,40,
+BA-ART-01-S041,BA-ART-01,row3.enemy2,IDENTITY_NAME,旧令道影,TRANSCRIPTION_EXACT,bone_aspect_enemy_c3_02_old_edict_shadow,bone_aspect_chapter_3,41,
+BA-ART-01-S042,BA-ART-01,row3.enemy2,MECHANIC_MARKER,打断 / 压制 / 禁止触发,TRANSCRIPTION_EXACT,bone_aspect_enemy_c3_02_old_edict_shadow,bone_aspect_chapter_3,42,
+BA-ART-01-S043,BA-ART-01,row4.enemy1,IDENTITY_NAME,无面骨俑,TRANSCRIPTION_EXACT,bone_aspect_enemy_c4_01_faceless_bone_figure,bone_aspect_chapter_4,43,
+BA-ART-01-S044,BA-ART-01,row4.enemy1,MECHANIC_MARKER,群体压迫 / 数量威胁,TRANSCRIPTION_EXACT,bone_aspect_enemy_c4_01_faceless_bone_figure,bone_aspect_chapter_4,44,
+BA-ART-01-S045,BA-ART-01,row4.enemy2,IDENTITY_NAME,骨契商侍,TRANSCRIPTION_EXACT,bone_aspect_enemy_c4_02_contract_attendant,bone_aspect_chapter_4,45,
+BA-ART-01-S046,BA-ART-01,row4.enemy2,MECHANIC_MARKER,封存器类 / 持续读契,TRANSCRIPTION_EXACT,bone_aspect_enemy_c4_02_contract_attendant,bone_aspect_chapter_4,46,
+BA-ART-01-S047,BA-ART-01,row4.enemy3,IDENTITY_NAME,天骨赝相,TRANSCRIPTION_EXACT,bone_aspect_enemy_c4_03_false_celestial_form,bone_aspect_chapter_4,47,
+BA-ART-01-S048,BA-ART-01,row4.enemy3,MECHANIC_MARKER,复合法门 / 能力切换,TRANSCRIPTION_EXACT,bone_aspect_enemy_c4_03_false_celestial_form,bone_aspect_chapter_4,48,
+BA-ART-01-S049,BA-ART-01,row1.boss,IDENTITY_NAME,守骨奴,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,49,
+BA-ART-01-S050,BA-ART-01,row1.boss,MECHANIC_MARKER,强护壳,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,50,
+BA-ART-01-S051,BA-ART-01,row1.boss,DAMAGE_TRANSFER_STATEMENT,替主承伤,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,51,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-01-S052,BA-ART-01,row1.boss,MECHANIC_MARKER,核心暴露,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,52,
+BA-ART-01-S053,BA-ART-01,row2.boss,IDENTITY_NAME,竞骨人,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,53,
+BA-ART-01-S054,BA-ART-01,row2.boss,MECHANIC_MARKER,身份切换,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,54,
+BA-ART-01-S055,BA-ART-01,row2.boss,MECHANIC_MARKER,竞价护盾,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,55,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-01-S056,BA-ART-01,row2.boss,MECHANIC_MARKER,读条破绽,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,56,
+BA-ART-01-S057,BA-ART-01,row3.enemy3,IDENTITY_NAME,骨尘小像,TRANSCRIPTION_EXACT,bone_aspect_enemy_c3_03_bone_dust_effigy,bone_aspect_chapter_3,57,
+BA-ART-01-S058,BA-ART-01,row3.enemy3,MECHANIC_MARKER,偷念,TRANSCRIPTION_EXACT,bone_aspect_enemy_c3_03_bone_dust_effigy,bone_aspect_chapter_3,58,
+BA-ART-01-S059,BA-ART-01,row3.enemy3,MECHANIC_MARKER,复制,TRANSCRIPTION_EXACT,bone_aspect_enemy_c3_03_bone_dust_effigy,bone_aspect_chapter_3,59,
+BA-ART-01-S060,BA-ART-01,row3.enemy3,MECHANIC_MARKER,干扰增益,TRANSCRIPTION_EXACT,bone_aspect_enemy_c3_03_bone_dust_effigy,bone_aspect_chapter_3,60,
+BA-ART-01-S061,BA-ART-01,row3.boss,IDENTITY_NAME,阵眼守护者,TRANSCRIPTION_EXACT,bone_aspect_boss_c3_array_eye_guardian,bone_aspect_chapter_3,61,
+BA-ART-01-S062,BA-ART-01,row3.boss,MECHANIC_MARKER,形态切换 / 验证资格 / 阵眼缺口,TRANSCRIPTION_EXACT,bone_aspect_boss_c3_array_eye_guardian,bone_aspect_chapter_3,62,
+BA-ART-01-S063,BA-ART-01,row4.boss,IDENTITY_NAME,万相骨兽,TRANSCRIPTION_EXACT,bone_aspect_boss_c4_myriad_bone_beast,bone_aspect_chapter_4,63,
+BA-ART-01-S064,BA-ART-01,row4.boss,MECHANIC_MARKER,交易封存,TRANSCRIPTION_EXACT,bone_aspect_boss_c4_myriad_bone_beast,bone_aspect_chapter_4,64,
+BA-ART-01-S065,BA-ART-01,row4.boss,MECHANIC_MARKER,能力切换,TRANSCRIPTION_EXACT,bone_aspect_boss_c4_myriad_bone_beast,bone_aspect_chapter_4,65,
+BA-ART-01-S066,BA-ART-01,row4.boss,MECHANIC_MARKER,空白骨破局,TRANSCRIPTION_EXACT,bone_aspect_boss_c4_myriad_bone_beast,bone_aspect_chapter_4,66,
+BA-ART-01-S067,BA-ART-01,row4.boss,MECHANIC_MARKER,记忆反噬,TRANSCRIPTION_EXACT,bone_aspect_boss_c4_myriad_bone_beast,bone_aspect_chapter_4,67,
+BA-ART-01-S068,BA-ART-01,bottom.design_principles,PRESENTATION_PRINCIPLE,一怪一机制,TRANSCRIPTION_EXACT,,,68,
+BA-ART-01-S069,BA-ART-01,bottom.design_principles,PRESENTATION_PRINCIPLE,大轮廓清晰,TRANSCRIPTION_EXACT,,,69,
+BA-ART-01-S070,BA-ART-01,bottom.design_principles,PRESENTATION_PRINCIPLE,机制一眼可见,TRANSCRIPTION_EXACT,,,70,
+BA-ART-01-S071,BA-ART-01,bottom.design_principles,PRESENTATION_PRINCIPLE,同章有家族感,TRANSCRIPTION_EXACT,,,71,
+BA-ART-01-S072,BA-ART-01,bottom.design_principles,PRESENTATION_PRINCIPLE,小屏可读,TRANSCRIPTION_EXACT,,,72,
+BA-ART-01-S073,BA-ART-01,bottom.design_principles,PRESENTATION_PRINCIPLE,志怪现代化,TRANSCRIPTION_EXACT,,,73,
+BA-ART-01-S074,BA-ART-01,bottom.mechanic_legend,PRESENTATION_LEGEND,护壳 / 冲撞 / 分裂 / 封招 / 读条 / 打断 / 压制 / 偷念 / 复制 / 封存 / 争夺 / 标记,TRANSCRIPTION_EXACT,,,74,
+BA-ART-01-S075,BA-ART-01,bottom.size_reference,PRESENTATION_NOTE,最终形象以游戏内实际为准,TRANSCRIPTION_EXACT,,,75,
+BA-ART-02-S001,BA-ART-02,left.title,IDENTITY_NAME,守骨奴,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,1,
+BA-ART-02-S002,BA-ART-02,left.title,FORM_HEADING,替骨承伤,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,2,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-02-S003,BA-ART-02,top.phase,PHASE_HEADING,第二阶段：替骨承伤,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,3,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-02-S004,BA-ART-02,top.phase,DAMAGE_TRANSFER_STATEMENT,为主承受伤害，替主分担一切侵袭。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,4,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-02-S005,BA-ART-02,top.phase,PRESENTATION_STATEMENT,护板环绕，骨绳相牵,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,5,
+BA-ART-02-S006,BA-ART-02,top.phase,NARRATIVE_STATEMENT,忠心不渝,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,6,
+BA-ART-02-S007,BA-ART-02,top.phase,NARRATIVE_STATEMENT,以身为门，代主无憾。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,7,
+BA-ART-02-S008,BA-ART-02,right.identity,IDENTITY_STATEMENT,守门骨相第二阶段形态。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,8,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-02-S009,BA-ART-02,right.identity,DAMAGE_TRANSFER_STATEMENT,以环门之势，护主承伤,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,9,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-02-S010,BA-ART-02,right.identity,ACTION_STATEMENT,以骨板拦截,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,10,
+BA-ART-02-S011,BA-ART-02,right.identity,ACTION_STATEMENT,以骨绳牵引,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,11,
+BA-ART-02-S012,BA-ART-02,right.identity,NARRATIVE_STATEMENT,为门为盾，代主受难。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,12,
+BA-ART-02-S013,BA-ART-02,left.role,ROLE_STATEMENT,防御型·拦截型·护主型,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,13,
+BA-ART-02-S014,BA-ART-02,left.role,PRESENTATION_STATEMENT,以环形护门与浮游护板构建防御体系,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,14,
+BA-ART-02-S015,BA-ART-02,left.role,DAMAGE_TRANSFER_STATEMENT,能拦截并转移绝大部分伤害,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,15,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-02-S016,BA-ART-02,left.role,TARGET_EFFECT_STATEMENT,借骨绳牵引控制敌人,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,16,
+BA-ART-02-S017,BA-ART-02,left.role,NARRATIVE_STATEMENT,始终将自身置于主人身前,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,17,
+BA-ART-02-S018,BA-ART-02,left.role,TIMING_STATEMENT,直至战斗终结,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,18,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-02-S019,BA-ART-02,right.details,PRESENTATION_DETAIL,胸口「忠」核心,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,19,
+BA-ART-02-S020,BA-ART-02,right.details,PRESENTATION_DETAIL,浮游护板,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,20,
+BA-ART-02-S021,BA-ART-02,right.details,PRESENTATION_DETAIL,朱砂骨绳,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,21,
+BA-ART-02-S022,BA-ART-02,right.details,PRESENTATION_DETAIL,开环骨门结构,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,22,
+BA-ART-02-S023,BA-ART-02,right.details,PRESENTATION_DETAIL,符咒挂饰,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,23,
+BA-ART-02-S024,BA-ART-02,bottom.skills,SKILL_HEADING,护板转移,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,24,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-02-S025,BA-ART-02,bottom.skills,DAMAGE_TRANSFER_STATEMENT,浮游护板沿骨绳轨迹快速转移，将即将到来的攻击引向自身。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,25,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-02-S026,BA-ART-02,bottom.skills,SKILL_HEADING,环形拦截,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,26,
+BA-ART-02-S027,BA-ART-02,bottom.skills,EFFECT_STATEMENT,张开骨门形成环形防御场，拦截来自多方向的攻击。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,27,
+BA-ART-02-S028,BA-ART-02,bottom.skills,SKILL_HEADING,骨绳牵引,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,28,
+BA-ART-02-S029,BA-ART-02,bottom.skills,TARGET_EFFECT_STATEMENT,以朱砂骨绳牵引敌人或攻击，拉回并打断其攻势。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,29,
+BA-ART-02-S030,BA-ART-02,bottom.skills,SKILL_HEADING,护主回身,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,30,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-02-S031,BA-ART-02,bottom.skills,TARGET_EFFECT_STATEMENT,迅速转身置于主人身前，背后方攻击拒接在身后。,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,31,历史美术证据保留，但语义已被用户决定否决。 TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-02-S032,BA-ART-02,bottom.form_compare,FORM_HEADING,第一阶段：守门骨相,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,32,
+BA-ART-02-S033,BA-ART-02,bottom.form_compare,FORM_HEADING,第二阶段：替骨承伤,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,33,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-02-S034,BA-ART-02,bottom.definition,PRESENTATION_HEADING,设定释义,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,34,
+BA-ART-02-S035,BA-ART-02,bottom.definition,NARRATIVE_STATEMENT,替骨承伤，忠诚无二，以开环护城，以骨板代身，以绳牵引，以门为界，代主受难，护主周全。,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,35,历史美术证据保留，但语义已被用户决定否决。 TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-02-S036,BA-ART-02,bottom.legend,PRESENTATION_LEGEND,护板 / 环形拒敌 / 骨绳牵引 / 护主 / 减伤 / 控制 / 反击 / 护盾,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,36,
+BA-ART-02-S037,BA-ART-02,bottom.drop_preview,DROP_REWARD_PROP,忠魂骨符,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,37,
+BA-ART-02-S038,BA-ART-02,bottom.drop_preview,DROP_REWARD_PROP,守门骨绳,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,38,
+BA-ART-02-S039,BA-ART-02,bottom.drop_preview,DROP_REWARD_PROP,守骨门牌,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,39,
+BA-ART-02-S040,BA-ART-02,bottom.drop_preview,DROP_REWARD_PROP,骨相残片,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,40,
+BA-ART-02-S041,BA-ART-02,bottom.footer,NARRATIVE_STATEMENT,替骨为契 忠诚为门 主人不语 骨奴无憾,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,41,
+BA-ART-03-S001,BA-ART-03,left.title,IDENTITY_NAME,守骨奴,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,1,
+BA-ART-03-S002,BA-ART-03,left.title,PHASE_HEADING,第三阶段：忠骨殉相,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,2,
+BA-ART-03-S003,BA-ART-03,left.form,FORM_HEADING,殉护之相,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,3,
+BA-ART-03-S004,BA-ART-03,left.form,NARRATIVE_STATEMENT,以残破为刃，以忠诚为盾，失去守护之躯后，化身为主之盾，倾尽骨血，誓死殉主。,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,4,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-03-S005,BA-ART-03,left.phase_concept,TRANSITION_STATEMENT,护体尽碎，守门化攻,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,5,
+BA-ART-03-S006,BA-ART-03,left.phase_concept,TRANSITION_STATEMENT,守骨奴以残破之躯发动最后的反击。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,6,
+BA-ART-03-S007,BA-ART-03,left.phase_concept,PRESENTATION_STATEMENT,其环阵破裂为锋，赤骨绳化为刃,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,7,
+BA-ART-03-S008,BA-ART-03,left.phase_concept,PRESENTATION_STATEMENT,心核“忠”字燃热,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,8,
+BA-ART-03-S009,BA-ART-03,left.phase_concept,NARRATIVE_STATEMENT,寸步不退,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,9,
+BA-ART-03-S010,BA-ART-03,left.phase_concept,ACTION_STATEMENT,赴死一击,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,10,
+BA-ART-03-S011,BA-ART-03,right.details,PRESENTATION_DETAIL,核心·忠骨心核,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,11,
+BA-ART-03-S012,BA-ART-03,right.details,PRESENTATION_DETAIL,残门破环,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,12,
+BA-ART-03-S013,BA-ART-03,right.details,PRESENTATION_STATEMENT,护身之板尽碎，“忠”字骨铭完全暴露，由此化作战斗核心。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,13,
+BA-ART-03-S014,BA-ART-03,right.details,PRESENTATION_STATEMENT,守门骨相的环阵碎裂，环阵化为利刃，赤绳缠绕，悬浮于肩背两侧。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,14,
+BA-ART-03-S015,BA-ART-03,right.details,PRESENTATION_DETAIL,残袍缚臂,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,15,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-03-S016,BA-ART-03,right.details,PRESENTATION_STATEMENT,战袍破碎，赤绳在骨躯间形成攻守一体的牵引结构。,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,16,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-03-S017,BA-ART-03,right.details,PRESENTATION_DETAIL,殉骨长臂,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,17,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-03-S018,BA-ART-03,bottom.skills,SKILL_HEADING,忠字震击,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,18,
+BA-ART-03-S019,BA-ART-03,bottom.skills,DAMAGE_EFFECT_STATEMENT,心锁“忠”字蓄能聚力，向前方扇形范围释放骨纹冲击波。,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,19,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-03-S020,BA-ART-03,bottom.skills,SKILL_HEADING,残门突进,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,20,
+BA-ART-03-S021,BA-ART-03,bottom.skills,TARGET_EFFECT_STATEMENT,残环刀刃围绕躯体，化为冲锋刃击，赤绳牵引加速，直线突刺目标。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,21,
+BA-ART-03-S022,BA-ART-03,bottom.skills,SKILL_HEADING,殉骨反震,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,22,
+BA-ART-03-S023,BA-ART-03,bottom.skills,DAMAGE_EFFECT_STATEMENT,心核裂纹与赤绳骨线同时暴涨，受到伤害时反弹骨纹。,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,23,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-03-S024,BA-ART-03,bottom.skills,SKILL_HEADING,护主绝行,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,24,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-03-S025,BA-ART-03,bottom.skills,DAMAGE_TRANSFER_STATEMENT,以残躯直前，长臂刺地，赤绳绞身，阻隔周边区域，为主抵挡最后一击。,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,25,历史美术证据保留，但语义已被用户决定否决。 TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-03-S026,BA-ART-03,bottom.phase_compare,PHASE_HEADING,第一阶段：守门骨相,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,26,
+BA-ART-03-S027,BA-ART-03,bottom.phase_compare,PHASE_HEADING,第二阶段：替骨承伤,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,27,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-03-S028,BA-ART-03,bottom.phase_compare,PHASE_HEADING,第三阶段：忠骨殉相,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,28,
+BA-ART-03-S029,BA-ART-03,bottom.definition,PRESENTATION_HEADING,设计释义,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,29,
+BA-ART-03-S030,BA-ART-03,bottom.definition,NARRATIVE_STATEMENT,至忠至殉，形破而意不灭。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,30,
+BA-ART-03-S031,BA-ART-03,bottom.legend,PRESENTATION_LEGEND,冲锋 / 牵引 / 反震 / 抓取 / 击地 / 护盾 / 封锁 / 突进 / 标记,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,31,
+BA-ART-03-S032,BA-ART-03,bottom.footer,NARRATIVE_STATEMENT,忠骨殉相 至忠不渝 殉主无悔,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,32,
+BA-ART-04-S001,BA-ART-04,left.title,IDENTITY_NAME,守骨奴,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,1,
+BA-ART-04-S002,BA-ART-04,top.title,FORM_HEADING,守门骨相,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,2,
+BA-ART-04-S003,BA-ART-04,top.title,PHASE_HEADING,形态一·守门之相,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,3,
+BA-ART-04-S004,BA-ART-04,top.intro,NARRATIVE_STATEMENT,为护主而立于门前，以骨为门，以忠为锁。门未开，主不出；敌未破，骨不卸。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,4,
+BA-ART-04-S005,BA-ART-04,left.basic_info,PRESENTATION_DETAIL,身高：约3.6头身,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,5,
+BA-ART-04-S006,BA-ART-04,left.basic_info,PRESENTATION_DETAIL,属性：骨相·守护,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,6,
+BA-ART-04-S007,BA-ART-04,left.basic_info,PRESENTATION_DETAIL,武器：无（以身为门）,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,7,
+BA-ART-04-S008,BA-ART-04,left.basic_info,PRESENTATION_DETAIL,角色定位：Boss,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,8,
+BA-ART-04-S009,BA-ART-04,left.basic_info,PHASE_HEADING,阶段：第一阶段,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,9,
+BA-ART-04-S010,BA-ART-04,left.backstory,NARRATIVE_STATEMENT,盲眼的女人血肉已尽，她的守骨奴始终立于门前，以骨为门，以忠为锁，与一切企图侵入者对抗。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,10,
+BA-ART-04-S011,BA-ART-04,right.details,PRESENTATION_DETAIL,骨瓷面壳：无眼，守护之相，不可回望主的方向。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,11,
+BA-ART-04-S012,BA-ART-04,right.details,PRESENTATION_DETAIL,忠字骨铭：主之命，骨之愿。其存，则守不竭。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,12,
+BA-ART-04-S013,BA-ART-04,right.details,PRESENTATION_STATEMENT,门甲骨板：由镇门骨片拼合而成，可合拢成门墙，亦可作为攻击之刃。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,13,
+BA-ART-04-S014,BA-ART-04,right.details,PRESENTATION_DETAIL,守护符绳,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,14,
+BA-ART-04-S015,BA-ART-04,right.details,NARRATIVE_STATEMENT,连接主与守骨奴,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,15,
+BA-ART-04-S016,BA-ART-04,right.details,DAMAGE_TRANSFER_STATEMENT,承受伤害，传递意志,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,16,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-04-S017,BA-ART-04,right.details,PRESENTATION_DETAIL,青布残衣：生前身份为门前守户人或青石坊坊门之根。,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,17,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-04-S018,BA-ART-04,bottom.skills,SKILL_HEADING,守门壁,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,18,
+BA-ART-04-S019,BA-ART-04,bottom.skills,EFFECT_STATEMENT,双臂合拢，骨甲向内聚合，形成坚不可破的门墙，抵挡攻击。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,19,
+BA-ART-04-S020,BA-ART-04,bottom.skills,SKILL_HEADING,替主承伤,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,20,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-04-S021,BA-ART-04,bottom.skills,DAMAGE_TRANSFER_STATEMENT,符绳延伸至主之方向，将伤害转移至自身承受。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,21,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-04-S022,BA-ART-04,bottom.skills,SKILL_HEADING,门槛推压,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,22,
+BA-ART-04-S023,BA-ART-04,bottom.skills,TARGET_EFFECT_STATEMENT,双臂向前推出，地面骨纹伸展，形成门槛之力，压迫敌人退避。,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,23,
+BA-ART-04-S024,BA-ART-04,bottom.phase_traits,ROLE_STATEMENT,典型防御型Boss,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,24,
+BA-ART-04-S025,BA-ART-04,bottom.phase_traits,DAMAGE_TRANSFER_STATEMENT,以守护与转移伤害为核心机制,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,25,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-04-S026,BA-ART-04,bottom.phase_traits,PRESENTATION_STATEMENT,战斗节奏沉重、压迫、稳定,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,26,
+BA-ART-04-S027,BA-ART-04,bottom.core_mechanics,MECHANIC_MARKER,守护,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,27,
+BA-ART-04-S028,BA-ART-04,bottom.core_mechanics,MECHANIC_MARKER,承伤,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,28,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-04-S029,BA-ART-04,bottom.core_mechanics,MECHANIC_MARKER,抗击,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,29,
+BA-ART-04-S030,BA-ART-04,bottom.core_mechanics,MECHANIC_MARKER,门槛压制,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,30,
+BA-ART-04-S031,BA-ART-04,bottom.silhouette,PHASE_HEADING,第一阶段,TRANSCRIPTION_EXACT,bone_aspect_boss_c1_bone_guard,bone_aspect_chapter_1,31,
+BA-ART-05-S001,BA-ART-05,left.title,IDENTITY_NAME,竞骨人·老人本相,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,1,
+BA-ART-05-S002,BA-ART-05,left.title,CHAPTER_LABEL,第二章·罗刹海市,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,2,
+BA-ART-05-S003,BA-ART-05,top.role,ROLE_HEADING,角色定位,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,3,
+BA-ART-05-S004,BA-ART-05,top.role,NARRATIVE_STATEMENT,罗刹海市的竞价之徒，旧书店老板。为换取“更好的人生”，将自己的一生送入拍卖交易。如今三种可能的人生被标价封存，他仍保留最后的清醒，不知该如何选择。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,4,
+BA-ART-05-S005,BA-ART-05,left.features,PRESENTATION_DETAIL,瘦小老人，温吞佝偻,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,5,
+BA-ART-05-S006,BA-ART-05,left.features,PRESENTATION_DETAIL,双手抱着“骨契册”,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,6,
+BA-ART-05-S007,BA-ART-05,left.features,PRESENTATION_DETAIL,身后竖立三块人生契相,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,7,
+BA-ART-05-S008,BA-ART-05,left.features,PRESENTATION_DETAIL,契柜上封存三种错误人生,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,8,
+BA-ART-05-S009,BA-ART-05,left.features,PRESENTATION_DETAIL,整体克制、犹豫、带羞愧感,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,9,
+BA-ART-05-S010,BA-ART-05,top.contract_frames,FORM_HEADING,书生契柜,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,10,
+BA-ART-05-S011,BA-ART-05,top.contract_frames,FORM_HEADING,将军契柜,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,11,
+BA-ART-05-S012,BA-ART-05,top.contract_frames,FORM_HEADING,富商契柜,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,12,
+BA-ART-05-S013,BA-ART-05,left.contract_book,PRESENTATION_DETAIL,骨契册,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,13,
+BA-ART-05-S014,BA-ART-05,left.contract_book,MECHANIC_STATEMENT,记录其一生与三种可能。每一页都被标上价格，翻到空白页时，将暴露真实的弱点。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,14,
+BA-ART-05-S015,BA-ART-05,right.elements,PRESENTATION_DETAIL,契纸封条,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,15,
+BA-ART-05-S016,BA-ART-05,right.elements,CROSS_SYSTEM_STATEMENT,用于封存人生与定价；揭开或破坏可削弱契柜。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,16,
+BA-ART-05-S017,BA-ART-05,right.elements,PRESENTATION_DETAIL,朱砂印记,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,17,
+BA-ART-05-S018,BA-ART-05,right.elements,CROSS_SYSTEM_STATEMENT,交易成立的印记，用于标价、落价与加价。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,18,
+BA-ART-05-S019,BA-ART-05,right.elements,PRESENTATION_DETAIL,价格牌,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,19,
+BA-ART-05-S020,BA-ART-05,right.elements,CROSS_SYSTEM_STATEMENT,记录被标价的对象，会影响战斗中的增益或惩罚。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,20,
+BA-ART-05-S021,BA-ART-05,right.elements,PRESENTATION_DETAIL,人生契柜,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,21,
+BA-ART-05-S022,BA-ART-05,right.elements,TRANSITION_STATEMENT,封存三种错误人生的容器，被击碎后会轮流释放力量。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,22,
+BA-ART-05-S023,BA-ART-05,middle.skills,SKILL_HEADING,标价,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,23,
+BA-ART-05-S024,BA-ART-05,middle.skills,TARGET_EFFECT_STATEMENT,翻开骨契册，写下价格，契纸飞出贴在目标身上。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,24,
+BA-ART-05-S025,BA-ART-05,middle.skills,SKILL_HEADING,读契,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,25,
+BA-ART-05-S026,BA-ART-05,middle.skills,TIMING_STATEMENT,逐页翻开骨契册，念诵契文，最后一页空白时出现破绽。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,26,
+BA-ART-05-S027,BA-ART-05,middle.skills,SKILL_HEADING,契柜代价,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,27,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-05-S028,BA-ART-05,middle.skills,DAMAGE_TRANSFER_STATEMENT,三块契柜轮流移至身前，为其抵挡伤害。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,28,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-05-S029,BA-ART-05,middle.skills,SKILL_HEADING,落价印,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,29,
+BA-ART-05-S030,BA-ART-05,middle.skills,FIELD_EFFECT_STATEMENT,盖下巨印，形成契税范围，区域内将持续被重新定价。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,30,
+BA-ART-05-S031,BA-ART-05,bottom.silhouette,PRESENTATION_STATEMENT,常态 / 读契 / 契柜代价 / 落价印,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,31,
+BA-ART-05-S032,BA-ART-05,bottom.weakness,MECHANIC_HEADING,破绽表现,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,32,
+BA-ART-05-S033,BA-ART-05,bottom.weakness,TIMING_STATEMENT,契册翻到最后一页空白时，书背裂开，露出内里的空白骨片，是唯一弱点。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,33,
+BA-ART-05-S034,BA-ART-05,bottom.size,PRESENTATION_STATEMENT,竞骨人·老人本相 / 人类（小满参考） / 骨瓷犬（对比）,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,34,
+BA-ART-05-S035,BA-ART-05,bottom.story,NARRATIVE_STATEMENT,旧书店老板本想换一副骨，换一个更好的自己，却把寿命、才学与真念一同送入罗刹海市。如今三种人生被他标价封存，他仍在犹豫，不知是换命，还是换心。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,35,
+BA-ART-06-S001,BA-ART-06,top.title,TITLE,竞骨人·三相轮替,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,1,
+BA-ART-06-S002,BA-ART-06,top.title,PHASE_HEADING,阶段二：一生竞价,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,2,
+BA-ART-06-S003,BA-ART-06,top.subtitle,NARRATIVE_STATEMENT,旧账未清，错命相替。一次只容一种错误的人生附体，借老人之身，以骨契为媒，强行改写交易规则，逼令众生以命为价。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,3,
+BA-ART-06-S004,BA-ART-06,top.facts,NARRATIVE_STATEMENT,生前为书摊掌账老人，精于契约之道。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,4,
+BA-ART-06-S005,BA-ART-06,top.facts,ROTATION_STATEMENT,错命三相轮替，唯有一相生效。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,5,
+BA-ART-06-S006,BA-ART-06,top.facts,PRESENTATION_DETAIL,骨契册为核心，记载生死与交易。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,6,
+BA-ART-06-S007,BA-ART-06,top.object,PRESENTATION_DETAIL,骨契册：以人骨为扉页，记生前所立契与未偿之价。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,7,
+BA-ART-06-S008,BA-ART-06,left.scholar,FORM_HEADING,书生相,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,8,
+BA-ART-06-S009,BA-ART-06,left.scholar,NARRATIVE_STATEMENT,错命：书生未成名,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,9,
+BA-ART-06-S010,BA-ART-06,left.scholar,PRESENTATION_DETAIL,高瘦 / 纸文升腾 / 契文缠绕,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,10,
+BA-ART-06-S011,BA-ART-06,left.scholar,NARRATIVE_STATEMENT,以文为刃，以契为锁。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,11,
+BA-ART-06-S012,BA-ART-06,left.scholar,PRESENTATION_DETAIL,体型特征：高瘦·竖直延展,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,12,
+BA-ART-06-S013,BA-ART-06,left.scholar,MATERIAL_STATEMENT,主色：纸白 / 墨黑 / 旧青,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,13,
+BA-ART-06-S014,BA-ART-06,center.general,FORM_HEADING,将军相,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,14,
+BA-ART-06-S015,BA-ART-06,center.general,NARRATIVE_STATEMENT,错命：将军未得胜,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,15,
+BA-ART-06-S016,BA-ART-06,center.general,PRESENTATION_DETAIL,宽阔 / 披阵压迫 / 直线冲击,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,16,
+BA-ART-06-S017,BA-ART-06,center.general,NARRATIVE_STATEMENT,以令为锋，以价为兵。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,17,
+BA-ART-06-S018,BA-ART-06,center.general,PRESENTATION_DETAIL,体型特征：宽阔·前压,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,18,
+BA-ART-06-S019,BA-ART-06,center.general,MATERIAL_STATEMENT,主色：骨白 / 焦红 / 残金,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,19,
+BA-ART-06-S020,BA-ART-06,right.merchant,FORM_HEADING,富商相,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,20,
+BA-ART-06-S021,BA-ART-06,right.merchant,NARRATIVE_STATEMENT,错命：富商贪不足,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,21,
+BA-ART-06-S022,BA-ART-06,right.merchant,PRESENTATION_DETAIL,方围 / 珠串环绕 / 账册环身,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,22,
+BA-ART-06-S023,BA-ART-06,right.merchant,NARRATIVE_STATEMENT,以价为盾，以账为网。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,23,
+BA-ART-06-S024,BA-ART-06,right.merchant,PRESENTATION_DETAIL,体型特征：方围·稳守,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,24,
+BA-ART-06-S025,BA-ART-06,right.merchant,MATERIAL_STATEMENT,主色：骨白 / 铜绿 / 灰黑,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,25,
+BA-ART-06-S026,BA-ART-06,left.scholar,PRESENTATION_STATEMENT,骨契册展开为长卷，契文如水，随风书写。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,26,
+BA-ART-06-S027,BA-ART-06,left.scholar.skills,SKILL_HEADING,读契,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,27,
+BA-ART-06-S028,BA-ART-06,left.scholar.skills,CAST_STATEMENT,展开长卷，读取交易条款。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,28,
+BA-ART-06-S029,BA-ART-06,left.scholar.skills,SKILL_HEADING,封招,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,29,
+BA-ART-06-S030,BA-ART-06,left.scholar.skills,FIELD_EFFECT_STATEMENT,书写符字，封印招式区域。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,30,
+BA-ART-06-S031,BA-ART-06,left.scholar.skills,SKILL_HEADING,墨落成狱,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,31,
+BA-ART-06-S032,BA-ART-06,left.scholar.skills,FIELD_EFFECT_STATEMENT,契文落地成阵，围禁其内。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,32,
+BA-ART-06-S033,BA-ART-06,center.general,PRESENTATION_STATEMENT,骨契册合为兵册，封面的令与内页形成兵阵。,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,33,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-06-S034,BA-ART-06,center.general.skills,SKILL_HEADING,竞价冲阵,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,34,
+BA-ART-06-S035,BA-ART-06,center.general.skills,SKILL_HEADING,烈刃横扫,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,35,
+BA-ART-06-S036,BA-ART-06,center.general.skills,SKILL_HEADING,标价追索,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,36,
+BA-ART-06-S037,BA-ART-06,center.general.skills,EFFECT_STATEMENT,将军相三项技能的说明文字,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,37,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-06-S038,BA-ART-06,right.merchant,PRESENTATION_STATEMENT,骨契册化为账页与算盘，账珠成环，护体成城。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,38,
+BA-ART-06-S039,BA-ART-06,right.merchant.skills,SKILL_HEADING,加价护账,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,39,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-06-S040,BA-ART-06,right.merchant.skills,EFFECT_STATEMENT,聚集账珠形成护账防御。,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,40,历史美术证据保留，但语义已被用户决定否决。 TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-06-S041,BA-ART-06,right.merchant.skills,SKILL_HEADING,买断标记,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,41,
+BA-ART-06-S042,BA-ART-06,right.merchant.skills,SKILL_HEADING,账断追索,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,42,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-06-S043,BA-ART-06,middle.rotation,ROTATION_HEADING,相替逻辑（三相轮替）,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,43,
+BA-ART-06-S044,BA-ART-06,middle.rotation,TRANSITION_STATEMENT,当前相被击破或完成计价机制后，进入短暂虚弱，随后切换下一相。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,44,
+BA-ART-06-S045,BA-ART-06,middle.rotation,ROTATION_STATEMENT,战斗中仅一种错误人生生效。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,45,
+BA-ART-06-S046,BA-ART-06,middle.rotation,PHASE_HEADING,书生相激活,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,46,
+BA-ART-06-S047,BA-ART-06,middle.rotation,PHASE_HEADING,将军相激活,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,47,
+BA-ART-06-S048,BA-ART-06,middle.rotation,PHASE_HEADING,富商相激活,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,48,
+BA-ART-06-S049,BA-ART-06,middle.rotation,TRANSITION_LABEL,击破 / 计价完成,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,49,
+BA-ART-06-S050,BA-ART-06,bottom.silhouette,PRESENTATION_STATEMENT,书生相：高瘦·竖直 / 将军相：宽阔·前压 / 富商相：方围·稳守,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,50,
+BA-ART-06-S051,BA-ART-06,bottom.skill_examples,SKILL_GROUP,书生相技能示例：读契 / 封招 / 墨落成狱,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,51,
+BA-ART-06-S052,BA-ART-06,bottom.skill_examples,SKILL_GROUP,将军相技能示例：竞价冲阵 / 烈刃横扫 / 标价追索,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,52,
+BA-ART-06-S053,BA-ART-06,bottom.skill_examples,SKILL_GROUP,富商相技能示例：加价护账 / 买断标记 / 账压成阵,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,53,
+BA-ART-06-S054,BA-ART-06,bottom.skill_examples,SKILL_HEADING,账压成阵,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,54,
+BA-ART-06-S055,BA-ART-06,bottom.notes,DESIGN_NOTE,三相任一作业技，切换时间和计价条件另锁。,TRANSCRIPTION_UNCERTAIN,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,55,TRANSCRIPTION_UNCERTAIN excluded from candidate support and acceptance.
+BA-ART-06-S056,BA-ART-06,bottom.notes,DESIGN_NOTE,所有技能围绕「契约 / 标记 / 计价」展开，强调交易规则。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,56,
+BA-ART-06-S057,BA-ART-06,bottom.notes,PRESENTATION_NOTE,老人面部与体态在三相中保持一致，体现被迫与痛苦。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,57,
+BA-ART-07-S001,BA-ART-07,left.title,PHASE_HEADING,竞骨人·三相夺身,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,1,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S002,BA-ART-07,left.title,CHAPTER_LABEL,第三章·罗刹海市,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,2,
+BA-ART-07-S003,BA-ART-07,top.role,ROLE_HEADING,角色定位,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,3,
+BA-ART-07-S004,BA-ART-07,top.role,ACTOR_STATEMENT,当三种错误人生同时撕扯老人本体时，他被迫悬吊于契柜之间，三相争夺他的身体与名字。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,4,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S005,BA-ART-07,top.role,PHASE_STATEMENT,此阶段为第二章最终形态。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,5,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S006,BA-ART-07,left.features,PRESENTATION_DETAIL,中央悬吊的老人本体,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,6,
+BA-ART-07-S007,BA-ART-07,left.features,ACTOR_STATEMENT,三种人生错相三向展开,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,7,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S008,BA-ART-07,left.features,PRESENTATION_DETAIL,骨契册破裂为三藏,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,8,
+BA-ART-07-S009,BA-ART-07,left.features,ACTOR_STATEMENT,契绳同时牵扯,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,9,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S010,BA-ART-07,left.features,PRESSURE_STATEMENT,大范围多方向压迫,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,10,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S011,BA-ART-07,left.book,PRESENTATION_DETAIL,骨契册·三藏,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,11,
+BA-ART-07-S012,BA-ART-07,left.book,PRESENTATION_STATEMENT,契册从书脊裂开为三藏，分别对应三种人生载体。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,12,
+BA-ART-07-S013,BA-ART-07,top.forms,FORM_HEADING,书生相·卷,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,13,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S014,BA-ART-07,top.forms,FIELD_EFFECT_STATEMENT,长卷向外展开，以墨字封锁区域，削弱玩家效果。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,14,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S015,BA-ART-07,top.forms,FORM_HEADING,将军相·旗,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,15,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S016,BA-ART-07,top.forms,DAMAGE_EFFECT_STATEMENT,断旗与残甲形成尖刺，向前突进压制，直线冲击。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,16,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S017,BA-ART-07,top.forms,FORM_HEADING,富商相·账,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,17,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S018,BA-ART-07,top.forms,RESOURCE_EFFECT_STATEMENT,算盘账柜向外延展，吸取资源并加价，形成压缩领域。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,18,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S019,BA-ART-07,right.elements,PRESENTATION_DETAIL,朱砂契绳,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,19,
+BA-ART-07-S020,BA-ART-07,right.elements,ACTOR_STATEMENT,悬吊并牵扯老人，所有技能与压迫来源。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,20,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S021,BA-ART-07,right.elements,PRESENTATION_DETAIL,破裂骨契册,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,21,
+BA-ART-07-S022,BA-ART-07,right.elements,ACTOR_STATEMENT,三藏契册为三种人生载体，也是弱点所在。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,22,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S023,BA-ART-07,right.elements,PRESENTATION_DETAIL,价格牌,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,23,
+BA-ART-07-S024,BA-ART-07,right.elements,CROSS_SYSTEM_STATEMENT,标记玩家与战场价值，被击破可降低压迫。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,24,
+BA-ART-07-S025,BA-ART-07,right.elements,PRESENTATION_DETAIL,朱砂印记,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,25,
+BA-ART-07-S026,BA-ART-07,right.elements,CROSS_SYSTEM_STATEMENT,记录交易与标价规则，驱动所有技能效果。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,26,
+BA-ART-07-S027,BA-ART-07,right.skills,SKILL_HEADING,三价齐出,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,27,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S028,BA-ART-07,right.skills,ACTION_STATEMENT,三种人生错相依次发动攻击。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,28,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S029,BA-ART-07,right.skills,SKILL_HEADING,夺身拉扯,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,29,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S030,BA-ART-07,right.skills,ACTOR_STATEMENT,三条契绳同时绷紧，将老人拉向三方向。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,30,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S031,BA-ART-07,right.skills,SKILL_HEADING,崩价,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,31,
+BA-ART-07-S032,BA-ART-07,right.skills,CROSS_SYSTEM_STATEMENT,所有价格印记被抹去，契册出现无价页。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,32,
+BA-ART-07-S033,BA-ART-07,right.skills,SKILL_HEADING,无价反噬（破绽）,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,33,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S034,BA-ART-07,right.skills,TRANSITION_STATEMENT,打破无价页后，三相错构互相撕裂崩解。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,34,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S035,BA-ART-07,bottom.silhouette,PRESENTATION_STATEMENT,常态悬吊 / 三价齐出 / 夺身拉扯 / 无价反噬,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,35,
+BA-ART-07-S036,BA-ART-07,bottom.phase_history,PHASE_HEADING,第一阶段·老人本相,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,36,
+BA-ART-07-S037,BA-ART-07,bottom.phase_history,PHASE_HEADING,第二阶段·三相轮替,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,37,
+BA-ART-07-S038,BA-ART-07,bottom.phase_history,PHASE_HEADING,第三阶段·三相夺身,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,38,历史美术证据保留，但语义已被用户决定否决。
+BA-ART-07-S039,BA-ART-07,bottom.weakness,MECHANIC_HEADING,破绽位置,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,39,
+BA-ART-07-S040,BA-ART-07,bottom.weakness,MECHANIC_STATEMENT,契册中心的无价页为最终弱点。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,40,
+BA-ART-07-S041,BA-ART-07,bottom.weakness,TRANSITION_STATEMENT,击破后进入无价反噬状态。,TRANSCRIPTION_EXACT,bone_aspect_boss_c2_identity_bidder,bone_aspect_chapter_2,41,历史美术证据保留，但语义已被用户决定否决。

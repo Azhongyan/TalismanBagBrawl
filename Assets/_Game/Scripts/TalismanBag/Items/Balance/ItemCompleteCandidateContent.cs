@@ -105,7 +105,7 @@ namespace TalismanBag.Items.Balance
 
     public static class ItemCompleteCandidateContentSeed
     {
-        public const string Revision = "ITEM_COMPLETE_CANDIDATE_CONTENT_WORKBENCH01_R1";
+        public const string Revision = "ITEM_FOUR_CORE_CANDIDATE_DATA_CORRECTION01_R1";
 
         private sealed class SignatureSeed
         {
@@ -187,7 +187,8 @@ namespace TalismanBag.Items.Balance
                 ItemInstanceRarity.Blue, ItemInstanceRarity.Purple, ItemInstanceRarity.Orange };
             int[] levels = { 10, 20, 30, 40, 40 };
             List<ItemBalanceCoreCandidate> result = new();
-            for (int i = 0; i < 5; i++)
+            int[] retainedStageIndices = { 0, 1, 2, 4 };
+            foreach (int i in retainedStageIndices)
             {
                 bool ultimate = i == 4;
                 string id = ultimate ? stem + "_ultimate" : stem + "_0" + (i + 1).ToString(CultureInfo.InvariantCulture);
@@ -260,7 +261,7 @@ namespace TalismanBag.Items.Balance
             AddRandom(result, "affix_cleanse_up", "净化增量", "每次净化额外移除X层。", ItemCandidateEffectCategory.NumericModifier, ItemCandidateEffectOperation.AddFlat, "cleanse", "on_cleanse", "cleanse_success", "stack", 1);
             AddRandom(result, "affix_control_up", "控制增量", "控制强度提高X点。", ItemCandidateEffectCategory.NumericModifier, ItemCandidateEffectOperation.AddFlat, "control", "always", "NONE", "point", 1);
             AddRandom(result, "affix_duration_up", "持续延长", "持续时间延长X回合。", ItemCandidateEffectCategory.NumericModifier, ItemCandidateEffectOperation.AddFlat, "duration", "on_apply_duration", "duration_gt_0", "turn", 1);
-            AddRandom(result, "affix_nian_efficiency", "省念", "耗念降低X点。", ItemCandidateEffectCategory.ResourceEffect, ItemCandidateEffectOperation.ReduceFlat, "nianCost", "before_trigger", "nian_cost_gt_0", "point", 1);
+            result.Add(BuildNianEfficiencyCandidate());
             AddRandom(result, "affix_cooldown_reduction", "回转", "冷却缩短X回合。", ItemCandidateEffectCategory.CooldownEffect, ItemCandidateEffectOperation.ReduceFlat, "cooldown", "after_trigger", "cooldown_gt_0", "turn", 1);
             AddRandom(result, "affix_trigger_refund", "回念", "触发后返还X点念。", ItemCandidateEffectCategory.ResourceEffect, ItemCandidateEffectOperation.Refund, "nian", "after_trigger", "trigger_success", "point", 1);
             AddRandom(result, "affix_direct_lit_power", "明点", "直接点亮时基础效果提高X%。", ItemCandidateEffectCategory.ConditionalModifier, ItemCandidateEffectOperation.AddPercent, "basicEffect", "on_direct_lit", "is_direct_lit", "basisPoint", 400);
@@ -422,6 +423,49 @@ namespace TalismanBag.Items.Balance
                 mutexGroupId = mutex, repeatPolicy = "NO_DUPLICATE",
                 designNote = "共享随机词条候选；五品阶范围可编辑。"
             });
+        }
+
+        private static ItemCandidateAffixDefinition BuildNianEfficiencyCandidate()
+        {
+            const string id = "affix_nian_efficiency";
+            const string name = "省念";
+            const string description = "耗念降低X%。";
+            return new ItemCandidateAffixDefinition
+            {
+                affixId = id,
+                displayName = name,
+                description = description,
+                effectPayload = Payload(
+                    id + ":effect",
+                    name,
+                    description,
+                    ItemCandidateEffectCategory.ResourceEffect,
+                    ItemCandidateEffectOperation.ReducePercent,
+                    "nianCost",
+                    "before_trigger",
+                    "nian_cost_gt_0",
+                    "basisPoint",
+                    200,
+                    0,
+                    id + "_params",
+                    "NONE"),
+                rarityRanges = NianEfficiencyRanges(),
+                mutexGroupId = "NONE",
+                repeatPolicy = "NO_DUPLICATE",
+                designNote = "共享随机词条候选；省念使用固定五品阶 BP 范围。"
+            };
+        }
+
+        private static List<ItemCandidateRarityValue> NianEfficiencyRanges()
+        {
+            return new List<ItemCandidateRarityValue>
+            {
+                new() { rarity = ItemInstanceRarity.White, minUnits = 200, maxUnits = 400 },
+                new() { rarity = ItemInstanceRarity.Green, minUnits = 350, maxUnits = 650 },
+                new() { rarity = ItemInstanceRarity.Blue, minUnits = 550, maxUnits = 900 },
+                new() { rarity = ItemInstanceRarity.Purple, minUnits = 800, maxUnits = 1300 },
+                new() { rarity = ItemInstanceRarity.Orange, minUnits = 1200, maxUnits = 1800 }
+            };
         }
 
         private static ItemCandidateEffectPayload Payload(string id, string name, string description,

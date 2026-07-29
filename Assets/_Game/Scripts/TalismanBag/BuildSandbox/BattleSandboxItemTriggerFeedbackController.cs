@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +10,18 @@ namespace TalismanBag.BuildSandbox
     public sealed class BattleSandboxItemTriggerFeedbackController : MonoBehaviour
     {
         public const string PackageName = "V0.4-BattleSandboxItemTriggerFeedbackFx01";
+        public const string LiHuoBuildFamilyPresentationKey =
+            "build.lihuo";
+        public const string TaiBaiBuildFamilyPresentationKeyReserved =
+            "build.taibai.reserved";
+        public const string FireProjectileCarrierKey =
+            "carrier.fire_projectile";
+        public const string SwordQiSlashCarrierKey =
+            "carrier.sword_qi_slash";
+        public const string HeavySealDropCarrierKey =
+            "carrier.heavy_seal_drop";
+        public const string TaiBaiCarrierFamilyKeyReserved =
+            "carrier.family.taibai.reserved";
 
         private const string FxLayerName = "BattleSandboxItemTriggerFeedbackFxLayer";
         private const string ZhaoShaMirrorFramesResourcesPath = "anim/\u7167\u715e\u955c_VFX_RGBA_9\u5e27/frames";
@@ -37,15 +50,30 @@ namespace TalismanBag.BuildSandbox
         private readonly List<Sprite> generatedSequenceSprites = new();
         private readonly Dictionary<RectTransform, Vector3> pulsedTargetBaseScales = new();
         private readonly Dictionary<string, float> passiveFeedbackLastPlayTimes = new();
+        private readonly HashSet<string> acceptedPresentationEventIds =
+            new(StringComparer.Ordinal);
         private BuildGridInteractionPreviewController gridController;
         private Font runtimeFont;
         private List<Sprite> cachedResourceSequenceFrames;
         private string cachedResourceSequenceFramesPath = string.Empty;
         private float lastActiveFeedbackTime = -100f;
         private float lastPassiveFeedbackTime = -100f;
+        private int rejectedAcceptedPresentationEventCount;
+        private int acceptedCompleteLegacyPresentationCount;
+        private int acceptedCarrierPresentationCount;
 
         public bool DevOnly => devOnly;
         public bool IsEnabled => isEnabled;
+        public int AcceptedPresentationEventCount =>
+            acceptedPresentationEventIds.Count;
+        public int RejectedAcceptedPresentationEventCount =>
+            rejectedAcceptedPresentationEventCount;
+        public int AcceptedCompleteLegacyPresentationCount =>
+            acceptedCompleteLegacyPresentationCount;
+        public int AcceptedCarrierPresentationCount =>
+            acceptedCarrierPresentationCount;
+        public int ActiveTransientObjectCount =>
+            transientObjects.Count(value => value != null);
 
         public void Bind(BuildGridInteractionPreviewController controller)
         {
@@ -53,6 +81,13 @@ namespace TalismanBag.BuildSandbox
         }
 
         public void Play(BattleSandboxRuntimeLoopRow row)
+        {
+            PlayResolvedPresentation(row, true);
+        }
+
+        private void PlayResolvedPresentation(
+            BattleSandboxRuntimeLoopRow row,
+            bool spawnLegacyFloatingText)
         {
             if (row == null
                 || !row.playsBoardItemTriggerFeedback
@@ -112,13 +147,146 @@ namespace TalismanBag.BuildSandbox
                 StartCoroutine(SpawnSkillVfx(fxLayer, anchoredPosition, sizeDelta, color, row.boardItemTriggerFeedbackKind, isPassive));
             }
 
-            StartCoroutine(SpawnFloatingText(
-                fxLayer,
-                anchoredPosition,
-                sizeDelta,
-                row.boardItemTriggerFeedbackTextChinese,
-                color,
-                isPassive));
+            if (spawnLegacyFloatingText)
+            {
+                StartCoroutine(SpawnFloatingText(
+                    fxLayer,
+                    anchoredPosition,
+                    sizeDelta,
+                    row.boardItemTriggerFeedbackTextChinese,
+                    color,
+                    isPassive));
+            }
+        }
+
+        public bool TryPlayAcceptedPresentation(
+            string eventId,
+            string sourceBaseItemId,
+            string sourceItemInstanceId,
+            string sourcePlacementId,
+            IReadOnlyList<ItemShapeCell> occupiedCells,
+            int resolvedPreMitigationDamageUnits,
+            RectTransform enemyHitAnchor,
+            out Vector3 sourceWorldPosition)
+        {
+            sourceWorldPosition = Vector3.zero;
+            if (gridController == null
+                || enemyHitAnchor == null
+                || string.IsNullOrWhiteSpace(eventId)
+                || string.IsNullOrWhiteSpace(sourceBaseItemId)
+                || string.IsNullOrWhiteSpace(sourceItemInstanceId)
+                || string.IsNullOrWhiteSpace(sourcePlacementId)
+                || occupiedCells == null
+                || occupiedCells.Count == 0
+                || resolvedPreMitigationDamageUnits <= 0)
+            {
+                return false;
+            }
+
+            string stableEventId = eventId.Trim();
+            if (acceptedPresentationEventIds.Contains(stableEventId))
+            {
+                rejectedAcceptedPresentationEventCount++;
+                return false;
+            }
+
+            if (!gridController.TryResolveBoardItemFeedbackAnchor(
+                    sourceBaseItemId.Trim(),
+                    occupiedCells,
+                    out RectTransform itemArtworkRect,
+                    out RectTransform feedbackLayer,
+                    out Vector2 anchoredPosition,
+                    out Vector2 sizeDelta))
+            {
+                return false;
+            }
+
+            sourceWorldPosition = itemArtworkRect != null
+                ? RectWorldCenter(itemArtworkRect)
+                : feedbackLayer.TransformPoint(anchoredPosition);
+            Canvas sourceCanvas =
+                (itemArtworkRect == null
+                    ? feedbackLayer
+                    : itemArtworkRect)
+                .GetComponentInParent<Canvas>();
+            Canvas targetCanvas =
+                enemyHitAnchor.GetComponentInParent<Canvas>();
+            Canvas rootCanvas = targetCanvas == null
+                ? sourceCanvas?.rootCanvas
+                : targetCanvas.rootCanvas;
+            RectTransform presentationRoot =
+                rootCanvas == null
+                    ? null
+                    : rootCanvas.transform as RectTransform;
+            if (presentationRoot == null)
+            {
+                return false;
+            }
+
+            acceptedPresentationEventIds.Add(stableEventId);
+            BattleSandboxRuntimeLoopRow completeLegacyPresentationRequest =
+                new()
+            {
+                rowId = stableEventId,
+                rowKind = "enemyHp",
+                itemId = sourceBaseItemId.Trim(),
+                playsBoardItemTriggerFeedback = true,
+                boardItemTriggerFeedbackChannel = "active",
+                boardItemTriggerFeedbackKind =
+                    ResolveAcceptedBuildVfxKind(
+                        sourceBaseItemId),
+                boardItemTriggerFeedbackTextChinese =
+                    resolvedPreMitigationDamageUnits.ToString(
+                        System.Globalization.CultureInfo.InvariantCulture),
+                boardItemTriggerFeedbackValue =
+                    resolvedPreMitigationDamageUnits,
+                boardItemTriggerOccupiedCells = occupiedCells
+                    .Select(value => new ItemShapeCell(value.x, value.y))
+                    .ToList()
+            };
+            PlayResolvedPresentation(
+                completeLegacyPresentationRequest,
+                false);
+            acceptedCompleteLegacyPresentationCount++;
+            AcceptedCarrierKind carrierKind =
+                ResolveAcceptedCarrierKind(sourceBaseItemId);
+            StartCoroutine(SpawnAcceptedCarrierVfx(
+                stableEventId,
+                presentationRoot,
+                sourceWorldPosition,
+                RectWorldCenter(enemyHitAnchor),
+                carrierKind,
+                ResolveColor(completeLegacyPresentationRequest
+                    .boardItemTriggerFeedbackKind)));
+            acceptedCarrierPresentationCount++;
+            return true;
+        }
+
+        public bool TryResolveBoardSourceWorldPosition(
+            string sourceBaseItemId,
+            IReadOnlyList<ItemShapeCell> occupiedCells,
+            out Vector3 sourceWorldPosition)
+        {
+            sourceWorldPosition = Vector3.zero;
+            if (gridController == null
+                || string.IsNullOrWhiteSpace(sourceBaseItemId)
+                || occupiedCells == null
+                || occupiedCells.Count == 0
+                || !gridController.TryResolveBoardItemFeedbackAnchor(
+                    sourceBaseItemId.Trim(),
+                    occupiedCells,
+                    out RectTransform itemArtworkRect,
+                    out RectTransform feedbackLayer,
+                    out Vector2 anchoredPosition,
+                    out Vector2 _))
+            {
+                return false;
+            }
+
+            sourceWorldPosition = itemArtworkRect != null
+                ? RectWorldCenter(itemArtworkRect)
+                : feedbackLayer.TransformPoint(anchoredPosition);
+            return true;
         }
 
         public void ClearAll()
@@ -134,10 +302,18 @@ namespace TalismanBag.BuildSandbox
 
             pulsedTargetBaseScales.Clear();
             passiveFeedbackLastPlayTimes.Clear();
+            acceptedPresentationEventIds.Clear();
+            rejectedAcceptedPresentationEventCount = 0;
+            acceptedCompleteLegacyPresentationCount = 0;
+            acceptedCarrierPresentationCount = 0;
             lastActiveFeedbackTime = -100f;
             lastPassiveFeedbackTime = -100f;
             for (int i = transientObjects.Count - 1; i >= 0; i--)
             {
+                if (transientObjects[i] != null)
+                {
+                    transientObjects[i].SetActive(false);
+                }
                 DestroyTransient(transientObjects[i]);
             }
 
@@ -284,6 +460,372 @@ namespace TalismanBag.BuildSandbox
 
             transientObjects.Remove(root);
             DestroyTransient(root);
+        }
+
+        private IEnumerator SpawnAcceptedCarrierVfx(
+            string eventId,
+            RectTransform presentationRoot,
+            Vector3 sourceWorldPosition,
+            Vector3 targetWorldPosition,
+            AcceptedCarrierKind carrierKind,
+            Color sourceColor)
+        {
+            if (presentationRoot == null)
+            {
+                yield break;
+            }
+
+            GameObject root = CreateUiObject(
+                "AcceptedSkillCarrier_"
+                + ResolveCarrierPresentationKey(carrierKind)
+                + "_"
+                + SanitizeName(eventId),
+                presentationRoot);
+            transientObjects.Add(root);
+            RectTransform rect = root.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = ResolveCarrierSize(carrierKind);
+            rect.position = sourceWorldPosition;
+            rect.localRotation = Quaternion.identity;
+            rect.SetAsLastSibling();
+
+            CanvasGroup group = root.AddComponent<CanvasGroup>();
+            group.interactable = false;
+            group.blocksRaycasts = false;
+            BuildCarrierVisual(
+                rect,
+                carrierKind,
+                sourceColor);
+
+            const float duration = 0.96f;
+            const float sourceActivationEnd = 0.19f;
+            const float carrierEnd = 0.72f;
+            float elapsed = 0f;
+            while (elapsed < duration
+                && root != null
+                && rect != null)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float progress = Mathf.Clamp01(elapsed / duration);
+                if (progress < sourceActivationEnd)
+                {
+                    float phase =
+                        Smooth01(progress / sourceActivationEnd);
+                    if (carrierKind == AcceptedCarrierKind.HeavySealDrop)
+                    {
+                        rect.position =
+                            targetWorldPosition + Vector3.up * 138f;
+                        rect.localScale =
+                            Vector3.one * Mathf.Lerp(0.76f, 0.94f, phase);
+                        group.alpha = 0f;
+                    }
+                    else
+                    {
+                        rect.position = sourceWorldPosition;
+                        rect.localScale =
+                            Vector3.one * Mathf.Lerp(0.58f, 1.08f, phase);
+                        group.alpha = Mathf.Lerp(0f, 0.96f, phase);
+                    }
+                }
+                else if (progress < carrierEnd)
+                {
+                    float phase =
+                        Smooth01(
+                            (progress - sourceActivationEnd)
+                            / (carrierEnd - sourceActivationEnd));
+                    AnimateCarrierTravel(
+                        rect,
+                        carrierKind,
+                        sourceWorldPosition,
+                        targetWorldPosition,
+                        phase);
+                    group.alpha = 1f;
+                }
+                else
+                {
+                    float phase =
+                        Smooth01(
+                            (progress - carrierEnd)
+                            / (1f - carrierEnd));
+                    rect.position = targetWorldPosition;
+                    AnimateCarrierImpact(
+                        rect,
+                        carrierKind,
+                        phase);
+                    group.alpha = 1f - phase;
+                }
+
+                yield return null;
+            }
+
+            transientObjects.Remove(root);
+            DestroyTransient(root);
+        }
+
+        private static void AnimateCarrierTravel(
+            RectTransform rect,
+            AcceptedCarrierKind carrierKind,
+            Vector3 sourceWorldPosition,
+            Vector3 targetWorldPosition,
+            float phase)
+        {
+            if (rect == null)
+            {
+                return;
+            }
+
+            switch (carrierKind)
+            {
+                case AcceptedCarrierKind.SwordQiSlash:
+                {
+                    Vector3 control =
+                        (sourceWorldPosition + targetWorldPosition) * 0.5f
+                        + Vector3.up * 42f;
+                    Vector3 next = QuadraticBezier(
+                        sourceWorldPosition,
+                        control,
+                        targetWorldPosition,
+                        phase);
+                    Vector3 tangent = phase < 0.98f
+                        ? QuadraticBezier(
+                            sourceWorldPosition,
+                            control,
+                            targetWorldPosition,
+                            Mathf.Min(1f, phase + 0.02f)) - next
+                        : targetWorldPosition - next;
+                    rect.position = next;
+                    rect.localEulerAngles = new Vector3(
+                        0f,
+                        0f,
+                        Mathf.Atan2(tangent.y, tangent.x)
+                        * Mathf.Rad2Deg);
+                    rect.localScale =
+                        Vector3.one * Mathf.Lerp(0.82f, 1.16f, phase);
+                    break;
+                }
+                case AcceptedCarrierKind.HeavySealDrop:
+                {
+                    Vector3 dropStart =
+                        targetWorldPosition + Vector3.up * 138f;
+                    rect.position = Vector3.Lerp(
+                        dropStart,
+                        targetWorldPosition,
+                        phase * phase);
+                    rect.localEulerAngles =
+                        new Vector3(0f, 0f, Mathf.Lerp(-4f, 3f, phase));
+                    rect.localScale = new Vector3(
+                        Mathf.Lerp(0.88f, 1.18f, phase),
+                        Mathf.Lerp(0.72f, 1.12f, phase),
+                        1f);
+                    break;
+                }
+                default:
+                {
+                    Vector3 control =
+                        (sourceWorldPosition + targetWorldPosition) * 0.5f
+                        + Vector3.up * 68f;
+                    rect.position = QuadraticBezier(
+                        sourceWorldPosition,
+                        control,
+                        targetWorldPosition,
+                        phase);
+                    rect.localEulerAngles =
+                        new Vector3(0f, 0f, phase * 118f);
+                    rect.localScale =
+                        Vector3.one * Mathf.Lerp(0.88f, 0.70f, phase);
+                    break;
+                }
+            }
+        }
+
+        private static void AnimateCarrierImpact(
+            RectTransform rect,
+            AcceptedCarrierKind carrierKind,
+            float phase)
+        {
+            if (rect == null)
+            {
+                return;
+            }
+
+            switch (carrierKind)
+            {
+                case AcceptedCarrierKind.SwordQiSlash:
+                    rect.localScale = new Vector3(
+                        Mathf.Lerp(0.94f, 1.72f, phase),
+                        Mathf.Lerp(0.94f, 1.26f, phase),
+                        1f);
+                    rect.localEulerAngles =
+                        new Vector3(0f, 0f, Mathf.Lerp(-18f, 24f, phase));
+                    break;
+                case AcceptedCarrierKind.HeavySealDrop:
+                    rect.localScale = new Vector3(
+                        Mathf.Lerp(1.18f, 1.64f, phase),
+                        Mathf.Lerp(1.12f, 0.72f, phase),
+                        1f);
+                    rect.localEulerAngles = Vector3.zero;
+                    break;
+                default:
+                    rect.localScale =
+                        Vector3.one * Mathf.Lerp(0.70f, 1.84f, phase);
+                    rect.localEulerAngles =
+                        new Vector3(0f, 0f, phase * 76f);
+                    break;
+            }
+        }
+
+        private void BuildCarrierVisual(
+            RectTransform parent,
+            AcceptedCarrierKind carrierKind,
+            Color sourceColor)
+        {
+            Color cinnabar = Color.Lerp(
+                sourceColor,
+                new Color(0.94f, 0.08f, 0.04f, 1f),
+                0.42f);
+            Color flameOrange =
+                new(1f, 0.38f, 0.06f, 1f);
+            Color brightGold =
+                new(1f, 0.84f, 0.24f, 1f);
+
+            switch (carrierKind)
+            {
+                case AcceptedCarrierKind.SwordQiSlash:
+                    CreateCarrierPart(
+                        parent,
+                        "SwordQiCore",
+                        new Vector2(112f, 8f),
+                        Vector2.zero,
+                        0f,
+                        brightGold);
+                    CreateCarrierPart(
+                        parent,
+                        "SwordQiEdge",
+                        new Vector2(96f, 3f),
+                        new Vector2(-8f, 7f),
+                        -5f,
+                        Color.Lerp(sourceColor, Color.white, 0.34f));
+                    CreateCarrierPart(
+                        parent,
+                        "SwordQiCrossImpact",
+                        new Vector2(72f, 5f),
+                        Vector2.zero,
+                        58f,
+                        flameOrange);
+                    break;
+                case AcceptedCarrierKind.HeavySealDrop:
+                    CreateCarrierPart(
+                        parent,
+                        "SealTop",
+                        new Vector2(84f, 7f),
+                        new Vector2(0f, 38f),
+                        0f,
+                        brightGold);
+                    CreateCarrierPart(
+                        parent,
+                        "SealBottom",
+                        new Vector2(84f, 7f),
+                        new Vector2(0f, -38f),
+                        0f,
+                        cinnabar);
+                    CreateCarrierPart(
+                        parent,
+                        "SealLeft",
+                        new Vector2(7f, 84f),
+                        new Vector2(-38f, 0f),
+                        0f,
+                        flameOrange);
+                    CreateCarrierPart(
+                        parent,
+                        "SealRight",
+                        new Vector2(7f, 84f),
+                        new Vector2(38f, 0f),
+                        0f,
+                        brightGold);
+                    CreateCarrierPart(
+                        parent,
+                        "SealWeightCore",
+                        new Vector2(54f, 12f),
+                        Vector2.zero,
+                        45f,
+                        sourceColor);
+                    CreateCarrierPart(
+                        parent,
+                        "SealImpactBar",
+                        new Vector2(116f, 8f),
+                        new Vector2(0f, -44f),
+                        0f,
+                        brightGold);
+                    break;
+                default:
+                    CreateCarrierPart(
+                        parent,
+                        "FireCore",
+                        new Vector2(30f, 30f),
+                        Vector2.zero,
+                        45f,
+                        brightGold);
+                    CreateCarrierPart(
+                        parent,
+                        "FireTrailA",
+                        new Vector2(74f, 10f),
+                        new Vector2(-40f, -4f),
+                        -7f,
+                        flameOrange);
+                    CreateCarrierPart(
+                        parent,
+                        "FireTrailB",
+                        new Vector2(56f, 6f),
+                        new Vector2(-34f, 13f),
+                        14f,
+                        cinnabar);
+                    CreateCarrierPart(
+                        parent,
+                        "FireSpark",
+                        new Vector2(14f, 14f),
+                        new Vector2(22f, -18f),
+                        45f,
+                        sourceColor);
+                    break;
+            }
+        }
+
+        private void CreateCarrierPart(
+            RectTransform parent,
+            string name,
+            Vector2 size,
+            Vector2 offset,
+            float rotation,
+            Color color)
+        {
+            GameObject part = CreateUiObject(name, parent);
+            RectTransform partRect =
+                part.GetComponent<RectTransform>();
+            partRect.anchorMin = new Vector2(0.5f, 0.5f);
+            partRect.anchorMax = new Vector2(0.5f, 0.5f);
+            partRect.pivot = new Vector2(0.5f, 0.5f);
+            partRect.anchoredPosition = offset;
+            partRect.sizeDelta = size;
+            partRect.localEulerAngles =
+                new Vector3(0f, 0f, rotation);
+            Image image = part.AddComponent<Image>();
+            image.raycastTarget = false;
+            image.color = color;
+        }
+
+        private static Vector2 ResolveCarrierSize(
+            AcceptedCarrierKind carrierKind)
+        {
+            return carrierKind switch
+            {
+                AcceptedCarrierKind.SwordQiSlash =>
+                    new Vector2(132f, 92f),
+                AcceptedCarrierKind.HeavySealDrop =>
+                    new Vector2(132f, 132f),
+                _ => new Vector2(124f, 90f)
+            };
         }
 
         private bool TryPlayResourceSequenceVfx(
@@ -626,10 +1168,48 @@ namespace TalismanBag.BuildSandbox
             return runtimeFont;
         }
 
+        private static Vector3 RectWorldCenter(RectTransform rect)
+        {
+            return rect == null
+                ? Vector3.zero
+                : rect.TransformPoint(rect.rect.center);
+        }
+
+        private static Vector3 QuadraticBezier(
+            Vector3 start,
+            Vector3 control,
+            Vector3 end,
+            float progress)
+        {
+            float t = Mathf.Clamp01(progress);
+            float inverse = 1f - t;
+            return inverse * inverse * start
+                + 2f * inverse * t * control
+                + t * t * end;
+        }
+
+        private static float Smooth01(float value)
+        {
+            float clamped = Mathf.Clamp01(value);
+            return clamped * clamped * (3f - 2f * clamped);
+        }
+
         private static Color ResolveColor(string kind)
         {
             switch (kind ?? string.Empty)
             {
+                case "lihuo.i007":
+                    return new Color(1f, 0.25f, 0.12f, 1f);
+                case "lihuo.i008":
+                    return new Color(1f, 0.48f, 0.10f, 1f);
+                case "lihuo.i009":
+                    return new Color(0.96f, 0.15f, 0.18f, 1f);
+                case "lihuo.i010":
+                    return new Color(0.22f, 0.78f, 0.72f, 1f);
+                case "lihuo.i011":
+                    return new Color(0.68f, 0.20f, 0.76f, 1f);
+                case "lihuo.i012":
+                    return new Color(1f, 0.70f, 0.16f, 1f);
                 case "damage":
                     return new Color(1f, 0.36f, 0.16f, 1f);
                 case "shieldBreak":
@@ -734,6 +1314,65 @@ namespace TalismanBag.BuildSandbox
             {
                 DestroyImmediate(obj);
             }
+        }
+
+        private static string ResolveAcceptedBuildVfxKind(
+            string sourceBaseItemId)
+        {
+            return (sourceBaseItemId ?? string.Empty).Trim() switch
+            {
+                "I007" => "lihuo.i007",
+                "I008" => "lihuo.i008",
+                "I009" => "lihuo.i009",
+                "I010" => "lihuo.i010",
+                "I011" => "lihuo.i011",
+                "I012" => "lihuo.i012",
+                _ => "damage"
+            };
+        }
+
+        public static string ResolveAcceptedCarrierPresentationKey(
+            string sourceBaseItemId)
+        {
+            return ResolveCarrierPresentationKey(
+                ResolveAcceptedCarrierKind(sourceBaseItemId));
+        }
+
+        private static AcceptedCarrierKind ResolveAcceptedCarrierKind(
+            string sourceBaseItemId)
+        {
+            // Presentation-only table. It does not infer gameplay from
+            // localized names and never participates in damage resolution.
+            return (sourceBaseItemId ?? string.Empty).Trim() switch
+            {
+                "I007" => AcceptedCarrierKind.FireProjectile,
+                "I008" => AcceptedCarrierKind.SwordQiSlash,
+                "I009" => AcceptedCarrierKind.HeavySealDrop,
+                "I010" => AcceptedCarrierKind.FireProjectile,
+                "I011" => AcceptedCarrierKind.SwordQiSlash,
+                "I012" => AcceptedCarrierKind.HeavySealDrop,
+                _ => AcceptedCarrierKind.FireProjectile
+            };
+        }
+
+        private static string ResolveCarrierPresentationKey(
+            AcceptedCarrierKind carrierKind)
+        {
+            return carrierKind switch
+            {
+                AcceptedCarrierKind.SwordQiSlash =>
+                    SwordQiSlashCarrierKey,
+                AcceptedCarrierKind.HeavySealDrop =>
+                    HeavySealDropCarrierKey,
+                _ => FireProjectileCarrierKey
+            };
+        }
+
+        private enum AcceptedCarrierKind
+        {
+            FireProjectile = 0,
+            SwordQiSlash = 1,
+            HeavySealDrop = 2
         }
 
         private static void DestroyTransient(UnityEngine.Object obj)

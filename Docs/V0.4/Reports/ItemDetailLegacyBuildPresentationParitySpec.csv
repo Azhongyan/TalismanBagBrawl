@@ -1,0 +1,6 @@
+scenarioId,result,marker,detail
+"S01","PASS","SHARED_PRESENTATION_SOURCE_PASS","verified"
+"S02","PASS","PROTECTED_DOMAIN_HASH_PASS","verified"
+"S03","PASS","REAL_AUTHORED_TEXT_PASS","verified"
+"S04","PASS","MACHINE_FACT_PLAYER_LEAK_PASS","verified"
+"S05","SUPPLEMENTAL","USER_HANDTEST_WAITING","Nine-point EventSystem matrix deferred to the first user handtest; it does not block this direct close."

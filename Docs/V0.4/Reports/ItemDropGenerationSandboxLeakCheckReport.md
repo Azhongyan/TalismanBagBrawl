@@ -1,7 +1,7 @@
 # ItemDropGenerationSandbox01 LeakCheck Report
 
 - Runtime scan root: `Assets/_Game/Scripts/TalismanBag/Items/Generation/DropSandbox`
-- Result: PASS
+- Result: FAIL
 
 | Category | Count |
 | --- | ---: |

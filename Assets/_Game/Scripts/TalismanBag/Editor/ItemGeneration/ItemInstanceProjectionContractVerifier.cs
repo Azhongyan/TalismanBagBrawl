@@ -598,8 +598,8 @@ namespace TalismanBag.EditorTools.ItemGeneration
             }
 
             Check(specs, verification, "item-system-schema-compatible", "compatibility",
-                ItemSystemSnapshot.CurrentSchemaVersion == "ItemSystemSnapshot.v1",
-                "ItemSystemSnapshot.v1", ItemSystemSnapshot.CurrentSchemaVersion);
+                ItemSystemSnapshot.CurrentSchemaVersion == "ItemSystemSnapshot.v2",
+                "ItemSystemSnapshot.v2", ItemSystemSnapshot.CurrentSchemaVersion);
             string itemSystemSource = ReadProjectFile("Assets/_Game/Scripts/TalismanBag/Items/ItemSystemSnapshot.cs");
             Check(specs, verification, "item-system-debug-signature-present", "compatibility",
                 itemSystemSource.Contains("public string BuildDebugSignature()"),

@@ -1,0 +1,37 @@
+applicability,p1,p2,assembler_status,build_completeness,pressure_completeness,evaluation_input,rule
+Applicable,C,C,Complete,Complete,Complete,non-null,Validator must accept
+Applicable,C,U,Unknown,Complete,Incomplete,non-null,P2 payload null
+Applicable,C,M,Unknown,Complete,Incomplete,non-null,P2 payload null
+Applicable,U,C,Unknown,Incomplete,Complete,non-null,P1 safe partial may remain
+Applicable,U,U,Unknown,Incomplete,Incomplete,non-null,No fact is invented
+Applicable,U,M,Unknown,Incomplete,Incomplete,non-null,Missing stays incomplete
+Applicable,M,C,Unknown,Incomplete,Complete,non-null,P1 payload null
+Applicable,M,U,Unknown,Incomplete,Incomplete,non-null,Both sides unresolved
+Applicable,M,M,Unknown,Incomplete,Incomplete,non-null,Both sides missing
+Unknown,C,C,Unknown,Complete,Complete,non-null,Explicit Unknown cannot upgrade
+Unknown,C,U,Unknown,Complete,Incomplete,non-null,Preserve side completeness
+Unknown,C,M,Unknown,Complete,Incomplete,non-null,Preserve source absence
+Unknown,U,C,Unknown,Incomplete,Complete,non-null,Preserve safe partial P1
+Unknown,U,U,Unknown,Incomplete,Incomplete,non-null,Explicit Unknown remains
+Unknown,U,M,Unknown,Incomplete,Incomplete,non-null,No inference
+Unknown,M,C,Unknown,Incomplete,Complete,non-null,No inference
+Unknown,M,U,Unknown,Incomplete,Incomplete,non-null,No inference
+Unknown,M,M,Unknown,Incomplete,Incomplete,non-null,No inference
+NotApplicable,C,C,Complete,NotRequired,NotRequired,non-null,Discard both payloads
+NotApplicable,C,U,Complete,NotRequired,NotRequired,non-null,Discard supplied P1
+NotApplicable,C,M,Complete,NotRequired,NotRequired,non-null,Missing is irrelevant
+NotApplicable,U,C,Complete,NotRequired,NotRequired,non-null,Discard safe partial
+NotApplicable,U,U,Complete,NotRequired,NotRequired,non-null,No Unknown issue retained
+NotApplicable,U,M,Complete,NotRequired,NotRequired,non-null,Explicit row controls
+NotApplicable,M,C,Complete,NotRequired,NotRequired,non-null,Discard supplied P2
+NotApplicable,M,U,Complete,NotRequired,NotRequired,non-null,Explicit row controls
+NotApplicable,M,M,Complete,NotRequired,NotRequired,non-null,Null payloads required
+Applicable,I,C,Invalid,not-emitted,not-emitted,null,Invalid dominates
+Applicable,C,I,Invalid,not-emitted,not-emitted,null,Invalid dominates
+Applicable,I,I,Invalid,not-emitted,not-emitted,null,Collect both sides
+Unknown,I,C,Invalid,not-emitted,not-emitted,null,Invalid dominates explicit Unknown
+NotApplicable,I,C,Invalid,not-emitted,not-emitted,null,Invalid dominates NotApplicable
+Missing,C,C,Unknown,not-emitted,not-emitted,null,N01B absence cannot author Unknown state
+NotInChannel,C,C,Invalid,not-emitted,not-emitted,null,Explicit rejection
+Applicable,C,C with incompatible domain,Invalid,not-emitted,not-emitted,null,N01C Validator rejection
+

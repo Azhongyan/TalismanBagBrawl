@@ -62,7 +62,7 @@ namespace TalismanBag.EditorTools.ItemBalance
             List<string> behaviorErrors = ValidateBehavior(catalog, profiles);
             bool passed = validation.isValid && profiles.Length == 30 && versions == 150 && ranges == 600
                 && powers == 150 && signatures == 30 && randomAffixes >= 36 && poolRows >= 180
-                && faMenStages == 15 && qiLeiStages == 10 && cores == 150 && ultimates == 30
+                && faMenStages == 15 && qiLeiStages == 10 && cores == 120 && ultimates == 30
                 && displays == 30 && leaks.Count == 0 && behaviorErrors.Count == 0
                 && profiles.All(value => value.baseItemId != "I031");
 
@@ -85,7 +85,7 @@ namespace TalismanBag.EditorTools.ItemBalance
             AssetDatabase.Refresh();
 
             summary = passed
-                ? Marker + $"\n30/30 profiles, 150/150 versions, 600/600 ranges, 150/150 power, 30/30 signatures, random={randomAffixes}, pools={poolRows}, builds=15+10, cores=150, leaks=0."
+                ? Marker + $"\n30/30 profiles, 150/150 versions, 600/600 ranges, 150/150 power, 30/30 signatures, random={randomAffixes}, pools={poolRows}, builds=15+10, cores=120, leaks=0."
                 : "ITEM_COMPLETE_CANDIDATE_CONTENT_WORKBENCH01_FAIL\n" + string.Join("\n", validation.Errors.Take(20))
                     + (leaks.Count == 0 ? string.Empty : "\nLeaks: " + string.Join(" | ", leaks.Take(10)));
             return passed;
@@ -213,7 +213,7 @@ namespace TalismanBag.EditorTools.ItemBalance
                 ("statRanges", ranges, 600), ("candidateItemPower", power, 150),
                 ("fixedSignatureAffixes", signatures, 30), ("randomAffixDictionary", random, 36),
                 ("randomPoolRows", pools, 180), ("faMenBuildStages", fa, 15),
-                ("qiLeiBuildStages", qi, 10), ("coreEffects", cores, 150),
+                ("qiLeiBuildStages", qi, 10), ("coreEffects", cores, 120),
                 ("ultimates", ultimates, 30), ("displayProfiles", displays, 30), ("leaks", leaks, 0)
             };
             StringBuilder builder = new("metric,actual,expected,result\n");
@@ -285,7 +285,7 @@ namespace TalismanBag.EditorTools.ItemBalance
                     value.effectPayload.effectCategory, value.effectPayload.operation,
                     value.effectPayload.valueUnitKey, value.effectPayload.valueUnits, value.stateDescription,
                     value.dataMaturity, value.designNote)).AppendLine();
-            Write("ItemCandidateCoreEffects150.csv", builder.ToString());
+            Write("ItemCandidateCoreEffects120.csv", builder.ToString());
         }
 
         private static void WritePower(IEnumerable<ItemBalanceProfile> profiles)
@@ -343,7 +343,7 @@ namespace TalismanBag.EditorTools.ItemBalance
             StringBuilder builder = new("# ItemCompleteCandidateContentWorkbench01 Report\n\n");
             builder.AppendLine("- Data maturity: BALANCE_CANDIDATE / EDITABLE / NOT_LIVE_LOCKED / NOT_BATTLE_CONNECTED");
             builder.AppendLine($"- Completeness: profiles={profiles}/30, versions={versions}/150, ranges={ranges}/600, power={powers}/150");
-            builder.AppendLine($"- Content: signatures={signatures}/30, randomDictionary={random}/>=36, poolRows={pools}/>=180, builds={fa}/15+{qi}/10, cores={cores}/150, ultimates={ultimates}/30, display={displays}/30");
+            builder.AppendLine($"- Content: signatures={signatures}/30, randomDictionary={random}/>=36, poolRows={pools}/>=180, builds={fa}/15+{qi}/10, cores={cores}/120, ultimates={ultimates}/30, display={displays}/30");
             builder.AppendLine("- Player candidate field leaks: " + leaks);
             builder.AppendLine("- Validation errors: " + validation.Errors.Count);
             foreach (string error in validation.Errors) builder.AppendLine("- FAIL: " + error);

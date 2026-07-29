@@ -1,6 +1,6 @@
 ﻿# ItemDetailProjectionComplete01 Rework Leak Check
 
-Result: PASS
+Result: FAIL
 
 Checked scoped files:
 - `Assets/_Game/Scripts/TalismanBag/Items/Detail/ItemDetailViewModel.cs`
@@ -28,3 +28,7 @@ Forbidden formal-system tokens:
 Runtime UI dependency boundary:
 - No `TalismanBag.ItemSandbox`, resolver, Battle, RunFlow, SaveData dependency inside runtime UI folder.
 - Sandbox detail panel and section are adapters over runtime UI.
+
+Errors:
+- Layout check failed for layout-1080x1920: 1080x1920; detail=viewport=1557x840; content=1557x1902; scrollbar=optional-present; autoLayout=present; debug=viewport=1557x840; content=1557x446; scrollbar=optional-present; autoLayout=present; sections=12/14 active (15/15 bound),3/3; manualGeometryPositive=True; headerColumnsAdvisory=False; reset=True; longScroll=True
+- Layout check failed for layout-720x1280: 720x1280; detail=viewport=1003x424; content=1003x1902; scrollbar=optional-present; autoLayout=present; debug=viewport=1003x424; content=1003x446; scrollbar=optional-present; autoLayout=present; sections=12/14 active (15/15 bound),3/3; manualGeometryPositive=True; headerColumnsAdvisory=False; reset=True; longScroll=True

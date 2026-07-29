@@ -1,0 +1,15 @@
+ownerType,fieldName,fieldType,cardinality,semantic,visibility,sourceOfTruth,futureConsumer
+EnemyRequirementChannelApplicabilitySnapshotInput,SchemaId,string,1,exact schema identity,public read-only,caller input,snapshot provider
+EnemyRequirementChannelApplicabilitySnapshotInput,SchemaVersion,int,1,exact schema version,public read-only,caller input,snapshot provider
+EnemyRequirementChannelApplicabilitySnapshotInput,SnapshotId,string,1,ordinal snapshot identity,public read-only,caller input,future channel evaluator
+EnemyRequirementChannelApplicabilitySnapshotInput,EvaluationChannel,EnemyRequirementChannel,1,current evaluation view,public read-only,caller input,future channel evaluator
+EnemyRequirementChannelApplicabilitySnapshotInput,Rows,IReadOnlyList<Row>,0..n,defensive row input,public read-only,caller input,snapshot provider
+EnemyRequirementChannelApplicabilitySnapshot,SchemaId,string,1,validated schema identity,public read-only,validated input,future channel evaluator
+EnemyRequirementChannelApplicabilitySnapshot,SchemaVersion,int,1,validated schema version,public read-only,validated input,future channel evaluator
+EnemyRequirementChannelApplicabilitySnapshot,SnapshotId,string,1,validated ordinal identity,public read-only,validated input,future channel evaluator
+EnemyRequirementChannelApplicabilitySnapshot,EvaluationChannel,EnemyRequirementChannel,1,current evaluation view,public read-only,validated input,future channel evaluator
+EnemyRequirementChannelApplicabilitySnapshot,Rows,IReadOnlyList<Row>,0..n,sorted immutable applicability rows,public read-only,validated input,future channel evaluator
+EnemyRequirementChannelApplicabilitySnapshot,CanonicalSignature,string,1,deterministic content identity,public read-only,canonical serializer,offline audit
+EnemyRequirementChannelApplicabilityRowSnapshot,RequirementId,string,1,ordinal generic requirement identity,public read-only,caller input,future requirement catalog
+EnemyRequirementChannelApplicabilityRowSnapshot,DeclaredChannel,EnemyRequirementChannel,1,explicit owning channel,public read-only,caller input,future requirement catalog
+EnemyRequirementChannelApplicabilityRowSnapshot,ApplicabilityState,EnemyRequirementApplicabilityState,1,current-view applicability only,public read-only,caller input,future channel evaluator

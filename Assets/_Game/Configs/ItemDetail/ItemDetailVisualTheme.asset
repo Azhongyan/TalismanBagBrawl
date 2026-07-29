@@ -20,13 +20,20 @@ MonoBehaviour:
   secondaryText: {r: 0.6, g: 0.56078434, b: 0.4862745, a: 1}
   weakText: {r: 0.5058824, g: 0.4745098, b: 0.42745098, a: 1}
   restrictionText: {r: 0.7882353, g: 0.30588236, b: 0.23137255, a: 1}
+  narrativeText: {r: 0.49411765, g: 0.40784314, b: 0.27058825, a: 1}
   buildActive: {r: 0.50980395, g: 0.68235296, b: 0.30980393, a: 1}
   buildNearActive: {r: 0.7529412, g: 0.6431373, b: 0.36862746, a: 1}
   buildInactive: {r: 0.44313726, g: 0.43529412, b: 0.4117647, a: 1}
   arrayModifierColor: {r: 0.33333334, g: 0.7764706, b: 0.7019608, a: 1}
   arrayModifierIcon: {fileID: 0}
+  artworkTint: {r: 1, g: 1, b: 1, a: 1}
+  iconTint: {r: 1, g: 1, b: 1, a: 1}
+  clearedStatusBadgeTint: {r: 0, g: 0, b: 0, a: 0}
   rarityWhite: {r: 0.8901961, g: 0.84705883, b: 0.7647059, a: 1}
   rarityGreen: {r: 0.5294118, g: 0.7137255, b: 0.41568628, a: 1}
   rarityBlue: {r: 0.40784314, g: 0.6627451, b: 0.9019608, a: 1}
   rarityPurple: {r: 0.69803923, g: 0.49019608, b: 0.8745098, a: 1}
   rarityOrange: {r: 0.89411765, g: 0.6313726, b: 0.29411766, a: 1}
+  rarityArtworkFrameAlpha: 0.28
+  rarityBadgeAlpha: 0.3
+  rarityAccentAlpha: 0.75

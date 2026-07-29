@@ -1,8 +1,8 @@
 # ItemAffixPoolAndRangeSchema01 Report
 
 - Package: `V0.4-ItemAffixPoolAndRangeSchema01`
-- Result: PASS
-- Marker: `ITEM_AFFIX_POOL_AND_RANGE_SCHEMA01_PASS`
+- Result: FAIL
+- Marker: `ITEM_AFFIX_POOL_AND_RANGE_SCHEMA01_FAIL`
 - Schema ID: `ItemAffixPoolAndRangeSchemaSnapshot.v1`
 - Spec: 88/88 PASS
 - Canonical Signature: `ItemAffixPoolAndRangeSchemaSnapshot.v1`
@@ -35,15 +35,15 @@
 
 ## Historical Regressions
 
-- Foundation: PASS
-- StatRange: PASS
-- CorePotential: PASS
+- Foundation: FAIL
+- StatRange: FAIL
+- CorePotential: FAIL
 - ItemInnerDataCatalog: PASS
 - ItemSystemValidatorAndSnapshot: PASS
 - BuildSynergyCore: PASS
 - CoreAwakeningPreview: PASS
 - ItemSkillTriggerContract: PASS
-- ItemDetailProjectionComplete: PASS
+- ItemDetailProjectionComplete: FAIL
 - JuNian Lighting: PASS
 - ArrayBonus: PASS
 - Foundation: 159/159
@@ -56,4 +56,7 @@
 
 ## Errors
 
-- None.
+- Historical regression report is not PASS: Foundation
+- Historical regression report is not PASS: StatRange
+- Historical regression report is not PASS: CorePotential
+- Historical regression report is not PASS: ItemDetailProjectionComplete

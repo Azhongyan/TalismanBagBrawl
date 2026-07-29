@@ -152,6 +152,6 @@ caseId,category,expected,actual,validationCode,result
 "forbidden-property-inventorySlot","contract-shape","absent","absent","NONE","PASS"
 "forbidden-property-saveKey","contract-shape","absent","absent","NONE","PASS"
 "forbidden-property-itemPower","contract-shape","absent","absent","NONE","PASS"
-"item-system-schema-compatible","compatibility","ItemSystemSnapshot.v1","ItemSystemSnapshot.v1","NONE","PASS"
+"item-system-schema-compatible","compatibility","ItemSystemSnapshot.v2","ItemSystemSnapshot.v2","NONE","PASS"
 "item-system-debug-signature-present","compatibility","present","present","NONE","PASS"
-"detail-viewmodel-unmodified-contract","compatibility","ItemDetailProjectionComplete PASS","report marker check","NONE","PASS"
+"detail-viewmodel-unmodified-contract","compatibility","ItemDetailProjectionComplete PASS","report marker check","ASSERTION_FAILED","FAIL"

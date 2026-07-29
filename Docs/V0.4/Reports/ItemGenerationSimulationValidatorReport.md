@@ -1,8 +1,8 @@
 # ItemGenerationSimulationValidator01 Report
 
 - Package: `V0.4-ItemGenerationSimulationValidator01-GuardFix01`
-- Result: PASS
-- Marker: `ITEM_GENERATION_SIMULATION_VALIDATOR01_GUARDFIX01_PASS`
+- Result: FAIL
+- Marker: `ITEM_GENERATION_SIMULATION_VALIDATOR01_GUARDFIX01_FAIL`
 - Result schema: `ItemGenerationSimulationResult.v1`
 - Suite schema: `ItemGenerationSimulationSuiteResult.v1`
 - simulationVersion: `1`
@@ -152,18 +152,18 @@
 
 ## Historical Regressions
 
-- Foundation: PASS
-- StatRange: PASS
-- CorePotential: PASS
-- AffixSchema: PASS
-- RollEngine: PASS
-- DropSandbox: PASS
+- Foundation: FAIL
+- StatRange: FAIL
+- CorePotential: FAIL
+- AffixSchema: FAIL
+- RollEngine: FAIL
+- DropSandbox: FAIL
 - ItemInnerDataCatalog: PASS
 - ItemSystemValidatorAndSnapshot: PASS
 - BuildSynergyCore: PASS
 - CoreAwakeningPreview: PASS
 - ItemSkillTriggerContract: PASS
-- ItemDetailProjectionComplete: PASS
+- ItemDetailProjectionComplete: FAIL
 - JuNian Lighting: PASS
 - ArrayBonus: PASS
 - Foundation: 159/159 PASS
@@ -180,4 +180,10 @@
 
 ## Errors
 
-- None.
+- Historical regression report is not PASS: Foundation.
+- Historical regression report is not PASS: StatRange.
+- Historical regression report is not PASS: CorePotential.
+- Historical regression report is not PASS: AffixSchema.
+- Historical regression report is not PASS: RollEngine.
+- Historical regression report is not PASS: DropSandbox.
+- Historical regression report is not PASS: ItemDetailProjectionComplete.

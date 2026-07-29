@@ -26,4 +26,4 @@
 | BuildSettings | 0 |
 
 All categories must remain zero. Schema identifiers, direction, maturity, baseItemId, statId, and deterministic integer range fields are allowed.
-Verifier errors: 0
+Verifier errors: 2

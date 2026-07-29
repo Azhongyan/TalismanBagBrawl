@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94ed01388841f6e42bf279e5a56d4498, type: 3}
   m_Name: ItemBalanceProfile_I020
   m_EditorClassIdentifier: 
-  balanceDataRevision: ITEM_COMPLETE_CANDIDATE_CONTENT_WORKBENCH01_R1
+  balanceDataRevision: ITEM_FOUR_CORE_CANDIDATE_DATA_CORRECTION01_R1
   baseItemId: I020
   displayName: "\u6DA4\u79FD\u957F\u7B26"
   faMenTag: xuanshui
@@ -238,42 +238,6 @@ MonoBehaviour:
     stateDescription: "\u54C1\u9636\u6EE1\u8DB3\u540E\u53EF\u89C1\uFF1B\u517B\u6210\u89E3\u9501\u4E14\u5B9E\u4F8B\u70B9\u4EAE\u65F6\u624D\u53EF\u6FC0\u6D3B\u3002"
     dataMaturity: BALANCE_CANDIDATE
     designNote: "\u540C\u539F\u578B\u4E94\u5C42\u9012\u8FDB\u5019\u9009\u6838\u5FC3\u3002"
-  - coreEffectId: candidate_core_i020_04
-    displayName: "\u6DA4\u79FD\u957F\u7B26\xB7\u8F6C\u673A"
-    description: "\u201C\u6DA4\u79FD\u201D\u6EE1\u8DB3\u5173\u952E\u6761\u4EF6\u540E\u989D\u5916\u89E6\u53D1\u4E00\u6B21\uFF0C\u4F46\u53D7\u72EC\u7ACB\u51B7\u5374\u9650\u5236\u3002"
-    isUltimate: 0
-    nodeKind: Core4
-    unlockLevel: 40
-    requiredRarity: 3
-    effectType: CoreEffect
-    effectPayload:
-      effectId: candidate_core_i020_04
-      displayName: "\u6DA4\u79FD\u957F\u7B26\xB7\u8F6C\u673A"
-      description: "\u201C\u6DA4\u79FD\u201D\u6EE1\u8DB3\u5173\u952E\u6761\u4EF6\u540E\u989D\u5916\u89E6\u53D1\u4E00\u6B21\uFF0C\u4F46\u53D7\u72EC\u7ACB\u51B7\u5374\u9650\u5236\u3002"
-      effectCategory: 7
-      triggerEventId: on_cleanse
-      conditionId: same_target_chain
-      targetSelector: effect_primary_target
-      targetStatId: cleanse
-      operation: 7
-      valueUnitKey: stack
-      valueUnits: 4
-      secondaryValueUnits: 0
-      durationUnits: 1
-      stackLimit: 1
-      internalCooldownUnits: 1
-      parameterProfileId: i020_core_4
-      mutexGroupId: CORE_I020
-      effectTags:
-      - CoreEffect
-      - ExtraTrigger
-      - DEV_ONLY
-      dataMaturity: BALANCE_CANDIDATE
-      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
-        executor.
-    stateDescription: "\u54C1\u9636\u6EE1\u8DB3\u540E\u53EF\u89C1\uFF1B\u517B\u6210\u89E3\u9501\u4E14\u5B9E\u4F8B\u70B9\u4EAE\u65F6\u624D\u53EF\u6FC0\u6D3B\u3002"
-    dataMaturity: BALANCE_CANDIDATE
-    designNote: "\u540C\u539F\u578B\u4E94\u5C42\u9012\u8FDB\u5019\u9009\u6838\u5FC3\u3002"
   - coreEffectId: candidate_core_i020_ultimate
     displayName: "\u6DA4\u79FD\u957F\u7B26\xB7\u6210\u6CD5"
     description: "\u6DA4\u79FD\u957F\u7B26\u5B8C\u6210\u6210\u6CD5\u540E\uFF0C\u5C06\u201C\u6DA4\u79FD\u201D\u7684\u89E6\u53D1\u7ED3\u679C\u8F6C\u6362\u4E3A\u4E00\u6B21\u4E0D\u6D88\u8017\u539F\u72B6\u6001\u7684\u673A\u5236\u56DE\u54CD\uFF1B\u6BCF\u8F6E\u9650\u4E00\u6B21\u3002"
@@ -410,12 +374,10 @@ MonoBehaviour:
     - candidate_core_i020_01
     - candidate_core_i020_02
     - candidate_core_i020_03
-    - candidate_core_i020_04
     visibleCoreEffectIds:
     - candidate_core_i020_01
     - candidate_core_i020_02
     - candidate_core_i020_03
-    - candidate_core_i020_04
     candidateItemPower: 78
     candidateItemPowerOverridden: 0
     candidateDisplaySummary: "\u6DA4\u79FD\u957F\u7B26 \xB7 \u7384\u54C1 \xB7 \u7269\u54C1\u5F3A\u5EA6\uFF08\u5019\u9009\uFF0978"
@@ -440,13 +402,11 @@ MonoBehaviour:
     - candidate_core_i020_01
     - candidate_core_i020_02
     - candidate_core_i020_03
-    - candidate_core_i020_04
     - candidate_core_i020_ultimate
     visibleCoreEffectIds:
     - candidate_core_i020_01
     - candidate_core_i020_02
     - candidate_core_i020_03
-    - candidate_core_i020_04
     - candidate_core_i020_ultimate
     candidateItemPower: 93
     candidateItemPowerOverridden: 0

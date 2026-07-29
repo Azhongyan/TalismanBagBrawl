@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -11,7 +12,10 @@ using UnityEditor.SceneManagement;
 namespace TalismanBag.BuildSandbox
 {
     [ExecuteAlways]
-    public sealed class BuildItemTrayPreviewView : MonoBehaviour
+    public sealed class BuildItemTrayPreviewView : MonoBehaviour,
+        IBeginDragHandler,
+        IEndDragHandler,
+        IScrollHandler
     {
         public const bool SupportsShapeAwareCellSpans = true;
         public const string AllCategory = "\u5168\u90e8";
@@ -23,8 +27,19 @@ namespace TalismanBag.BuildSandbox
         private const string TestDevOnlyCategory = "测试";
 
         private const string ItemCardLayerName = "ItemCardLayer";
-        private const float TrayScrollSensitivity = 18f;
-        private const float TrayScrollDecelerationRate = 0.16f;
+        private const float TrayRowSnapVelocityPitchRatio = 0.2f;
+        private const float TrayRowSnapIdleSeconds = 0.12f;
+        private const float TrayRowSnapTolerance = 0.25f;
+        public const int AuthoredTraySlotCount = 40;
+        public const int ItemSystemAuthorityLogicalRows = 13;
+        public const int ItemSystemAuthorityLogicalSlotCount =
+            BuildGridInteractionPreviewController.TrayColumns * ItemSystemAuthorityLogicalRows;
+        public const int ItemSystemAuthorityRuntimeSlotCount =
+            ItemSystemAuthorityLogicalSlotCount - AuthoredTraySlotCount;
+        public const string ItemSystemAuthorityRuntimeSlotNamePrefix =
+            "TrayGridSlot_Runtime_";
+        private const HideFlags RuntimeSlotHideFlags =
+            HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
 
         [SerializeField] private ScrollRect scrollRect;
         [SerializeField] private RectTransform contentRoot;
@@ -39,13 +54,50 @@ namespace TalismanBag.BuildSandbox
         private readonly Dictionary<string, Button> buttonsByCategory = new(StringComparer.Ordinal);
         private readonly Dictionary<string, Text> labelsByCategory = new(StringComparer.Ordinal);
         private readonly Dictionary<string, BuildItemPreviewCardView> cardsByItemId = new(StringComparer.Ordinal);
+        // This is a transient view projection only.  placementModels remains the canonical All layout.
+        private readonly Dictionary<string, TrayPlacementViewModel> displayedPlacementsByItemId =
+            new(StringComparer.Ordinal);
         private readonly List<TrayPlacementViewModel> placementModels = new();
+        private readonly List<TrayPlacementViewModel> activeFilteredPlacementModels = new();
+        private readonly Dictionary<string, TrayPlacementViewModel>
+            activeFilteredRememberedPlacementsByItemId = new(StringComparer.Ordinal);
         private readonly HashSet<string> hiddenItemIds = new(StringComparer.Ordinal);
         private readonly TrayItemLayoutView itemLayoutView = new();
         private readonly TrayGridReservationView reservationView = new();
+        private readonly List<GameObject> itemSystemAuthorityRuntimeSlots = new();
         private List<BuildGridInteractionPreviewController.PreviewItem> currentItems = new();
+        private List<RectTransform> preAuthorityTraySlotRects;
+        private List<Image> preAuthorityTraySlotImages;
+        private List<Outline> preAuthorityTraySlotOutlines;
         private BuildGridInteractionPreviewController controller;
         private string activeCategory = AllCategory;
+        private float preAuthorityContentSizeDeltaY;
+        private bool hasPreAuthorityContentHeight;
+        private bool itemSystemAuthorityRuntimeSlotsInstalled;
+        private int trayViewTransactionDepth;
+        private bool trayViewPublishPending;
+        private bool trayScrollResetToTopPending;
+        private List<TrayPlacementViewModel> transactionPlacementBackup;
+        private List<TrayPlacementViewModel> transactionFilteredPlacementBackup;
+        private Dictionary<string, TrayPlacementViewModel>
+            transactionFilteredRememberedPlacementBackup;
+        private HashSet<string> transactionHiddenItemIdsBackup;
+        private string transactionCategoryBackup;
+        private string transactionFilteredCategoryBackup;
+        private string activeFilteredCategory = string.Empty;
+        private bool trayScrollPointerDragging;
+        private bool trayRowSnapPending;
+        private bool applyingTrayRowSnap;
+        private float lastTrayScrollMutationTime = -999f;
+        private float lastTrayAutoScrollTime = -999f;
+        private float lastObservedVerticalNormalizedPosition = float.NaN;
+        private int trayViewPublicationRevision;
+        private ScrollRect observedRowSnapScrollRect;
+        private EventTrigger observedRowSnapEventTrigger;
+        private EventTrigger.Entry observedBeginDragEntry;
+        private EventTrigger.Entry observedEndDragEntry;
+        private EventTrigger.Entry observedScrollEntry;
+        private bool ownsObservedRowSnapEventTrigger;
 
 #if UNITY_EDITOR
         private bool editModePreviewRefreshQueued;
@@ -54,6 +106,329 @@ namespace TalismanBag.BuildSandbox
         public int TraySlotCount => GetTraySlotCount();
         public int CategoryCount => categoryLabels.Count(label => label != null);
         public string ActiveCategory => activeCategory;
+        public bool HasItemSystemAuthorityRuntimeSlots =>
+            itemSystemAuthorityRuntimeSlotsInstalled;
+        public int InstalledItemSystemAuthorityRuntimeSlotCount =>
+            itemSystemAuthorityRuntimeSlots.Count(slot => slot != null);
+        public bool IsTrayViewTransactionActive => trayViewTransactionDepth > 0;
+        public int TrayViewPublicationRevision => trayViewPublicationRevision;
+        public bool HasProductionRowSnapObserver =>
+            observedRowSnapScrollRect != null
+            && observedRowSnapScrollRect == scrollRect
+            && observedRowSnapEventTrigger != null;
+
+        public bool TryGetDisplayedPlacement(
+            string itemId,
+            out TrayPlacementViewModel placement)
+        {
+            return displayedPlacementsByItemId.TryGetValue(itemId ?? string.Empty,
+                out placement);
+        }
+
+        public void BeginTrayViewTransaction()
+        {
+            if (trayViewTransactionDepth == 0)
+            {
+                transactionPlacementBackup = placementModels.ToList();
+                transactionFilteredPlacementBackup =
+                    activeFilteredPlacementModels.ToList();
+                transactionFilteredRememberedPlacementBackup =
+                    activeFilteredRememberedPlacementsByItemId.ToDictionary(
+                        pair => pair.Key,
+                        pair => pair.Value,
+                        StringComparer.Ordinal);
+                transactionHiddenItemIdsBackup =
+                    new HashSet<string>(hiddenItemIds, StringComparer.Ordinal);
+                transactionCategoryBackup = activeCategory;
+                transactionFilteredCategoryBackup = activeFilteredCategory;
+                trayViewPublishPending = false;
+                trayScrollResetToTopPending = false;
+            }
+            trayViewTransactionDepth++;
+        }
+
+        public bool CommitTrayViewTransaction()
+        {
+            if (trayViewTransactionDepth <= 0)
+            {
+                return false;
+            }
+
+            trayViewTransactionDepth--;
+            if (trayViewTransactionDepth > 0)
+            {
+                return true;
+            }
+
+            bool shouldPublish = trayViewPublishPending;
+            bool shouldResetScrollToTop = trayScrollResetToTopPending;
+            try
+            {
+                if (shouldPublish)
+                {
+                    PublishTrayViews(BuildVisibleItemIds());
+                }
+                if (shouldResetScrollToTop)
+                {
+                    ResetTrayScrollToTop();
+                }
+                ClearTrayViewTransactionBackup();
+                return true;
+            }
+            catch
+            {
+                RestoreTrayViewTransactionModelBackup();
+                try
+                {
+                    PublishTrayViews(BuildVisibleItemIds());
+                }
+                catch
+                {
+                    // Preserve the original publication exception.  The staged
+                    // model has already been rolled back to the last snapshot.
+                }
+                ClearTrayViewTransactionBackup();
+                throw;
+            }
+        }
+
+        public void RollbackTrayViewTransaction()
+        {
+            if (trayViewTransactionDepth <= 0)
+            {
+                return;
+            }
+
+            RestoreTrayViewTransactionModelBackup();
+            trayViewTransactionDepth = 0;
+            ClearTrayViewTransactionBackup();
+        }
+
+        private void RestoreTrayViewTransactionModelBackup()
+        {
+            placementModels.Clear();
+            placementModels.AddRange(transactionPlacementBackup
+                ?? Enumerable.Empty<TrayPlacementViewModel>());
+            activeFilteredPlacementModels.Clear();
+            activeFilteredPlacementModels.AddRange(
+                transactionFilteredPlacementBackup
+                ?? Enumerable.Empty<TrayPlacementViewModel>());
+            activeFilteredRememberedPlacementsByItemId.Clear();
+            if (transactionFilteredRememberedPlacementBackup != null)
+            {
+                foreach (KeyValuePair<string, TrayPlacementViewModel> pair in
+                         transactionFilteredRememberedPlacementBackup)
+                {
+                    activeFilteredRememberedPlacementsByItemId[pair.Key] =
+                        pair.Value;
+                }
+            }
+            hiddenItemIds.Clear();
+            if (transactionHiddenItemIdsBackup != null)
+            {
+                hiddenItemIds.UnionWith(transactionHiddenItemIdsBackup);
+            }
+            activeCategory = transactionCategoryBackup ?? AllCategory;
+            activeFilteredCategory =
+                transactionFilteredCategoryBackup ?? string.Empty;
+        }
+
+        private void ClearTrayViewTransactionBackup()
+        {
+            transactionPlacementBackup = null;
+            transactionFilteredPlacementBackup = null;
+            transactionFilteredRememberedPlacementBackup = null;
+            transactionHiddenItemIdsBackup = null;
+            transactionCategoryBackup = null;
+            transactionFilteredCategoryBackup = null;
+            trayViewPublishPending = false;
+            trayScrollResetToTopPending = false;
+        }
+
+        public bool InstallItemSystemAuthorityRuntimeSlots(out string diagnosticCode)
+        {
+            diagnosticCode = string.Empty;
+            if (itemSystemAuthorityRuntimeSlotsInstalled)
+            {
+                diagnosticCode = "ITEM_SYSTEM_TRAY_SLOTS_ALREADY_INSTALLED";
+                return false;
+            }
+            if (contentRoot == null)
+            {
+                diagnosticCode = "ITEM_SYSTEM_TRAY_CONTENT_MISSING";
+                return false;
+            }
+
+            GridLayoutGroup grid = contentRoot.GetComponent<GridLayoutGroup>();
+            if (grid == null
+                || grid.constraint != GridLayoutGroup.Constraint.FixedColumnCount
+                || grid.constraintCount != BuildGridInteractionPreviewController.TrayColumns)
+            {
+                diagnosticCode = "ITEM_SYSTEM_TRAY_GRID_GEOMETRY_INVALID";
+                return false;
+            }
+
+            List<RectTransform> authoredSlots = new(AuthoredTraySlotCount);
+            int[] authoredSiblingIndexes = new int[AuthoredTraySlotCount];
+            for (int index = 0; index < AuthoredTraySlotCount; index++)
+            {
+                string slotName = $"TrayGridSlot_{index + 1:00}";
+                RectTransform slot = contentRoot.Find(slotName) as RectTransform;
+                if (slot == null || slot.parent != contentRoot)
+                {
+                    diagnosticCode = "ITEM_SYSTEM_AUTHORED_TRAY_SLOT_MISSING";
+                    return false;
+                }
+                authoredSlots.Add(slot);
+                authoredSiblingIndexes[index] = slot.GetSiblingIndex();
+            }
+
+            for (int index = AuthoredTraySlotCount + 1;
+                 index <= ItemSystemAuthorityLogicalSlotCount;
+                 index++)
+            {
+                if (contentRoot.Find(ItemSystemAuthorityRuntimeSlotNamePrefix
+                        + index.ToString("00")) != null)
+                {
+                    diagnosticCode = "ITEM_SYSTEM_RUNTIME_TRAY_SLOT_DUPLICATE";
+                    return false;
+                }
+            }
+
+            RectTransform template = authoredSlots[AuthoredTraySlotCount - 1];
+            if (template.GetComponent<Image>() == null
+                || template.GetComponent<Outline>() == null)
+            {
+                diagnosticCode = "ITEM_SYSTEM_TRAY_SLOT_TEMPLATE_INVALID";
+                return false;
+            }
+
+            preAuthorityTraySlotRects = traySlotRects.ToList();
+            preAuthorityTraySlotImages = traySlotImages.ToList();
+            preAuthorityTraySlotOutlines = traySlotOutlines.ToList();
+            preAuthorityContentSizeDeltaY = contentRoot.sizeDelta.y;
+            hasPreAuthorityContentHeight = true;
+
+            try
+            {
+                List<RectTransform> extendedRects = preAuthorityTraySlotRects.ToList();
+                List<Image> extendedImages = preAuthorityTraySlotImages.ToList();
+                List<Outline> extendedOutlines = preAuthorityTraySlotOutlines.ToList();
+                for (int index = AuthoredTraySlotCount + 1;
+                     index <= ItemSystemAuthorityLogicalSlotCount;
+                     index++)
+                {
+                    GameObject runtimeSlot = Instantiate(
+                        template.gameObject, contentRoot, worldPositionStays: false);
+                    runtimeSlot.name = ItemSystemAuthorityRuntimeSlotNamePrefix
+                        + index.ToString("00");
+                    runtimeSlot.hideFlags = RuntimeSlotHideFlags;
+                    foreach (Component component in runtimeSlot.GetComponents<Component>())
+                    {
+                        component.hideFlags = RuntimeSlotHideFlags;
+                    }
+
+                    RectTransform runtimeRect = runtimeSlot.GetComponent<RectTransform>();
+                    Image runtimeImage = runtimeSlot.GetComponent<Image>();
+                    Outline runtimeOutline = runtimeSlot.GetComponent<Outline>();
+                    if (runtimeRect == null || runtimeImage == null || runtimeOutline == null)
+                    {
+                        throw new InvalidOperationException(
+                            "Runtime tray slot did not preserve the authored component pattern.");
+                    }
+
+                    itemSystemAuthorityRuntimeSlots.Add(runtimeSlot);
+                    extendedRects.Add(runtimeRect);
+                    extendedImages.Add(runtimeImage);
+                    extendedOutlines.Add(runtimeOutline);
+                }
+
+                traySlotRects = extendedRects;
+                traySlotImages = extendedImages;
+                traySlotOutlines = extendedOutlines;
+                BindViewAuthorities();
+                EnsureContentHeightFromGrid();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(contentRoot);
+
+                bool authoredSlotsPreserved = authoredSlots.Select((slot, index) =>
+                        slot != null
+                        && slot.parent == contentRoot
+                        && slot.GetSiblingIndex() == authoredSiblingIndexes[index]
+                        && string.Equals(slot.name, $"TrayGridSlot_{index + 1:00}",
+                            StringComparison.Ordinal))
+                    .All(value => value);
+                if (!authoredSlotsPreserved
+                    || itemSystemAuthorityRuntimeSlots.Count
+                        != ItemSystemAuthorityRuntimeSlotCount
+                    || GetTraySlotCount() != ItemSystemAuthorityLogicalSlotCount)
+                {
+                    throw new InvalidOperationException(
+                        "Runtime tray extension did not preserve the 40 authored slots.");
+                }
+
+                itemSystemAuthorityRuntimeSlotsInstalled = true;
+                diagnosticCode = "NONE";
+                return true;
+            }
+            catch
+            {
+                RestoreItemSystemAuthorityRuntimeSlots();
+                diagnosticCode = "ITEM_SYSTEM_RUNTIME_TRAY_SLOT_INSTALL_FAILED";
+                return false;
+            }
+        }
+
+        public void UninstallItemSystemAuthorityRuntimeSlots()
+        {
+            RestoreItemSystemAuthorityRuntimeSlots();
+        }
+
+        private void RestoreItemSystemAuthorityRuntimeSlots()
+        {
+            foreach (GameObject runtimeSlot in itemSystemAuthorityRuntimeSlots)
+            {
+                if (runtimeSlot == null)
+                {
+                    continue;
+                }
+                if (Application.isPlaying)
+                {
+                    Destroy(runtimeSlot);
+                }
+                else
+                {
+                    DestroyImmediate(runtimeSlot);
+                }
+            }
+            itemSystemAuthorityRuntimeSlots.Clear();
+
+            if (preAuthorityTraySlotRects != null)
+            {
+                traySlotRects = preAuthorityTraySlotRects;
+            }
+            if (preAuthorityTraySlotImages != null)
+            {
+                traySlotImages = preAuthorityTraySlotImages;
+            }
+            if (preAuthorityTraySlotOutlines != null)
+            {
+                traySlotOutlines = preAuthorityTraySlotOutlines;
+            }
+            if (contentRoot != null && hasPreAuthorityContentHeight)
+            {
+                Vector2 restoredSizeDelta = contentRoot.sizeDelta;
+                restoredSizeDelta.y = preAuthorityContentSizeDeltaY;
+                contentRoot.sizeDelta = restoredSizeDelta;
+                LayoutRebuilder.ForceRebuildLayoutImmediate(contentRoot);
+            }
+
+            preAuthorityTraySlotRects = null;
+            preAuthorityTraySlotImages = null;
+            preAuthorityTraySlotOutlines = null;
+            hasPreAuthorityContentHeight = false;
+            itemSystemAuthorityRuntimeSlotsInstalled = false;
+            BindViewAuthorities();
+        }
 
         public void Bind(
             ScrollRect trayScrollRect,
@@ -67,7 +442,6 @@ namespace TalismanBag.BuildSandbox
             IReadOnlyList<BuildItemPreviewCardView> cardViews)
         {
             scrollRect = trayScrollRect;
-            ConfigureTrayScrollMomentum(scrollRect);
             contentRoot = trayContentRoot;
             itemCardLayer = trayItemCardLayer;
             categoryButtons = (buttons ?? Array.Empty<Button>()).Where(button => button != null).ToList();
@@ -101,34 +475,49 @@ namespace TalismanBag.BuildSandbox
 
         public void ApplyFilter(string category)
         {
-            string previousCategory = NormalizeCategory(activeCategory);
             string nextCategory = NormalizeCategory(category);
+            bool categoryChanged = !string.Equals(
+                NormalizeCategory(activeCategory),
+                nextCategory,
+                StringComparison.Ordinal);
             activeCategory = nextCategory;
-            if (previousCategory != AllCategory && nextCategory == AllCategory)
+            if (nextCategory == AllCategory)
             {
-                controller?.CompactTrayWhenReturningToAllCategory();
+                ClearActiveFilteredProjection();
             }
+            else if (categoryChanged
+                     || !string.Equals(activeFilteredCategory,
+                         nextCategory, StringComparison.Ordinal))
+            {
+                RebuildActiveFilteredProjection(BuildVisibleItemIds());
+            }
+            controller?.NotifyTrayCategoryChanged();
 
             HashSet<string> visibleIds = BuildVisibleItemIds();
-
-            foreach (BuildItemPreviewCardView card in cards)
-            {
-                if (card == null || string.IsNullOrWhiteSpace(card.ItemId))
-                {
-                    continue;
-                }
-
-                card.SetVisible(visibleIds.Contains(card.ItemId));
-            }
-
             RefreshTrayViews(visibleIds);
 
-            if (scrollRect != null)
+            if (Application.isPlaying && scrollRect != null)
             {
-                scrollRect.verticalNormalizedPosition = 1f;
+                if (trayViewTransactionDepth > 0)
+                {
+                    trayScrollResetToTopPending = true;
+                }
+                else
+                {
+                    ResetTrayScrollToTop();
+                }
             }
+        }
 
-            RefreshCategoryVisuals();
+        private void ResetTrayScrollToTop()
+        {
+            if (scrollRect == null)
+            {
+                return;
+            }
+            scrollRect.StopMovement();
+            scrollRect.verticalNormalizedPosition = 1f;
+            RequestTrayRowSnap();
         }
 
         public void RefreshItemPlacement(TrayPlacementViewModel placement)
@@ -150,6 +539,7 @@ namespace TalismanBag.BuildSandbox
                 placementModels.Add(placement);
             }
 
+            ReconcileActiveFilteredItemPlacement(placement);
             RefreshTrayViews(BuildVisibleItemIds());
         }
 
@@ -163,17 +553,23 @@ namespace TalismanBag.BuildSandbox
             if (inTray)
             {
                 hiddenItemIds.Remove(itemId);
+                // Return callers publish the new physical placement through
+                // RefreshItemPlacement immediately afterwards.  Do not expose
+                // a visible card with no matching master/filtered placement in
+                // the small interval between those two operations.
+                if (trayViewTransactionDepth <= 0
+                    && !placementModels.Any(model => model != null
+                        && string.Equals(model.itemId, itemId,
+                            StringComparison.Ordinal)))
+                {
+                    return;
+                }
             }
             else
             {
+                RemoveActiveFilteredItemAndRemember(itemId);
                 hiddenItemIds.Add(itemId);
                 RemoveItemPlacement(itemId);
-            }
-
-            if (cardsByItemId.TryGetValue(itemId, out BuildItemPreviewCardView card)
-                && card != null)
-            {
-                card.SetVisible(inTray && BuildVisibleItemIds().Contains(itemId));
             }
 
             RefreshTrayViews(BuildVisibleItemIds());
@@ -392,8 +788,336 @@ namespace TalismanBag.BuildSandbox
                 return false;
             }
 
+            lastTrayAutoScrollTime = Time.unscaledTime;
+            RequestTrayRowSnap();
             Canvas.ForceUpdateCanvases();
             return true;
+        }
+
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+            trayScrollPointerDragging = true;
+            RequestTrayRowSnap();
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+            trayScrollPointerDragging = false;
+            lastTrayScrollMutationTime = Time.unscaledTime;
+            RequestTrayRowSnap();
+        }
+
+        public void OnScroll(PointerEventData eventData)
+        {
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+            lastTrayScrollMutationTime = Time.unscaledTime;
+            RequestTrayRowSnap();
+        }
+
+        private void OnEnable()
+        {
+            BindProductionRowSnapObserver();
+#if UNITY_EDITOR
+            QueueEditModePreviewRefresh();
+#endif
+        }
+
+        private void LateUpdate()
+        {
+            if (!Application.isPlaying || scrollRect == null || contentRoot == null)
+            {
+                return;
+            }
+
+            float normalizedPosition = scrollRect.verticalNormalizedPosition;
+            if (!applyingTrayRowSnap
+                && (float.IsNaN(lastObservedVerticalNormalizedPosition)
+                    || Mathf.Abs(normalizedPosition
+                        - lastObservedVerticalNormalizedPosition) > 0.00001f))
+            {
+                trayRowSnapPending = true;
+            }
+            lastObservedVerticalNormalizedPosition = normalizedPosition;
+
+            if (!trayRowSnapPending
+                || trayScrollPointerDragging
+                || controller?.IsTrayItemDragActive == true
+                || Time.unscaledTime - lastTrayAutoScrollTime
+                    < TrayRowSnapIdleSeconds
+                || Time.unscaledTime - lastTrayScrollMutationTime
+                    < TrayRowSnapIdleSeconds
+                || Mathf.Abs(scrollRect.velocity.y)
+                    > ResolveTrayRowSnapVelocityThreshold())
+            {
+                return;
+            }
+
+            SettleTrayScrollToNearestRow();
+        }
+
+        private float ResolveTrayRowSnapVelocityThreshold()
+        {
+            GridLayoutGroup grid = contentRoot == null
+                ? null
+                : contentRoot.GetComponent<GridLayoutGroup>();
+            return grid == null
+                ? 0f
+                : Mathf.Max(0f, grid.cellSize.y + grid.spacing.y)
+                    * TrayRowSnapVelocityPitchRatio;
+        }
+
+        private void OnDisable()
+        {
+            UnbindProductionRowSnapObserver();
+            trayScrollPointerDragging = false;
+            applyingTrayRowSnap = false;
+        }
+
+        private void OnDestroy()
+        {
+            UnbindProductionRowSnapObserver();
+        }
+
+        private void RequestTrayRowSnap()
+        {
+            trayRowSnapPending = true;
+        }
+
+        private void SettleTrayScrollToNearestRow()
+        {
+            if (!TryResolveTrayScrollMetrics(
+                    out RectTransform viewport,
+                    out float rowPitch,
+                    out float currentOffset,
+                    out float scrollableHeight))
+            {
+                trayRowSnapPending = false;
+                return;
+            }
+
+            if (rowPitch <= TrayRowSnapTolerance
+                || scrollableHeight <= TrayRowSnapTolerance)
+            {
+                scrollRect.velocity = Vector2.zero;
+                scrollRect.verticalNormalizedPosition = 1f;
+                trayRowSnapPending = false;
+                lastObservedVerticalNormalizedPosition = 1f;
+                return;
+            }
+
+            float rowOffset = ResolveNearestTrayRowOffset(
+                currentOffset,
+                rowPitch,
+                scrollableHeight);
+
+            float targetNormalizedPosition =
+                1f - rowOffset / scrollableHeight;
+            applyingTrayRowSnap = true;
+            scrollRect.StopMovement();
+            scrollRect.verticalNormalizedPosition =
+                Mathf.Clamp01(targetNormalizedPosition);
+            Canvas.ForceUpdateCanvases();
+            Bounds settledBounds =
+                RectTransformUtility.CalculateRelativeRectTransformBounds(
+                    viewport,
+                    contentRoot);
+            float settledOffset = Mathf.Clamp(
+                settledBounds.max.y - viewport.rect.yMax,
+                0f,
+                scrollableHeight);
+            float correction = rowOffset - settledOffset;
+            if (Mathf.Abs(correction) > TrayRowSnapTolerance)
+            {
+                Vector2 anchoredPosition = contentRoot.anchoredPosition;
+                anchoredPosition.y += correction;
+                contentRoot.anchoredPosition = anchoredPosition;
+                Canvas.ForceUpdateCanvases();
+            }
+            applyingTrayRowSnap = false;
+            trayRowSnapPending = false;
+            lastObservedVerticalNormalizedPosition =
+                scrollRect.verticalNormalizedPosition;
+        }
+
+        private static float ResolveNearestTrayRowOffset(
+            float currentOffset,
+            float rowPitch,
+            float scrollableHeight)
+        {
+            float safeScrollableHeight = Mathf.Max(0f, scrollableHeight);
+            if (rowPitch <= TrayRowSnapTolerance
+                || safeScrollableHeight <= TrayRowSnapTolerance)
+            {
+                return 0f;
+            }
+
+            float safeCurrentOffset = Mathf.Clamp(
+                currentOffset, 0f, safeScrollableHeight);
+            float rowOffset = Mathf.Clamp(
+                Mathf.Round(safeCurrentOffset / rowPitch) * rowPitch,
+                0f,
+                safeScrollableHeight);
+            return Mathf.Abs(safeScrollableHeight - safeCurrentOffset)
+                   < Mathf.Abs(rowOffset - safeCurrentOffset)
+                ? safeScrollableHeight
+                : rowOffset;
+        }
+
+        private bool TryResolveTrayScrollMetrics(
+            out RectTransform viewport,
+            out float rowPitch,
+            out float currentOffset,
+            out float scrollableHeight)
+        {
+            viewport = ResolveTrayViewport();
+            GridLayoutGroup grid = contentRoot == null
+                ? null
+                : contentRoot.GetComponent<GridLayoutGroup>();
+            rowPitch = grid == null ? 0f : grid.cellSize.y + grid.spacing.y;
+            currentOffset = 0f;
+            scrollableHeight = 0f;
+            if (scrollRect == null || contentRoot == null || viewport == null
+                || grid == null)
+            {
+                return false;
+            }
+
+            Canvas.ForceUpdateCanvases();
+            Bounds contentBounds =
+                RectTransformUtility.CalculateRelativeRectTransformBounds(
+                    viewport,
+                    contentRoot);
+            scrollableHeight = Mathf.Max(
+                0f,
+                contentBounds.size.y - viewport.rect.height);
+            currentOffset = Mathf.Clamp(
+                contentBounds.max.y - viewport.rect.yMax,
+                0f,
+                scrollableHeight);
+            return true;
+        }
+
+        private void BindProductionRowSnapObserver()
+        {
+            if (!Application.isPlaying || scrollRect == null)
+            {
+                return;
+            }
+            if (observedRowSnapScrollRect == scrollRect
+                && observedRowSnapEventTrigger != null)
+            {
+                return;
+            }
+
+            UnbindProductionRowSnapObserver();
+            observedRowSnapScrollRect = scrollRect;
+            observedRowSnapScrollRect.onValueChanged.AddListener(
+                HandleObservedScrollValueChanged);
+            observedRowSnapEventTrigger =
+                scrollRect.GetComponent<EventTrigger>();
+            if (observedRowSnapEventTrigger == null)
+            {
+                observedRowSnapEventTrigger =
+                    scrollRect.gameObject.AddComponent<EventTrigger>();
+                ownsObservedRowSnapEventTrigger = true;
+            }
+            observedRowSnapEventTrigger.triggers ??=
+                new List<EventTrigger.Entry>();
+            observedBeginDragEntry = AddObservedRowSnapEntry(
+                EventTriggerType.BeginDrag,
+                HandleObservedBeginDrag);
+            observedEndDragEntry = AddObservedRowSnapEntry(
+                EventTriggerType.EndDrag,
+                HandleObservedEndDrag);
+            observedScrollEntry = AddObservedRowSnapEntry(
+                EventTriggerType.Scroll,
+                HandleObservedScroll);
+        }
+
+        private EventTrigger.Entry AddObservedRowSnapEntry(
+            EventTriggerType eventId,
+            UnityEngine.Events.UnityAction<BaseEventData> callback)
+        {
+            EventTrigger.Entry entry = new()
+            {
+                eventID = eventId
+            };
+            entry.callback.AddListener(callback);
+            observedRowSnapEventTrigger.triggers.Add(entry);
+            return entry;
+        }
+
+        private void UnbindProductionRowSnapObserver()
+        {
+            if (observedRowSnapScrollRect != null)
+            {
+                observedRowSnapScrollRect.onValueChanged.RemoveListener(
+                    HandleObservedScrollValueChanged);
+            }
+            if (observedRowSnapEventTrigger != null
+                && observedRowSnapEventTrigger.triggers != null)
+            {
+                observedRowSnapEventTrigger.triggers.Remove(
+                    observedBeginDragEntry);
+                observedRowSnapEventTrigger.triggers.Remove(
+                    observedEndDragEntry);
+                observedRowSnapEventTrigger.triggers.Remove(
+                    observedScrollEntry);
+            }
+            if (ownsObservedRowSnapEventTrigger
+                && observedRowSnapEventTrigger != null
+                && Application.isPlaying)
+            {
+                Destroy(observedRowSnapEventTrigger);
+            }
+
+            observedRowSnapScrollRect = null;
+            observedRowSnapEventTrigger = null;
+            observedBeginDragEntry = null;
+            observedEndDragEntry = null;
+            observedScrollEntry = null;
+            ownsObservedRowSnapEventTrigger = false;
+        }
+
+        private void HandleObservedScrollValueChanged(Vector2 position)
+        {
+            if (!Application.isPlaying || applyingTrayRowSnap)
+            {
+                return;
+            }
+            trayRowSnapPending = true;
+            lastObservedVerticalNormalizedPosition = position.y;
+        }
+
+        private void HandleObservedBeginDrag(BaseEventData eventData)
+        {
+            trayScrollPointerDragging = true;
+            lastTrayScrollMutationTime = Time.unscaledTime;
+            RequestTrayRowSnap();
+        }
+
+        private void HandleObservedEndDrag(BaseEventData eventData)
+        {
+            trayScrollPointerDragging = false;
+            lastTrayScrollMutationTime = Time.unscaledTime;
+            RequestTrayRowSnap();
+        }
+
+        private void HandleObservedScroll(BaseEventData eventData)
+        {
+            lastTrayScrollMutationTime = Time.unscaledTime;
+            RequestTrayRowSnap();
         }
 
         private void BindViewAuthorities()
@@ -404,6 +1128,7 @@ namespace TalismanBag.BuildSandbox
                 traySlotRects,
                 BuildGridInteractionPreviewController.TrayColumns);
             reservationView.Bind(traySlotRects, traySlotImages, traySlotOutlines);
+            BindProductionRowSnapObserver();
         }
 
         private void EnsureRuntimeMatureScrollArea()
@@ -413,7 +1138,6 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
-            ConfigureTrayScrollMomentum(scrollRect);
             RectTransform viewport = ResolveTrayViewport();
             if (viewport != null && scrollRect.viewport == null)
             {
@@ -459,21 +1183,6 @@ namespace TalismanBag.BuildSandbox
 
             contentRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, requiredHeight);
             return true;
-        }
-
-        private static void ConfigureTrayScrollMomentum(ScrollRect target)
-        {
-            if (target == null)
-            {
-                return;
-            }
-
-            target.horizontal = false;
-            target.vertical = true;
-            target.inertia = true;
-            target.decelerationRate = TrayScrollDecelerationRate;
-            target.movementType = ScrollRect.MovementType.Clamped;
-            target.scrollSensitivity = TrayScrollSensitivity;
         }
 
         private static int ResolveGridColumnCount(GridLayoutGroup grid)
@@ -593,11 +1302,6 @@ namespace TalismanBag.BuildSandbox
         }
 
 #if UNITY_EDITOR
-        private void OnEnable()
-        {
-            QueueEditModePreviewRefresh();
-        }
-
         private void OnValidate()
         {
             QueueEditModePreviewRefresh();
@@ -1069,7 +1773,17 @@ namespace TalismanBag.BuildSandbox
 
         private void EnsureRuntimeCardCapacity(int requiredCount)
         {
-            if (!Application.isPlaying || requiredCount <= cards.Count)
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+
+            // A serialized card reference can become invalid after user-authored
+            // hierarchy work.  Authority installation is a 31-row contract, so
+            // capacity must be measured from usable card views rather than the
+            // raw list length.
+            cards.RemoveAll(card => card == null);
+            if (requiredCount <= cards.Count)
             {
                 return;
             }
@@ -1221,22 +1935,251 @@ namespace TalismanBag.BuildSandbox
 
         private void RefreshTrayViews(HashSet<string> visibleIds)
         {
+            if (trayViewTransactionDepth > 0)
+            {
+                trayViewPublishPending = true;
+                return;
+            }
+            PublishTrayViews(visibleIds ?? BuildVisibleItemIds());
+        }
+
+        private void PublishTrayViews(HashSet<string> visibleIds)
+        {
             HashSet<string> safeVisibleIds = visibleIds ?? new HashSet<string>(StringComparer.Ordinal);
             IReadOnlyList<TrayPlacementViewModel> viewPlacements = BuildViewPlacements(safeVisibleIds);
+            foreach (BuildItemPreviewCardView card in cards)
+            {
+                if (card == null || string.IsNullOrWhiteSpace(card.ItemId))
+                {
+                    continue;
+                }
+                card.SetVisible(safeVisibleIds.Contains(card.ItemId));
+            }
+            displayedPlacementsByItemId.Clear();
+            foreach (TrayPlacementViewModel placement in viewPlacements.Where(value => value != null
+                         && !string.IsNullOrWhiteSpace(value.itemId)))
+            {
+                displayedPlacementsByItemId[placement.itemId] = placement;
+            }
             itemLayoutView.Refresh(viewPlacements, cardsByItemId, safeVisibleIds);
             reservationView.Refresh(viewPlacements, safeVisibleIds);
+            RefreshCategoryVisuals();
+            trayViewPublicationRevision++;
         }
 
         private IReadOnlyList<TrayPlacementViewModel> BuildViewPlacements(ISet<string> visibleIds)
         {
-            if (visibleIds == null
-                || visibleIds.Count == 0
-                || NormalizeCategory(activeCategory) == AllCategory)
+            if (NormalizeCategory(activeCategory) == AllCategory)
             {
                 return placementModels;
             }
+            if (visibleIds == null || visibleIds.Count == 0)
+            {
+                return Array.Empty<TrayPlacementViewModel>();
+            }
 
-            return BuildCompactedFilterPlacements(visibleIds);
+            if (!string.Equals(activeFilteredCategory,
+                    NormalizeCategory(activeCategory),
+                    StringComparison.Ordinal))
+            {
+                RebuildActiveFilteredProjection(visibleIds);
+            }
+            return activeFilteredPlacementModels
+                .Where(placement => placement != null
+                    && visibleIds.Contains(placement.itemId))
+                .ToArray();
+        }
+
+        private void ClearActiveFilteredProjection()
+        {
+            activeFilteredCategory = string.Empty;
+            activeFilteredPlacementModels.Clear();
+            activeFilteredRememberedPlacementsByItemId.Clear();
+        }
+
+        private void RebuildActiveFilteredProjection(ISet<string> visibleIds)
+        {
+            activeFilteredCategory = NormalizeCategory(activeCategory);
+            activeFilteredPlacementModels.Clear();
+            activeFilteredRememberedPlacementsByItemId.Clear();
+            if (activeFilteredCategory == AllCategory
+                || visibleIds == null
+                || visibleIds.Count == 0)
+            {
+                return;
+            }
+            activeFilteredPlacementModels.AddRange(
+                BuildCompactedFilterPlacements(visibleIds));
+        }
+
+        private void RemoveActiveFilteredItemAndRemember(string itemId)
+        {
+            if (NormalizeCategory(activeCategory) == AllCategory
+                || string.IsNullOrWhiteSpace(itemId))
+            {
+                return;
+            }
+            int index = activeFilteredPlacementModels.FindIndex(placement =>
+                placement != null && string.Equals(
+                    placement.itemId, itemId, StringComparison.Ordinal));
+            if (index < 0)
+            {
+                return;
+            }
+            activeFilteredRememberedPlacementsByItemId[itemId] =
+                activeFilteredPlacementModels[index];
+            activeFilteredPlacementModels.RemoveAt(index);
+        }
+
+        private void ReconcileActiveFilteredItemPlacement(
+            TrayPlacementViewModel sourcePlacement)
+        {
+            if (sourcePlacement == null
+                || NormalizeCategory(activeCategory) == AllCategory
+                || hiddenItemIds.Contains(sourcePlacement.itemId)
+                || !ItemMatchesActiveCategory(sourcePlacement.itemId))
+            {
+                return;
+            }
+
+            int existingIndex = activeFilteredPlacementModels.FindIndex(
+                placement => placement != null && string.Equals(
+                    placement.itemId,
+                    sourcePlacement.itemId,
+                    StringComparison.Ordinal));
+            TrayPlacementViewModel existing = existingIndex < 0
+                ? null
+                : activeFilteredPlacementModels[existingIndex];
+            if (existing != null
+                && string.Equals(existing.shapeId,
+                    sourcePlacement.shapeId,
+                    StringComparison.Ordinal)
+                && existing.rotation == sourcePlacement.rotation)
+            {
+                return;
+            }
+            if (existingIndex >= 0)
+            {
+                activeFilteredPlacementModels.RemoveAt(existingIndex);
+            }
+
+            TrayPlacementViewModel preferred = existing;
+            if (preferred == null)
+            {
+                activeFilteredRememberedPlacementsByItemId.TryGetValue(
+                    sourcePlacement.itemId,
+                    out preferred);
+            }
+            if (TryBuildSingleStableFilteredPlacement(
+                    sourcePlacement,
+                    preferred,
+                    out TrayPlacementViewModel restored))
+            {
+                int insertionIndex = existingIndex < 0
+                    ? activeFilteredPlacementModels.Count
+                    : Mathf.Clamp(existingIndex, 0,
+                        activeFilteredPlacementModels.Count);
+                activeFilteredPlacementModels.Insert(
+                    insertionIndex,
+                    restored);
+                activeFilteredRememberedPlacementsByItemId.Remove(
+                    sourcePlacement.itemId);
+            }
+        }
+
+        private bool ItemMatchesActiveCategory(string itemId)
+        {
+            string category = NormalizeCategory(activeCategory);
+            return currentItems.Any(item => item != null
+                && string.Equals(item.ItemId, itemId, StringComparison.Ordinal)
+                && item.MatchesCategory(category));
+        }
+
+        private bool TryBuildSingleStableFilteredPlacement(
+            TrayPlacementViewModel sourcePlacement,
+            TrayPlacementViewModel preferredPlacement,
+            out TrayPlacementViewModel result)
+        {
+            result = null;
+            List<ItemShapeCell> normalizedOffsets =
+                BuildNormalizedOffsets(sourcePlacement);
+            HashSet<int> occupiedSlots = new(
+                activeFilteredPlacementModels
+                    .Where(placement => placement != null)
+                    .SelectMany(placement =>
+                        placement.occupiedSlotIndexes ?? Array.Empty<int>()));
+            int traySlotCount = GetTraySlotCount();
+            int anchorSlotIndex;
+            List<int> itemOccupiedSlots = new();
+            bool placed = preferredPlacement != null
+                && TryPlaceFilteredItemAtAnchor(
+                    normalizedOffsets,
+                    occupiedSlots,
+                    traySlotCount,
+                    preferredPlacement.anchorSlotIndex,
+                    out itemOccupiedSlots);
+            if (placed)
+            {
+                anchorSlotIndex = preferredPlacement.anchorSlotIndex;
+            }
+            else if (!TryFindCompactPlacement(
+                         normalizedOffsets,
+                         occupiedSlots,
+                         traySlotCount,
+                         out anchorSlotIndex,
+                         out itemOccupiedSlots))
+            {
+                return false;
+            }
+
+            result = new TrayPlacementViewModel
+            {
+                itemId = sourcePlacement.itemId,
+                shapeId = sourcePlacement.shapeId,
+                anchorSlotIndex = anchorSlotIndex,
+                occupiedSlotIndexes = itemOccupiedSlots,
+                rotation = sourcePlacement.rotation,
+                isValid = sourcePlacement.isValid
+            };
+            return true;
+        }
+
+        private static bool TryPlaceFilteredItemAtAnchor(
+            IReadOnlyList<ItemShapeCell> offsets,
+            ISet<int> occupiedSlots,
+            int traySlotCount,
+            int anchorSlotIndex,
+            out List<int> itemOccupiedSlots)
+        {
+            itemOccupiedSlots = new List<int>();
+            if (anchorSlotIndex < 0 || anchorSlotIndex >= traySlotCount)
+            {
+                return false;
+            }
+            int anchorColumn =
+                anchorSlotIndex % BuildGridInteractionPreviewController.TrayColumns;
+            int anchorRow =
+                anchorSlotIndex / BuildGridInteractionPreviewController.TrayColumns;
+            foreach (ItemShapeCell offset in offsets ?? Array.Empty<ItemShapeCell>())
+            {
+                int column = anchorColumn + offset.x;
+                int row = anchorRow + offset.y;
+                int slotIndex =
+                    row * BuildGridInteractionPreviewController.TrayColumns
+                    + column;
+                if (column < 0
+                    || column >= BuildGridInteractionPreviewController.TrayColumns
+                    || row < 0
+                    || slotIndex < 0
+                    || slotIndex >= traySlotCount
+                    || occupiedSlots.Contains(slotIndex))
+                {
+                    itemOccupiedSlots.Clear();
+                    return false;
+                }
+                itemOccupiedSlots.Add(slotIndex);
+            }
+            return itemOccupiedSlots.Count > 0;
         }
 
         private List<TrayPlacementViewModel> BuildCompactedFilterPlacements(ISet<string> visibleIds)
@@ -1294,6 +2237,7 @@ namespace TalismanBag.BuildSandbox
                 compactedPlacements.Add(new TrayPlacementViewModel
                 {
                     itemId = sourcePlacement.itemId,
+                    shapeId = sourcePlacement.shapeId,
                     anchorSlotIndex = anchorSlotIndex,
                     occupiedSlotIndexes = itemOccupiedSlots,
                     rotation = sourcePlacement.rotation,

@@ -2,7 +2,7 @@
 
 - Package: `V0.4-ItemAffixPoolAndRangeSchema01`
 - Runtime scan root: `Assets/_Game/Scripts/TalismanBag/Items/Generation/Affixes`
-- Result: PASS
+- Result: FAIL
 
 | Category | Count |
 | --- | ---: |

@@ -114,7 +114,6 @@ namespace TalismanBag.Items.Detail
         public const string IconKey = "Icon_ArrayVeinModifier";
         public const string InlineIconToken = "[Icon_ArrayVeinModifier]";
         public const string ColorTokenName = "arrayModifierColor";
-        public const string DefaultColorHex = "55C6B3";
         private static readonly string[] ForbiddenTextIconFallbacks =
         {
             "\u25C6",
@@ -233,9 +232,9 @@ namespace TalismanBag.Items.Detail
 
             string text = source ?? string.Empty;
             string inline = InlineIconToken + " " + modifier.formattedDelta;
-            string rendered = useArrayModifierColor && modifier.isCurrentlyApplied
-                ? Colorize(inline)
-                : GreyColorize(inline);
+            string rendered = ItemDetailPresentationFormatter.MarkArrayModifier(
+                inline,
+                useArrayModifierColor && modifier.isCurrentlyApplied);
             return text.Length == 0
                 ? rendered
                 : text + " " + rendered;
@@ -428,14 +427,5 @@ namespace TalismanBag.Items.Detail
             };
         }
 
-        private static string Colorize(string value)
-        {
-            return "<color=#" + DefaultColorHex + "><b>" + (value ?? string.Empty) + "</b></color>";
-        }
-
-        private static string GreyColorize(string value)
-        {
-            return "<color=#8A8A8A>" + (value ?? string.Empty) + "</color>";
-        }
     }
 }

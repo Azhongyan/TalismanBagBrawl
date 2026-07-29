@@ -1,0 +1,2 @@
+fixture,oldDisplayEventId,oldGeneration,newGeneration,staleAccepted,resetPlayerHp,postResetAcceptedApplications,status
+reset_generation,"battle.display.g1.0001",1,2,false,9999,1,PASS

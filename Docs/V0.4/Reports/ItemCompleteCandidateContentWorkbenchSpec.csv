@@ -12,4 +12,4 @@ coreEffects,150,150,PASS
 ultimates,30,30,PASS
 displayProfiles,30,30,PASS
 leaks,0,0,PASS
-finalMarker,,,ITEM_COMPLETE_CANDIDATE_CONTENT_WORKBENCH01_PASS
+finalMarker,,,FAIL

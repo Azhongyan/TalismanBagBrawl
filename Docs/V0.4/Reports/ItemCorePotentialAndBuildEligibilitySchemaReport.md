@@ -1,9 +1,9 @@
 # ItemCorePotentialAndBuildEligibilitySchema01 Report
 
 - Package: `V0.4-ItemCorePotentialAndBuildEligibilitySchema01`
-- Run time (UTC): `2026-07-16T08:55:14.1157343Z`
-- Overall: PASS
-- PASS marker: `ITEM_CORE_POTENTIAL_AND_BUILD_ELIGIBILITY_SCHEMA01_PASS`
+- Run time (UTC): `2026-07-21T07:30:04.8142268Z`
+- Overall: FAIL
+- PASS marker: `NONE`
 - Schema ID: `ItemCorePotentialAndBuildEligibilitySchemaSnapshot.v1`
 - Spec: 69 total / 69 PASS / 0 FAIL
 
@@ -40,14 +40,14 @@
 
 ## Historical Regressions
 
-- ItemRarityInstanceFoundation: PASS
-- ItemStatRangeSchema: PASS
+- ItemRarityInstanceFoundation: FAIL
+- ItemStatRangeSchema: FAIL
 - ItemInnerDataCatalog: PASS
 - ItemSystemValidatorAndSnapshot: PASS
 - BuildSynergyCore: PASS
 - CoreAwakeningPreview: PASS
 - ItemSkillTriggerContract: PASS
-- ItemDetailProjectionComplete: PASS
+- ItemDetailProjectionComplete: FAIL
 - JuNian Lighting: PASS
 - ArrayBonus: PASS
 - Foundation original Spec: 159/159 PASS
@@ -60,4 +60,6 @@
 
 ## Errors
 
-- None
+- Historical regression report is not PASS: ItemRarityInstanceFoundation.
+- Historical regression report is not PASS: ItemStatRangeSchema.
+- Historical regression report is not PASS: ItemDetailProjectionComplete.

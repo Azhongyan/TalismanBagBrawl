@@ -1,8 +1,8 @@
 # ItemInstanceRollEngine01 Report
 
 - Package: `V0.4-ItemInstanceRollEngine01`
-- Result: PASS
-- Marker: `ITEM_INSTANCE_ROLL_ENGINE01_PASS`
+- Result: FAIL
+- Marker: `ITEM_INSTANCE_ROLL_ENGINE01_FAIL`
 - Algorithm ID: `item-instance-roll-v1`
 - generationVersion: `1`
 - Domain hash: `FNV-1a 64-bit over explicit length-prefixed UTF-8 fields and segment count`
@@ -30,16 +30,16 @@
 
 ## Historical Regressions
 
-- Foundation: PASS
-- StatRange: PASS
-- CorePotential: PASS
-- AffixSchema: PASS
+- Foundation: FAIL
+- StatRange: FAIL
+- CorePotential: FAIL
+- AffixSchema: FAIL
 - ItemInnerDataCatalog: PASS
 - ItemSystemValidatorAndSnapshot: PASS
 - BuildSynergyCore: PASS
 - CoreAwakeningPreview: PASS
 - ItemSkillTriggerContract: PASS
-- ItemDetailProjectionComplete: PASS
+- ItemDetailProjectionComplete: FAIL
 - JuNian Lighting: PASS
 - ArrayBonus: PASS
 - Foundation: 159/159
@@ -53,4 +53,8 @@
 
 ## Errors
 
-- None.
+- Historical regression report is not PASS: Foundation
+- Historical regression report is not PASS: StatRange
+- Historical regression report is not PASS: CorePotential
+- Historical regression report is not PASS: AffixSchema
+- Historical regression report is not PASS: ItemDetailProjectionComplete

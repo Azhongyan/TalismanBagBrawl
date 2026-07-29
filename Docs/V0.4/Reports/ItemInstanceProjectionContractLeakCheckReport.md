@@ -1,7 +1,7 @@
 # ItemInstanceProjectionContract01 LeakCheck Report
 
 - Runtime scan root: `Assets/_Game/Scripts/TalismanBag/Items/Generation/Projection`
-- Result: PASS
+- Result: FAIL
 - Total leaks: 0
 
 | Category | Count |

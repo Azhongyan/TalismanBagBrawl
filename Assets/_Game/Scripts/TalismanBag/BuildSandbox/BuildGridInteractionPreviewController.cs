@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TalismanBag.Items;
+using TalismanBag.Items.Awakening.RuntimeState;
+using TalismanBag.Items.Build.Qualified;
+using TalismanBag.Items.Capability;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -118,6 +122,7 @@ namespace TalismanBag.BuildSandbox
         [SerializeField] private BuildSandboxItemInfoPanel itemInfoPanel;
         [SerializeField] private Button resetPreviewButton;
         [SerializeField] private Button rotatePreviewButton;
+        [SerializeField] private Button trayArrangeButton;
         [SerializeField] private RectTransform dragGhostRoot;
         [SerializeField] private Text dragGhostText;
         [SerializeField] private RectTransform battlePrepareMotionRoot;
@@ -146,12 +151,20 @@ namespace TalismanBag.BuildSandbox
         private MobileShapePlacementInputExtension mobileInput;
         private ShapeAwareItemTrayGrid shapeAwareTrayGrid;
         private UiBoardShapeGridReceiver boardReceiver;
+        private IItemSystemBattleSandboxBoardAuthority itemSystemBoardAuthority;
+        private ItemSystemBattleSandboxItemDetailAdapter itemSystemDetailAdapter;
         private PreviewItem selectedItem;
         private ShapePlacementResult lastPreviewResult;
         private ItemShapeCell lastPreviewAnchor;
         private bool hasLastPreviewAnchor;
         private ShapePlacementSource lastPreviewSource = ShapePlacementSource.Unknown;
         private readonly HashSet<string> placedItemIds = new(StringComparer.Ordinal);
+        // Runtime-only memory.  It is intentionally keyed by an ordinary item's instance identity,
+        // never by its catalog/base id; I031 has the dedicated SPECIAL_I031 key.
+        private readonly Dictionary<string, ItemShapeCell> rememberedTrayAnchorsByIdentity =
+            new(StringComparer.Ordinal);
+        private bool trayMasterLayoutInitialized;
+        private bool resetRequiresNewTrayMasterLayout;
         private string activeDragItemId = string.Empty;
         private int placementSequence;
         private CanvasGroup itemTrayCanvasGroup;
@@ -218,8 +231,84 @@ namespace TalismanBag.BuildSandbox
         public bool UsesShapePlacementSession => placementSession != null;
         public bool UsesShapeAwareItemTrayGrid => shapeAwareTrayGrid != null;
         public bool UsesMobileShapePlacementInputExtension => mobileInput != null;
+        public bool UsesItemSystemBoardAuthority => itemSystemBoardAuthority != null;
+        public ItemSystemSnapshot CurrentItemSystemBoardSnapshot =>
+            itemSystemBoardAuthority?.CurrentSnapshot;
+        public ItemInstancePlacementBindingContractSnapshot CurrentItemSystemBoardBinding =>
+            itemSystemBoardAuthority?.CurrentBindingSnapshot;
+        public ItemInstanceQualifiedBuildStateSnapshot CurrentItemSystemQualifiedBuildState =>
+            itemSystemBoardAuthority?.CurrentQualifiedBuildState;
+        public ItemInstanceCoreEffectRuntimeStateSnapshot CurrentItemSystemCoreEffectRuntimeState =>
+            itemSystemBoardAuthority?.CurrentCoreEffectRuntimeState;
+        public ItemSystemBattleSandboxItemDetailAdapter ItemSystemDetailAdapter =>
+            itemSystemDetailAdapter;
         public bool IsSandboxBattleModeActive =>
             sandboxBattleActive && !battlePrepareStateActive && !battlePrepareContinueStateActive;
+        public bool IsTrayArrangeAvailable => CanArrangeTrayLayout();
+        public bool IsTrayItemDragActive =>
+            !string.IsNullOrWhiteSpace(activeDragItemId);
+
+        public void NotifyTrayCategoryChanged()
+        {
+            RefreshTrayArrangeButton();
+        }
+
+        public void ArrangeTrayLayout()
+        {
+            if (!CanArrangeTrayLayout())
+            {
+                placementFeedbackView?.ShowInfo("整理仅可在全部分类且没有拖动道具时使用。");
+                RefreshTrayArrangeButton();
+                return;
+            }
+
+            if (!TryBuildArrangedTrayMaster(out ShapeAwareItemTrayGrid stagedGrid))
+            {
+                placementFeedbackView?.ShowInvalid("整理失败：当前托盘无法完整容纳全部道具，已保留原布局。");
+                return;
+            }
+
+            ShapeAwareItemTrayGrid previousMaster = shapeAwareTrayGrid;
+            bool previousMasterInitialized = trayMasterLayoutInitialized;
+            bool trayTransactionOpen = itemTrayView != null;
+            itemTrayView?.BeginTrayViewTransaction();
+            try
+            {
+                shapeAwareTrayGrid = stagedGrid;
+                trayMasterLayoutInitialized = true;
+                foreach (PreviewItem item in itemById.Values
+                             .Where(value => value != null
+                                 && !placedItemIds.Contains(value.ItemId))
+                             .OrderBy(value => value.ItemId, StringComparer.Ordinal))
+                {
+                    RefreshTrayPlacement(item);
+                }
+                itemTrayView?.ApplyFilter(BuildItemTrayPreviewView.AllCategory);
+                if (trayTransactionOpen
+                    && itemTrayView?.CommitTrayViewTransaction() != true)
+                {
+                    shapeAwareTrayGrid = previousMaster;
+                    trayMasterLayoutInitialized = previousMasterInitialized;
+                    itemTrayView?.RollbackTrayViewTransaction();
+                    placementFeedbackView?.ShowInvalid(
+                        "整理失败：托盘视图未提交，已完整恢复原布局。");
+                    return;
+                }
+                trayTransactionOpen = false;
+            }
+            catch
+            {
+                shapeAwareTrayGrid = previousMaster;
+                trayMasterLayoutInitialized = previousMasterInitialized;
+                if (trayTransactionOpen)
+                {
+                    itemTrayView?.RollbackTrayViewTransaction();
+                }
+                throw;
+            }
+            placementFeedbackView?.ShowValid("已按固定规则整理道具栏。");
+            RefreshTrayArrangeButton();
+        }
 
         public void Bind(
             RectTransform boardRoot,
@@ -243,6 +332,121 @@ namespace TalismanBag.BuildSandbox
             rotatePreviewButton = rotateButton;
             dragGhostRoot = ghostRoot;
             dragGhostText = ghostText;
+        }
+
+        public bool InstallItemSystemBattleSandboxBoardAuthority(
+            IItemSystemBattleSandboxBoardAuthority authority,
+            ItemSystemBattleSandboxItemDetailAdapter detailAdapter,
+            out string diagnosticCode)
+        {
+            diagnosticCode = string.Empty;
+            if (authority == null || authority.CurrentSnapshot == null
+                || !authority.CurrentSnapshot.isValid
+                || !string.Equals(authority.CurrentSnapshot.schemaVersion,
+                    ItemSystemSnapshot.CurrentSchemaVersion,
+                    StringComparison.Ordinal)
+                || authority.CurrentQualifiedBuildState == null
+                || !string.Equals(authority.CurrentQualifiedBuildState.schemaId,
+                    ItemInstanceQualifiedBuildStateSnapshot.CurrentSchemaId,
+                    StringComparison.Ordinal)
+                || authority.CurrentQualifiedBuildState.status ==
+                    ItemInstanceQualifiedBuildStateStatus.Invalid
+                || authority.CurrentCoreEffectRuntimeState == null
+                || !string.Equals(authority.CurrentCoreEffectRuntimeState.schemaId,
+                    ItemInstanceCoreEffectRuntimeStateSnapshot.CurrentSchemaId,
+                    StringComparison.Ordinal)
+                || authority.CurrentCoreEffectRuntimeState.status ==
+                    ItemCoreEffectRuntimeStateStatus.Invalid)
+            {
+                diagnosticCode = "ITEM_SYSTEM_AUTHORITY_INVALID";
+                return false;
+            }
+            if (detailAdapter == null || !detailAdapter.IsInitialized)
+            {
+                diagnosticCode = "ITEM_SYSTEM_DETAIL_ADAPTER_INVALID";
+                return false;
+            }
+            if (itemSystemBoardAuthority != null)
+            {
+                diagnosticCode = ReferenceEquals(itemSystemBoardAuthority, authority)
+                    ? "ITEM_SYSTEM_AUTHORITY_ALREADY_INSTALLED"
+                    : "ITEM_SYSTEM_AUTHORITY_DUPLICATE";
+                return false;
+            }
+            if (itemTrayView == null)
+            {
+                diagnosticCode = "ITEM_SYSTEM_TRAY_VIEW_MISSING";
+                return false;
+            }
+            if (!itemTrayView.InstallItemSystemAuthorityRuntimeSlots(
+                    out string trayDiagnosticCode))
+            {
+                diagnosticCode = string.IsNullOrWhiteSpace(trayDiagnosticCode)
+                    ? "ITEM_SYSTEM_TRAY_EXTENSION_REJECTED"
+                    : trayDiagnosticCode;
+                return false;
+            }
+
+            mobileInput?.Cancel(boardReceiver);
+            itemSystemBoardAuthority = authority;
+            itemSystemDetailAdapter = detailAdapter;
+            itemInfoPanel?.Hide();
+            RebuildItemSystemAuthorityCatalog();
+            InitializePlacementRuntime();
+            string[] categories = new[] { BuildItemTrayPreviewView.AllCategory }
+                .Concat(authority.Rows
+                    .Where(row => row != null)
+                    .Select(row => row.CategoryDisplayName))
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            itemTrayView?.Initialize(
+                this,
+                itemById.Values
+                    .Where(item => item != null)
+                    .OrderBy(item => item.ItemId, StringComparer.Ordinal)
+                    .ToList(),
+                categories);
+            if (!ApplyItemSystemAuthorityArtwork())
+            {
+                RestoreItemSystemAuthorityArtwork();
+                itemSystemDetailAdapter = null;
+                itemSystemBoardAuthority = null;
+                itemTrayView?.UninstallItemSystemAuthorityRuntimeSlots();
+                diagnosticCode = "ITEM_SYSTEM_ARTWORK_BINDING_INVALID";
+                return false;
+            }
+            RebuildCachesFromAcceptedItemSystemSnapshot();
+            ResetItemSystemAuthorityInteractionState(
+                "ItemSystem 棋盘已就绪；全部道具位于道具栏，棋盘为空。");
+            return true;
+        }
+
+        public void UninstallItemSystemBattleSandboxBoardAuthority(
+            IItemSystemBattleSandboxBoardAuthority authority)
+        {
+            if (authority == null
+                || !ReferenceEquals(itemSystemBoardAuthority, authority))
+            {
+                return;
+            }
+            RestoreItemSystemAuthorityArtwork();
+            itemSystemDetailAdapter?.Uninstall();
+            itemSystemDetailAdapter = null;
+            itemInfoPanel?.Hide();
+            itemSystemBoardAuthority = null;
+            itemTrayView?.UninstallItemSystemAuthorityRuntimeSlots();
+            ClearFormationPowerVisuals();
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
+            BuildShapeLookup();
+            BuildItemLookup();
+            InitializePlacementRuntime();
+            itemTrayView?.Initialize(this, itemById.Values.ToList(), CategoryLabels);
+            CacheAllItemVisualStyles();
+            ResetPreview();
         }
 
         public static List<ItemShapeConfig> CreatePreviewShapeConfigs()
@@ -373,6 +577,13 @@ namespace TalismanBag.BuildSandbox
 
         public BuildSandboxLayoutSnapshot BuildCurrentLayoutSnapshot()
         {
+            if (itemSystemBoardAuthority != null)
+            {
+                return ItemSystemBattleSandboxViewProjection.ToCompatibilitySnapshot(
+                    itemSystemBoardAuthority.CurrentSnapshot,
+                    itemSystemBoardAuthority.Rows);
+            }
+
             BuildSandboxLayoutSnapshot snapshot = new();
             if (itemById.Count == 0)
             {
@@ -420,55 +631,9 @@ namespace TalismanBag.BuildSandbox
 
         public void CompactTrayWhenReturningToAllCategory()
         {
-            if (shapeAwareTrayGrid == null
-                || itemTrayView == null
-                || !string.IsNullOrEmpty(activeDragItemId))
-            {
-                return;
-            }
-
-            List<PreviewItem> remainingItems = itemById.Values
-                .Where(item => item != null && !placedItemIds.Contains(item.ItemId))
-                .ToList();
-            if (remainingItems.Count == 0)
-            {
-                return;
-            }
-
-            shapeAwareTrayGrid.Clear();
-            List<PreviewItem> packedItems = new();
-            while (remainingItems.Count > 0)
-            {
-                int firstEmptySlot = FindFirstEmptyTraySlotIndex();
-                if (firstEmptySlot < 0)
-                {
-                    break;
-                }
-
-                ItemShapeCell firstEmptyCell = shapeAwareTrayGrid.SlotIndexToCell(firstEmptySlot);
-                int fittingIndex = FindItemIndexThatFitsTrayCell(remainingItems, firstEmptyCell);
-                if (fittingIndex >= 0)
-                {
-                    PreviewItem fittingItem = remainingItems[fittingIndex];
-                    if (TryCommitTrayItemAt(fittingItem, firstEmptyCell, out _))
-                    {
-                        packedItems.Add(fittingItem);
-                    }
-
-                    remainingItems.RemoveAt(fittingIndex);
-                    continue;
-                }
-
-                if (!TryPackFirstRemainingTrayItem(remainingItems, packedItems))
-                {
-                    break;
-                }
-            }
-
-            foreach (PreviewItem item in packedItems)
-            {
-                RefreshTrayPlacement(item);
-            }
+            // Compatibility entrypoint retained for existing callers.  Returning to All must only
+            // reveal the canonical master layout; it must never mutate or repack that layout.
+            RefreshTrayArrangeButton();
         }
 
         public void SelectItem(BuildItemPreviewCardView card, bool showInfoPanel = true)
@@ -536,6 +701,7 @@ namespace TalismanBag.BuildSandbox
             CacheItemVisualStyles(item);
             BeginHoldingItem(item, showInfoPanel: false);
             activeDragItemId = item.ItemId;
+            RefreshTrayArrangeButton();
             itemTrayView?.SetRotateEnabled(item.ItemId, false);
             RefreshItemInfoPanel(item);
             ClearPreviewCells();
@@ -590,6 +756,7 @@ namespace TalismanBag.BuildSandbox
                 source: ShapePlacementSource.Board,
                 boardAnchor: boardCell);
             activeDragItemId = item.ItemId;
+            RefreshTrayArrangeButton();
             itemTrayView?.SetRotateEnabled(item.ItemId, false);
             RefreshItemInfoPanel(item);
             ClearPreviewCells();
@@ -624,8 +791,54 @@ namespace TalismanBag.BuildSandbox
             placementFeedbackView?.ShowInfo("本包不需要点击预览影确认：合法位置松手已直接放置。");
         }
 
+        public bool TryShowBoardItemDetailFromCell(ItemShapeCell visualCell)
+        {
+            ItemShapeCell boardCell = ResolveBoardDataCellFromVisualCell(visualCell);
+            if (boardReceiver == null
+                || !boardReceiver.TryGetItemAtCell(boardCell, out string itemId)
+                || !itemById.TryGetValue(itemId, out PreviewItem item))
+            {
+                return false;
+            }
+
+            selectedItem = item;
+            SetSelectedItemInfoVisible(true);
+            UpdateSelectedItemInfo(item);
+            bool detailShown;
+            if (itemSystemBoardAuthority != null)
+            {
+                itemInfoPanel?.Hide();
+                detailShown = ShowQualifiedItemSystemDetail(item);
+            }
+            else
+            {
+                detailShown = itemInfoPanel != null;
+                if (detailShown)
+                {
+                    ShowItemInfoPanel(item);
+                }
+            }
+
+            if (!detailShown)
+            {
+                placementFeedbackView?.ShowInvalid("棋盘道具详情暂不可用。");
+                return true;
+            }
+
+            placementFeedbackView?.ShowInfo(
+                $"已查看棋盘上的“{item.DisplayName}”。");
+            return true;
+        }
+
         public void ResetPreview()
         {
+            ClearRememberedTrayAnchorsForReset();
+            if (itemSystemBoardAuthority != null)
+            {
+                ResetItemSystemAuthorityPreview();
+                return;
+            }
+
             mobileInput?.Cancel(boardReceiver);
             boardReceiver?.Clear();
             placementSequence = 0;
@@ -636,7 +849,7 @@ namespace TalismanBag.BuildSandbox
             lastPreviewSource = ShapePlacementSource.Unknown;
             selectedItem = null;
             shapeAwareTrayGrid?.Clear();
-            foreach (PreviewItem item in itemById.Values)
+            foreach (PreviewItem item in OrderInitialTrayLayoutItems(itemById.Values))
             {
                 item.Rotation = ItemShapeRotation.Rotation0;
                 shapeAwareTrayGrid?.TryPack(BuildPayload(item, ShapePlacementSource.Tray), out _);
@@ -644,6 +857,7 @@ namespace TalismanBag.BuildSandbox
                 RefreshTrayPlacement(item);
                 itemTrayView?.SetRotateEnabled(item.ItemId, true);
             }
+            trayMasterLayoutInitialized = true;
 
             foreach (BuildGridPreviewSlotView slot in boardSlots ?? Array.Empty<BuildGridPreviewSlotView>())
             {
@@ -663,6 +877,7 @@ namespace TalismanBag.BuildSandbox
             runtimeLoopRuntime?.ResetLoop();
             RefreshBattlePrepareChrome(snapMotion: true);
             placementFeedbackView?.ShowNeutral("已取消。单击查看信息；拖动摆放，棋盘上可向右下角按钮顺时针旋转。");
+            RefreshTrayArrangeButton();
         }
 
         private void OnValidate()
@@ -698,10 +913,60 @@ namespace TalismanBag.BuildSandbox
         private void Update()
         {
             UpdateBattlePrepareMotion();
+            HandleItemSystemDetailOutsideDismissInput();
+        }
+
+        private void HandleItemSystemDetailOutsideDismissInput()
+        {
+            if (itemSystemDetailAdapter?.IsVisible != true
+                || itemSystemDetailAdapter.VisibleSinceFrame == Time.frameCount)
+            {
+                return;
+            }
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                TryDismissItemSystemDetailAt(Input.mousePosition);
+                return;
+            }
+
+            for (int index = 0; index < Input.touchCount; index++)
+            {
+                Touch touch = Input.GetTouch(index);
+                if (touch.phase != TouchPhase.Began)
+                {
+                    continue;
+                }
+
+                TryDismissItemSystemDetailAt(touch.position);
+                return;
+            }
+        }
+
+        private bool TryDismissItemSystemDetailAt(Vector2 screenPosition)
+        {
+            if (itemSystemDetailAdapter?.IsVisible != true
+                || itemSystemDetailAdapter.ContainsVisibleContentScreenPoint(screenPosition))
+            {
+                return false;
+            }
+
+            itemSystemDetailAdapter.Hide();
+            return true;
+        }
+
+        private void LateUpdate()
+        {
+            EnsureItemSystemAuthorityFeedbackLine();
+            RefreshTrayArrangeButton();
         }
 
         private void OnDestroy()
         {
+            if (trayArrangeButton != null)
+            {
+                trayArrangeButton.onClick.RemoveListener(ArrangeTrayLayout);
+            }
             foreach (ItemShapeConfig shapeConfig in runtimeShapeConfigs)
             {
                 if (shapeConfig != null)
@@ -1041,9 +1306,32 @@ namespace TalismanBag.BuildSandbox
 
         private ItemShapeCell ResolveBoardDataCellFromVisualCell(ItemShapeCell visualCell)
         {
-            return BoardVisualRowsAreTopDown()
-                ? visualCell
-                : new ItemShapeCell(visualCell.x, BoardRows - 1 - visualCell.y);
+            return ConvertBoardVisualCellToDataCell(
+                visualCell,
+                BoardRows,
+                BoardVisualRowsAreTopDown());
+        }
+
+        private ItemShapeCell ResolveBoardVisualCellFromDataCell(ItemShapeCell dataCell)
+        {
+            return ConvertBoardVisualCellToDataCell(
+                dataCell,
+                BoardRows,
+                BoardVisualRowsAreTopDown());
+        }
+
+        private static ItemShapeCell ConvertBoardVisualCellToDataCell(
+            ItemShapeCell cell,
+            int rowCount,
+            bool visualRowsAreTopDown)
+        {
+            if (!visualRowsAreTopDown)
+            {
+                return cell;
+            }
+
+            int safeRowCount = Mathf.Max(1, rowCount);
+            return new ItemShapeCell(cell.x, safeRowCount - 1 - cell.y);
         }
 
         private bool BoardVisualRowsAreTopDown()
@@ -1073,10 +1361,90 @@ namespace TalismanBag.BuildSandbox
                 : boardGridPreview.GetComponentInChildren<GridLayoutGroup>(true);
         }
 
+        private void RebuildItemSystemAuthorityCatalog()
+        {
+            DestroyRuntimeShapeConfigs();
+            shapeById.Clear();
+            itemById.Clear();
+            foreach (IGrouping<string, ItemSystemBattleSandboxViewRow> shapeGroup in
+                     itemSystemBoardAuthority.Rows
+                         .Where(row => row != null)
+                         .GroupBy(row => row.ShapeId, StringComparer.Ordinal))
+            {
+                ItemSystemBattleSandboxViewRow row = shapeGroup.First();
+                ItemShapeConfig shape = CreateShape(
+                    row.ShapeId,
+                    row.ShapeDisplayName,
+                    row.RotationAllowed,
+                    row.ShapeCells.ToArray());
+                shape.hideFlags = HideFlags.HideAndDontSave;
+                runtimeShapeConfigs.Add(shape);
+                shapeById[shape.shapeId] = shape;
+            }
+
+            foreach (ItemSystemBattleSandboxViewRow row in itemSystemBoardAuthority.Rows
+                         .Where(value => value != null)
+                         .OrderBy(value => value.BaseItemId, StringComparer.Ordinal))
+            {
+                itemById[row.BaseItemId] = new PreviewItem(
+                    row.BaseItemId,
+                    row.DisplayName,
+                    row.CategoryDisplayName,
+                    row.ShapeId,
+                    row.ShapeDisplayName,
+                    ResolveItemSystemAuthorityCardColor(row),
+                    BuildSandboxItemStatCatalog.Resolve(row.BaseItemId),
+                    new[] { row.CategoryDisplayName },
+                    row.ItemInstanceId);
+            }
+        }
+
+        private static Color ResolveItemSystemAuthorityCardColor(
+            ItemSystemBattleSandboxViewRow row)
+        {
+            if (row == null)
+            {
+                return new Color(0.44f, 0.35f, 0.18f, 1f);
+            }
+            if (row.IsSystemItem)
+            {
+                return new Color(0.36f, 0.32f, 0.25f, 1f);
+            }
+            int band = Mathf.Clamp((row.Ordinal - 1) / 6, 0, 4);
+            return band switch
+            {
+                0 => new Color(0.45f, 0.40f, 0.72f, 1f),
+                1 => new Color(0.72f, 0.32f, 0.20f, 1f),
+                2 => new Color(0.52f, 0.45f, 0.25f, 1f),
+                3 => new Color(0.26f, 0.48f, 0.62f, 1f),
+                _ => new Color(0.62f, 0.55f, 0.48f, 1f)
+            };
+        }
+
+        private void DestroyRuntimeShapeConfigs()
+        {
+            foreach (ItemShapeConfig shapeConfig in runtimeShapeConfigs)
+            {
+                if (shapeConfig == null)
+                {
+                    continue;
+                }
+                if (Application.isPlaying)
+                {
+                    Destroy(shapeConfig);
+                }
+                else
+                {
+                    DestroyImmediate(shapeConfig);
+                }
+            }
+            runtimeShapeConfigs.Clear();
+        }
+
         private void BuildShapeLookup()
         {
+            DestroyRuntimeShapeConfigs();
             shapeById.Clear();
-            runtimeShapeConfigs.Clear();
             foreach (ItemShapeConfig shapeConfig in CreatePreviewShapeConfigs())
             {
                 shapeConfig.hideFlags = HideFlags.HideAndDontSave;
@@ -1101,18 +1469,306 @@ namespace TalismanBag.BuildSandbox
             shapeAwareTrayGrid = new ShapeAwareItemTrayGrid(
                 receiverId: "battle_sandbox_x2_item_tray",
                 columnCount: TrayColumns,
-                slotCount: TrayColumns * TrayRows,
+                slotCount: ResolveTrayGridSlotCount(),
                 commitAllowed: true);
             boardReceiver = new UiBoardShapeGridReceiver(
                 "battle_sandbox_x2_board",
                 boardGridPreview,
                 BoardColumns,
                 BoardRows,
-                boardSlotByCell);
+                boardSlotByCell,
+                ResolveBoardDataCellFromVisualCell,
+                BoardVisualRowsAreTopDown());
 
-            foreach (PreviewItem item in itemById.Values)
+            foreach (PreviewItem item in OrderInitialTrayLayoutItems(itemById.Values))
             {
                 shapeAwareTrayGrid.TryPack(BuildPayload(item, ShapePlacementSource.Tray), out _);
+            }
+            trayMasterLayoutInitialized = true;
+        }
+
+        private bool ApplyItemSystemAuthorityArtwork()
+        {
+            if (itemSystemBoardAuthority == null)
+            {
+                return false;
+            }
+
+            ItemSystemSnapshot snapshot = itemSystemBoardAuthority.CurrentSnapshot;
+            foreach (ItemSystemBattleSandboxViewRow row in itemSystemBoardAuthority.Rows
+                         .Where(value => value != null))
+            {
+                bool lit = snapshot?.placements?.FirstOrDefault(placement =>
+                    placement != null && string.Equals(placement.itemId,
+                        row.BaseItemId, StringComparison.Ordinal))?.isLit == true;
+                Sprite sprite = row.ResolveSprite(lit);
+                visualStylesByItemId[row.BaseItemId] = new List<ShapeCellVisualStyle>
+                {
+                    new(
+                        sprite,
+                        Color.white,
+                        Image.Type.Simple,
+                        preserveAspect: true,
+                        fillCenter: true,
+                        material: null,
+                        pixelsPerUnitMultiplier: 1f,
+                        sourceRotationDegrees: 0f,
+                        spansWholeItem: true)
+                };
+            }
+
+            if (itemTrayView == null)
+            {
+                return false;
+            }
+            Dictionary<string, ItemSystemBattleSandboxViewRow> rowsById =
+                itemSystemBoardAuthority.Rows
+                    .Where(row => row != null)
+                    .ToDictionary(row => row.BaseItemId, row => row,
+                        StringComparer.Ordinal);
+            HashSet<string> boundIds = new(StringComparer.Ordinal);
+            HashSet<string> cardIds = new(StringComparer.Ordinal);
+            HashSet<string> bindFailedIds = new(StringComparer.Ordinal);
+            BuildItemPreviewCardView[] cards = itemTrayView
+                .GetComponentsInChildren<BuildItemPreviewCardView>(true);
+            foreach (BuildItemPreviewCardView card in cards)
+            {
+                if (card == null
+                    || !rowsById.TryGetValue(card.ItemId,
+                        out ItemSystemBattleSandboxViewRow row))
+                {
+                    continue;
+                }
+                cardIds.Add(row.BaseItemId);
+                ItemSystemPlacementSnapshot placement = snapshot?.placements
+                    ?.FirstOrDefault(value => value != null && string.Equals(
+                        value.itemId, row.BaseItemId, StringComparison.Ordinal));
+                if (card.BindAuthoritativeArtwork(
+                        row.ResolveSprite(placement?.isLit == true)))
+                {
+                    boundIds.Add(row.BaseItemId);
+                }
+                else
+                {
+                    bindFailedIds.Add(row.BaseItemId);
+                }
+            }
+            if (boundIds.SetEquals(rowsById.Keys))
+            {
+                return true;
+            }
+
+            string[] missingCardIds = rowsById.Keys
+                .Where(id => !cardIds.Contains(id))
+                .OrderBy(id => id, StringComparer.Ordinal)
+                .ToArray();
+            string[] missingSpriteIds = rowsById.Values
+                .Where(row => row.ResolveSprite(snapshot?.placements?.FirstOrDefault(
+                    placement => placement != null && string.Equals(placement.itemId,
+                        row.BaseItemId, StringComparison.Ordinal))?.isLit == true) == null)
+                .Select(row => row.BaseItemId)
+                .OrderBy(id => id, StringComparer.Ordinal)
+                .ToArray();
+            Debug.LogError("[BuildGridInteractionPreviewController]"
+                + "[ITEM_SYSTEM_ARTWORK_BINDING_DIAGNOSTIC]"
+                + " expected=" + rowsById.Count
+                + ";cards=" + cards.Length
+                + ";bound=" + boundIds.Count
+                + ";missingCards=" + string.Join(",", missingCardIds)
+                + ";missingSprites=" + string.Join(",", missingSpriteIds)
+                + ";bindFailed=" + string.Join(",", bindFailedIds.OrderBy(
+                    id => id, StringComparer.Ordinal)), this);
+            return false;
+        }
+
+        private void RestoreItemSystemAuthorityArtwork()
+        {
+            if (itemTrayView == null)
+            {
+                return;
+            }
+            foreach (BuildItemPreviewCardView card in itemTrayView
+                         .GetComponentsInChildren<BuildItemPreviewCardView>(true))
+            {
+                card?.RestoreAuthoritativeArtwork();
+            }
+        }
+
+        private void RebuildCachesFromAcceptedItemSystemSnapshot()
+        {
+            if (itemSystemBoardAuthority?.CurrentSnapshot == null
+                || !itemSystemBoardAuthority.CurrentSnapshot.isValid)
+            {
+                return;
+            }
+
+            bool trayTransactionOpen = itemTrayView != null;
+            itemTrayView?.BeginTrayViewTransaction();
+            try
+            {
+                ItemSystemSnapshot accepted = itemSystemBoardAuthority.CurrentSnapshot;
+                boardReceiver?.ReplaceFromAcceptedSnapshot(accepted.placements);
+                placedItemIds.Clear();
+                foreach (ItemSystemPlacementSnapshot placement in accepted.placements
+                             .Where(value => value != null))
+                {
+                    placedItemIds.Add(placement.itemId);
+                }
+                if (accepted.i031State?.location == I031Location.Board)
+                {
+                    placedItemIds.Add(I031InventoryPlacementContract.ItemId);
+                }
+                placementSequence = placedItemIds.Count;
+
+                foreach (ItemSystemBattleSandboxViewRow row in itemSystemBoardAuthority.Rows
+                             .Where(value => value != null)
+                             .OrderBy(value => value.BaseItemId, StringComparer.Ordinal))
+                {
+                    ItemSystemPlacementSnapshot placement = accepted.placements
+                        .FirstOrDefault(value => value != null
+                            && string.Equals(value.itemId, row.BaseItemId,
+                                StringComparison.Ordinal));
+                    if (itemById.TryGetValue(row.BaseItemId, out PreviewItem item))
+                    {
+                        item.Rotation = placement == null
+                            ? ItemShapeRotation.Rotation0
+                            : ItemSystemBattleSandboxViewProjection.DegreesToRotation(
+                                placement.rotation);
+                        itemTrayView?.SetItemInTray(
+                            row.BaseItemId,
+                            !placedItemIds.Contains(row.BaseItemId));
+                    }
+                }
+
+                if (!ReconcileTrayMasterFromAcceptedItemSystemSnapshot())
+                {
+                    itemTrayView?.RollbackTrayViewTransaction();
+                    trayTransactionOpen = false;
+                    Debug.LogError(
+                        "[BuildGridInteractionPreviewController]"
+                        + "[TRAY_MASTER_RECONCILE_FAILED] "
+                        + "Accepted ItemSystem snapshot was not partially published.",
+                        this);
+                    return;
+                }
+
+                foreach (PreviewItem item in itemById.Values
+                             .Where(value => value != null
+                                 && !placedItemIds.Contains(value.ItemId))
+                             .OrderBy(value => value.ItemId, StringComparer.Ordinal))
+                {
+                    RefreshTrayPlacement(item);
+                }
+
+                if (trayTransactionOpen
+                    && itemTrayView?.CommitTrayViewTransaction() != true)
+                {
+                    itemTrayView?.RollbackTrayViewTransaction();
+                    trayTransactionOpen = false;
+                    Debug.LogError(
+                        "[BuildGridInteractionPreviewController]"
+                        + "[TRAY_VIEW_TRANSACTION_COMMIT_FAILED]",
+                        this);
+                    return;
+                }
+                trayTransactionOpen = false;
+
+                foreach (ItemSystemBattleSandboxViewRow row in
+                             itemSystemBoardAuthority.Rows.Where(value => value != null))
+                {
+                    itemTrayView?.SetRotateEnabled(
+                        row.BaseItemId,
+                        !placedItemIds.Contains(row.BaseItemId));
+                }
+                ApplyItemSystemAuthorityArtwork();
+                RedrawBoardPlacedVisuals();
+                RefreshTrayArrangeButton();
+            }
+            catch
+            {
+                if (trayTransactionOpen)
+                {
+                    itemTrayView?.RollbackTrayViewTransaction();
+                }
+                throw;
+            }
+        }
+
+        private string ResolveItemSystemPlacementId(string baseItemId)
+        {
+            ItemSystemPlacementSnapshot[] matches =
+                (itemSystemBoardAuthority?.CurrentSnapshot?.placements ??
+                    Array.Empty<ItemSystemPlacementSnapshot>())
+                .Where(value => value != null && string.Equals(
+                    value.itemId, baseItemId, StringComparison.Ordinal))
+                .ToArray();
+            return matches.Length == 1
+                ? matches[0].placementId
+                : string.Empty;
+        }
+
+        private void ResetItemSystemAuthorityPreview()
+        {
+            ClearRememberedTrayAnchorsForReset();
+            mobileInput?.Cancel(boardReceiver);
+            ItemSystemBattleSandboxBoardOperationResult result =
+                itemSystemBoardAuthority.Reset();
+            if (!result.Accepted)
+            {
+                placementFeedbackView?.ShowInvalid(
+                    WithItemSystemAuthorityFeedback(result.ChineseMessage));
+                return;
+            }
+            RebuildCachesFromAcceptedItemSystemSnapshot();
+            ResetItemSystemAuthorityInteractionState(result.Changed
+                ? "已重置：全部道具回到栏中，棋盘为空。"
+                : "当前已经是初始布局。未重复刷新结构诊断。");
+        }
+
+        private void ResetItemSystemAuthorityInteractionState(string message)
+        {
+            activeDragItemId = string.Empty;
+            hasLastPreviewAnchor = false;
+            lastPreviewResult = null;
+            lastPreviewSource = ShapePlacementSource.Unknown;
+            selectedItem = null;
+            ClearPreviewCells();
+            HideDragGhost();
+            SetRotateZonesVisible(false);
+            SetSelectedItemInfoVisible(false);
+            UpdateSelectedItemInfo(null);
+            itemInfoPanel?.Hide();
+            itemSystemDetailAdapter?.Hide();
+            sandboxBattleActive = false;
+            battlePrepareStateActive = false;
+            battlePrepareContinueStateActive = false;
+            manaLoopRuntime?.ResetLoop();
+            runtimeLoopRuntime?.ResetLoop();
+            RefreshBattlePrepareChrome(snapMotion: true);
+            placementFeedbackView?.ShowNeutral(
+                WithItemSystemAuthorityFeedback(message));
+        }
+
+        private string WithItemSystemAuthorityFeedback(string message)
+        {
+            string aggregate = itemSystemBoardAuthority?
+                .CurrentLayoutResilienceSnapshot?.aggregateFeedbackText
+                ?? string.Empty;
+            return LayoutResilienceBattleSandboxPlaytestFeedback
+                .ApplyToExistingFeedback(message ?? string.Empty, aggregate);
+        }
+
+        private void EnsureItemSystemAuthorityFeedbackLine()
+        {
+            if (itemSystemBoardAuthority == null || placementFeedbackView == null)
+            {
+                return;
+            }
+            string current = placementFeedbackView.CurrentMessage;
+            string next = WithItemSystemAuthorityFeedback(current);
+            if (!string.Equals(current, next, StringComparison.Ordinal))
+            {
+                placementFeedbackView.ShowInfo(next);
             }
         }
 
@@ -1160,15 +1816,229 @@ namespace TalismanBag.BuildSandbox
             shapeAwareTrayGrid = new ShapeAwareItemTrayGrid(
                 receiverId: "battle_sandbox_x2_item_tray_query",
                 columnCount: TrayColumns,
-                slotCount: TrayColumns * TrayRows,
+                slotCount: ResolveTrayGridSlotCount(),
                 commitAllowed: true);
 
             IEnumerable<PreviewItem> items = itemById.Count > 0
                 ? itemById.Values
                 : CreatePreviewItems();
-            foreach (PreviewItem item in items)
+            foreach (PreviewItem item in OrderTrayPackingItems(items))
             {
                 shapeAwareTrayGrid.TryPack(BuildPayload(item, ShapePlacementSource.Tray), out _);
+            }
+        }
+
+        private IEnumerable<PreviewItem> OrderTrayPackingItems(
+            IEnumerable<PreviewItem> items)
+        {
+            IEnumerable<PreviewItem> safeItems =
+                (items ?? Array.Empty<PreviewItem>()).Where(item => item != null);
+            if (itemSystemBoardAuthority == null)
+            {
+                return safeItems;
+            }
+            return safeItems
+                .OrderByDescending(item => shapeById.TryGetValue(
+                    item.ShapeId, out ItemShapeConfig shape) ? shape.cellCount : 0)
+                .ThenBy(item => item.ItemId, StringComparer.Ordinal);
+        }
+
+        private int ResolveTrayGridSlotCount()
+        {
+            return itemSystemBoardAuthority == null
+                ? TrayColumns * TrayRows
+                : BuildItemTrayPreviewView.ItemSystemAuthorityLogicalSlotCount;
+        }
+
+        private void ClearRememberedTrayAnchorsForReset()
+        {
+            rememberedTrayAnchorsByIdentity.Clear();
+            resetRequiresNewTrayMasterLayout = true;
+            trayMasterLayoutInitialized = false;
+        }
+
+        private bool ReconcileTrayMasterFromAcceptedItemSystemSnapshot()
+        {
+            if (shapeAwareTrayGrid == null)
+            {
+                return false;
+            }
+
+            ShapeAwareItemTrayGrid previousMaster = shapeAwareTrayGrid;
+            ShapeAwareItemTrayGrid stagedMaster = CreateEmptyTrayMaster();
+            List<PreviewItem> trayItems = itemById.Values
+                .Where(item => item != null && !placedItemIds.Contains(item.ItemId))
+                .ToList();
+            HashSet<string> stagedItemIds = new(StringComparer.Ordinal);
+
+            if (!resetRequiresNewTrayMasterLayout && trayMasterLayoutInitialized)
+            {
+                foreach (PreviewItem item in trayItems
+                             .OrderBy(value => ResolveTrayLayoutIdentity(value), StringComparer.Ordinal))
+                {
+                    if (!previousMaster.TryGetPlacement(item.ItemId,
+                            out ShapeAwareItemTrayGridPlacement placement)
+                        || placement == null
+                        || !TryCommitTrayItemAt(stagedMaster, item, placement.AnchorCell, out _))
+                    {
+                        continue;
+                    }
+                    stagedItemIds.Add(item.ItemId);
+                }
+            }
+
+            foreach (PreviewItem item in OrderInitialTrayLayoutItems(
+                         trayItems.Where(value => !stagedItemIds.Contains(value.ItemId))))
+            {
+                if (!TryRestoreOrFindFirstTrayPlacement(stagedMaster, item, out _))
+                {
+                    // Never publish a partial rebuild.  The authoritative board state remains intact
+                    // and the last valid master remains available for a focused diagnostic.
+                    return false;
+                }
+            }
+
+            shapeAwareTrayGrid = stagedMaster;
+            trayMasterLayoutInitialized = true;
+            resetRequiresNewTrayMasterLayout = false;
+            return true;
+        }
+
+        private bool TryBuildArrangedTrayMaster(out ShapeAwareItemTrayGrid stagedMaster)
+        {
+            stagedMaster = CreateEmptyTrayMaster();
+            IEnumerable<PreviewItem> trayItems = itemById.Values
+                .Where(item => item != null && !placedItemIds.Contains(item.ItemId));
+            foreach (PreviewItem item in OrderManualTrayArrangeItems(trayItems))
+            {
+                if (!TryRestoreOrFindFirstTrayPlacement(stagedMaster, item, out _,
+                        allowRememberedAnchor: false))
+                {
+                    stagedMaster = null;
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private ShapeAwareItemTrayGrid CreateEmptyTrayMaster()
+        {
+            return new ShapeAwareItemTrayGrid(
+                receiverId: "battle_sandbox_x2_item_tray",
+                columnCount: TrayColumns,
+                slotCount: ResolveTrayGridSlotCount(),
+                commitAllowed: true);
+        }
+
+        private bool TryRestoreOrFindFirstTrayPlacement(
+            ShapeAwareItemTrayGrid targetGrid,
+            PreviewItem item,
+            out ShapePlacementResult result,
+            bool allowRememberedAnchor = true)
+        {
+            result = null;
+            if (targetGrid == null || item == null)
+            {
+                return false;
+            }
+
+            if (allowRememberedAnchor
+                && rememberedTrayAnchorsByIdentity.TryGetValue(
+                    ResolveTrayLayoutIdentity(item), out ItemShapeCell rememberedAnchor)
+                && TryCommitTrayItemAt(targetGrid, item, rememberedAnchor, out result))
+            {
+                return true;
+            }
+
+            return targetGrid.TryPack(BuildPayload(item, ShapePlacementSource.Tray), out result)
+                && result != null
+                && result.IsValid;
+        }
+
+        private IEnumerable<PreviewItem> OrderInitialTrayLayoutItems(
+            IEnumerable<PreviewItem> items)
+        {
+            // Initial/reset layout is deterministic but must not strand a later
+            // complex footprint in fragmented free cells.  Reuse the same
+            // package-owned shape-first ordering as explicit Arrange; placement
+            // itself still goes through the single tray CanPlace/TryPack path.
+            return OrderManualTrayArrangeItems(items);
+        }
+
+        private IEnumerable<PreviewItem> OrderManualTrayArrangeItems(
+            IEnumerable<PreviewItem> items)
+        {
+            return (items ?? Array.Empty<PreviewItem>())
+                .Where(item => item != null)
+                .Select(item => new
+                {
+                    Item = item,
+                    Offsets = BuildPayload(item, ShapePlacementSource.Tray).BuildNormalizedOffsets()
+                })
+                .OrderByDescending(value => value.Offsets.Count)
+                .ThenByDescending(value => IsIrregularFootprint(value.Offsets))
+                .ThenByDescending(value => BoundingCellCount(value.Offsets))
+                .ThenBy(value => ResolveTrayLayoutIdentity(value.Item), StringComparer.Ordinal)
+                .Select(value => value.Item);
+        }
+
+        private static bool IsIrregularFootprint(IReadOnlyList<ItemShapeCell> offsets)
+        {
+            return offsets != null
+                && offsets.Count > 0
+                && offsets.Count != BoundingCellCount(offsets);
+        }
+
+        private static int BoundingCellCount(IReadOnlyList<ItemShapeCell> offsets)
+        {
+            if (offsets == null || offsets.Count == 0)
+            {
+                return 0;
+            }
+            int width = offsets.Max(cell => cell.x) - offsets.Min(cell => cell.x) + 1;
+            int height = offsets.Max(cell => cell.y) - offsets.Min(cell => cell.y) + 1;
+            return Mathf.Max(0, width * height);
+        }
+
+        private static string ResolveTrayLayoutIdentity(PreviewItem item)
+        {
+            if (item == null)
+            {
+                return string.Empty;
+            }
+            return string.Equals(item.ItemId, I031InventoryPlacementContract.ItemId,
+                    StringComparison.Ordinal)
+                ? I031InventoryPlacementContract.SpecialIdentityId
+                : item.ItemInstanceId;
+        }
+
+        private void RememberTrayPlacement(PreviewItem item)
+        {
+            if (item == null
+                || shapeAwareTrayGrid == null
+                || !shapeAwareTrayGrid.TryGetPlacement(item.ItemId,
+                    out ShapeAwareItemTrayGridPlacement placement)
+                || placement == null)
+            {
+                return;
+            }
+            rememberedTrayAnchorsByIdentity[ResolveTrayLayoutIdentity(item)] = placement.AnchorCell;
+        }
+
+        private bool CanArrangeTrayLayout()
+        {
+            return shapeAwareTrayGrid != null
+                && string.IsNullOrWhiteSpace(activeDragItemId)
+                && itemTrayView != null
+                && string.Equals(itemTrayView.ActiveCategory,
+                    BuildItemTrayPreviewView.AllCategory, StringComparison.Ordinal);
+        }
+
+        private void RefreshTrayArrangeButton()
+        {
+            if (trayArrangeButton != null)
+            {
+                trayArrangeButton.interactable = CanArrangeTrayLayout();
             }
         }
 
@@ -1186,6 +2056,13 @@ namespace TalismanBag.BuildSandbox
                 rotatePreviewButton.interactable = false;
                 rotatePreviewButton.gameObject.SetActive(false);
             }
+
+            if (trayArrangeButton != null)
+            {
+                trayArrangeButton.onClick.RemoveListener(ArrangeTrayLayout);
+                trayArrangeButton.onClick.AddListener(ArrangeTrayLayout);
+            }
+            RefreshTrayArrangeButton();
         }
 
         private void EnsureBattlePrepareChrome()
@@ -1792,6 +2669,17 @@ namespace TalismanBag.BuildSandbox
             ShapeItemPayload payload = BuildPayload(selectedItem, source);
             ItemShapeCell? trayAnchor = null;
             if (source == ShapePlacementSource.Tray
+                && itemTrayView != null
+                && itemTrayView.TryGetDisplayedPlacement(item.ItemId,
+                    out TrayPlacementViewModel displayedPlacement)
+                && displayedPlacement != null
+                && displayedPlacement.anchorSlotIndex >= 0)
+            {
+                trayAnchor = new ItemShapeCell(
+                    displayedPlacement.anchorSlotIndex % TrayColumns,
+                    displayedPlacement.anchorSlotIndex / TrayColumns);
+            }
+            else if (source == ShapePlacementSource.Tray
                 && shapeAwareTrayGrid != null
                 && shapeAwareTrayGrid.TryGetPlacement(item.ItemId, out ShapeAwareItemTrayGridPlacement placement))
             {
@@ -2057,6 +2945,7 @@ namespace TalismanBag.BuildSandbox
                     placementSession.CurrentPayload,
                     anchorCell);
                 ShapePlacementResult preview = placementSession.Preview(boardReceiver, previewAnchor);
+                preview = ApplyItemSystemAuthorityPreview(preview);
                 lastPreviewResult = preview;
                 hasLastPreviewAnchor = preview != null;
                 lastPreviewAnchor = previewAnchor;
@@ -2340,6 +3229,7 @@ namespace TalismanBag.BuildSandbox
 
         private void ApplyBoardDragPreview(PointerEventData eventData, ShapePlacementResult result)
         {
+            result = ApplyItemSystemAuthorityPreview(result);
             lastPreviewResult = result;
             hasLastPreviewAnchor = result != null;
             lastPreviewSource = ShapePlacementSource.Board;
@@ -2367,6 +3257,52 @@ namespace TalismanBag.BuildSandbox
             }
         }
 
+        private ShapePlacementResult ApplyItemSystemAuthorityPreview(
+            ShapePlacementResult cachePreview)
+        {
+            if (itemSystemBoardAuthority == null
+                || cachePreview == null
+                || selectedItem == null)
+            {
+                return cachePreview;
+            }
+
+            ItemSystemBattleSandboxBoardOperationResult authorityPreview =
+                itemSystemBoardAuthority.PreviewPlacement(
+                    selectedItem.ItemId,
+                    cachePreview.AnchorCell,
+                    selectedItem.Rotation);
+            IReadOnlyList<ItemShapeCell> occupied = authorityPreview.Accepted
+                && authorityPreview.OccupiedCells.Count > 0
+                    ? authorityPreview.OccupiedCells
+                    : cachePreview.OccupiedCells;
+            ShapePlacementInvalidReason invalidReason = authorityPreview.Accepted
+                ? ShapePlacementInvalidReason.None
+                : ResolveItemSystemInvalidReason(authorityPreview.DiagnosticCode);
+            return new ShapePlacementResult(
+                cachePreview.ItemId,
+                cachePreview.ShapeId,
+                cachePreview.AnchorCell,
+                occupied,
+                authorityPreview.Accepted,
+                invalidReason,
+                cachePreview.AdjacentItems,
+                cachePreview.EnergyConnected,
+                "item_system_authority_preview");
+        }
+
+        private static ShapePlacementInvalidReason ResolveItemSystemInvalidReason(
+            string diagnosticCode)
+        {
+            return diagnosticCode switch
+            {
+                "ITEM_OUT_OF_BOUNDS" => ShapePlacementInvalidReason.OutOfGrid,
+                "PLACEMENT_OVERLAP" => ShapePlacementInvalidReason.CellOccupied,
+                "EYE_CELL_COVERED" => ShapePlacementInvalidReason.CellOccupied,
+                _ => ShapePlacementInvalidReason.ShapeInvalid
+            };
+        }
+
         private void EndActiveDrag(string itemId, PointerEventData eventData)
         {
             if (TryCommitTrayDrag(itemId, eventData))
@@ -2378,6 +3314,7 @@ namespace TalismanBag.BuildSandbox
                 boardReceiver,
                 eventData.position,
                 eventData.pressEventCamera);
+            result = ApplyItemSystemAuthorityPreview(result);
             lastPreviewResult = result;
             hasLastPreviewAnchor = result != null;
             lastPreviewSource = ShapePlacementSource.Board;
@@ -2397,6 +3334,55 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
+            if (itemSystemBoardAuthority != null)
+            {
+                bool movedByAuthority = placementSession.SourceContainer
+                    == ShapePlacementSource.Board;
+                ItemSystemBattleSandboxBoardOperationResult authorityResult =
+                    movedByAuthority
+                        ? itemSystemBoardAuthority.CommitMove(
+                            ResolveItemSystemPlacementId(selectedItem.ItemId),
+                            result.AnchorCell,
+                            selectedItem.Rotation)
+                        : itemSystemBoardAuthority.CommitFromTray(
+                            selectedItem.ItemId,
+                            result.AnchorCell,
+                            selectedItem.Rotation);
+                if (!authorityResult.Accepted)
+                {
+                    mobileInput?.Cancel(boardReceiver);
+                    activeDragItemId = string.Empty;
+                    itemTrayView?.SetRotateEnabled(itemId,
+                        !placedItemIds.Contains(itemId));
+                    RefreshItemInfoPanel(selectedItem);
+                    ClearPreviewCells();
+                    HideDragGhost();
+                    placementFeedbackView?.ShowInvalid(
+                        WithItemSystemAuthorityFeedback(
+                            authorityResult.ChineseMessage));
+                    return;
+                }
+
+                if (!movedByAuthority)
+                {
+                    RememberTrayPlacement(selectedItem);
+                }
+                RebuildCachesFromAcceptedItemSystemSnapshot();
+                lastPreviewResult = result;
+                activeDragItemId = string.Empty;
+                itemTrayView?.SetRotateEnabled(selectedItem.ItemId, false);
+                mobileInput?.Cancel(boardReceiver);
+                HideDragGhost();
+                placementFeedbackView?.ShowValid(
+                    WithItemSystemAuthorityFeedback(movedByAuthority
+                        ? $"已移动“{selectedItem.DisplayName}”。"
+                        : $"已放置“{selectedItem.DisplayName}”。"));
+                UpdateSelectedItemInfo(selectedItem);
+                RefreshItemInfoPanel(selectedItem);
+                RefreshTrayArrangeButton();
+                return;
+            }
+
             ShapePlacementResult commitResult = placementSession.Commit(boardReceiver);
             if (commitResult == null || !commitResult.IsValid)
             {
@@ -2410,6 +3396,10 @@ namespace TalismanBag.BuildSandbox
             }
 
             bool movedPlacedItem = placedItemIds.Contains(selectedItem.ItemId);
+            if (!movedPlacedItem)
+            {
+                RememberTrayPlacement(selectedItem);
+            }
             placedItemIds.Add(selectedItem.ItemId);
             placementSequence = placedItemIds.Count;
             shapeAwareTrayGrid?.RemoveItem(selectedItem.ItemId);
@@ -2426,6 +3416,7 @@ namespace TalismanBag.BuildSandbox
                 : $"已放置“{selectedItem.DisplayName}”。");
             UpdateSelectedItemInfo(selectedItem);
             RefreshItemInfoPanel(selectedItem);
+            RefreshTrayArrangeButton();
         }
 
         private bool TryPreviewTrayDrag(PointerEventData eventData, out ShapePlacementResult result)
@@ -2440,6 +3431,26 @@ namespace TalismanBag.BuildSandbox
                 return false;
             }
 
+            if (placementSession.SourceContainer == ShapePlacementSource.Board)
+            {
+                if (rememberedTrayAnchorsByIdentity.TryGetValue(
+                        ResolveTrayLayoutIdentity(selectedItem), out ItemShapeCell rememberedAnchor))
+                {
+                    result = placementSession.Preview(shapeAwareTrayGrid, rememberedAnchor);
+                    if (result != null && result.IsValid)
+                    {
+                        return true;
+                    }
+                }
+
+                if (shapeAwareTrayGrid.TryFindFirstLegalAnchor(
+                        placementSession.CurrentPayload, out ItemShapeCell firstLegalAnchor))
+                {
+                    result = placementSession.Preview(shapeAwareTrayGrid, firstLegalAnchor);
+                }
+                return true;
+            }
+
             if (!itemTrayView.TryScreenPointToTrayCell(
                     eventData.position,
                     eventData.pressEventCamera,
@@ -2449,15 +3460,6 @@ namespace TalismanBag.BuildSandbox
             }
 
             result = placementSession.Preview(shapeAwareTrayGrid, anchorCell);
-            if ((result == null || !result.IsValid)
-                && placementSession.SourceContainer == ShapePlacementSource.Board
-                && shapeAwareTrayGrid.TryFindFirstLegalAnchor(
-                    placementSession.CurrentPayload,
-                    out ItemShapeCell fallbackAnchor))
-            {
-                result = placementSession.Preview(shapeAwareTrayGrid, fallbackAnchor);
-            }
-
             return true;
         }
 
@@ -2488,6 +3490,41 @@ namespace TalismanBag.BuildSandbox
                 return true;
             }
 
+            if (itemSystemBoardAuthority != null
+                && placementSession.SourceContainer == ShapePlacementSource.Board)
+            {
+                ItemSystemBattleSandboxBoardOperationResult authorityResult =
+                    itemSystemBoardAuthority.ReturnToTray(
+                        ResolveItemSystemPlacementId(selectedItem.ItemId));
+                if (!authorityResult.Accepted)
+                {
+                    mobileInput?.Cancel(boardReceiver);
+                    activeDragItemId = string.Empty;
+                    itemTrayView?.SetRotateEnabled(itemId, false);
+                    RefreshItemInfoPanel(selectedItem);
+                    ClearPreviewCells();
+                    HideDragGhost();
+                    placementFeedbackView?.ShowInvalid(
+                        WithItemSystemAuthorityFeedback(
+                            authorityResult.ChineseMessage));
+                    return true;
+                }
+
+                RebuildCachesFromAcceptedItemSystemSnapshot();
+                lastPreviewResult = result;
+                activeDragItemId = string.Empty;
+                mobileInput?.Cancel(shapeAwareTrayGrid);
+                RefreshItemInfoPanel(selectedItem);
+                ClearPreviewCells();
+                HideDragGhost();
+                placementFeedbackView?.ShowValid(
+                    WithItemSystemAuthorityFeedback(
+                        $"已移动“{selectedItem.DisplayName}”到道具栏空位。"));
+                UpdateSelectedItemInfo(selectedItem);
+                RefreshTrayArrangeButton();
+                return true;
+            }
+
             ShapePlacementResult commitResult = placementSession.Commit(shapeAwareTrayGrid);
             if (commitResult == null || !commitResult.IsValid)
             {
@@ -2515,16 +3552,13 @@ namespace TalismanBag.BuildSandbox
             itemTrayView?.SetRotateEnabled(selectedItem.ItemId, !placedItemIds.Contains(selectedItem.ItemId));
             mobileInput?.Cancel(shapeAwareTrayGrid);
             RefreshTrayPlacement(selectedItem);
-            if (movedFromBoard)
-            {
-                itemTrayView?.ApplyFilter(BuildItemTrayPreviewView.AllCategory);
-            }
 
             RefreshItemInfoPanel(selectedItem);
             ClearPreviewCells();
             HideDragGhost();
             placementFeedbackView?.ShowValid($"已移动“{selectedItem.DisplayName}”到道具栏空位。");
             UpdateSelectedItemInfo(selectedItem);
+            RefreshTrayArrangeButton();
             return true;
         }
 
@@ -2539,6 +3573,7 @@ namespace TalismanBag.BuildSandbox
             }
 
             ShapePlacementResult result = placementSession.Preview(boardReceiver, anchor);
+            result = ApplyItemSystemAuthorityPreview(result);
             lastPreviewResult = result;
             DrawPreviewResult(result, locked);
             return result;
@@ -2629,15 +3664,24 @@ namespace TalismanBag.BuildSandbox
             ItemShapeCell anchorCell,
             out ShapePlacementResult result)
         {
+            return TryCommitTrayItemAt(shapeAwareTrayGrid, item, anchorCell, out result);
+        }
+
+        private bool TryCommitTrayItemAt(
+            ShapeAwareItemTrayGrid targetGrid,
+            PreviewItem item,
+            ItemShapeCell anchorCell,
+            out ShapePlacementResult result)
+        {
             result = null;
-            if (shapeAwareTrayGrid == null || item == null)
+            if (targetGrid == null || item == null)
             {
                 return false;
             }
 
             ShapePlacementSession traySession = new();
             traySession.Begin(BuildPayload(item, ShapePlacementSource.Tray), trayAnchorCell: anchorCell);
-            result = traySession.Commit(shapeAwareTrayGrid);
+            result = traySession.Commit(targetGrid);
             return result != null && result.IsValid;
         }
 
@@ -3159,13 +4203,17 @@ namespace TalismanBag.BuildSandbox
         private void RefreshFormationPowerVisuals()
         {
             EnsureFormationPowerOverlays();
-            foreach (FormationPowerCellOverlay overlay in formationPowerOverlayByCell.Values)
-            {
-                overlay.Clear();
-            }
+            ClearFormationPowerVisuals();
 
             if (formationPowerOverlayByCell.Count == 0)
             {
+                return;
+            }
+
+            if (itemSystemBoardAuthority != null)
+            {
+                RenderItemSystemFormationPowerVisuals(
+                    itemSystemBoardAuthority.CurrentSnapshot);
                 return;
             }
 
@@ -3232,6 +4280,59 @@ namespace TalismanBag.BuildSandbox
                         overlay.ShowEyeCellOccupied();
                     }
                 }
+            }
+        }
+
+        private void RenderItemSystemFormationPowerVisuals(
+            ItemSystemSnapshot snapshot)
+        {
+            if (snapshot == null || !snapshot.isValid)
+            {
+                return;
+            }
+
+            ResolveFormationPowerOverlay(new ItemShapeCell(
+                snapshot.eyeCell.x, snapshot.eyeCell.y))?.ShowCore();
+            foreach (Vector2Int cell in snapshot.LitRangeCells)
+            {
+                ResolveFormationPowerOverlay(
+                    new ItemShapeCell(cell.x, cell.y))?.ShowPoweredRange();
+            }
+
+            foreach (ItemSystemPlacementSnapshot placement in snapshot.placements
+                         .Where(value => value != null))
+            {
+                string badge = placement.isLightingSource
+                    ? "供能源·不计Build"
+                    : placement.isDirectLit
+                        ? (placement.isCountedInBuild
+                            ? "直亮·计Build" : "直亮·不计Build")
+                        : placement.isLit
+                            ? (placement.isCountedInBuild
+                                ? "阵脉·计Build" : "阵脉·不计Build")
+                            : "未点亮·不计Build";
+                Color color = placement.isLit
+                    ? new Color(1f, 0.76f, 0.22f, 0.98f)
+                    : new Color(0.72f, 0.74f, 0.70f, 0.92f);
+                foreach (Vector2Int cell in placement.OccupiedCells)
+                {
+                    FormationPowerCellOverlay overlay = ResolveFormationPowerOverlay(
+                        new ItemShapeCell(cell.x, cell.y));
+                    overlay?.ShowItemState(badge, color);
+                    if (cell == snapshot.eyeCell)
+                    {
+                        overlay?.ShowEyeCellOccupied();
+                    }
+                }
+            }
+        }
+
+        private void ClearFormationPowerVisuals()
+        {
+            foreach (FormationPowerCellOverlay overlay in
+                     formationPowerOverlayByCell.Values)
+            {
+                overlay?.Clear();
             }
         }
 
@@ -3332,6 +4433,27 @@ namespace TalismanBag.BuildSandbox
                 return "\u672a\u653e\u7f6e";
             }
 
+            if (itemSystemBoardAuthority != null)
+            {
+                ItemSystemPlacementSnapshot placement =
+                    itemSystemBoardAuthority.CurrentSnapshot?.placements
+                        ?.SingleOrDefault(value => value != null && string.Equals(
+                            value.itemId, item.ItemId, StringComparison.Ordinal));
+                if (placement == null)
+                {
+                    return "未放置";
+                }
+                if (placement.isLightingSource)
+                {
+                    return "供能源";
+                }
+                return placement.isDirectLit
+                    ? "直接点亮"
+                    : placement.isLit
+                        ? "阵脉点亮"
+                        : "未供能";
+            }
+
             FormationEnergyContractPreview preview =
                 FormationEnergyContractResolver.Apply(BuildCurrentLayoutSnapshot());
             FormationEnergyContractRow row = preview?.rows?.FirstOrDefault(candidate =>
@@ -3401,6 +4523,19 @@ namespace TalismanBag.BuildSandbox
 
         private void ShowItemInfoPanel(PreviewItem item)
         {
+            if (itemSystemBoardAuthority != null)
+            {
+                itemInfoPanel?.Hide();
+                if (item != null)
+                {
+                    ShowQualifiedItemSystemDetail(item);
+                }
+                else
+                {
+                    itemSystemDetailAdapter?.Hide();
+                }
+                return;
+            }
             if (itemInfoPanel == null || item == null)
             {
                 return;
@@ -3411,12 +4546,56 @@ namespace TalismanBag.BuildSandbox
 
         private void RefreshItemInfoPanel(PreviewItem item)
         {
+            if (itemSystemBoardAuthority != null)
+            {
+                itemInfoPanel?.Hide();
+                if (item != null && itemSystemDetailAdapter?.IsVisible == true
+                    && string.Equals(itemSystemDetailAdapter.CurrentBaseItemId,
+                        item.ItemId, StringComparison.Ordinal))
+                {
+                    ShowQualifiedItemSystemDetail(item);
+                }
+                return;
+            }
             if (itemInfoPanel == null || item == null)
             {
                 return;
             }
 
             itemInfoPanel.RefreshIfShowing(item, BuildItemInfoContext(item), CanRotateItemFromInfoPanel(item));
+        }
+
+        private bool ShowQualifiedItemSystemDetail(PreviewItem item)
+        {
+            if (item == null
+                || itemSystemBoardAuthority == null
+                || itemSystemDetailAdapter == null)
+            {
+                itemSystemDetailAdapter?.Hide();
+                return false;
+            }
+
+            ItemSystemBattleSandboxViewRow[] exactRows =
+                (itemSystemBoardAuthority.Rows ??
+                    Array.Empty<ItemSystemBattleSandboxViewRow>())
+                .Where(row => row != null
+                    && string.Equals(row.BaseItemId, item.ItemId,
+                        StringComparison.Ordinal))
+                .ToArray();
+            if (exactRows.Length != 1)
+            {
+                itemSystemDetailAdapter.Hide();
+                return false;
+            }
+
+            ItemSystemBattleSandboxViewRow row = exactRows[0];
+            return itemSystemDetailAdapter.Show(
+                row.BaseItemId,
+                row.ItemInstanceId,
+                ResolveItemSystemPlacementId(row.BaseItemId),
+                itemSystemBoardAuthority.CurrentSnapshot,
+                itemSystemBoardAuthority.CurrentQualifiedBuildState,
+                itemSystemBoardAuthority.CurrentCoreEffectRuntimeState);
         }
 
         private void RotateInfoPanelItem(string itemId)
@@ -5193,9 +6372,13 @@ namespace TalismanBag.BuildSandbox
                 string shapeDisplayName,
                 Color cardColor,
                 BuildSandboxItemStat itemStat = null,
-                IReadOnlyList<string> categoryIds = null)
+                IReadOnlyList<string> categoryIds = null,
+                string itemInstanceId = null)
             {
                 ItemId = itemId ?? string.Empty;
+                ItemInstanceId = string.IsNullOrWhiteSpace(itemInstanceId)
+                    ? ItemId
+                    : itemInstanceId;
                 DisplayName = displayName ?? string.Empty;
                 Category = category ?? string.Empty;
                 ShapeId = shapeId ?? string.Empty;
@@ -5213,6 +6396,7 @@ namespace TalismanBag.BuildSandbox
             }
 
             public string ItemId { get; }
+            public string ItemInstanceId { get; }
             public string DisplayName { get; }
             public string Category { get; }
             public string ShapeId { get; }
@@ -5273,18 +6457,24 @@ namespace TalismanBag.BuildSandbox
             private readonly Dictionary<ItemShapeCell, string> occupiedByItemId = new();
             private readonly Dictionary<ItemShapeCell, RectTransform> slotRectsByCell = new();
             private readonly RectTransform boardRect;
+            private readonly Func<ItemShapeCell, ItemShapeCell> visualToDataCell;
+            private readonly bool visualRowsAreTopDown;
 
             public UiBoardShapeGridReceiver(
                 string receiverId,
                 RectTransform boardRect,
                 int width,
                 int height,
-                IReadOnlyDictionary<ItemShapeCell, BuildGridPreviewSlotView> slotsByCell = null)
+                IReadOnlyDictionary<ItemShapeCell, BuildGridPreviewSlotView> slotsByCell = null,
+                Func<ItemShapeCell, ItemShapeCell> visualToDataCell = null,
+                bool visualRowsAreTopDown = true)
             {
                 ReceiverId = string.IsNullOrWhiteSpace(receiverId) ? "battle_sandbox_board" : receiverId;
                 this.boardRect = boardRect;
                 Width = width;
                 Height = height;
+                this.visualToDataCell = visualToDataCell ?? (cell => cell);
+                this.visualRowsAreTopDown = visualRowsAreTopDown;
                 foreach (KeyValuePair<ItemShapeCell, BuildGridPreviewSlotView> pair
                          in slotsByCell ?? new Dictionary<ItemShapeCell, BuildGridPreviewSlotView>())
                 {
@@ -5423,8 +6613,11 @@ namespace TalismanBag.BuildSandbox
                 float normalizedX = Mathf.Clamp01((localPoint.x - bounds.xMin) / bounds.width);
                 float normalizedY = Mathf.Clamp01((localPoint.y - bounds.yMin) / bounds.height);
                 int x = Mathf.Clamp(Mathf.FloorToInt(normalizedX * Width), 0, Width - 1);
-                int y = Mathf.Clamp(Mathf.FloorToInt((1f - normalizedY) * Height), 0, Height - 1);
-                anchorCell = new ItemShapeCell(x, y);
+                int visualY = visualRowsAreTopDown
+                    ? Mathf.FloorToInt((1f - normalizedY) * Height)
+                    : Mathf.FloorToInt(normalizedY * Height);
+                visualY = Mathf.Clamp(visualY, 0, Height - 1);
+                anchorCell = visualToDataCell(new ItemShapeCell(x, visualY));
                 return true;
             }
 
@@ -5542,6 +6735,26 @@ namespace TalismanBag.BuildSandbox
             public void Clear()
             {
                 occupiedByItemId.Clear();
+            }
+
+            public void ReplaceFromAcceptedSnapshot(
+                IReadOnlyList<ItemSystemPlacementSnapshot> placements)
+            {
+                occupiedByItemId.Clear();
+                foreach (ItemSystemPlacementSnapshot placement in placements
+                             ?? Array.Empty<ItemSystemPlacementSnapshot>())
+                {
+                    if (placement == null
+                        || string.IsNullOrWhiteSpace(placement.itemId))
+                    {
+                        continue;
+                    }
+                    foreach (Vector2Int cell in placement.OccupiedCells)
+                    {
+                        occupiedByItemId[new ItemShapeCell(cell.x, cell.y)] =
+                            placement.itemId;
+                    }
+                }
             }
 
             public bool RemoveItem(string itemId)

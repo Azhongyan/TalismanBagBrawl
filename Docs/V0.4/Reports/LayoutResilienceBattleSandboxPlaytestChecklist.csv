@@ -1,0 +1,92 @@
+checkId,category,expected,actual,result
+"authority.calls.S04_COMPLETE_EMPTY_LAYOUT","authority","1/1","1/1",PASS
+"authority.calls.S05_I031_ONLY_LAYOUT","authority","1/1","1/1",PASS
+"authority.calls.S06_FORMATION_EYE_STABLE","authority","1/1","1/1",PASS
+"authority.calls.S07_FORMATION_EYE_PRESSURED","authority","1/1","1/1",PASS
+"authority.calls.S08_POLLUTED_TILE_STABLE","authority","1/1","1/1",PASS
+"authority.calls.S09_POLLUTED_TILE_PRESSURED","authority","1/1","1/1",PASS
+"authority.calls.S10_IF01_IDENTITY_MISSING","authority","1/1","1/1",PASS
+"authority.calls.S11_INVALID_ITEM_SNAPSHOT","authority","1/1","1/1",PASS
+"determinism.reverse-input","determinism","sha256:62e420000d40184002c8eb0e4789bc2d0582eb20c3110320a560e0209b5cd983","sha256:62e420000d40184002c8eb0e4789bc2d0582eb20c3110320a560e0209b5cd983",PASS
+"feedback.player-mask","feedback","no ascii/internal answer","【阵势韧性】稳定 3 项／受压 1 项",PASS
+"feedback.preserve-changed","feedback","latest interaction+1 suffix","格子冲突：目标形状与已有道具重叠。
+【阵势韧性】稳定 3 项／受压 1 项",PASS
+"feedback.preserve-first","feedback","interaction+suffix","可放置
+【阵势韧性】稳定 3 项／受压 1 项",PASS
+"identity.i031-not-projected","identity","0/0","0/0",PASS
+"identity.missing-stays-unknown","identity","Unknown","Unknown",PASS
+"leak.formal.ChapterProgress","leak","absent","absent",PASS
+"leak.formal.DamageText","leak","absent","absent",PASS
+"leak.formal.PlayerPrefs","leak","absent","absent",PASS
+"leak.formal.RewardConfig","leak","absent","absent",PASS
+"leak.formal.RunFlow","leak","absent","absent",PASS
+"leak.formal.SaveData","leak","absent","absent",PASS
+"leak.formal.UnifiedBattle","leak","absent","absent",PASS
+"leak.formal.V02FormationGridFrame","leak","absent","absent",PASS
+"leak.runtime.AuthoredLayoutPressureSourceAdapter","leak","absent","absent",PASS
+"leak.runtime.BuildSandboxLayoutSnapshot","leak","absent","absent",PASS
+"leak.runtime.Builder","leak","absent","absent",PASS
+"leak.runtime.DefaultItemSystemSnapshotProvider","leak","absent","absent",PASS
+"leak.runtime.EditorSceneManager","leak","absent","absent",PASS
+"leak.runtime.LayoutResilienceEvaluationInputAssembler","leak","absent","absent",PASS
+"leak.runtime.LayoutResilienceItemFactProjectionAdapter","leak","absent","absent",PASS
+"leak.runtime.LayoutResilienceStructuralPredicateEvaluator","leak","absent","absent",PASS
+"leak.runtime.LayoutResilienceStructuralReadinessConsumer","leak","absent","absent",PASS
+"leak.runtime.RectTransform","leak","absent","absent",PASS
+"leak.runtime.SaveScene","leak","absent","absent",PASS
+"leak.runtime.SceneBinder","leak","absent","absent",PASS
+"leak.runtime.new GameObject","leak","absent","absent",PASS
+"package.assignment-hash","package","178d0fce3a56d428ea44c8eeb8b6b78f4a0f0563e449c257402e273f557d00d8","178d0fce3a56d428ea44c8eeb8b6b78f4a0f0563e449c257402e273f557d00d8",PASS
+"package.exists.LayoutResilienceBattleSandboxPlaytestAdapter.cs","package","exists","exists",PASS
+"package.exists.LayoutResilienceBattleSandboxPlaytestAdapter.cs.meta","package","exists","exists",PASS
+"package.exists.LayoutResilienceBattleSandboxPlaytestAdapterReport.md","package","exists","exists",PASS
+"package.exists.LayoutResilienceBattleSandboxPlaytestAdapterVerifier.cs","package","exists","exists",PASS
+"package.exists.LayoutResilienceBattleSandboxPlaytestAdapterVerifier.cs.meta","package","exists","exists",PASS
+"package.exists.LayoutResilienceBattleSandboxPlaytestChecklist.csv","package","exists","exists",PASS
+"package.exists.LayoutResilienceBattleSandboxPlaytestFeedback.cs","package","exists","exists",PASS
+"package.exists.LayoutResilienceBattleSandboxPlaytestFeedback.cs.meta","package","exists","exists",PASS
+"package.exists.LayoutResilienceBattleSandboxPlaytestFeedbackReport.csv","package","exists","exists",PASS
+"package.exists.LayoutResilienceBattleSandboxPlaytestLeakCheckReport.md","package","exists","exists",PASS
+"package.exists.LayoutResilienceBattleSandboxPlaytestStateReport.csv","package","exists","exists",PASS
+"package.output-count","package","11","11",PASS
+"protected.before-after","protected","b81e3035a3f66d80d52970c442c56c203485164026572b251896197cf54cd1d4|7e9b4cb329a25477b32054a7661aaa0d4ffcf5789c48f0832d462fa2c4b412fc|d2c4392acf4d1d8b4d9230cf19bc7a41591f20dcbe41cd38849b9c43a9427f07|283432017bf6f2d559f54c1a9d2ba7102d60cd0118761b8258b67e3397e61144|8a249cd0c943abbb6096a84c60148928c1396c8ae6e1d73f8c80c73f769c08d8|da29c51ff7cc5a814caa83a22d45b1ba3b1c54c826334d914215407611ae6d0b|7fe361444bc9568f0599076d65aa707172d02da55d56a5be1348bf186b237087|08a277e3ca465a44e792318c0d3c210afdba61069f1170b74fa5a1a18598fe59|f80fbd8ffb8e2d75b0032058a0d09b484e6f63ba","b81e3035a3f66d80d52970c442c56c203485164026572b251896197cf54cd1d4|7e9b4cb329a25477b32054a7661aaa0d4ffcf5789c48f0832d462fa2c4b412fc|d2c4392acf4d1d8b4d9230cf19bc7a41591f20dcbe41cd38849b9c43a9427f07|283432017bf6f2d559f54c1a9d2ba7102d60cd0118761b8258b67e3397e61144|8a249cd0c943abbb6096a84c60148928c1396c8ae6e1d73f8c80c73f769c08d8|da29c51ff7cc5a814caa83a22d45b1ba3b1c54c826334d914215407611ae6d0b|7fe361444bc9568f0599076d65aa707172d02da55d56a5be1348bf186b237087|08a277e3ca465a44e792318c0d3c210afdba61069f1170b74fa5a1a18598fe59|f80fbd8ffb8e2d75b0032058a0d09b484e6f63ba",PASS
+"protected.build-settings","protected","08a277e3ca465a44e792318c0d3c210afdba61069f1170b74fa5a1a18598fe59","08a277e3ca465a44e792318c0d3c210afdba61069f1170b74fa5a1a18598fe59",PASS
+"protected.head","protected","f80fbd8ffb8e2d75b0032058a0d09b484e6f63ba","f80fbd8ffb8e2d75b0032058a0d09b484e6f63ba",PASS
+"protected.if01-exact4.count","protected","4","4",PASS
+"protected.if01-exact4.hash","protected","d2c4392acf4d1d8b4d9230cf19bc7a41591f20dcbe41cd38849b9c43a9427f07","d2c4392acf4d1d8b4d9230cf19bc7a41591f20dcbe41cd38849b9c43a9427f07",PASS
+"protected.item-sandbox-exact4.count","protected","4","4",PASS
+"protected.item-sandbox-exact4.hash","protected","283432017bf6f2d559f54c1a9d2ba7102d60cd0118761b8258b67e3397e61144","283432017bf6f2d559f54c1a9d2ba7102d60cd0118761b8258b67e3397e61144",PASS
+"protected.item105.count","protected","105","105",PASS
+"protected.item105.hash","protected","b81e3035a3f66d80d52970c442c56c203485164026572b251896197cf54cd1d4","b81e3035a3f66d80d52970c442c56c203485164026572b251896197cf54cd1d4",PASS
+"protected.p6-exact15.count","protected","15","15",PASS
+"protected.p6-exact15.hash","protected","7e9b4cb329a25477b32054a7661aaa0d4ffcf5789c48f0832d462fa2c4b412fc","7e9b4cb329a25477b32054a7661aaa0d4ffcf5789c48f0832d462fa2c4b412fc",PASS
+"protected.prefabs.count","protected","16","16",PASS
+"protected.prefabs.hash","protected","7fe361444bc9568f0599076d65aa707172d02da55d56a5be1348bf186b237087","7fe361444bc9568f0599076d65aa707172d02da55d56a5be1348bf186b237087",PASS
+"protected.scenes.count","protected","14","14",PASS
+"protected.scenes.hash","protected","da29c51ff7cc5a814caa83a22d45b1ba3b1c54c826334d914215407611ae6d0b","da29c51ff7cc5a814caa83a22d45b1ba3b1c54c826334d914215407611ae6d0b",PASS
+"protected.target-scene","protected","8a249cd0c943abbb6096a84c60148928c1396c8ae6e1d73f8c80c73f769c08d8","8a249cd0c943abbb6096a84c60148928c1396c8ae6e1d73f8c80c73f769c08d8",PASS
+"refresh.reference-gate","refresh","true/false/true","True/False/True",PASS
+"scenario.S01_NON_TARGET_NO_INSTALL","scenario","PASS","PASS",PASS
+"scenario.S02_TARGET_ADAPTER_MISSING","scenario","PASS","PASS",PASS
+"scenario.S03_TARGET_ADAPTER_DUPLICATE","scenario","PASS","PASS",PASS
+"scenario.S04_COMPLETE_EMPTY_LAYOUT","scenario","PASS","PASS",PASS
+"scenario.S05_I031_ONLY_LAYOUT","scenario","PASS","PASS",PASS
+"scenario.S06_FORMATION_EYE_STABLE","scenario","PASS","PASS",PASS
+"scenario.S07_FORMATION_EYE_PRESSURED","scenario","PASS","PASS",PASS
+"scenario.S08_POLLUTED_TILE_STABLE","scenario","PASS","PASS",PASS
+"scenario.S09_POLLUTED_TILE_PRESSURED","scenario","PASS","PASS",PASS
+"scenario.S10_IF01_IDENTITY_MISSING","scenario","PASS","PASS",PASS
+"scenario.S11_INVALID_ITEM_SNAPSHOT","scenario","PASS","PASS",PASS
+"scenarios.count","scenarios","11","11",PASS
+"scene.adapter-count","scene","1","1",PASS
+"scene.feedback-count","scene","1","1",PASS
+"scene.feedback-root-count","scene","1","1",PASS
+"scene.no-package-component","scene","0 serialized","0",PASS
+"schema.id","schema","LayoutResilienceBattleSandboxPlaytestSnapshot.v1","LayoutResilienceBattleSandboxPlaytestSnapshot.v1",PASS
+"schema.version","schema","1","1",PASS
+"source.authorities","source","ItemSandbox/session/IF01/P6 direct authorities","scan",PASS
+"source.editor-play-only-bootstrap","source","UNITY_EDITOR + exact scene","scan",PASS
+"source.placed-projection-filter","source","placed ordinary only","scan",PASS
+"surface.feedback-row","surface","stableRouteKey|chineseDisplayName|pipelineRowStatus|predicateState|chineseHint|answerMasked","stableRouteKey|chineseDisplayName|pipelineRowStatus|predicateState|chineseHint|answerMasked",PASS
+"surface.snapshot","surface","schemaId|schemaVersion|status|devOnly|isEnabled|itemSnapshotSignature|bindingCanonicalSignature|pipelineCanonicalSignature|feedbackRows|issues|canonicalSignature","schemaId|schemaVersion|status|devOnly|isEnabled|itemSnapshotSignature|bindingCanonicalSignature|pipelineCanonicalSignature|feedbackRows|issues|canonicalSignature",PASS
+"surface.snapshot-status","surface","Complete=1/Unknown=2/Invalid=3","Complete=1/Unknown=2/Invalid=3",PASS

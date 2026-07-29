@@ -1,0 +1,10 @@
+condition,pipelineStatus,rowCount,predicateDisposition
+input null or schema mismatch,Invalid,0,none
+evaluationBatchId empty,Invalid,0,none
+P5-M invalid or identity drift,Invalid,0,none
+P1 Invalid,Invalid,0,none
+four P4 Complete,Complete,4,KnownTrue or KnownFalse
+no Invalid and any P4 Unknown,Unknown,4,null or Unknown
+any route authority invalid,Invalid,4,rejected row null
+P4 validator rejects,Invalid,4,rejected row null
+P4 Complete plus NotApplicable,Invalid,4,rejected row null

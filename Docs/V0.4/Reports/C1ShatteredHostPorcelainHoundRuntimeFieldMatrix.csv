@@ -1,0 +1,13 @@
+schemaOrSnapshot,field,owner,playerSafe,developerOnly,notes
+Profile,runtimeProfileId/contentId/presentationKey,Enemy,true,false,stable identity
+Profile,mechanicKeys/actionPatternIds,Enemy,true,false,immutable ordinal collections
+Profile,fixture cadence and HP/shell values,Enemy,false,true,dev-only fixture
+RuntimeState,enemyInstanceId/contentId/presentationKey,Enemy,true,false,presentation identity
+RuntimeState,resetGeneration/revision/lifecycle,Enemy,true,false,monotonic state
+RuntimeState,currentHp/currentShell/shellState,Enemy,true,false,Enemy-owned state
+RuntimeState,selfPossessionState,Enemy,true,false,own-state declaration only
+RuntimeState,acceptedApplicationEventIds,Enemy,false,true,dedupe ledger
+RuntimeState,activeAction/pendingRequests,Enemy,false,true,internal scheduling and neutral intent
+RuntimeState,developerDiagnostics,Enemy,false,true,excluded from presentation payload
+PresentationSafe,latestCue/publicErrors,Enemy,true,false,read-only presentation projection
+BattleApplication,application ledger fields,Battle,false,true,already-adjudicated neutral input

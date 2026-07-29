@@ -1,0 +1,72 @@
+section,name,type_or_value,rule
+schema,SchemaId,LayoutResilienceEvaluationInputAssembler.v1,Ordinal exact
+schema,SchemaVersion,1,InvariantCulture decimal
+status,Complete,1,Valid input with no unresolved required facts
+status,Unknown,2,Explicit applicability Unknown or required source incomplete
+status,Invalid,3,Malformed input source join channel or validator rejection
+status,zero,forbidden,Undefined enum values are rejected
+type,LayoutResilienceEvaluationInputAssemblerSchema,static,Schema constants only
+type,LayoutResilienceEvaluationInputAssemblerIssue,sealed,Read-only diagnostic
+type,LayoutResilienceEvaluationInputAssemblerInput,sealed,Read-only request
+type,LayoutResilienceEvaluationInputAssemblerResult,sealed,Read-only result
+type,ILayoutResilienceEvaluationInputAssembler,interface,Single Assemble operation
+type,DefaultLayoutResilienceEvaluationInputAssembler,sealed,Stateless singleton
+type,DefaultLayoutResilienceEvaluationInputAssemblerValidator,sealed,Result shape validator
+input,SchemaId,string,Must match assembler schema exactly
+input,SchemaVersion,int,Must equal 1
+input,EvaluationId,string,Required no outer whitespace and copied exactly
+input,RequirementId,string,Required no outer whitespace and Ordinal join key
+input,ApplicabilitySnapshot,N01B snapshot nullable,Missing stays Unknown plus null
+input,BuildProjectionResult,P1 result nullable,Missing normalizes to Incomplete plus null
+input,PressureSourceResult,P2 result nullable,Missing normalizes to Incomplete plus null
+result,SchemaId,string,Fixed assembler schema
+result,SchemaVersion,int,Fixed version 1
+result,Status,enum,Complete Unknown or Invalid only
+result,EvaluationInput,N01C input nullable,Invalid always null
+result,Issues,read-only list,Stable Path Code Message ordering
+result,CanonicalSignature,string,sha256 colon plus 64 lowercase hex
+issue,Code,string,Required diagnostic identifier
+issue,Status,enum,Unknown or Invalid only
+issue,Path,string,Required stable location
+issue,Message,string,Stable invariant text
+code,INPUT_NULL,Invalid,Assembler input missing
+code,ASSEMBLER_SCHEMA_MISMATCH,Invalid,Assembler schema or version mismatch
+code,EVALUATION_ID_INVALID,Invalid,Evaluation identity malformed
+code,REQUIREMENT_ID_INVALID,Invalid,Requirement identity malformed
+code,APPLICABILITY_SOURCE_MISSING,Unknown,N01B source missing
+code,APPLICABILITY_SOURCE_INVALID,Invalid,N01B public shape malformed
+code,REQUIREMENT_JOIN_MISSING,Invalid,Exact row absent
+code,REQUIREMENT_JOIN_DUPLICATE,Invalid,More than one exact row
+code,NOT_IN_CHANNEL_REJECTED,Invalid,Selected NotInChannel is not an input disposition
+code,BUILD_SOURCE_MISSING,Unknown,P1 result missing
+code,BUILD_SOURCE_UNKNOWN,Unknown,P1 result incomplete
+code,BUILD_SOURCE_INVALID,Invalid,P1 source declares Invalid
+code,BUILD_SOURCE_SHAPE_INVALID,Invalid,P1 public result shape malformed
+code,PRESSURE_SOURCE_MISSING,Unknown,P2 result missing
+code,PRESSURE_SOURCE_UNKNOWN,Unknown,P2 result incomplete
+code,PRESSURE_SOURCE_INVALID,Invalid,P2 source declares Invalid
+code,PRESSURE_SOURCE_SHAPE_INVALID,Invalid,P2 public result shape malformed
+code,N01C_VALIDATOR_REJECTED,Invalid,Pressure-only structural validator found issues
+canonical,identity,Ordinal exact,No trim case folding or cross-namespace equality
+canonical,integer,InvariantCulture decimal,No locale-sensitive representation
+canonical,bool,lowercase true or false,Presence is explicit
+canonical,placement rows,PlacementId Ordinal,Stable independent of input order
+canonical,cells,Y then X ascending,Stable spatial ordering
+canonical,kinds and clauses,numeric ascending,Stable enum ordering
+canonical,undirected edges,normalized endpoints then coordinates,Stable edge ordering
+canonical,issues,Path then Code then Message Ordinal,Stable diagnostics
+canonical,null versus empty,distinct,Missing is never encoded as empty
+precedence,Invalid,highest,Collect all Invalid source issues before returning
+precedence,Unknown,middle,Never upgrades missing facts
+precedence,Complete,lowest,Only after all required facts are complete
+boundary,NotApplicable,explicit N01B only,Produces NotRequired sides and null payloads
+boundary,NotInChannel,Invalid,Never becomes NotApplicable or Unknown
+boundary,N01C Validator,only allowed call,Evaluator and ValidateResult calls are zero
+boundary,real mapping,forbidden,No requirement readiness encounter or map connection
+boundary,numeric conversion,forbidden,No BP score threshold ratio or difficulty authoring
+immutability,Issues,read-only,Array copy before exposure
+immutability,EvaluationInput,defensive clone,Source mutation cannot change result
+verification,fixtures,22/22,All in-memory synthetic cases
+verification,C02 blocked rows,32/32,No runtime Unknown reduction
+verification,Actual Unknown reduction,0,Assembly does not evaluate
+

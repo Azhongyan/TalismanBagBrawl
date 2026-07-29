@@ -1,9 +1,9 @@
 # ItemStatRangeSchema01 Report
 
 - Package: `V0.4-ItemStatRangeSchema01`
-- Run time (UTC): `2026-07-16T08:55:14.1020065Z`
-- Overall: PASS
-- PASS marker: `ITEM_STAT_RANGE_SCHEMA01_PASS`
+- Run time (UTC): `2026-07-21T07:30:04.7982490Z`
+- Overall: FAIL
+- PASS marker: `NONE`
 - Schema ID: `ItemStatRangeSchemaSnapshot.v1`
 - Spec: 39 total / 39 PASS / 0 FAIL
 
@@ -35,13 +35,13 @@
 
 ## Historical Regressions
 
-- ItemRarityInstanceFoundation01: PASS
+- ItemRarityInstanceFoundation01: FAIL
 - ItemInnerDataCatalog: PASS
 - ItemSystemValidatorAndSnapshot: PASS
 - BuildSynergyCore: PASS
 - CoreAwakeningPreview: PASS
 - ItemSkillTriggerContract: PASS
-- ItemDetailProjectionComplete: PASS
+- ItemDetailProjectionComplete: FAIL
 - JuNian Lighting: PASS
 - ArrayBonus: PASS
 - Foundation original Spec: 159/159 PASS
@@ -53,4 +53,5 @@
 
 ## Errors
 
-- None
+- Historical regression report is not PASS: ItemRarityInstanceFoundation01.
+- Historical regression report is not PASS: ItemDetailProjectionComplete.

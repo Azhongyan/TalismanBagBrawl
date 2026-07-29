@@ -286,7 +286,30 @@ namespace TalismanBag.BuildSandbox
                 return Array.Empty<ItemShapeCell>();
             }
 
-            return payload.BuildNormalizedOffsets();
+            return BuildTrayCoordinateOffsets(payload.BuildNormalizedOffsets());
+        }
+
+        private static IReadOnlyList<ItemShapeCell> BuildTrayCoordinateOffsets(
+            IReadOnlyList<ItemShapeCell> normalizedOffsets)
+        {
+            ItemShapeCell[] offsets = (normalizedOffsets ?? Array.Empty<ItemShapeCell>())
+                .Distinct()
+                .OrderBy(cell => cell.y)
+                .ThenBy(cell => cell.x)
+                .ToArray();
+            if (offsets.Length == 0)
+            {
+                return Array.Empty<ItemShapeCell>();
+            }
+
+            int minY = offsets.Min(cell => cell.y);
+            int maxY = offsets.Max(cell => cell.y);
+            return offsets
+                .Select(cell => new ItemShapeCell(cell.x, minY + maxY - cell.y))
+                .Distinct()
+                .OrderBy(cell => cell.y)
+                .ThenBy(cell => cell.x)
+                .ToArray();
         }
 
         private void ReleaseItem(string itemId)

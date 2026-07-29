@@ -232,7 +232,7 @@ namespace TalismanBag.EditorTools.ItemBalance
             profile.rarityVersions = new List<ItemBalanceRarityVersion>();
             foreach (ItemInstanceRarityDefinition rarity in ItemInstanceRarityCatalog.All)
             {
-                int count = rarity.tierIndex + 1;
+                int count = OptionCCoreCount(rarity.rarity);
                 string[] coreIds = profile.coreCandidates.Take(count).Select(value => value.coreEffectId).ToArray();
                 profile.rarityVersions.Add(new ItemBalanceRarityVersion
                 {
@@ -338,8 +338,9 @@ namespace TalismanBag.EditorTools.ItemBalance
                 if (string.IsNullOrWhiteSpace(target.dataMaturity)) target.dataMaturity = seed.dataMaturity;
                 if (string.IsNullOrWhiteSpace(target.designNote)) target.designNote = seed.designNote;
             }
-            profile.coreCandidates = profile.coreCandidates.Where(value => value != null)
-                .OrderBy(value => value.isUltimate ? 4 : Math.Max(0, value.unlockLevel / 10 - 1)).Take(5).ToList();
+            profile.coreCandidates = seededCores.Select(seed => profile.coreCandidates.First(value => value != null
+                    && string.Equals(value.coreEffectId, seed.coreEffectId, StringComparison.Ordinal)))
+                .ToList();
 
             List<ItemBalanceWeightedAffix> seededPool = ItemCompleteCandidateContentSeed.BuildRandomPool(
                 profile, catalog.candidateRandomAffixes);
@@ -363,7 +364,7 @@ namespace TalismanBag.EditorTools.ItemBalance
             profile.rarityVersions ??= new List<ItemBalanceRarityVersion>();
             foreach (ItemBalanceRarityVersion version in profile.rarityVersions.Where(value => value != null))
             {
-                int visibleCount = version.rarity.ToTierIndex() + 1;
+                int visibleCount = OptionCCoreCount(version.rarity);
                 string[] coreIds = profile.coreCandidates.Take(visibleCount).Select(value => value.coreEffectId).ToArray();
                 version.eligibleCoreEffectIds ??= new List<string>();
                 version.visibleCoreEffectIds ??= new List<string>();
@@ -382,6 +383,19 @@ namespace TalismanBag.EditorTools.ItemBalance
                         + " · 物品强度（候选）" + version.candidateItemPower.ToString(CultureInfo.InvariantCulture);
             }
             EditorUtility.SetDirty(profile);
+        }
+
+        internal static int OptionCCoreCount(ItemInstanceRarity rarity)
+        {
+            return rarity switch
+            {
+                ItemInstanceRarity.White => 1,
+                ItemInstanceRarity.Green => 2,
+                ItemInstanceRarity.Blue => 3,
+                ItemInstanceRarity.Purple => 3,
+                ItemInstanceRarity.Orange => 4,
+                _ => 0
+            };
         }
 
         private static bool IsLegacyPlaceholder(ItemBalanceCoreCandidate value)

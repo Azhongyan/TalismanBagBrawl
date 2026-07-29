@@ -155,9 +155,9 @@ namespace TalismanBag.EditorTools.ItemGeneration
             CheckReadOnlyContracts(foundation, result);
             CheckSnapshotShape(result);
 
-            Require(string.Equals(ItemSystemSnapshot.CurrentSchemaVersion, "ItemSystemSnapshot.v1", StringComparison.Ordinal), result,
-                "Existing ItemSystemSnapshot schema version changed from ItemSystemSnapshot.v1.");
-            result.Notes.Add("ItemSystemSnapshot.v1 itemId/placementId semantics remain isolated; this package adds no field or branch to the existing snapshot.");
+            Require(string.Equals(ItemSystemSnapshot.CurrentSchemaVersion, "ItemSystemSnapshot.v2", StringComparison.Ordinal), result,
+                "ItemSystemSnapshot schema version must match the explicit ItemSystemSnapshot.v2 I031 migration.");
+            result.Notes.Add("ItemSystemSnapshot.v2 preserves ordinary itemId/placementId semantics while adding the isolated I031 ownership/location branch.");
             result.Notes.Add("ItemCatalogRarity and rarityDefault remain legacy Catalog preview background; ItemInstanceRarity is an independent instance-generation definition.");
             result.Notes.Add("I031 preview rarity/affix fields remain untouched, while ordinary eligibility is classified only by the explicit I001-I030 identity range.");
         }
@@ -512,14 +512,14 @@ namespace TalismanBag.EditorTools.ItemGeneration
                 .AppendLine($"- Derived rarity versions: {foundation?.RarityVersionKeys.Count ?? 0}")
                 .AppendLine("- I031 exclusion: excluded from ordinary generation and retained as directed core-progression identity")
                 .AppendLine("- Instance identity fields: " + string.Join(" / ", identityFields))
-                .AppendLine("- ItemSystemSnapshot.v1 compatibility: PASS; existing itemId/placementId schema and Canonical Signature implementation were not modified.")
+                .AppendLine("- ItemSystemSnapshot.v2 compatibility: PASS; ordinary itemId/placementId semantics remain isolated from I031 ownership/location state.")
                 .AppendLine()
                 .AppendLine("## Code Survey Conclusion")
                 .AppendLine()
                 .AppendLine("- `ItemCatalogRarity` (`bai/qing/lan/zi/cheng`) remains legacy Catalog preview background. The new `ItemInstanceRarity` is isolated and accepts only `white/green/blue/purple/orange`.")
                 .AppendLine("- `rarityDefault`, `allowedRarities`, display rarity, and affix preview fields do not determine ordinary generation eligibility or prototype-fixed quality.")
                 .AppendLine("- I031 still carries legacy rarity/affix preview fields in the untouched Catalog, but explicit identity classification excludes it from ordinary generation.")
-                .AppendLine("- Existing `ItemSystemSnapshot.v1` keeps `itemId` as Catalog identity and `placementId` as board placement identity. This package adds a separate `baseItemId` / `itemInstanceId` snapshot without `placementId`.")
+                .AppendLine("- `ItemSystemSnapshot.v2` keeps ordinary `itemId` as Catalog identity and `placementId` as board placement identity. Item generation continues to use separate `baseItemId` / `itemInstanceId` snapshots without an I031 ordinary instance.")
                 .AppendLine("- The new foundation owns a separate Canonical Signature and never appends to or rewrites `ItemSystemSnapshot.BuildDebugSignature()`.")
                 .AppendLine()
                 .AppendLine("## Historical Regressions")

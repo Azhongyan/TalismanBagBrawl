@@ -1,0 +1,98 @@
+# ItemSystem BattleSandbox Board Adapter Report
+
+- Package: `V0.4-ItemSystemBattleSandboxBoardAdapter01`
+- Revision: `Revision09-Rev03`
+- Assignment SHA-256: `6c346e00c35342345ef4f92765eb64685f13fef213aa782fd74369769714e1a2`
+- Item-review release: `GUARD_PASS_ITEMSYSTEMBATTLESANDBOARDADAPTER01_REVISION09_REV03_ITEM_REVIEW`
+- Item Guard: `ITEM_GUARD_CONFIRM_ITEMSYSTEMBATTLESANDBOARDADAPTER01`
+- Enemy Guard rereview: `NOT_REQUIRED`
+- Capability Algorithm Guard rereview: `NOT_REQUIRED`
+- Static status: `DEV_COMPLETE / QA_STATIC_PASS / WAITING_USER_HANDTEST`
+- Offline verifier: `PASS / 56 of 56`
+- Unity compile + StaticBatch verifier: `PASS / 56 of 56`
+- Protected non-whitelist hashes: `PASS / 12 of 12`
+- Package Leak Count: `0`
+- User handtest: `WAITING_USER_HANDTEST`
+- Package seed: `404310000`
+- Ordinary seed rule: `packageSeed + ordinal`
+- Ordinary rarity: `ItemInstanceRarity.Orange / orange / 道品`
+- Artwork rarityIndex: `5`
+- DaoPin detail model coverage: `30 of 30 / complete visible sections`
+- Authored detail visible binding: `30 of 30 / header + model-visible sections`
+- Legacy Text S20G-S20N: `PASS / full panel font + section state + layout + shared view`
+- Revision09-Rev03 S20O-S20V: `PASS / Chinese typography + BodyText container + authored icons`
+- Legacy Text recovery order: `chineseTextFont -> first descendant Font -> installed SimSun -> Microsoft YaHei -> Noto Sans CJK SC -> Droid Sans Fallback -> LegacyRuntime.ttf`
+- Cached panel font: `SimSun / installed OS Font: SimSun / resolution count 1`
+- Font fallback reason: `NONE / preferred SimSun or authored source selected`
+- Authored icon final-visible counts: `FaMen 90 / QiLei 60 / Core 30 / Placement 30 / Flavor 30`
+- Authored icon checks: `Sprite / enabled / activeInHierarchy / effective alpha / Canvas cull / viewport intersection / exact resource identity`
+- Existing valid font/size/color/alignment/material overwrite count: `0`
+- Initial authority: `ItemSystemSnapshot.v2 / I031 Complete+Inventory / empty board`
+- Tray capacity: `5 columns / 13 logical rows / 65 slots`
+- Runtime extension: `TrayGridSlot_Runtime_41-65 / 25 DontSave slots`
+- Packing order: `footprint cells descending, then baseItemId Ordinal; anchors row-major`
+- Footprint cells / last occupied slot: `62 ordinary + 1 I031 = 63 / 63`
+- Detail runtime: `one authored PopupLayer/ItemDetailPanel / initial hide / latest v2 projection / legacy panel disabled`
+- Runtime detail roots / prefab loads / panel instantiate / panel destroy: `0 / 0 / 0 / 0`
+- I031 identity: `SPECIAL_I031 / P_SYSTEM_I031 / no ordinary itemInstanceId`
+- IF01 canonical signature: `sha256:c29d558621cb9af5ffe2532c3c1300d6f721554fe3d06a4ab1e18c9398501b82`
+- P6 feedback canonical signature: `sha256:9a19bd130d8beed7f27ffd99632e0513ffdfb9666a06d3126db30eb2ab01290a`
+
+## Verifier results
+
+- S01: `PASS` — exact I001-I031 roster, Ordinal and unique
+- S01A: `PASS` — 40/60 reject, 65 accepts 63 cells through slot 63
+- S01B: `PASS` — runtime slots 41-65 install and cleanly uninstall
+- S02: `PASS` — deterministic Orange/DaoPin projections and explicit identities
+- S03: `PASS` — I031 inventory/board/move/return stable identity
+- S04: `PASS` — catalog shapes, core cells and rotation semantics
+- S04A: `PASS` — ordinary Orange rarityIndex 5 artwork resolves 30/30
+- S04B: `PASS` — I031 lit and unlit artwork resolves 2/2
+- S04C: `PASS` — 31/31 final artwork renderer binding and regressions
+- S04D: `PASS` — tray/ghost/board exact Sprite seam and restore
+- S05: `PASS` — owned Inventory I031 plus empty board is valid v2
+- S05A: `PASS` — omitted explicit I031 state rejects deterministically
+- S06: `PASS` — legal tray-to-board commit refreshes IF01/P6 once
+- S07: `PASS` — overlap, bounds and eye failures are atomic
+- S08: `PASS` — board move commits atomically
+- S09: `PASS` — rotate preview and commit use ItemSystem semantics
+- S10: `PASS` — ordinary and I031 return preserve exact inventory state
+- S11: `PASS` — reset restores all 31 to tray and empty board
+- S12: `PASS` — same snapshot and no-op reset do not refresh
+- S13: `PASS` — changed commit/reset refresh exactly once
+- S14: `PASS` — unknown/malformed dependency never succeeds
+- S15: `PASS` — compatibility snapshot is one-way from ItemSystem
+- S16: `PASS` — only the real V04 BattleSandbox path installs
+- S17: `PASS` — ItemSandbox and UnifiedBattle shell are rejected
+- S18: `PASS` — no scene/prefab/layout/formal-system write
+- S19: `PASS` — one authored scene panel hides/reuses/uninstalls intact
+- S19A: `PASS` — no prefab/runtime detail construction or ItemSandbox presenter
+- S20: `PASS` — exact row model and authoritative Sprite bind
+- S20A: `PASS` — tray detail uses CatalogPreview latest v2
+- S20B: `PASS` — placed detail uses all five v2 projections
+- S20C: `PASS` — fresh projected clone and immutable base model
+- S20D: `PASS` — invalid/stale/mismatched detail context clears
+- S20E: `PASS` — 30/30 DaoPin models expose complete player detail
+- S20F: `PASS` — authored panel renders all model-visible player text
+- S20G: `PASS` — section hidden/plain/rows/plain/hidden transitions
+- S20H: `PASS` — target panel resolves a usable Legacy Text font
+- S20I: `PASS` — all active data-bearing Legacy Text has a font
+- S20J: `PASS` — header and connected status badge text render data
+- S20K: `PASS` — plain body and authored rows are exclusive and restorable
+- S20L: `PASS` — runtime-created Legacy Text receives a valid font
+- S20M: `PASS` — active data-bearing Text preferred size is non-zero
+- S20N: `PASS` — ItemSandbox and BattleSandbox shared-view regression
+- S20O: `PASS` — source SimSun and target null-font evidence
+- S20P: `PASS` — target resolves cached SimSun or exact approved fallback
+- S20Q: `PASS` — authored mode keeps BodyText container active
+- S20R: `PASS` — FaMen Build icons are actually visible and exact
+- S20S: `PASS` — QiLei Build icons are actually visible and exact
+- S20T: `PASS` — Core Effect icons match base item and ordinal
+- S20U: `PASS` — Placement and Flavor authored icons remain visible
+- S20V: `PASS` — plain/authored/plain preserves font sprite and visibility
+- S21: `PASS` — authority detail has no legacy panel fallback
+- S22: `PASS` — tap/drag/close read-only detail seam remains
+- S23: `PASS` — inventory I031 means zero range and unlit Build state
+- S24: `PASS` — interior/edge/corner I031 exact clipped range
+- S25: `PASS` — I031 move/return clears stale range and links
+- S26: `PASS` — authority renderer never resolves legacy power

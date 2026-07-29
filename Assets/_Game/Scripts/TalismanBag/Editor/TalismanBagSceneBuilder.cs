@@ -324,7 +324,7 @@ namespace TalismanBag.EditorTools
         {
             try
             {
-                Assembly editorAssembly = typeof(Editor).Assembly;
+                Assembly editorAssembly = typeof(UnityEditor.Editor).Assembly;
                 Type sizesType = editorAssembly.GetType("UnityEditor.GameViewSizes");
                 Type sizeType = editorAssembly.GetType("UnityEditor.GameViewSize");
                 Type sizeTypeEnum = editorAssembly.GetType("UnityEditor.GameViewSizeType");

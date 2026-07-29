@@ -1,0 +1,48 @@
+ownerType,fieldName,fieldType,cardinality,semantic,sourceOfTruth,eligibility,futureConsumer
+LayoutResilienceStructuralPredicateSchema,SchemaId,string,1,exact schema identity,contract constant,internal contract,validator
+LayoutResilienceStructuralPredicateSchema,SchemaVersion,int,1,exact schema version,contract constant,internal contract,validator
+LayoutCellCoordinate,X,int,1,neutral integer x coordinate,caller authored or future projection,coordinate only,future adapters
+LayoutCellCoordinate,Y,int,1,neutral integer y coordinate,caller authored or future projection,coordinate only,future adapters
+LayoutCellConnection,CellA,LayoutCellCoordinate,1,canonical first undirected endpoint,caller authored pressure,usable neutral cell,pure evaluator
+LayoutCellConnection,CellB,LayoutCellCoordinate,1,canonical second undirected endpoint,caller authored pressure,usable neutral cell,pure evaluator
+LayoutResiliencePlacedItemFactSnapshot,PlacementId,string,1,ordinal placement identity,future Item projection,approved Item fact,future Item adapter
+LayoutResiliencePlacedItemFactSnapshot,ItemId,string,1,ordinal base Item identity,future Item projection,approved Item fact,future Item adapter
+LayoutResiliencePlacedItemFactSnapshot,AnchorCell,LayoutCellCoordinate,1,world placement anchor,future Item projection,approved Item fact,validation and signature
+LayoutResiliencePlacedItemFactSnapshot,Rotation,int,1,already applied placement rotation,future Item projection,approved Item fact,validation and signature
+LayoutResiliencePlacedItemFactSnapshot,ShapeCells,IReadOnlyList<LayoutCellCoordinate>,1..n,local shape integrity evidence,future Item projection,approved Item fact,validation and signature
+LayoutResiliencePlacedItemFactSnapshot,OccupiedCells,IReadOnlyList<LayoutCellCoordinate>,1..n,materialized world occupancy,future Item projection,approved Item fact,pure evaluator
+LayoutResiliencePlacedItemFactSnapshot,CoreCellWorld,LayoutCellCoordinate,1,materialized world core,future Item projection,approved Item fact,pure evaluator
+LayoutResiliencePlacedItemFactSnapshot,IsLit,bool,1,upstream lit fact,future Item projection,approved Item fact,counted consistency validation
+LayoutResiliencePlacedItemFactSnapshot,IsCountedInBuild,bool,1,upstream Build participation,future Item projection,approved Item fact,pure evaluator filter
+LayoutResilienceBuildFactSnapshot,BoardSize,nullable int,0..1,neutral square board bound,future Item projection,approved Item fact,validator
+LayoutResilienceBuildFactSnapshot,BaselineEyeCell,LayoutCellCoordinate,0..1,baseline structural anchor,future Item projection,approved Item fact,validation and signature
+LayoutResilienceBuildFactSnapshot,PlacementRows,IReadOnlyList<PlacedItemFact>,0..n,materialized placement facts,future Item projection,approved Item facts,pure evaluator
+LayoutPressureSnapshot,PressureInputId,string,1,ordinal authored pressure identity,caller authored pressure,fixture only now,future pressure adapter
+LayoutPressureSnapshot,PressureKinds,IReadOnlyList<LayoutPressureKind>,1..3,authored pressure provenance,caller authored pressure,no coordinate inference,diagnostics
+LayoutPressureSnapshot,LayoutDomainCells,IReadOnlyList<LayoutCellCoordinate>,1..n,complete neutral layout domain,caller authored pressure,fully materialized,pure evaluator validator
+LayoutPressureSnapshot,UsableCellsAfterPressure,IReadOnlyList<LayoutCellCoordinate>,0..n,post-pressure usable mask,caller authored pressure,fully materialized,pure evaluator
+LayoutPressureSnapshot,EffectiveEyeAnchorCellAfterPressure,LayoutCellCoordinate,0..1,post-pressure structural anchor,caller authored pressure,fully materialized,pure evaluator
+LayoutPressureSnapshot,PreservedStructuralConnectionsAfterPressure,IReadOnlyList<LayoutCellConnection>,0..n,post-pressure neutral connectivity,caller authored pressure,fully materialized,pure evaluator
+LayoutPressureSnapshot,RequiredPredicateClauses,IReadOnlyList<ClauseKind>,1..5,explicit clauses to evaluate,caller authored pressure,no implicit enablement,pure evaluator
+LayoutResilienceEvaluationInput,SchemaId,string,1,exact schema identity,caller input,internal contract,validator
+LayoutResilienceEvaluationInput,SchemaVersion,int,1,exact schema version,caller input,internal contract,validator
+LayoutResilienceEvaluationInput,EvaluationId,string,1,ordinal evaluation identity,caller input,dev fixture only,diagnostics
+LayoutResilienceEvaluationInput,ApplicabilityState,EnemyRequirementApplicabilityState,1,N01B channel applicability,caller input,N01B semantics,pure evaluator disposition
+LayoutResilienceEvaluationInput,BuildFactsCompleteness,LayoutResilienceInputCompleteness,1,explicit Item-side completeness,caller input,no empty-set inference,pure evaluator disposition
+LayoutResilienceEvaluationInput,PressureFactsCompleteness,LayoutResilienceInputCompleteness,1,explicit pressure-side completeness,caller input,no empty-set inference,pure evaluator disposition
+LayoutResilienceEvaluationInput,BuildFacts,LayoutResilienceBuildFactSnapshot,0..1,neutral build facts,caller input,no direct Item dependency,pure evaluator
+LayoutResilienceEvaluationInput,Pressure,LayoutPressureSnapshot,0..1,neutral pressure facts,caller input,no Map inference,pure evaluator
+LayoutResiliencePredicateClauseSnapshot,ClauseKind,LayoutResiliencePredicateClauseKind,1,explicit evaluated clause,pure evaluator,required clause only,diagnostics
+LayoutResiliencePredicateClauseSnapshot,ClauseState,LayoutResiliencePredicateClauseState,1,satisfied or violated,pure evaluator,no readiness meaning,diagnostics
+LayoutResiliencePredicateResultSnapshot,SchemaId,string,1,validated schema identity,input,internal contract,future structural consumer
+LayoutResiliencePredicateResultSnapshot,SchemaVersion,int,1,validated schema version,input,internal contract,future structural consumer
+LayoutResiliencePredicateResultSnapshot,EvaluationId,string,1,validated evaluation identity,input,dev fixture only,diagnostics
+LayoutResiliencePredicateResultSnapshot,ApplicabilityState,EnemyRequirementApplicabilityState,1,preserved N01B applicability,input,no remapping,future structural consumer
+LayoutResiliencePredicateResultSnapshot,PredicateState,LayoutResiliencePredicateState,1,strict four-state disposition,pure evaluator,no readiness band,future structural consumer
+LayoutResiliencePredicateResultSnapshot,ClauseRows,IReadOnlyList<ClauseSnapshot>,0..5,required clause outcomes only,pure evaluator,no player output,diagnostics
+LayoutResiliencePredicateResultSnapshot,CanonicalSignature,string,1,deterministic full input and result identity,canonical serializer,internal diagnostics,offline audit
+LayoutResilienceValidationIssue,Code,string,1,stable validation code,validator,developer diagnostic,verifier
+LayoutResilienceValidationIssue,Path,string,1,ordinal failing field path,validator,developer diagnostic,verifier
+LayoutResilienceValidationIssue,Message,string,1,developer explanation,validator,developer diagnostic,verifier
+LayoutResilienceValidationException,Issues,IReadOnlyList<ValidationIssue>,0..n,immutable rejected-input evidence,validator,developer diagnostic,verifier
+

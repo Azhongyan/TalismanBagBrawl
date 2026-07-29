@@ -1,0 +1,7 @@
+base_item_id,item_instance_id,placement_id,rarity,root_seed,base_damage,damage_up_bp,adjacency_bp,trade_bp,build2_bp,additive_bp,resolved_damage,active_core_count
+"I007","wb_i007_orange_404310007","P_BOARD_I007","Orange",404310007,24,1454,0,0,800,2254,29,4
+"I008","wb_i008_orange_404310008","P_BOARD_I008","Orange",404310008,32,1327,1839,0,0,3166,42,4
+"I009","wb_i009_orange_404310009","P_BOARD_I009","Orange",404310009,44,1450,0,0,800,2250,53,4
+"I010","wb_i010_orange_404310010","P_BOARD_I010","Orange",404310010,37,1662,0,0,800,2462,46,4
+"I011","wb_i011_orange_404310011","P_BOARD_I011","Orange",404310011,40,1740,0,2200,0,3940,55,4
+"I012","wb_i012_orange_404310012","P_BOARD_I012","Orange",404310012,62,1527,0,0,800,2327,76,4

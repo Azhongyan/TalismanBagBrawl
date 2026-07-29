@@ -1488,3 +1488,48 @@ STATE: USER_ACCEPTED_PHASE_MILESTONE / READY_FOR_REPOOPS_UPLOAD
 NEXT: ItemDetailVisualSlotTool01
 NEXT_STATE: WAIT_UNTIL_REPOOPS_UPLOAD_RECEIPT
 ```
+
+## Shared Module Layering / Prefab Presentation 强制规则
+
+Item Guard 后续必须同时读取并执行：
+
+```text
+Docs/V0.4/SHARED_MODULE_LAYERING_AND_PREFAB_PRESENTATION_GUARD.md
+GUARD_SYNC_SHARED_MODULE_LAYERING_ACCEPTED
+GUARD_REQUIRE_PREFAB_PRESENTATION_READONLY
+GUARD_REQUIRE_PLAIN_LANGUAGE_USER_WARNING
+```
+
+Item 数据与运行时状态继续由 Item System 唯一持有。Item Prefab 只允许读取
+`ItemDetailViewModel`、Item ViewModel 或权威 Snapshot 的只读投影并渲染；不得挂载
+Item 真源、当前背包、棋盘、品阶实例、I031状态或第二套 InventoryManager。
+
+任何 Item UI 包必须明确属于 Base Prefab、Prefab Variant、Scene Slot 或 Presenter；
+若继续复制 Scene hierarchy、在不同场景分别维护同一弹窗、使用 Scene-local Font，或
+超过两个技术包没有设计师手测节点，Item Guard 必须暂停并用非技术语言提醒用户。
+
+### Item Player Field Lineage Gate
+
+Item Guard 必须执行
+`SHARED_MODULE_LAYERING_AND_PREFAB_PRESENTATION_GUARD.md` 第 16-17 节。所有道具详情
+字段必须从 Item 真源、runtime producer、Snapshot、Composer、ViewModel追踪到共享
+Prefab节点与真实样本。Fixture显示成功、Snapshot整体Valid和兜底文案可见均不能替代
+真实数据接线 PASS。
+
+当前 Build 轨道手测失败必须标记为 `REAL_RUNTIME_PATH_FAIL`，在定位第一个断点前，
+不得通过 Prefab 默认数据、硬编码阶段行或玩家文案掩盖。
+
+字段血缘审计已完成：`MULTIPLE_BREAKPOINTS`。第一断点为 Battle Runtime Producer /
+State Assembly 未消费 Roll 实例 `BuildQualification`；第二断点为详情 Adapter 使用
+`CatalogPreview + empty placementId`，没有把实例资格与阶段效果投影到 ViewModel。
+
+批准的修复顺序只能是：
+
+```text
+ItemInstanceQualifiedBuildStateAdapter01
+→ ItemDetailQualifiedBuildTrackProjection01
+```
+
+两个包均由 Item Guard 主审、Cross-System Guard确认；Item Algorithm Guard、Enemy Guard
+不参与，因为本轮不改变资格算法、概率、Enemy语义或Capability计算。真实数据链通过前，
+ItemDetail Base Prefab A/B保持阻塞。

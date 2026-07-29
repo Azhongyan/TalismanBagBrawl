@@ -1,0 +1,12 @@
+sourceField,targetField,transform,eligibility,missingDisposition,owner
+SchemaId,validation-only,Ordinal exact,required,Invalid,P2
+SchemaVersion,validation-only,exact integer,required,Invalid,P2
+AuthoringCompleteness,result disposition,named enum only,required,Invalid if undefined,P2
+PressureInputId,LayoutPressureSnapshot.PressureInputId,exact no trim,required,Unknown,P2
+DeclaredBoardSize,validation-only,bounds and exact-domain metadata,required,Unknown,P2
+PressureKinds,LayoutPressureSnapshot.PressureKinds,numeric stable sort,required nonempty,Unknown,P2
+LayoutDomainCells,LayoutPressureSnapshot.LayoutDomainCells,Y/X stable sort,required exact board,Unknown,P2
+UsableCellsAfterPressure,LayoutPressureSnapshot.UsableCellsAfterPressure,Y/X stable sort,required may empty,Unknown,P2
+EffectiveEyeAnchorCellAfterPressure,LayoutPressureSnapshot.EffectiveEyeAnchorCellAfterPressure,exact defensive copy,required,Unknown,P2
+PreservedStructuralConnectionsAfterPressure,LayoutPressureSnapshot.PreservedStructuralConnectionsAfterPressure,normalize endpoints and stable sort,required may empty,Unknown,P2
+RequiredPredicateClauses,LayoutPressureSnapshot.RequiredPredicateClauses,numeric stable sort,required nonempty,Unknown,P2

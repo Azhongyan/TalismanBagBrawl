@@ -1,0 +1,21 @@
+fixtureId,source,expectedStatus,expectedPredicateState,expectedClauses,evaluateCalls,validateResultCalls,result
+1,P3 Complete Applicable C/C single satisfied,Complete,KnownTrue,1,1,1,PASS
+2,P3 Complete Applicable C/C single violated,Complete,KnownFalse,1,1,1,PASS
+3,P3 Complete Applicable C/C multi all satisfied,Complete,KnownTrue,4,1,1,PASS
+4,P3 Complete Applicable C/C multi mixed,Complete,KnownFalse,4,1,1,PASS
+5,P3 Complete explicit NotApplicable,Complete,NotApplicable,0,1,1,PASS
+6,P3 Unknown explicit Unknown C/C,Unknown,Unknown,0,1,1,PASS
+7,P3 Unknown Applicable Build Incomplete,Unknown,Unknown,0,1,1,PASS
+8,P3 Unknown Applicable Pressure Incomplete,Unknown,Unknown,0,1,1,PASS
+9,P3 Unknown null EvaluationInput,Unknown,null,0,0,0,PASS
+10,P3 source null,Unknown,null,0,0,0,PASS
+11,P3 Invalid,Invalid,null,0,0,0,PASS
+12,Malformed Complete/null Invalid/non-null signature,Invalid,null,0,0,0,PASS
+13,Undefined Consumer P3 N01C enum,Invalid,null,0,0,0,PASS
+14,Null Consumer input or schema mismatch,Invalid,null,0,0,0,PASS
+15,Legal P3 shape malformed N01C input,Invalid,null,0,1,0,PASS
+16,Injected evaluator throws,Invalid,null,0,1,0,PASS
+17,Injected evaluator returns null,Invalid,null,0,1,1,PASS
+18,Injected malformed N01C result,Invalid,null,0,1,1,PASS
+19,Reverse order culture change repeated consume,Complete,KnownTrue,3,1,1,PASS
+20,Defensive copy immutable clauses canonical sensitivity,Complete,KnownTrue,1,1,1,PASS

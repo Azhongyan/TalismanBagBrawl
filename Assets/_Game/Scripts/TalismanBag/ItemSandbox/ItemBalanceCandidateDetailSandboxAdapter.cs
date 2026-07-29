@@ -319,10 +319,6 @@ namespace TalismanBag.ItemSandbox
             }
 
             model.displayPrimaryStats = stats;
-            ItemBalanceCoreCandidate ultimate = profile?.coreCandidates?.FirstOrDefault(value => value?.isUltimate == true);
-            model.displayOrangeAffix = ultimate != null && projection.rarity == ItemInstanceRarity.Orange
-                ? FormatCoreEffectBody(ultimate, true)
-                : string.Empty;
             model.displayLightingStatusText = NotBattleConnected;
             model.displayArrayBonusStatusText = NotBattleConnected;
             model.displayAwakeningStatusText = "潜力可见；养成开窍未接入";
@@ -391,12 +387,15 @@ namespace TalismanBag.ItemSandbox
             List<ItemBalanceCoreCandidate> previewCoreCandidates = (profile?.coreCandidates
                     ?? new List<ItemBalanceCoreCandidate>())
                 .Where(value => value != null
-                    && !value.isUltimate
                     && !string.IsNullOrWhiteSpace(value.coreEffectId)
-                    && visibleCoreIdSet.Contains(value.coreEffectId))
-                .OrderBy(value => value.unlockLevel)
+                    && visibleCoreIdSet.Contains(value.coreEffectId)
+                    && FormalCandidateRank(
+                        projection.baseItemId,
+                        value.coreEffectId) < int.MaxValue)
+                .OrderBy(value => FormalCandidateRank(
+                    projection.baseItemId,
+                    value.coreEffectId))
                 .ThenBy(value => value.coreEffectId, StringComparer.Ordinal)
-                .Take(4)
                 .ToList();
             model.displayCoreEffects = previewCoreCandidates.Count > 0
                 ? previewCoreCandidates.Select(candidate => new ItemDetailTextLine(
@@ -405,7 +404,9 @@ namespace TalismanBag.ItemSandbox
                         : candidate.displayName,
                     FormatCoreEffectDetail(candidate),
                     candidate.coreEffectId)).ToList()
-                : projection.EligibleCoreEffectIds.Take(4).Select(coreId => new ItemDetailTextLine(
+                : FormalCandidateIds(projection.baseItemId)
+                    .Where(coreId => visibleCoreIdSet.Contains(coreId))
+                    .Select(coreId => new ItemDetailTextLine(
                     coreId,
                     FormatCoreEffectDetail(null),
                     coreId)).ToList();
@@ -433,10 +434,16 @@ namespace TalismanBag.ItemSandbox
                 SectionOrHidden("随机词条", randomAffixes, "randomAffix"),
                 string.IsNullOrWhiteSpace(model.displayOrangeAffix)
                     ? HiddenSection("orange")
-                    : SectionOrHidden("道痕 / 终极核心", model.displayOrangeAffix, "orange"),
+                    : SectionOrHidden("道痕", model.displayOrangeAffix, "orange"),
                 SectionOrHidden("核心效果", FormatCoreEffectLines(model.displayCoreEffects, true), "coreEffect"),
-                SectionOrHidden("法门构筑", faMenBuildText, "famenBuild"),
-                SectionOrHidden("器类构筑", qiLeiBuildText, "qileiBuild"),
+                SectionOrHidden(
+                    ItemBuildPlayerPresentationFormatter.FaMenSectionTitle,
+                    faMenBuildText,
+                    "famenBuild"),
+                SectionOrHidden(
+                    ItemBuildPlayerPresentationFormatter.QiLeiSectionTitle,
+                    qiLeiBuildText,
+                    "qileiBuild"),
                 HiddenSection("skillMonitor"),
                 SectionOrHidden("推荐摆放", FormatTextLines(model.displayPlacementTips), "placement"),
                 SectionOrHidden("旧物日记", model.displayFlavorText, "flavor"),
@@ -699,26 +706,23 @@ namespace TalismanBag.ItemSandbox
 
             int maxPieceCount = previews.Max(ResolveBuildStageThreshold);
             int currentCount = previews.Max(ResolveBuildCurrentCount);
-            string[] rows = previews
+            ItemBuildPlayerPresentationStage[] stages = previews
                 .OrderBy(ResolveBuildStageThreshold)
-                .Select(value => FormatBuildStageRow(value, faMen, currentCount, rarity))
+                .Select(value => new ItemBuildPlayerPresentationStage(
+                    ResolveBuildStageThreshold(value),
+                    value.previewText,
+                    currentCount >= ResolveBuildStageThreshold(value)))
                 .ToArray();
-            string progressLine = BuildColoredText(
-                ItemSandboxBuildPresentationNames.ProgressLabel(faMen, stableTag)
-                    + "：" + FormatBuildProgress(currentCount, maxPieceCount),
-                BuildActiveHex,
-                true);
-            if (faMen)
-            {
-                string memberRows = FormatFaMenCandidateMemberRows(stableTag);
-                return BuildColoredText(NonEmpty(previews.FirstOrDefault()?.buildName, "未命名法门典藏"), BuildTitleHex, true)
-                    + "\n" + progressLine
-                    + (string.IsNullOrWhiteSpace(memberRows) ? string.Empty : "\n" + memberRows)
-                    + "\n" + string.Join("\n", rows);
-            }
-
-            return progressLine
-                + "\n" + string.Join("\n", rows);
+            return ItemBuildPlayerPresentationFormatter.FormatTrack(
+                faMen,
+                stableTag,
+                currentCount,
+                maxPieceCount,
+                stages,
+                Array.Empty<string>(),
+                string.Empty,
+                RarityColorHex(rarity),
+                faMen ? previews.FirstOrDefault()?.buildName : null);
         }
 
         private static string FormatFaMenCandidateMemberRows(string stableTag)
@@ -1338,6 +1342,39 @@ namespace TalismanBag.ItemSandbox
         private static string NonEmpty(string value, string fallback)
         {
             return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+        }
+
+        private static IReadOnlyList<string> FormalCandidateIds(
+            string baseItemId)
+        {
+            string prefix = "candidate_core_"
+                + Normalize(baseItemId).ToLowerInvariant();
+            return new[]
+            {
+                prefix + "_01",
+                prefix + "_02",
+                prefix + "_03",
+                prefix + "_ultimate"
+            };
+        }
+
+        private static int FormalCandidateRank(
+            string baseItemId,
+            string candidateDefinitionId)
+        {
+            IReadOnlyList<string> ids =
+                FormalCandidateIds(baseItemId);
+            for (int index = 0; index < ids.Count; index++)
+            {
+                if (string.Equals(
+                        ids[index],
+                        candidateDefinitionId,
+                        StringComparison.Ordinal))
+                {
+                    return index;
+                }
+            }
+            return int.MaxValue;
         }
 
         private static string Normalize(string value)
