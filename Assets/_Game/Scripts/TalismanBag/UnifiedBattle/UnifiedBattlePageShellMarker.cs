@@ -17,5 +17,13 @@ namespace TalismanBag.UnifiedBattle
         public bool IsEnabled => isEnabled;
         public bool FormalFlow => formalFlow;
         public bool ConnectedToFormalRoute => connectedToFormalRoute;
+
+        public void ConfigureFormalForEditor()
+        {
+            devOnly = false;
+            isEnabled = true;
+            formalFlow = true;
+            connectedToFormalRoute = true;
+        }
     }
 }

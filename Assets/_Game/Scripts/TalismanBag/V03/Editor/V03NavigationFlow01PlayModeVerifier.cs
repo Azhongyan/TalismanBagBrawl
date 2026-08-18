@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Linq;
+using TalismanBag.Navigation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -19,8 +20,11 @@ namespace TalismanBag.V03.EditorTools
 
         private static int frameCount;
         private static int stage;
-        private static int trialSceneFrames;
+        private static int completedCycles;
+        private static int mainHomeLoadCount;
+        private static int worldMapSceneFrames;
         private static int upgradeSceneFrames;
+        private static double bootDeadline;
 
         static V03NavigationFlow01PlayModeVerifier()
         {
@@ -28,9 +32,9 @@ namespace TalismanBag.V03.EditorTools
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             EditorApplication.update -= OnEditorUpdate;
             EditorApplication.update += OnEditorUpdate;
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/NavigationFlow01/[QA Only] Verify PlayMode")]
         public static void VerifyPlayModeBatch()
         {
             BeginVerification();
@@ -44,14 +48,17 @@ namespace TalismanBag.V03.EditorTools
         private static void BeginVerification()
         {
             Require(!EditorApplication.isPlaying, "PlayMode verification is already running.");
+            TalismanBag.V03.Editor.V03MainSceneNavigationVerifier.VerifyFromMenu();
             EditorSceneManager.OpenScene(
-                V03NavigationFlow01SceneBuilder.MainHomeScenePath,
+                TalismanSceneNavigationOwner.BootEntryScenePath,
                 OpenSceneMode.Single);
-            V03NavigationFlow01SceneBuilder.VerifyStaticScene();
 
             frameCount = 0;
-            stage = 0;
-            trialSceneFrames = 0;
+            stage = -1;
+            completedCycles = 0;
+            bootDeadline = EditorApplication.timeSinceStartup + 5d;
+            mainHomeLoadCount = 0;
+            worldMapSceneFrames = 0;
             upgradeSceneFrames = 0;
             SessionState.SetBool(VerificationKey, true);
             SessionState.SetBool(ExitKey, false);
@@ -64,8 +71,11 @@ namespace TalismanBag.V03.EditorTools
                 SessionState.GetBool(VerificationKey, false))
             {
                 frameCount = 0;
-                stage = 0;
-                trialSceneFrames = 0;
+                stage = -1;
+                completedCycles = 0;
+                bootDeadline = EditorApplication.timeSinceStartup + 5d;
+                mainHomeLoadCount = 0;
+                worldMapSceneFrames = 0;
                 upgradeSceneFrames = 0;
                 return;
             }
@@ -92,27 +102,30 @@ namespace TalismanBag.V03.EditorTools
             try
             {
                 Scene activeScene = SceneManager.GetActiveScene();
-                if (activeScene.path ==
-                    TalismanBag.V03.Navigation.V03NavigationFlowController.UpgradeScenePath)
+                if (activeScene.path == TalismanSceneNavigationOwner.BootEntryScenePath)
                 {
-                    upgradeSceneFrames++;
-                    if (upgradeSceneFrames >= 3)
+                    VerifyBootEntryScene(activeScene);
+                    return;
+                }
+
+                if (activeScene.path == TalismanSceneNavigationOwner.WorldMapScenePath)
+                {
+                    worldMapSceneFrames++;
+                    if (worldMapSceneFrames >= 3)
                     {
-                        VerifyUpgradeScene(activeScene);
-                        CompleteVerification();
+                        VerifyWorldMapScene(activeScene);
                     }
 
                     return;
                 }
 
                 if (activeScene.path ==
-                    TalismanBag.V03.Navigation.V03NavigationFlowController.TrialScenePath)
+                    TalismanSceneNavigationOwner.TalismanUpgradeScenePath)
                 {
-                    trialSceneFrames++;
-                    if (trialSceneFrames >= 3)
+                    upgradeSceneFrames++;
+                    if (upgradeSceneFrames >= 3)
                     {
-                        VerifyTrialScene(activeScene);
-                        CompleteVerification();
+                        VerifyUpgradeScene(activeScene);
                     }
 
                     return;
@@ -150,25 +163,70 @@ namespace TalismanBag.V03.EditorTools
                 case 0:
                     VerifyPageState(scene, "MainHomeRoot", null, true);
                     VerifyHomeHotspotBoundary(scene);
-                    ClickButton(scene, "BottomNavExploreButton");
-                    stage++;
+                    ClickButton(scene, "BottomNavTrialButton");
+                    frameCount = 0;
+                    worldMapSceneFrames = 0;
+                    stage = 1;
                     break;
-                case 1:
-                    VerifyPageState(scene, "ExplorePageRoot", "ExplorePageRoot", true);
-                    ClickButton(scene, "BottomNavMoreButton");
-                    stage++;
-                    break;
-                case 2:
-                    VerifyPageState(scene, "MorePageRoot", "MorePageRoot", true);
-                    ClickButton(scene, "BottomNavHomeButton");
-                    stage++;
-                    break;
-                case 3:
+                case 4:
                     VerifyPageState(scene, "MainHomeRoot", null, true);
                     VerifyHomeHotspotBoundary(scene);
-                    ClickButton(scene, "BottomNavRefineButton");
-                    stage++;
+                    completedCycles++;
+                    if (completedCycles >= 3)
+                    {
+                        Require(mainHomeLoadCount == 4,
+                            "BootEntry and three WorldMap returns must load MainHome exactly four times.");
+                        Debug.Log(
+                            "[MainSceneNavigation] PLAYMODE_SUCCESS cycles=3 " +
+                            "bootEntryMainHome=true mainHomeLoadEvents=4 " +
+                            "mainHomeTrial=true worldMapUpgrade=true " +
+                            "upgradeBackWorldMap=true worldMapBackMainHome=true " +
+                            "duplicateRequestRejected=true loadMode=Single");
+                        CompleteVerification();
+                        return;
+                    }
+
+                    stage = 0;
+                    frameCount = 0;
                     break;
+            }
+        }
+
+        private static void VerifyBootEntryScene(Scene scene)
+        {
+            if (stage == 0)
+            {
+                Require(EditorApplication.timeSinceStartup < bootDeadline,
+                    "BootEntry did not leave after its MainHome request was accepted.");
+                return;
+            }
+
+            Require(stage == -1, "BootEntry reloaded after navigation had already started.");
+            GameObject startButtonObject = FindSceneObject(scene, "StartGameButton");
+            Button startButton = startButtonObject != null
+                ? startButtonObject.GetComponent<Button>()
+                : null;
+            Require(startButton != null, "BootEntry StartGameButton is missing.");
+            if (!startButton.gameObject.activeInHierarchy || !startButton.interactable)
+            {
+                Require(EditorApplication.timeSinceStartup < bootDeadline,
+                    "BootEntry StartGamePage did not become active.");
+                return;
+            }
+
+            startButton.onClick.Invoke();
+            startButton.onClick.Invoke();
+            bootDeadline = EditorApplication.timeSinceStartup + 5d;
+            frameCount = 0;
+            stage = 0;
+        }
+
+        private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (SessionState.GetBool(VerificationKey, false) &&
+                scene.path == TalismanSceneNavigationOwner.MainHomeScenePath)
+            {
+                mainHomeLoadCount++;
             }
         }
 
@@ -219,50 +277,61 @@ namespace TalismanBag.V03.EditorTools
                 "MainHomeRoot visibility does not match the expected navigation state.");
             Require(bottomNav.activeInHierarchy == expectBottomNav,
                 "BottomNavBar_Root visibility does not match the expected state.");
+            Require(expectedSecondaryRoot == null,
+                "MainHome RuntimeLock does not support legacy secondary page roots.");
 
             foreach (string rootName in secondaryRoots)
             {
-                GameObject root = FindSceneObject(scene, rootName);
-                Require(root != null, $"{rootName} is missing at runtime.");
                 Require(
-                    root.activeInHierarchy == (rootName == expectedSecondaryRoot),
-                    $"{rootName} visibility does not match the expected navigation state.");
+                    FindSceneObject(scene, rootName) == null,
+                    $"{rootName} must remain absent under MainHome RuntimeLock.");
             }
         }
 
-        private static void VerifyTrialScene(Scene scene)
+        private static void VerifyWorldMapScene(Scene scene)
         {
             Require(
-                scene.name == TalismanBag.V03.Navigation.V03NavigationFlowController.TrialSceneName,
-                "Trial navigation did not enter the contracted V02 scene.");
-            Require(FindAllSceneObjects(scene, "Canvas").Length == 1,
-                "V02 trial scene must contain exactly one Canvas.");
-            Require(FindAllSceneObjects(scene, "EventSystem").Length == 1,
-                "V02 trial scene must contain exactly one EventSystem.");
-            Require(scene
-                    .GetRootGameObjects()
-                    .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
-                    .Sum(transform =>
-                        GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(
-                            transform.gameObject)) == 0,
-                "V02 trial scene contains Missing Script components.");
+                scene.name == TalismanSceneNavigationOwner.WorldMapSceneName,
+                "Explore navigation did not enter the contracted WorldMap scene.");
+            Require(CountComponentsInScene<Canvas>(scene) == 1,
+                "WorldMap scene must contain exactly one Canvas.");
+            Require(CountComponentsInScene<UnityEngine.EventSystems.EventSystem>(scene) == 1,
+                "WorldMap scene must contain exactly one EventSystem.");
 
-            Debug.Log(
-                "[V0.3-NavigationFlow01] NF01_PLAYMODE_SUCCESS " +
-                "homeFirstFrame=true refine=true explore=true more=true homeReturn=true " +
-                "bottomTrial=true loadMode=Single duplicateCanvas=false duplicateEventSystem=false");
+            if (stage == 1)
+            {
+                Button upgradeButton = GetButton(scene, "WorldMapUpgradeButton");
+                upgradeButton.onClick.Invoke();
+                upgradeButton.onClick.Invoke();
+                worldMapSceneFrames = 0;
+                upgradeSceneFrames = 0;
+                stage = 2;
+                return;
+            }
+
+            if (stage == 3)
+            {
+                ClickButton(scene, "BackButton");
+                worldMapSceneFrames = 0;
+                frameCount = 0;
+                stage = 4;
+            }
         }
 
         private static void VerifyUpgradeScene(Scene scene)
         {
             Require(
-                scene.name == TalismanBag.V03.Navigation.V03NavigationFlowController.UpgradeSceneName,
+                scene.name == TalismanSceneNavigationOwner.TalismanUpgradeSceneName,
                 "Refine navigation did not enter the contracted V03 upgrade scene.");
-
-            Debug.Log(
-                "[V0.3-NavigationFlow01] NF01_PLAYMODE_SUCCESS " +
-                "homeFirstFrame=true explore=true more=true homeReturn=true " +
-                "bottomCultivate=true upgradeScene=true loadMode=Single");
+            Require(CountComponentsInScene<Canvas>(scene) == 1,
+                "Upgrade scene must contain exactly one Canvas.");
+            if (stage == 2)
+            {
+                ClickButton(scene, "BottomNav_Home");
+                upgradeSceneFrames = 0;
+                worldMapSceneFrames = 0;
+                stage = 3;
+            }
         }
 
         private static void CompleteVerification()
@@ -274,13 +343,28 @@ namespace TalismanBag.V03.EditorTools
 
         private static void ClickButton(Scene scene, string objectName)
         {
+            Button button = GetButton(scene, objectName);
+            button.onClick.Invoke();
+        }
+
+        private static Button GetButton(Scene scene, string objectName)
+        {
             GameObject buttonObject = FindSceneObject(scene, objectName);
             Require(buttonObject != null, $"Button '{objectName}' is missing.");
             Button button = buttonObject.GetComponent<Button>();
             Require(button != null, $"Object '{objectName}' does not contain a Button.");
             Require(button.isActiveAndEnabled && button.interactable,
                 $"Button '{objectName}' is not interactable.");
-            button.onClick.Invoke();
+            return button;
+        }
+
+        private static int CountComponentsInScene<T>(Scene scene)
+            where T : Component
+        {
+            return scene
+                .GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<T>(true))
+                .Count();
         }
 
         private static GameObject FindSceneObject(Scene scene, string objectName)

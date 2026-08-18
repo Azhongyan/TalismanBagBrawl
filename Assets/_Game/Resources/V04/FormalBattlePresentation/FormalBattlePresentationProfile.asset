@@ -1,0 +1,607 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2788af26d05d46e4aa076c17bd772d36, type: 3}
+  m_Name: FormalBattlePresentationProfile
+  m_EditorClassIdentifier: 
+  playerAvatarSprite: {fileID: 21300000, guid: ec9a0d655598fb9489a2e07732aae6f7, type: 3}
+  hpFrameSprite: {fileID: 21300000, guid: b93205d89b9e3464c8a9916672246dc9, type: 3}
+  damageFont: {fileID: 11400000, guid: 073a35581f3821049b069181160661d5, type: 2}
+  restrainedVfxTexture: {fileID: 2800000, guid: a5ceadc894804794684b8cf054782df2, type: 3}
+  sourcePulseClip: {fileID: 8300000, guid: 81875e058cd7fc646bc5e043ef4af7cd, type: 3}
+  enemyAttackClip: {fileID: 8300000, guid: 602ecca4eeb66604eb2a84c560a7dfb3, type: 3}
+  impactClip: {fileID: 8300000, guid: 3cea4db535ba41b40b7808022a9d896d, type: 3}
+  enemyProfiles:
+  - contentId: bone_aspect_enemy_c1_01_shattered_host
+    runtimeProfileId: bone_aspect.runtime.c1.shattered_host.v1
+    displayName: "\u788E\u5951\u5BBF\u4E3B"
+    idle:
+      clipId: shattered-host.idle
+      frames:
+      - {fileID: 2800000, guid: 4eaf60b8b37278a46a2423723eab4d7d, type: 3}
+      - {fileID: 2800000, guid: a5022b08db4a79448bbecfbe58837045, type: 3}
+      - {fileID: 2800000, guid: 721a9dc6ff48430468ca85206890572c, type: 3}
+      - {fileID: 2800000, guid: ddec449c3221b194a8cd9189e27f06df, type: 3}
+      - {fileID: 2800000, guid: a06188eb27d68614385b6d1c05ecd046, type: 3}
+      - {fileID: 2800000, guid: 70b6d55336cbaa94f8090721901757f7, type: 3}
+      - {fileID: 2800000, guid: 436963eea921f244883c5e7438b2aea8, type: 3}
+      - {fileID: 2800000, guid: 19c793549e950bc49adc81f2a519b122, type: 3}
+      frameDurationMilliseconds: 125
+      loops: 1
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 960
+        height: 960
+      unionPixelBounds:
+        x: 14
+        y: 0
+        width: 945
+        height: 949
+    attack:
+      clipId: shattered-host.attack
+      frames:
+      - {fileID: 2800000, guid: e971f63b0e68068409881080c2dc5ff9, type: 3}
+      - {fileID: 2800000, guid: 0c65f397ebbe530489c10fa762c5e0a8, type: 3}
+      - {fileID: 2800000, guid: 10e7892edccf71742b7fb7fc4afb96cb, type: 3}
+      - {fileID: 2800000, guid: e36ff254d4e4ae942a551e5913c523af, type: 3}
+      - {fileID: 2800000, guid: 9740d312b8bbdd9478cae87a07362fd5, type: 3}
+      - {fileID: 2800000, guid: d0cb9337e0492bf4f873b19fbe426785, type: 3}
+      - {fileID: 2800000, guid: edeaba86cc81d254e84d8ba806dab599, type: 3}
+      - {fileID: 2800000, guid: 85c8d4f840d2be641a6eb795b5eca460, type: 3}
+      frameDurationMilliseconds: 95
+      loops: 0
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 960
+        height: 960
+      unionPixelBounds:
+        x: 14
+        y: 0
+        width: 945
+        height: 949
+    hit:
+      clipId: shattered-host.hit
+      frames:
+      - {fileID: 2800000, guid: 94383eea25ceac0429d5241f67c77094, type: 3}
+      - {fileID: 2800000, guid: 5c8d19245e907d84ea5642c2bb77b6c8, type: 3}
+      - {fileID: 2800000, guid: fd31ccf5fa75e3f44a2db1b715508392, type: 3}
+      - {fileID: 2800000, guid: 442c172e42010a842bddb3e6c03b4a98, type: 3}
+      frameDurationMilliseconds: 60
+      loops: 0
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 960
+        height: 960
+      unionPixelBounds:
+        x: 0
+        y: 0
+        width: 1440
+        height: 1440
+    death:
+      clipId: shattered-host.death
+      frames:
+      - {fileID: 2800000, guid: aec327370f9f9b7498452e620e24d092, type: 3}
+      - {fileID: 2800000, guid: 09b0af1af7a52254aaf55eef619f553b, type: 3}
+      - {fileID: 2800000, guid: 774eb06a3acf1e346b54f21f7a3fb9e5, type: 3}
+      - {fileID: 2800000, guid: 8f0fc18b92a8d14468e228f2678d2c75, type: 3}
+      - {fileID: 2800000, guid: c83cbb23b9928014ea8f17e6ce21c2ea, type: 3}
+      - {fileID: 2800000, guid: 899f90afcb3f61f448e5df3b7c64e2b0, type: 3}
+      - {fileID: 2800000, guid: 92b1a18637f21c242bb624706a2ad141, type: 3}
+      - {fileID: 2800000, guid: 96bdc3f60ea24394eb8639e9ae498ac6, type: 3}
+      - {fileID: 2800000, guid: c95c5bb779fbba64b901480141cdbca6, type: 3}
+      - {fileID: 2800000, guid: 928d0b053f7c07041a4d0f7c7b7f29b2, type: 3}
+      frameDurationMilliseconds: 100
+      loops: 0
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 960
+        height: 960
+      unionPixelBounds:
+        x: 14
+        y: 0
+        width: 945
+        height: 949
+  - contentId: bone_aspect_enemy_c1_02_porcelain_hound
+    runtimeProfileId: bone_aspect.runtime.c1.porcelain_hound.v1
+    displayName: "\u74F7\u9AA8\u730E\u72AC"
+    idle:
+      clipId: porcelain-hound.idle
+      frames:
+      - {fileID: 2800000, guid: 3269deea568215b4d8ae5c5b42e33013, type: 3}
+      frameDurationMilliseconds: 350
+      loops: 1
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 512
+        height: 765
+      unionPixelBounds:
+        x: 0
+        y: 0
+        width: 512
+        height: 765
+    attack:
+      clipId: porcelain-hound.attack
+      frames:
+      - {fileID: 2800000, guid: 8c802cb0ae4d2e1418c2627ce9fe48ec, type: 3}
+      frameDurationMilliseconds: 350
+      loops: 0
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 512
+        height: 765
+      unionPixelBounds:
+        x: 0
+        y: 0
+        width: 512
+        height: 765
+    hit:
+      clipId: porcelain-hound.hit
+      frames:
+      - {fileID: 2800000, guid: 07c23fcfe35a6b04cbf742590eb3ab1b, type: 3}
+      frameDurationMilliseconds: 350
+      loops: 0
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 512
+        height: 765
+      unionPixelBounds:
+        x: 0
+        y: 0
+        width: 512
+        height: 765
+    death:
+      clipId: porcelain-hound.death
+      frames:
+      - {fileID: 2800000, guid: bba0b5bba4a872745b9e6337bb3ba3d9, type: 3}
+      frameDurationMilliseconds: 350
+      loops: 0
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 512
+        height: 765
+      unionPixelBounds:
+        x: 0
+        y: 0
+        width: 512
+        height: 765
+  - contentId: bone_aspect_enemy_c1_03_bone_swap_remnant
+    runtimeProfileId: bone_aspect.runtime.c1.bone_swap_remnant.operator.v1
+    displayName: "\u6362\u9AA8\u6B8B\u76F8"
+    idle:
+      clipId: bone-swap-remnant.idle
+      frames:
+      - {fileID: 2800000, guid: 4eaf60b8b37278a46a2423723eab4d7d, type: 3}
+      - {fileID: 2800000, guid: a5022b08db4a79448bbecfbe58837045, type: 3}
+      - {fileID: 2800000, guid: 721a9dc6ff48430468ca85206890572c, type: 3}
+      - {fileID: 2800000, guid: ddec449c3221b194a8cd9189e27f06df, type: 3}
+      - {fileID: 2800000, guid: a06188eb27d68614385b6d1c05ecd046, type: 3}
+      - {fileID: 2800000, guid: 70b6d55336cbaa94f8090721901757f7, type: 3}
+      - {fileID: 2800000, guid: 436963eea921f244883c5e7438b2aea8, type: 3}
+      - {fileID: 2800000, guid: 19c793549e950bc49adc81f2a519b122, type: 3}
+      frameDurationMilliseconds: 125
+      loops: 1
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 960
+        height: 960
+      unionPixelBounds:
+        x: 14
+        y: 0
+        width: 945
+        height: 949
+    attack:
+      clipId: bone-swap-remnant.attack-or-skill
+      frames:
+      - {fileID: 2800000, guid: f8b3a32e39d3bac468bd5c4d8120ee25, type: 3}
+      - {fileID: 2800000, guid: f0bd7785096a6434585fc5cbb8d675c6, type: 3}
+      - {fileID: 2800000, guid: 26c1e8f20d10a2642bf35c5e1e6177ae, type: 3}
+      - {fileID: 2800000, guid: 88ca8e60ae2ba344c9c77412a0cf4fcf, type: 3}
+      - {fileID: 2800000, guid: 7f4ea062887beb146ac39cce721a38f4, type: 3}
+      - {fileID: 2800000, guid: 89c3417882c25264ba42952d1b7d7700, type: 3}
+      - {fileID: 2800000, guid: 06fe9c45758d3914d99a6598c8aae66d, type: 3}
+      - {fileID: 2800000, guid: 4b30f1e8c8cbe62469eda50945cf229c, type: 3}
+      - {fileID: 2800000, guid: bd46c77af90c8734fb16ba9d704ebc8d, type: 3}
+      - {fileID: 2800000, guid: e8a3a528307b16f408469cb9b3c7f430, type: 3}
+      - {fileID: 2800000, guid: f05fd2cfcfd107e4791c9b926df01a1d, type: 3}
+      - {fileID: 2800000, guid: aeb78fa6ae4125d43aeb635c31df5e20, type: 3}
+      frameDurationMilliseconds: 100
+      loops: 0
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 960
+        height: 960
+      unionPixelBounds:
+        x: 0
+        y: 0
+        width: 1440
+        height: 1440
+    hit:
+      clipId: bone-swap-remnant.hit
+      frames:
+      - {fileID: 2800000, guid: 94383eea25ceac0429d5241f67c77094, type: 3}
+      - {fileID: 2800000, guid: 5c8d19245e907d84ea5642c2bb77b6c8, type: 3}
+      - {fileID: 2800000, guid: fd31ccf5fa75e3f44a2db1b715508392, type: 3}
+      - {fileID: 2800000, guid: 442c172e42010a842bddb3e6c03b4a98, type: 3}
+      frameDurationMilliseconds: 60
+      loops: 0
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 960
+        height: 960
+      unionPixelBounds:
+        x: 0
+        y: 0
+        width: 1440
+        height: 1440
+    death:
+      clipId: bone-swap-remnant.death
+      frames:
+      - {fileID: 2800000, guid: aec327370f9f9b7498452e620e24d092, type: 3}
+      - {fileID: 2800000, guid: 09b0af1af7a52254aaf55eef619f553b, type: 3}
+      - {fileID: 2800000, guid: 774eb06a3acf1e346b54f21f7a3fb9e5, type: 3}
+      - {fileID: 2800000, guid: 8f0fc18b92a8d14468e228f2678d2c75, type: 3}
+      - {fileID: 2800000, guid: c83cbb23b9928014ea8f17e6ce21c2ea, type: 3}
+      - {fileID: 2800000, guid: 899f90afcb3f61f448e5df3b7c64e2b0, type: 3}
+      - {fileID: 2800000, guid: 92b1a18637f21c242bb624706a2ad141, type: 3}
+      - {fileID: 2800000, guid: 96bdc3f60ea24394eb8639e9ae498ac6, type: 3}
+      - {fileID: 2800000, guid: c95c5bb779fbba64b901480141cdbca6, type: 3}
+      - {fileID: 2800000, guid: 928d0b053f7c07041a4d0f7c7b7f29b2, type: 3}
+      frameDurationMilliseconds: 100
+      loops: 0
+      referencePixelBounds:
+        x: 0
+        y: 0
+        width: 960
+        height: 960
+      unionPixelBounds:
+        x: 14
+        y: 0
+        width: 945
+        height: 949
+  causalItemStyles:
+  - grammarKey: C1_LV1_STARTER_RELEASE
+    presentationStyleKey: 
+    effectFamilyKey: C1_LV1_STARTER_RELEASE
+    cueIdentity: 
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 1, g: 0.62, b: 0.16, a: 0.92}
+    proxyHaloColor: {r: 1, g: 0.4, b: 0.08, a: 0.72}
+    ribbonCoreColor: {r: 1, g: 0.82, b: 0.34, a: 0.94}
+    ribbonGlowColor: {r: 1, g: 0.24, b: 0.05, a: 0.26}
+    ribbonSegmentCount: 6
+    ribbonWaveAmplitude: 6
+    ribbonWaveCycles: 0.85
+    ribbonCoreWidth: 7
+    ribbonGlowWidth: 22
+    sourcePulseCadence: 1
+  - grammarKey: DIRECT_TEMPO
+    presentationStyleKey: 
+    effectFamilyKey: DIRECT_TEMPO
+    cueIdentity: 
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 0.34, g: 0.88, b: 1, a: 0.9}
+    proxyHaloColor: {r: 0.2, g: 0.66, b: 1, a: 0.7}
+    ribbonCoreColor: {r: 0.74, g: 0.96, b: 1, a: 0.94}
+    ribbonGlowColor: {r: 0.12, g: 0.5, b: 1, a: 0.27}
+    ribbonSegmentCount: 8
+    ribbonWaveAmplitude: 11
+    ribbonWaveCycles: 1.55
+    ribbonCoreWidth: 6
+    ribbonGlowWidth: 26
+    sourcePulseCadence: 1.45
+  - grammarKey: DIRECT_TEMPO|presentation.c1.campaign.item.i007.white.v1|cue.c1.campaign.direct_tempo.i007
+    presentationStyleKey: presentation.c1.campaign.item.i007.white.v1
+    effectFamilyKey: DIRECT_TEMPO
+    cueIdentity: cue.c1.campaign.direct_tempo.i007
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 1, g: 0.3, b: 0.12, a: 0.92}
+    proxyHaloColor: {r: 1, g: 0.12, b: 0.05, a: 0.72}
+    ribbonCoreColor: {r: 1, g: 0.62, b: 0.18, a: 0.94}
+    ribbonGlowColor: {r: 1, g: 0.08, b: 0.02, a: 0.28}
+    ribbonSegmentCount: 7
+    ribbonWaveAmplitude: 8
+    ribbonWaveCycles: 1.1
+    ribbonCoreWidth: 7
+    ribbonGlowWidth: 24
+    sourcePulseCadence: 1.15
+  - grammarKey: DIRECT_TEMPO|presentation.c1.campaign.item.i026.white.v1|cue.c1.campaign.direct_tempo.i026
+    presentationStyleKey: presentation.c1.campaign.item.i026.white.v1
+    effectFamilyKey: DIRECT_TEMPO
+    cueIdentity: cue.c1.campaign.direct_tempo.i026
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 0.68, g: 0.9, b: 1, a: 0.92}
+    proxyHaloColor: {r: 0.35, g: 0.62, b: 0.8, a: 0.7}
+    ribbonCoreColor: {r: 0.92, g: 0.98, b: 1, a: 0.95}
+    ribbonGlowColor: {r: 0.22, g: 0.58, b: 0.82, a: 0.25}
+    ribbonSegmentCount: 5
+    ribbonWaveAmplitude: 4
+    ribbonWaveCycles: 0.6
+    ribbonCoreWidth: 6
+    ribbonGlowWidth: 20
+    sourcePulseCadence: 1.25
+  - grammarKey: ENEMY_CONTROL
+    presentationStyleKey: 
+    effectFamilyKey: ENEMY_CONTROL
+    cueIdentity: 
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 1, g: 0.62, b: 0.16, a: 0.92}
+    proxyHaloColor: {r: 1, g: 0.4, b: 0.08, a: 0.72}
+    ribbonCoreColor: {r: 1, g: 0.82, b: 0.34, a: 0.94}
+    ribbonGlowColor: {r: 1, g: 0.24, b: 0.05, a: 0.26}
+    ribbonSegmentCount: 6
+    ribbonWaveAmplitude: 6
+    ribbonWaveCycles: 0.85
+    ribbonCoreWidth: 7
+    ribbonGlowWidth: 22
+    sourcePulseCadence: 1
+  - grammarKey: ENEMY_CONTROL|presentation.c1.campaign.item.i025.white.v1|cue.c1.campaign.enemy_control.i025
+    presentationStyleKey: presentation.c1.campaign.item.i025.white.v1
+    effectFamilyKey: ENEMY_CONTROL
+    cueIdentity: cue.c1.campaign.enemy_control.i025
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 0.68, g: 0.9, b: 1, a: 0.92}
+    proxyHaloColor: {r: 0.35, g: 0.62, b: 0.8, a: 0.7}
+    ribbonCoreColor: {r: 0.92, g: 0.98, b: 1, a: 0.95}
+    ribbonGlowColor: {r: 0.22, g: 0.58, b: 0.82, a: 0.25}
+    ribbonSegmentCount: 5
+    ribbonWaveAmplitude: 4
+    ribbonWaveCycles: 0.6
+    ribbonCoreWidth: 6
+    ribbonGlowWidth: 20
+    sourcePulseCadence: 1.25
+  - grammarKey: ENEMY_CONTROL|presentation.c1.campaign.item.i028.white.v1|cue.c1.campaign.enemy_control.i028
+    presentationStyleKey: presentation.c1.campaign.item.i028.white.v1
+    effectFamilyKey: ENEMY_CONTROL
+    cueIdentity: cue.c1.campaign.enemy_control.i028
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 0.68, g: 0.9, b: 1, a: 0.92}
+    proxyHaloColor: {r: 0.35, g: 0.62, b: 0.8, a: 0.7}
+    ribbonCoreColor: {r: 0.92, g: 0.98, b: 1, a: 0.95}
+    ribbonGlowColor: {r: 0.22, g: 0.58, b: 0.82, a: 0.25}
+    ribbonSegmentCount: 5
+    ribbonWaveAmplitude: 4
+    ribbonWaveCycles: 0.6
+    ribbonCoreWidth: 6
+    ribbonGlowWidth: 20
+    sourcePulseCadence: 1.25
+  - grammarKey: GUARD_SUSTAIN
+    presentationStyleKey: 
+    effectFamilyKey: GUARD_SUSTAIN
+    cueIdentity: 
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 0.78, g: 0.72, b: 0.26, a: 0.9}
+    proxyHaloColor: {r: 0.42, g: 0.52, b: 0.12, a: 0.7}
+    ribbonCoreColor: {r: 0.92, g: 0.84, b: 0.42, a: 0.94}
+    ribbonGlowColor: {r: 0.34, g: 0.44, b: 0.1, a: 0.26}
+    ribbonSegmentCount: 6
+    ribbonWaveAmplitude: 5
+    ribbonWaveCycles: 0.7
+    ribbonCoreWidth: 8
+    ribbonGlowWidth: 25
+    sourcePulseCadence: 0.85
+  - grammarKey: GUARD_SUSTAIN|presentation.c1.campaign.item.i024.white.v1|cue.c1.campaign.guard_sustain.i024
+    presentationStyleKey: presentation.c1.campaign.item.i024.white.v1
+    effectFamilyKey: GUARD_SUSTAIN
+    cueIdentity: cue.c1.campaign.guard_sustain.i024
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 0.2, g: 0.76, b: 1, a: 0.9}
+    proxyHaloColor: {r: 0.12, g: 0.38, b: 0.88, a: 0.7}
+    ribbonCoreColor: {r: 0.54, g: 0.9, b: 1, a: 0.94}
+    ribbonGlowColor: {r: 0.06, g: 0.28, b: 0.9, a: 0.27}
+    ribbonSegmentCount: 8
+    ribbonWaveAmplitude: 10
+    ribbonWaveCycles: 1.45
+    ribbonCoreWidth: 6
+    ribbonGlowWidth: 26
+    sourcePulseCadence: 1.35
+  - grammarKey: POSITIONAL_ADJACENCY
+    presentationStyleKey: 
+    effectFamilyKey: POSITIONAL_ADJACENCY
+    cueIdentity: 
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 1, g: 0.3, b: 0.12, a: 0.92}
+    proxyHaloColor: {r: 1, g: 0.12, b: 0.05, a: 0.72}
+    ribbonCoreColor: {r: 1, g: 0.62, b: 0.18, a: 0.94}
+    ribbonGlowColor: {r: 1, g: 0.08, b: 0.02, a: 0.28}
+    ribbonSegmentCount: 7
+    ribbonWaveAmplitude: 8
+    ribbonWaveCycles: 1.1
+    ribbonCoreWidth: 7
+    ribbonGlowWidth: 24
+    sourcePulseCadence: 1.15
+  - grammarKey: POSITIONAL_ADJACENCY|presentation.c1.campaign.item.i014.white.v1|cue.c1.campaign.positional_adjacency.i014
+    presentationStyleKey: presentation.c1.campaign.item.i014.white.v1
+    effectFamilyKey: POSITIONAL_ADJACENCY
+    cueIdentity: cue.c1.campaign.positional_adjacency.i014
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 0.78, g: 0.72, b: 0.26, a: 0.9}
+    proxyHaloColor: {r: 0.42, g: 0.52, b: 0.12, a: 0.7}
+    ribbonCoreColor: {r: 0.92, g: 0.84, b: 0.42, a: 0.94}
+    ribbonGlowColor: {r: 0.34, g: 0.44, b: 0.1, a: 0.26}
+    ribbonSegmentCount: 6
+    ribbonWaveAmplitude: 5
+    ribbonWaveCycles: 0.7
+    ribbonCoreWidth: 8
+    ribbonGlowWidth: 25
+    sourcePulseCadence: 0.85
+  - grammarKey: POSITIONAL_ADJACENCY|presentation.c1.campaign.item.i022.white.v1|cue.c1.campaign.positional_adjacency.i022
+    presentationStyleKey: presentation.c1.campaign.item.i022.white.v1
+    effectFamilyKey: POSITIONAL_ADJACENCY
+    cueIdentity: cue.c1.campaign.positional_adjacency.i022
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 0.2, g: 0.76, b: 1, a: 0.9}
+    proxyHaloColor: {r: 0.12, g: 0.38, b: 0.88, a: 0.7}
+    ribbonCoreColor: {r: 0.54, g: 0.9, b: 1, a: 0.94}
+    ribbonGlowColor: {r: 0.06, g: 0.28, b: 0.9, a: 0.27}
+    ribbonSegmentCount: 8
+    ribbonWaveAmplitude: 10
+    ribbonWaveCycles: 1.45
+    ribbonCoreWidth: 6
+    ribbonGlowWidth: 26
+    sourcePulseCadence: 1.35
+  - grammarKey: TARGET_SPREAD
+    presentationStyleKey: 
+    effectFamilyKey: TARGET_SPREAD
+    cueIdentity: 
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 1, g: 0.62, b: 0.16, a: 0.92}
+    proxyHaloColor: {r: 1, g: 0.4, b: 0.08, a: 0.72}
+    ribbonCoreColor: {r: 1, g: 0.82, b: 0.34, a: 0.94}
+    ribbonGlowColor: {r: 1, g: 0.24, b: 0.05, a: 0.26}
+    ribbonSegmentCount: 6
+    ribbonWaveAmplitude: 6
+    ribbonWaveCycles: 0.85
+    ribbonCoreWidth: 7
+    ribbonGlowWidth: 22
+    sourcePulseCadence: 1
+  - grammarKey: TARGET_SPREAD|presentation.c1.campaign.item.i011.white.v1|cue.c1.campaign.target_spread.i011
+    presentationStyleKey: presentation.c1.campaign.item.i011.white.v1
+    effectFamilyKey: TARGET_SPREAD
+    cueIdentity: cue.c1.campaign.target_spread.i011
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 1, g: 0.3, b: 0.12, a: 0.92}
+    proxyHaloColor: {r: 1, g: 0.12, b: 0.05, a: 0.72}
+    ribbonCoreColor: {r: 1, g: 0.62, b: 0.18, a: 0.94}
+    ribbonGlowColor: {r: 1, g: 0.08, b: 0.02, a: 0.28}
+    ribbonSegmentCount: 7
+    ribbonWaveAmplitude: 8
+    ribbonWaveCycles: 1.1
+    ribbonCoreWidth: 7
+    ribbonGlowWidth: 24
+    sourcePulseCadence: 1.15
+  - grammarKey: TARGET_SPREAD|presentation.c1.campaign.item.i030.white.v1|cue.c1.campaign.target_spread.i030
+    presentationStyleKey: presentation.c1.campaign.item.i030.white.v1
+    effectFamilyKey: TARGET_SPREAD
+    cueIdentity: cue.c1.campaign.target_spread.i030
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 0.68, g: 0.9, b: 1, a: 0.92}
+    proxyHaloColor: {r: 0.35, g: 0.62, b: 0.8, a: 0.7}
+    ribbonCoreColor: {r: 0.92, g: 0.98, b: 1, a: 0.95}
+    ribbonGlowColor: {r: 0.22, g: 0.58, b: 0.82, a: 0.25}
+    ribbonSegmentCount: 5
+    ribbonWaveAmplitude: 4
+    ribbonWaveCycles: 0.6
+    ribbonCoreWidth: 6
+    ribbonGlowWidth: 20
+    sourcePulseCadence: 1.25
+  - grammarKey: NIAN_RESOURCE_GAIN
+    presentationStyleKey: 
+    effectFamilyKey: NIAN_RESOURCE
+    cueIdentity: 
+    cueKind: 
+    effectVariantId: 
+    retiredSourceArtwork: {fileID: 0}
+    sourcePulseColor: {r: 0.3, g: 0.96, b: 0.86, a: 0.92}
+    proxyHaloColor: {r: 0.18, g: 0.72, b: 0.66, a: 0.72}
+    ribbonCoreColor: {r: 0.76, g: 1, b: 0.92, a: 0.95}
+    ribbonGlowColor: {r: 0.12, g: 0.68, b: 0.58, a: 0.3}
+    ribbonSegmentCount: 8
+    ribbonWaveAmplitude: 8
+    ribbonWaveCycles: 1.2
+    ribbonCoreWidth: 7
+    ribbonGlowWidth: 24
+    sourcePulseCadence: 1
+  statusStyles:
+  - statusKey: afterglow
+    statusFamilyKey: PERIODIC_DAMAGE
+    displayName: "\u4F59\u70EC"
+    glyph: 
+    icon: {fileID: 21300000, guid: cacaf5a6a47af9a4cbf08f647d3ada97, type: 3}
+    polarity: 1
+    backgroundColor: {r: 0.48, g: 0.11, b: 0.045, a: 0.96}
+    foregroundColor: {r: 1, g: 0.66, b: 0.34, a: 1}
+  - statusKey: pollution
+    statusFamilyKey: NEGATIVE_POLLUTION
+    displayName: "\u6C61\u67D3"
+    glyph: 
+    icon: {fileID: 21300000, guid: 72dee21600ba3784ea2c0f5ce51ce03a, type: 3}
+    polarity: 1
+    backgroundColor: {r: 0.42, g: 0.055, b: 0.075, a: 0.96}
+    foregroundColor: {r: 1, g: 0.58, b: 0.48, a: 1}
+  damageFloatStyles:
+  - styleKey: DAMAGE
+    topColor: {r: 1, g: 0.89, b: 0.54, a: 1}
+    middleColor: {r: 1, g: 0.4, b: 0.18, a: 1}
+    bottomColor: {r: 0.68, g: 0.06, b: 0.13, a: 1}
+  - styleKey: HEAL
+    topColor: {r: 0.9, g: 1, b: 0.71, a: 1}
+    middleColor: {r: 0.35, g: 0.85, b: 0.53, a: 1}
+    bottomColor: {r: 0.14, g: 0.49, b: 0.34, a: 1}
+  - styleKey: GUARD
+    topColor: {r: 0.78, g: 0.93, b: 1, a: 1}
+    middleColor: {r: 0.33, g: 0.68, b: 0.92, a: 1}
+    bottomColor: {r: 0.14, g: 0.35, b: 0.66, a: 1}
+  - styleKey: SHELL
+    topColor: {r: 0.85, g: 0.96, b: 1, a: 1}
+    middleColor: {r: 0.45, g: 0.79, b: 0.91, a: 1}
+    bottomColor: {r: 0.18, g: 0.46, b: 0.62, a: 1}
+  - styleKey: NIAN
+    topColor: {r: 0.89, g: 0.83, b: 1, a: 1}
+    middleColor: {r: 0.55, g: 0.45, b: 0.91, a: 1}
+    bottomColor: {r: 0.32, g: 0.23, b: 0.64, a: 1}
+  - styleKey: CLEANSE
+    topColor: {r: 0.96, g: 1, b: 1, a: 1}
+    middleColor: {r: 0.56, g: 0.88, b: 0.89, a: 1}
+    bottomColor: {r: 0.24, g: 0.6, b: 0.64, a: 1}
+  - styleKey: CONTROL
+    topColor: {r: 1, g: 0.82, b: 0.63, a: 1}
+    middleColor: {r: 0.93, g: 0.46, b: 0.27, a: 1}
+    bottomColor: {r: 0.66, g: 0.18, b: 0.2, a: 1}
+  hpDamageTop: {r: 1, g: 0.84, b: 0.36, a: 1}
+  hpDamageMiddle: {r: 1, g: 0.36, b: 0.08, a: 1}
+  hpDamageBottom: {r: 0.72, g: 0.07, b: 0.06, a: 1}
+  targetOutlineColor: {r: 1, g: 0.82, b: 0.28, a: 0.92}
+  hpFillColor: {r: 0.73, g: 0.12, b: 0.09, a: 1}
+  sourcePulseColor: {r: 1, g: 0.64, b: 0.18, a: 0.88}
+  causalWindupDuration: 0.42
+  causalSourceHoldDuration: 0.72
+  causalRibbonDuration: 0.28

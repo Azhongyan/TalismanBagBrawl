@@ -1,0 +1,6 @@
+sequence,scenario,waveId,requestedEnemyInstanceId,selectedBefore,selectedAfter,outcome
+1,default_direct_damage,v04.c1.wave.1-1.w01,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot01.shattered_host.o01.g0001,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot01.shattered_host.o01.g0001,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot01.shattered_host.o01.g0001,ACCEPT_SLOT01_ONLY
+2,explicit_select,v04.c1.wave.1-1.w01,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot02.shattered_host.o02.g0001,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot01.shattered_host.o01.g0001,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot02.shattered_host.o02.g0001,ACCEPT_SLOT02_ONLY
+3,illegal_select,v04.c1.wave.1-1.w01,illegal.enemy.instance,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot02.shattered_host.o02.g0001,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot02.shattered_host.o02.g0001,REJECT_PRESERVE_SLOT02
+4,selected_death,v04.c1.wave.1-1.w01,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot02.shattered_host.o02.g0001,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot02.shattered_host.o02.g0001,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot01.shattered_host.o01.g0001,AUTO_RESELECT_SLOT01
+5,wave_clear,v04.c1.wave.1-1.w01,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot01.shattered_host.o01.g0001,v04.c1.enemy_instance.v04.c1.actor.1-1.w01.slot01.shattered_host.o01.g0001,,CLEAR_SELECTION

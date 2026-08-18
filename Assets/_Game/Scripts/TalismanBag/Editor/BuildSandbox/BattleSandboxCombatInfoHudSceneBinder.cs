@@ -16,7 +16,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
     public static class BattleSandboxCombatInfoHudSceneBinder
     {
         public const string ManualMenuPath =
-            "Tools/Talisman Bag/V0.4/BuildSandbox/BattleSandboxEnemyCombatFeedbackUiReuse01/[Writes Scene][Manual Only] Bind V02 Combat Info HUD";
+            "Tools/Talisman Bag/Dev Only/V0.4/BuildSandbox/BattleSandboxEnemyCombatFeedbackUiReuse01/[Writes Scene][Manual Only] Bind V02 Combat Info HUD";
 
         private const string FeedbackRootName = "FeedbackRoot";
         private const string StageProgressName = "V02StageProgressBar_Runtime";

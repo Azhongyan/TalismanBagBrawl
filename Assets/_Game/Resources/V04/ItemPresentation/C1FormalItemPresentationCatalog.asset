@@ -1,0 +1,255 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d64345963bd42c7a80aacfcfa91b824, type: 3}
+  m_Name: C1FormalItemPresentationCatalog
+  m_EditorClassIdentifier: 
+  sourceProfileSignature: e3415d36da25bb28df0aafa9896bdf9514781dd587f383c98de4f1af1ca3a3af
+  rows:
+  - baseItemId: I002
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: b314efbef712d234bab6fbb59191f91f, type: 3}
+    artworkIdentity: i002_placeholder
+    effectFamilyKey: DIRECT_TEMPO
+    presentationStyleKey: presentation.c1.campaign.item.i002.white.v1
+    cueIdentity: cue.c1.campaign.direct_tempo.i002
+    sourceProfileSignature: 75e76f1f4b3b1cf1a5a5b5e305d1ee62f78832dc118dc5fa3deed9803a52701a
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: 5e93b9f24a6f9817164c7052a13b0585a9e6906189c95dc4098de1ece22fbac8
+  - baseItemId: I003
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: 47defb400f55f7c4fbc132142653bae2, type: 3}
+    artworkIdentity: i003_placeholder
+    effectFamilyKey: ENEMY_CONTROL
+    presentationStyleKey: presentation.c1.campaign.item.i003.white.v1
+    cueIdentity: cue.c1.campaign.enemy_control.i003
+    sourceProfileSignature: 4f625016a6b433477b58a313444355dab91334640ddfee6f1e444d1094168097
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: 236c2f109208ae2b6d02a5f17d6dc26964cbec42bb1d1020d5493e4ab8d5381c
+  - baseItemId: I004
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: 4e10e904e80967646b603727fc593762, type: 3}
+    artworkIdentity: i004_placeholder
+    effectFamilyKey: TARGET_SPREAD
+    presentationStyleKey: presentation.c1.campaign.item.i004.white.v1
+    cueIdentity: cue.c1.campaign.target_spread.i004
+    sourceProfileSignature: 758a879e46ad0b712218963d65b76382c2e86aea050964639e2e9a0e646101b9
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: f9aafde66019a2952a5767f4d1d380eda8ea79687f68b7d9a7eb99697a32790a
+  - baseItemId: I007
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: 03852e0b881367b44aba0edccc82249d, type: 3}
+    artworkIdentity: i007_placeholder
+    effectFamilyKey: DIRECT_TEMPO
+    presentationStyleKey: presentation.c1.campaign.item.i007.white.v1
+    cueIdentity: cue.c1.campaign.direct_tempo.i007
+    sourceProfileSignature: 52605027da96cee9cc53cc2bdbca6c9676fb2bbfc609b65cf23488b5d7afa679
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: c92fcafebfce3d8a32993f4fa705f02a427edfc0cfe4d8daada47cfa731df5a3
+  - baseItemId: I010
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: dbcb8e13432990046b33523b3f09d811, type: 3}
+    artworkIdentity: i010_placeholder
+    effectFamilyKey: POSITIONAL_ADJACENCY
+    presentationStyleKey: presentation.c1.campaign.item.i010.white.v1
+    cueIdentity: cue.c1.campaign.positional_adjacency.i010
+    sourceProfileSignature: c9378c166f3522c5afd3440856f6f150d5b2a91956ecb957f0015f6dd6ff9c88
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: ebba210f422ab120f7c09f5733ffc6185ebb795d9a28da273c8056da934f121a
+  - baseItemId: I011
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: 63d7bc017f19bfd4bb28a808aa490ebf, type: 3}
+    artworkIdentity: i011_placeholder
+    effectFamilyKey: TARGET_SPREAD
+    presentationStyleKey: presentation.c1.campaign.item.i011.white.v1
+    cueIdentity: cue.c1.campaign.target_spread.i011
+    sourceProfileSignature: bf2732d2c874278d1256025dbc35ab815ab4ef31ba0f97ad2246218f86c3a122
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: 0cd7a0c9a1d037329543874bd5e7c7e3c278841c415a4aa2af0a24c0d626fc5a
+  - baseItemId: I013
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: cbe13ad46af070f43a8cd6ff8602e8fb, type: 3}
+    artworkIdentity: i013_placeholder
+    effectFamilyKey: GUARD_SUSTAIN
+    presentationStyleKey: presentation.c1.campaign.item.i013.white.v1
+    cueIdentity: cue.c1.campaign.guard_sustain.i013
+    sourceProfileSignature: c0a3ec0408915e4fd209c3884e69e4408a85719d29b4c1a896d0ebdbbef2c5a0
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: 447b7c2368bbad4525482db7f22d1aeabf9454ecee4e4674052823cad70bc380
+  - baseItemId: I014
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: c78edbec2f9bcc24b85e462fef60a239, type: 3}
+    artworkIdentity: i014_placeholder
+    effectFamilyKey: POSITIONAL_ADJACENCY
+    presentationStyleKey: presentation.c1.campaign.item.i014.white.v1
+    cueIdentity: cue.c1.campaign.positional_adjacency.i014
+    sourceProfileSignature: 7a108875c80fae8921cad8fb35f63226fced7993a32f6e9b095ee74390dce5c7
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: 30ce5432b21ac20fcb9fa8957cc4f71e71906d121241b63a22864c74af3e712c
+  - baseItemId: I015
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: 9cdbc75bfbb1eb44a840660e679f3c4c, type: 3}
+    artworkIdentity: i015_placeholder
+    effectFamilyKey: GUARD_SUSTAIN
+    presentationStyleKey: presentation.c1.campaign.item.i015.white.v1
+    cueIdentity: cue.c1.campaign.guard_sustain.i015
+    sourceProfileSignature: e52af20ddc05576910357ecfce512842c20fdcd90b481bc8e51e41fb87bff850
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: 7454e5382b73cf027619117f6ef945d7b3740c41aff7eb99de7b8cb6efedd200
+  - baseItemId: I022
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: 4eeea0ae877fdd44e890ddb3534550c3, type: 3}
+    artworkIdentity: i022_placeholder
+    effectFamilyKey: POSITIONAL_ADJACENCY
+    presentationStyleKey: presentation.c1.campaign.item.i022.white.v1
+    cueIdentity: cue.c1.campaign.positional_adjacency.i022
+    sourceProfileSignature: 4c78ce5c6dff9cd5c3448491b0592554bb4208267a7837cf948918c88776ffb2
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: dc6da01b324a0d1f871fe1d5fd9044c66d9cbbb88d1c893b09bd4f930a4b6931
+  - baseItemId: I024
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: 268e94ac8e715f448a53f75983410520, type: 3}
+    artworkIdentity: i024_placeholder
+    effectFamilyKey: GUARD_SUSTAIN
+    presentationStyleKey: presentation.c1.campaign.item.i024.white.v1
+    cueIdentity: cue.c1.campaign.guard_sustain.i024
+    sourceProfileSignature: f55803e2190f733ba515bc32620ffc37748f4479386e19ef0c59bb303001c229
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: b3fcd78f15ce87d16c6663fbcb345ca0d99143f06a231dca6e17f20185cf3fb0
+  - baseItemId: I025
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: 059b5497ee98c604a905dc9c37c54572, type: 3}
+    artworkIdentity: i025_placeholder
+    effectFamilyKey: ENEMY_CONTROL
+    presentationStyleKey: presentation.c1.campaign.item.i025.white.v1
+    cueIdentity: cue.c1.campaign.enemy_control.i025
+    sourceProfileSignature: 5c93d68db3f7ddf0686d4d02d43d6d20bf781ef3af32f7bd8502fa475ee3fb44
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: 78ea421e6f1f89d55b42b41b3844952979854c72c74cd58b29feff5dd58cae0c
+  - baseItemId: I026
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: ffa06f2d1d1867646977b68f49569034, type: 3}
+    artworkIdentity: i026_placeholder
+    effectFamilyKey: DIRECT_TEMPO
+    presentationStyleKey: presentation.c1.campaign.item.i026.white.v1
+    cueIdentity: cue.c1.campaign.direct_tempo.i026
+    sourceProfileSignature: 95a6b9012b251ea91e8cf784c9c8b8d416080a9981e5340fbf3c1bfced200ef8
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: a59d10624f9dbcfb650106c11c8324a74ac2fb9bb756ad892199aa5dbd73267d
+  - baseItemId: I028
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: 47fddce2428d81940b4acb41d2ad94f9, type: 3}
+    artworkIdentity: i028_placeholder
+    effectFamilyKey: ENEMY_CONTROL
+    presentationStyleKey: presentation.c1.campaign.item.i028.white.v1
+    cueIdentity: cue.c1.campaign.enemy_control.i028
+    sourceProfileSignature: d78d14fc82a841f4767e9b67b1dfd64d7b9b524693d28f89ff33dff5f70e389e
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: 6ab3965c9385fb8a77ebfa85f6b09dbdfd92c2ccd366fa7826c9ed5cc933b99a
+  - baseItemId: I030
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: 77d3e283d28076f4c9ca529db5e92134, type: 3}
+    artworkIdentity: i030_placeholder
+    effectFamilyKey: TARGET_SPREAD
+    presentationStyleKey: presentation.c1.campaign.item.i030.white.v1
+    cueIdentity: cue.c1.campaign.target_spread.i030
+    sourceProfileSignature: a7f33c8610e6349b9113a0e50dad6a7f89453e6b597663e2b2242531d02fc6aa
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: c83e8897072a901111664f53c8555db0acb7e7ad7c4c50b2f3aebdf8ef95cd1e
+  - baseItemId: I001
+    rarityKey: white
+    artwork: {fileID: 21300000, guid: 4dac4346dfdad864ab93cfa262bb80dd, type: 3}
+    artworkIdentity: i001_placeholder
+    effectFamilyKey: C1_LV1_STARTER_RELEASE
+    presentationStyleKey: C1_LV1_STARTER_RELEASE
+    cueIdentity: d272004505a969a148ce33ed9f5a70c7871991c01f6fd5ebbbeb9f98383462e2
+    sourceProfileSignature: d272004505a969a148ce33ed9f5a70c7871991c01f6fd5ebbbeb9f98383462e2
+    isSpecialLightingSource: 0
+    unlitArtwork: {fileID: 0}
+    unlitArtworkIdentity: 
+    litArtwork: {fileID: 0}
+    litArtworkIdentity: 
+    rowCanonicalSignature: cf10e6d3e8c54ff4ade0bfbaacce447c05aca6c87d25389b168aee28180b8d51
+  - baseItemId: I031
+    rarityKey: 
+    artwork: {fileID: 21300000, guid: dee368244b48e554e94d58a308219029, type: 3}
+    artworkIdentity: SPECIAL_I031
+    effectFamilyKey: SPECIAL_I031
+    presentationStyleKey: SPECIAL_I031
+    cueIdentity: SPECIAL_I031
+    sourceProfileSignature: 2ff243d373facf4cc48f204fa288c1d48ae5e2d4b046af3156a70b456288fc66
+    isSpecialLightingSource: 1
+    unlitArtwork: {fileID: 21300000, guid: dee368244b48e554e94d58a308219029, type: 3}
+    unlitArtworkIdentity: SPECIAL_I031.unlit
+    litArtwork: {fileID: 21300000, guid: e034ba076ce76184195c7d6e9354a8cb, type: 3}
+    litArtworkIdentity: SPECIAL_I031.lit
+    rowCanonicalSignature: 40a86c1362ed99b7adb45ee0d58ad61b8e5c12bbac338ac903edc52e6a628521
+  catalogCanonicalSignature: 3c2834f3ac1863451796e187ed33e5e289e9b8f609eff7d87b2c8d9693dee35d

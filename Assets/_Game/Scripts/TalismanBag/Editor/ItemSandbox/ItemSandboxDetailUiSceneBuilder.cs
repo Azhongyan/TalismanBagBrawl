@@ -45,7 +45,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
         private static readonly Vector2 DetailAnchorMin = new(0.47f, 0.045f);
         private static readonly Vector2 DetailAnchorMax = new(0.975f, 0.955f);
 
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/ItemSandboxDetailUi01/[Writes Scene][Manual Only] Build Item Sandbox Scene")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4/ItemSandbox/ItemSandboxDetailUi01/[Writes Scene][Manual Only] Build Item Sandbox Scene")]
         public static void BuildSceneMenu()
         {
             BuildScene();
@@ -71,7 +71,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             }
         }
 
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/ItemGridPlacementAndEyeRule01/[Manual Only] Validate Manual Panel Layout")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4/ItemSandbox/ItemGridPlacementAndEyeRule01/[Manual Only] Validate Manual Panel Layout")]
         public static void ApplyFlexiblePanelLayoutMenu()
         {
             ApplyFlexiblePanelLayout();
@@ -97,7 +97,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             }
         }
 
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/ItemDetailPanel/[Writes Scene][Manual Only] Apply Item Detail Card Layout")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4/ItemSandbox/ItemDetailPanel/[Writes Scene][Manual Only] Apply Item Detail Card Layout")]
         public static void ApplyDetailCardLayoutMenu()
         {
             ApplyDetailCardLayout();
@@ -123,7 +123,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             }
         }
 
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/ItemDetailPanel/[Writes Prefab][Manual Only] Build Runtime Prefab")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4/ItemSandbox/ItemDetailPanel/[Writes Prefab][Manual Only] Build Runtime Prefab")]
         public static void BuildRuntimeItemDetailPanelPrefabMenu()
         {
             BuildRuntimeItemDetailPanelPrefab();
@@ -149,7 +149,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             }
         }
 
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/ItemSkillTriggerContract01/[Writes Scene][Manual Only] Apply Skill Monitor Preview Layout")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4/ItemSandbox/ItemSkillTriggerContract01/[Writes Scene][Manual Only] Apply Skill Monitor Preview Layout")]
         public static void ApplyItemSkillTriggerContractLayoutMenu()
         {
             ApplyItemSkillTriggerContractLayout();
@@ -175,7 +175,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             }
         }
 
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/ItemDetailInstanceDataAdapter01/[Writes Scene][Manual Only] Apply Instance Modes")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4/ItemSandbox/ItemDetailInstanceDataAdapter01/[Writes Scene][Manual Only] Apply Instance Modes")]
         public static void ApplyItemDetailInstanceDataAdapterLayoutMenu()
         {
             ApplyItemDetailInstanceDataAdapterLayout();
@@ -201,7 +201,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             }
         }
 
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/ItemBalanceCandidateDetailSandboxAdapter01/[Writes Scene][Manual Only] Apply Candidate Preview")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4/ItemSandbox/ItemBalanceCandidateDetailSandboxAdapter01/[Writes Scene][Manual Only] Apply Candidate Preview")]
         public static void ApplyItemBalanceCandidateDetailSandboxLayoutMenu()
         {
             ApplyItemBalanceCandidateDetailSandboxLayout();

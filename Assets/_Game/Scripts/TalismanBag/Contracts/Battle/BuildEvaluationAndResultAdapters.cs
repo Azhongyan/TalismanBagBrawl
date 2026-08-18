@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TalismanBag.BuildSandbox;
-using TalismanBag.V02.CoreLoop.Battle;
-using UnityEngine;
 
 namespace TalismanBag.Contracts.Battle
 {
@@ -309,11 +307,9 @@ namespace TalismanBag.Contracts.Battle
 
     public sealed class BattleSnapshotAdapterValidationSnapshot
     {
-        public BattleLayoutSnapshot v03LayoutSnapshot;
         public BattleLayoutSnapshot v04LayoutSnapshot;
         public BuildEvaluationSnapshot buildEvaluationSnapshot;
         public BattleResultSnapshot sandboxResultSnapshot;
-        public int v03SingleCellErrorCount;
         public int v04MultiCellErrorCount;
         public int playerDeveloperFieldLeakCount;
         public int sandboxResultDefaultErrorCount;
@@ -329,8 +325,7 @@ namespace TalismanBag.Contracts.Battle
             + devOnlyFormalFlowLeakCount;
 
         public int TotalErrorCount =>
-            v03SingleCellErrorCount
-            + v04MultiCellErrorCount
+            v04MultiCellErrorCount
             + sandboxResultDefaultErrorCount
             + TotalLeakCount;
 
@@ -359,10 +354,6 @@ namespace TalismanBag.Contracts.Battle
 
         public static BattleSnapshotAdapterValidationSnapshot BuildValidationSnapshot()
         {
-            BattleLoadoutSnapshot v03Loadout = BuildV03SampleLoadout();
-            BattleLayoutSnapshot v03Layout =
-                V03BattleLayoutSnapshotExporter.FromLoadoutSnapshot(v03Loadout, 5, 5, "validation_v03_single_cell");
-
             BuildSandboxLayoutSnapshot v04Source =
                 BattleSandboxBuildCombatPreviewBuilder.BuildDefaultPreviewLayoutSnapshot();
             BattleLayoutSnapshot v04Layout =
@@ -383,11 +374,9 @@ namespace TalismanBag.Contracts.Battle
 
             BattleSnapshotAdapterValidationSnapshot snapshot = new()
             {
-                v03LayoutSnapshot = v03Layout,
                 v04LayoutSnapshot = v04Layout,
                 buildEvaluationSnapshot = buildSnapshot,
                 sandboxResultSnapshot = resultSnapshot,
-                v03SingleCellErrorCount = CountV03SingleCellErrors(v03Layout),
                 v04MultiCellErrorCount = CountV04MultiCellErrors(v04Layout),
                 playerDeveloperFieldLeakCount = CountPlayerFieldAnswerLeaks(buildSnapshot),
                 sandboxResultDefaultErrorCount = CountSandboxResultDefaultErrors(resultSnapshot),
@@ -396,7 +385,6 @@ namespace TalismanBag.Contracts.Battle
                 devOnlyFormalFlowLeakCount = CountDevOnlyFormalFlowLeaks(buildPreview, runtimePreview)
             };
 
-            snapshot.validationMessages.Add($"v03PlacedItems={v03Layout.placedItems.Count}");
             snapshot.validationMessages.Add($"v04PlacedItems={v04Layout.placedItems.Count}");
             snapshot.validationMessages.Add($"v04MultiCellItems={v04Layout.placedItems.Count(item => item.occupiedCells.Count > 1)}");
             snapshot.validationMessages.Add($"activeSynergies={buildSnapshot.activeSynergies.Count}");
@@ -404,26 +392,6 @@ namespace TalismanBag.Contracts.Battle
             snapshot.validationMessages.Add($"sandboxShouldWriteSave={resultSnapshot.shouldWriteSave}");
             snapshot.validationMessages.Add($"sandboxShouldGrantReward={resultSnapshot.shouldGrantReward}");
             return snapshot;
-        }
-
-        public static int CountV03SingleCellErrors(BattleLayoutSnapshot snapshot)
-        {
-            if (snapshot == null || snapshot.placedItems == null || snapshot.placedItems.Count == 0)
-            {
-                return 1;
-            }
-
-            int errors = snapshot.devOnly ? 1 : 0;
-            errors += snapshot.legacySingleCell ? 0 : 1;
-            errors += snapshot.placedItems.Count(item =>
-                item == null
-                || !item.legacySingleCell
-                || !string.Equals(item.shapeId, V03BattleLayoutSnapshotExporter.LegacySingleShapeId, StringComparison.Ordinal)
-                || item.rotationIndex != 0
-                || item.occupiedCells == null
-                || item.occupiedCells.Count != 1
-                || !item.occupiedCells[0].Equals(item.anchorCell));
-            return errors;
         }
 
         public static int CountV04MultiCellErrors(BattleLayoutSnapshot snapshot)
@@ -521,29 +489,6 @@ namespace TalismanBag.Contracts.Battle
             }
 
             return leaks;
-        }
-
-        private static BattleLoadoutSnapshot BuildV03SampleLoadout()
-        {
-            BattleLoadoutSnapshot snapshot = new();
-            snapshot.items.Add(new BattleLoadoutItemSnapshot
-            {
-                runtimeId = "validation_v03_fire_runtime",
-                itemId = "fire_talisman_basic",
-                displayName = "Fire Talisman",
-                level = 1,
-                gridPosition = new Vector2Int(1, 2),
-                isPowered = true,
-                computedStats = new ComputedTalismanStats
-                {
-                    computedDamage = 12,
-                    computedCooldown = 2.5f,
-                    computedShieldValue = 0,
-                    computedBreakShieldRate = 1f,
-                    computedControlDuration = 1f
-                }
-            });
-            return snapshot;
         }
 
         private static bool ContainsForbiddenPlayerToken(string value)

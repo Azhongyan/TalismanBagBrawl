@@ -1,0 +1,6 @@
+outputField,sourceAuthority,join,transformation
+qualifiedCoreEffect,ItemInstanceCoreEffectRuntimeStateSnapshot.v2,itemInstanceId+baseItemId+placementId/location,immutable read-only copy
+displayCoreEffects,Runtime CoreEffectRows,visibleFact KnownTrue in explicit Core1/Core2/Core3/Ultimate order,displayName+description only
+coreEffectRowStates,Runtime unlockedFact+activeFact,exact projected row identity,Known facts mapped to existing row-state enum
+qualifiedBuildTrack,ItemInstanceQualifiedBuildStateSnapshot.v1,unchanged accepted projector output,preserved clone
+LastProjectedModel,CurrentSnapshot+CurrentQualifiedBuildState+CurrentCoreEffectRuntimeState,one adapter call,fail closed on stale identity/canonical

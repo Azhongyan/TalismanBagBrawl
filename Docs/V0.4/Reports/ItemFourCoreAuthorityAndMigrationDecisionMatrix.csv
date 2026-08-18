@@ -1,0 +1,11 @@
+decisionKey,legacyCandidatePattern,legacyAwakeningPattern,disposition,canonicalOrder,unlockLevel,firstEligibleRarity,eligibleRarities,notes
+CORE_01,candidate_core_ixxx_01,Ixxx_CORE_01,KEEP_CANONICAL,1,10,white,white|green|blue|purple|orange,Fixed progressive effect
+CORE_02,candidate_core_ixxx_02,Ixxx_CORE_02,KEEP_CANONICAL,2,20,green,green|blue|purple|orange,Fixed progressive effect
+CORE_03,candidate_core_ixxx_03,Ixxx_CORE_03,KEEP_CANONICAL,3,30,blue,blue|purple|orange,Fixed progressive effect
+CORE_04_DRIFT,candidate_core_ixxx_04,Ixxx_CORE_04,SUPERSEDED_EXPANSION_DRIFT,0,40,purple,,Historical evidence only; never merge payload into Ultimate
+CORE_ULT,candidate_core_ixxx_ultimate,Ixxx_CORE_ULT,KEEP_CANONICAL,4,40,orange,orange,Fourth and final formal core effect
+RARITY_WHITE,,,ELIGIBILITY_POLICY,1,,white,CORE_01,Option C
+RARITY_GREEN,,,ELIGIBILITY_POLICY,2,,green,CORE_01|CORE_02,Option C
+RARITY_BLUE,,,ELIGIBILITY_POLICY,3,,blue,CORE_01|CORE_02|CORE_03,Option C
+RARITY_PURPLE,,,ELIGIBILITY_POLICY,3,,purple,CORE_01|CORE_02|CORE_03,No new core identity
+RARITY_ORANGE,,,ELIGIBILITY_POLICY,4,,orange,CORE_01|CORE_02|CORE_03|CORE_ULT,Option C

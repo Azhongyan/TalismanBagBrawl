@@ -1,0 +1,195 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acb6bc16ccbe04745928107411c65748, type: 3}
+  m_Name: ItemRarityContourBloomProfile
+  m_EditorClassIdentifier: 
+  profileId: item_living_gradient_outline_exact_v2
+  white:
+    rarityKey: white
+    contourMaterial: {fileID: 2100000, guid: 2f80674248f28fb4fa853caae7ab5ccc, type: 2}
+    persistentHaloMaterial: {fileID: 2100000, guid: 548f4a2d95b85f8428854467b8776179, type: 2}
+    wholeBodyEmissionMaterial: {fileID: 2100000, guid: cd3fee90ece2bce49895bf244535e787, type: 2}
+    innerGlowMaterial: {fileID: 2100000, guid: e137423fbee6fdd4cb613d6e7dcfca3a, type: 2}
+    outerHaloMaterial: {fileID: 2100000, guid: 726d2d7bc52cfb540a7ddb1a362e122d, type: 2}
+    spillMaterial: {fileID: 2100000, guid: 738760464f34ddc4e86a2fa822999051, type: 2}
+    triggerMaterial: {fileID: 2100000, guid: 2b79bf3effe083f46b057e42b62e09ed, type: 2}
+    persistentAlpha: 0.78
+    persistentHaloAlpha: 0.32
+    persistentHaloScale: 1
+    breathAmount: 0.07
+    breathCyclesPerSecond: 0.28
+    wholeBodyPersistentAlpha: 0.19
+    wholeBodyTriggerAlpha: 0.68
+    innerGlowAlpha: 0.18
+    outerHaloAlpha: 0.095
+    wholeBodyBreathAmount: 0.1
+    wholeBodyBreathCyclesPerSecond: 0.5
+    wholeBodyTriggerEndScale: 1.2
+    environmentSpillPersistentAlpha: 0.13
+    environmentSpillTriggerAlpha: 0.52
+    environmentSpillBaseScale: 1.75
+    environmentSpillTriggerScale: 2.15
+    triggerAlpha: 0.94
+    triggerAttackSeconds: 0.08
+    triggerSpreadSeconds: 0.25
+    triggerSettleSeconds: 0.55
+    triggerEndScale: 1.22
+  green:
+    rarityKey: green
+    contourMaterial: {fileID: 2100000, guid: 892a1ce7d48a49745a2039dd16bbe669, type: 2}
+    persistentHaloMaterial: {fileID: 2100000, guid: 7a6b5233edad5314ba90588b3b4a1fe1, type: 2}
+    wholeBodyEmissionMaterial: {fileID: 2100000, guid: 63214ecccb77a4c4e94d658426671209, type: 2}
+    innerGlowMaterial: {fileID: 2100000, guid: 86b5d9ee7241f27458fc1011546150f1, type: 2}
+    outerHaloMaterial: {fileID: 2100000, guid: 7b0462a7ac7b47f4691d190fafef19e1, type: 2}
+    spillMaterial: {fileID: 2100000, guid: 83eaa04b78e638d45b8c22fd43812ec8, type: 2}
+    triggerMaterial: {fileID: 2100000, guid: 99c02b9e8d6449c4992dc65e2ef4f1c9, type: 2}
+    persistentAlpha: 0.8
+    persistentHaloAlpha: 0.34
+    persistentHaloScale: 1
+    breathAmount: 0.075
+    breathCyclesPerSecond: 0.29
+    wholeBodyPersistentAlpha: 0.205
+    wholeBodyTriggerAlpha: 0.7
+    innerGlowAlpha: 0.195
+    outerHaloAlpha: 0.1
+    wholeBodyBreathAmount: 0.11
+    wholeBodyBreathCyclesPerSecond: 0.515
+    wholeBodyTriggerEndScale: 1.2
+    environmentSpillPersistentAlpha: 0.14
+    environmentSpillTriggerAlpha: 0.54
+    environmentSpillBaseScale: 1.75
+    environmentSpillTriggerScale: 2.15
+    triggerAlpha: 0.95
+    triggerAttackSeconds: 0.08
+    triggerSpreadSeconds: 0.25
+    triggerSettleSeconds: 0.55
+    triggerEndScale: 1.22
+  blue:
+    rarityKey: blue
+    contourMaterial: {fileID: 2100000, guid: d5b44af1c564dcc4c89f2dd975d7410d, type: 2}
+    persistentHaloMaterial: {fileID: 2100000, guid: fc366dac5242a934eac389c5f013c276, type: 2}
+    wholeBodyEmissionMaterial: {fileID: 2100000, guid: 35627fca943f302498918890a92c55ff, type: 2}
+    innerGlowMaterial: {fileID: 2100000, guid: af22d979174cd084383a94d15cc9b19f, type: 2}
+    outerHaloMaterial: {fileID: 2100000, guid: c7038c4658c1b8043b622b305655754a, type: 2}
+    spillMaterial: {fileID: 2100000, guid: d6e72bdbc2bb3aa45a9ecacf58e1aa51, type: 2}
+    triggerMaterial: {fileID: 2100000, guid: 257e55efaf84c6747997bf815b99b9b3, type: 2}
+    persistentAlpha: 0.82
+    persistentHaloAlpha: 0.36
+    persistentHaloScale: 1
+    breathAmount: 0.08
+    breathCyclesPerSecond: 0.3
+    wholeBodyPersistentAlpha: 0.22
+    wholeBodyTriggerAlpha: 0.72
+    innerGlowAlpha: 0.21
+    outerHaloAlpha: 0.11
+    wholeBodyBreathAmount: 0.12
+    wholeBodyBreathCyclesPerSecond: 0.53
+    wholeBodyTriggerEndScale: 1.2
+    environmentSpillPersistentAlpha: 0.15
+    environmentSpillTriggerAlpha: 0.56
+    environmentSpillBaseScale: 1.75
+    environmentSpillTriggerScale: 2.15
+    triggerAlpha: 0.96
+    triggerAttackSeconds: 0.08
+    triggerSpreadSeconds: 0.25
+    triggerSettleSeconds: 0.55
+    triggerEndScale: 1.22
+  purple:
+    rarityKey: purple
+    contourMaterial: {fileID: 2100000, guid: d473204bcc95a1349900bae53f70c741, type: 2}
+    persistentHaloMaterial: {fileID: 2100000, guid: ab1d11de39d39eb41b81250d3195d4bb, type: 2}
+    wholeBodyEmissionMaterial: {fileID: 2100000, guid: dec0e26fbb50b0545953fda669d835a4, type: 2}
+    innerGlowMaterial: {fileID: 2100000, guid: 0901b40fe5fda434cb7340a40e473021, type: 2}
+    outerHaloMaterial: {fileID: 2100000, guid: ecd8ea6ea8cd062448d065735595d5f9, type: 2}
+    spillMaterial: {fileID: 2100000, guid: 4f97959751b857a40b430bdd132028ae, type: 2}
+    triggerMaterial: {fileID: 2100000, guid: c0aa00d81c5f114489f2f5968006bb77, type: 2}
+    persistentAlpha: 0.84
+    persistentHaloAlpha: 0.38
+    persistentHaloScale: 1
+    breathAmount: 0.085
+    breathCyclesPerSecond: 0.31
+    wholeBodyPersistentAlpha: 0.235
+    wholeBodyTriggerAlpha: 0.74
+    innerGlowAlpha: 0.225
+    outerHaloAlpha: 0.12
+    wholeBodyBreathAmount: 0.13
+    wholeBodyBreathCyclesPerSecond: 0.545
+    wholeBodyTriggerEndScale: 1.2
+    environmentSpillPersistentAlpha: 0.165
+    environmentSpillTriggerAlpha: 0.59
+    environmentSpillBaseScale: 1.75
+    environmentSpillTriggerScale: 2.15
+    triggerAlpha: 0.97
+    triggerAttackSeconds: 0.08
+    triggerSpreadSeconds: 0.25
+    triggerSettleSeconds: 0.55
+    triggerEndScale: 1.22
+  orange:
+    rarityKey: orange
+    contourMaterial: {fileID: 2100000, guid: 67f7708b29d719649ba3cb1b22f5a55b, type: 2}
+    persistentHaloMaterial: {fileID: 2100000, guid: 5dec434b5a811a44cbcff7d570e0fa0b, type: 2}
+    wholeBodyEmissionMaterial: {fileID: 2100000, guid: 70b1865b09f01bd44a57fac5d76eb311, type: 2}
+    innerGlowMaterial: {fileID: 2100000, guid: 58a5cf53f7eb58a498e41b86c00fbefe, type: 2}
+    outerHaloMaterial: {fileID: 2100000, guid: 5fce22cf662996a43ba1bdb0b113dc8e, type: 2}
+    spillMaterial: {fileID: 2100000, guid: c3eb05315f3042e48b138aa00bd27fb1, type: 2}
+    triggerMaterial: {fileID: 2100000, guid: cbfdcdc620e657149a6aa112a6b0fdca, type: 2}
+    persistentAlpha: 0.86
+    persistentHaloAlpha: 0.4
+    persistentHaloScale: 1
+    breathAmount: 0.09
+    breathCyclesPerSecond: 0.32
+    wholeBodyPersistentAlpha: 0.25
+    wholeBodyTriggerAlpha: 0.76
+    innerGlowAlpha: 0.24
+    outerHaloAlpha: 0.13
+    wholeBodyBreathAmount: 0.14
+    wholeBodyBreathCyclesPerSecond: 0.56
+    wholeBodyTriggerEndScale: 1.2
+    environmentSpillPersistentAlpha: 0.18
+    environmentSpillTriggerAlpha: 0.62
+    environmentSpillBaseScale: 1.75
+    environmentSpillTriggerScale: 2.15
+    triggerAlpha: 0.98
+    triggerAttackSeconds: 0.08
+    triggerSpreadSeconds: 0.25
+    triggerSettleSeconds: 0.55
+    triggerEndScale: 1.22
+  specialSource:
+    rarityKey: special-source
+    contourMaterial: {fileID: 2100000, guid: 2f80674248f28fb4fa853caae7ab5ccc, type: 2}
+    persistentHaloMaterial: {fileID: 2100000, guid: 548f4a2d95b85f8428854467b8776179, type: 2}
+    wholeBodyEmissionMaterial: {fileID: 2100000, guid: cd3fee90ece2bce49895bf244535e787, type: 2}
+    innerGlowMaterial: {fileID: 2100000, guid: e137423fbee6fdd4cb613d6e7dcfca3a, type: 2}
+    outerHaloMaterial: {fileID: 2100000, guid: 726d2d7bc52cfb540a7ddb1a362e122d, type: 2}
+    spillMaterial: {fileID: 2100000, guid: 738760464f34ddc4e86a2fa822999051, type: 2}
+    triggerMaterial: {fileID: 2100000, guid: 2b79bf3effe083f46b057e42b62e09ed, type: 2}
+    persistentAlpha: 0.78
+    persistentHaloAlpha: 0.32
+    persistentHaloScale: 1
+    breathAmount: 0.07
+    breathCyclesPerSecond: 0.28
+    wholeBodyPersistentAlpha: 0.19
+    wholeBodyTriggerAlpha: 0.68
+    innerGlowAlpha: 0.18
+    outerHaloAlpha: 0.095
+    wholeBodyBreathAmount: 0.1
+    wholeBodyBreathCyclesPerSecond: 0.5
+    wholeBodyTriggerEndScale: 1.2
+    environmentSpillPersistentAlpha: 0.13
+    environmentSpillTriggerAlpha: 0.52
+    environmentSpillBaseScale: 1.75
+    environmentSpillTriggerScale: 2.15
+    triggerAlpha: 0.94
+    triggerAttackSeconds: 0.08
+    triggerSpreadSeconds: 0.25
+    triggerSettleSeconds: 0.55
+    triggerEndScale: 1.22

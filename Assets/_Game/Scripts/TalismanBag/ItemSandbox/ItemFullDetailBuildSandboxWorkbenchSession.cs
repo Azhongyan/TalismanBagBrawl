@@ -7,6 +7,7 @@ using System.Text;
 using TalismanBag.Items;
 using TalismanBag.Items.Awakening;
 using TalismanBag.Items.Build;
+using TalismanBag.Items.Build.Qualified;
 using TalismanBag.Items.Detail;
 using TalismanBag.Items.Generation;
 using TalismanBag.Items.Generation.Potential;
@@ -153,118 +154,24 @@ namespace TalismanBag.ItemSandbox
     }
 
     /// <summary>
-    /// Sandbox-only qualification bridge. It consumes the existing Build resolver result and only
-    /// removes track membership that the generated instance qualification does not permit.
+    /// Workbench presentation seam over the shared Package A qualification resolver.
+    /// It owns no independent qualification filter or Build threshold logic.
     /// </summary>
     public static class ItemFullDetailQualifiedBuildAdapter
     {
         public static ItemBuildSynergyResolutionResult Resolve(
-            ItemLightingResolutionResult lighting,
-            IReadOnlyList<ItemInnerDataDefinition> catalog,
+            ItemSystemSnapshot itemSystemSnapshot,
             IReadOnlyDictionary<string, ItemBuildQualification> qualificationByPlacement)
         {
-            ItemBuildSynergyResolutionResult baseline = ItemBuildSynergyResolver.Resolve(lighting, catalog);
-            Dictionary<string, ItemBuildSynergyItemResult> baselineByPlacement = baseline.ItemResults
-                .Where(item => item != null && !string.IsNullOrWhiteSpace(item.placementId))
-                .ToDictionary(item => item.placementId, item => item, StringComparer.Ordinal);
-            List<string> errors = new(baseline.ValidationErrors);
-            List<ItemBuildSynergyItemResult> items = new();
-
-            foreach (ItemLightingItemResult lit in lighting?.ItemResults ?? Array.Empty<ItemLightingItemResult>())
-            {
-                if (lit == null || !baselineByPlacement.TryGetValue(lit.placementId, out ItemBuildSynergyItemResult source))
-                {
-                    continue;
-                }
-
-                bool ordinary = !source.isLightingSource;
-                if (!qualificationByPlacement.TryGetValue(lit.placementId, out ItemBuildQualification qualification))
-                {
-                    qualification = ItemBuildQualification.None;
-                    if (ordinary)
-                    {
-                        errors.Add($"missing generated BuildQualification for placementId '{lit.placementId}'; treated as None.");
-                    }
-                }
-
-                bool allowFaMen = qualification == ItemBuildQualification.FaMenOnly
-                    || qualification == ItemBuildQualification.Dual;
-                bool allowQiLei = qualification == ItemBuildQualification.QiLeiOnly
-                    || qualification == ItemBuildQualification.Dual;
-                items.Add(new ItemBuildSynergyItemResult
-                {
-                    itemId = source.itemId,
-                    placementId = source.placementId,
-                    isLit = source.isLit,
-                    isLightingSource = source.isLightingSource,
-                    countedInBuild = source.countedInBuild && source.isLit && ordinary && (allowFaMen || allowQiLei),
-                    faMenTag = allowFaMen ? source.faMenTag : string.Empty,
-                    qiLeiTag = allowQiLei ? source.qiLeiTag : string.Empty,
-                    faMenBuildId = allowFaMen ? source.faMenBuildId : string.Empty,
-                    qiLeiBuildId = allowQiLei ? source.qiLeiBuildId : string.Empty
-                });
-            }
-
-            List<ItemBuildTrackResult> faMenTracks = BuildTracks(
-                baseline.FaMenBuilds, items, ItemBuildTrackKind.FaMen);
-            List<ItemBuildTrackResult> qiLeiTracks = BuildTracks(
-                baseline.QiLeiBuilds, items, ItemBuildTrackKind.QiLei);
-            Dictionary<string, ItemBuildTrackResult> tracks = faMenTracks.Concat(qiLeiTracks)
-                .ToDictionary(track => track.buildId, track => track, StringComparer.Ordinal);
-
-            foreach (ItemBuildSynergyItemResult item in items)
-            {
-                if (!string.IsNullOrWhiteSpace(item.faMenBuildId)
-                    && tracks.TryGetValue(item.faMenBuildId, out ItemBuildTrackResult faMen))
-                {
-                    item.faMenBuildCount = faMen.litItemCount;
-                    item.faMenActiveStagePieceCount = faMen.activeStagePieceCount;
-                }
-
-                if (!string.IsNullOrWhiteSpace(item.qiLeiBuildId)
-                    && tracks.TryGetValue(item.qiLeiBuildId, out ItemBuildTrackResult qiLei))
-                {
-                    item.qiLeiBuildCount = qiLei.litItemCount;
-                    item.qiLeiActiveStagePieceCount = qiLei.activeStagePieceCount;
-                }
-            }
-
-            return new ItemBuildSynergyResolutionResult(faMenTracks, qiLeiTracks, items, errors);
-        }
-
-        private static List<ItemBuildTrackResult> BuildTracks(
-            IReadOnlyList<ItemBuildTrackResult> baselineTracks,
-            IReadOnlyList<ItemBuildSynergyItemResult> items,
-            ItemBuildTrackKind kind)
-        {
-            List<ItemBuildTrackResult> output = new();
-            foreach (ItemBuildTrackResult baseline in baselineTracks ?? Array.Empty<ItemBuildTrackResult>())
-            {
-                ItemBuildSynergyItemResult[] sources = items
-                    .Where(item => item != null && item.countedInBuild && item.isLit && !item.isLightingSource)
-                    .Where(item => kind == ItemBuildTrackKind.FaMen
-                        ? string.Equals(item.faMenBuildId, baseline.buildId, StringComparison.Ordinal)
-                        : string.Equals(item.qiLeiBuildId, baseline.buildId, StringComparison.Ordinal))
-                    .OrderBy(item => item.placementId, StringComparer.Ordinal)
-                    .ToArray();
-                output.Add(new ItemBuildTrackResult(
-                    baseline.buildId,
-                    baseline.trackKind,
-                    baseline.stableTag,
-                    baseline.displayName,
-                    sources.Length,
-                    baseline.maxPieceCount,
-                    sources.Select(item => item.placementId).ToArray(),
-                    sources.Select(item => item.itemId).ToArray()));
-            }
-
-            return output;
+            return ItemInstanceQualifiedBuildContributionResolver.Resolve(
+                itemSystemSnapshot,
+                qualificationByPlacement);
         }
     }
 
     public static class ItemFullDetailCandidateAwakeningAdapter
     {
-        private static readonly int[] FallbackNodeLevels = { 10, 20, 30, 40, 40 };
+        private static readonly int[] FallbackNodeLevels = { 10, 20, 30, 40 };
 
         public static ItemCoreAwakeningResolutionResult Resolve(
             ItemLightingResolutionResult lighting,
@@ -299,27 +206,37 @@ namespace TalismanBag.ItemSandbox
                 ItemInstanceProjectionContractSnapshot projection = instance.Projection;
                 HashSet<string> visible = new(projection.VisibleCoreEffectIds, StringComparer.Ordinal);
                 List<ItemCoreAwakeningNodeState> nodes = new();
-                int index = 0;
-                foreach (string coreId in projection.EligibleCoreEffectIds)
+                string[] formalEligibleIds = projection.EligibleCoreEffectIds
+                    .Where(coreId => FormalCandidateRank(
+                        projection.baseItemId, coreId) < int.MaxValue)
+                    .OrderBy(coreId => FormalCandidateRank(
+                        projection.baseItemId, coreId))
+                    .ToArray();
+                foreach (string coreId in formalEligibleIds)
                 {
+                    if (!TryResolveFormalNodeKind(
+                            projection.baseItemId,
+                            coreId,
+                            out ItemCoreAwakeningNodeKind kind,
+                            out int formalRank))
+                    {
+                        errors.Add(
+                            $"unsupported formal core identity '{coreId}' for '{projection.baseItemId}'.");
+                        continue;
+                    }
                     int unlockLevel = instance.Candidate.CoreUnlockLevels.TryGetValue(coreId, out int configuredLevel)
                         ? configuredLevel
-                        : FallbackNodeLevels[Math.Min(index, FallbackNodeLevels.Length - 1)];
+                        : FallbackNodeLevels[formalRank];
                     bool isVisible = visible.Contains(coreId);
                     bool unlocked = isVisible && level >= unlockLevel;
                     bool active = unlocked && lit.isLit;
-                    ItemCoreAwakeningNodeKind kind = index >= 4
-                        ? ItemCoreAwakeningNodeKind.Ultimate
-                        : index switch
-                        {
-                            0 => ItemCoreAwakeningNodeKind.Core1,
-                            1 => ItemCoreAwakeningNodeKind.Core2,
-                            2 => ItemCoreAwakeningNodeKind.Core3,
-                            _ => ItemCoreAwakeningNodeKind.Core3
-                        };
-                    ItemDetailTextLine detailLine = index < instance.Candidate.viewModel.displayCoreEffects.Count
-                        ? instance.Candidate.viewModel.displayCoreEffects[index]
-                        : null;
+                    ItemDetailTextLine detailLine =
+                        instance.Candidate.viewModel.displayCoreEffects
+                            .SingleOrDefault(value => value != null
+                                && string.Equals(
+                                    value.stateKey,
+                                    coreId,
+                                    StringComparison.Ordinal));
                     string previewText = detailLine == null
                         ? "核心效果校验失败"
                         : detailLine.title + "\n" + detailLine.body;
@@ -338,7 +255,6 @@ namespace TalismanBag.ItemSandbox
                             : ItemCoreAwakeningBlockedReason.ItemNotLit,
                         previewText,
                         projection.rarityKey));
-                    index++;
                 }
 
                 results.Add(new ItemCoreAwakeningItemResult(
@@ -358,6 +274,54 @@ namespace TalismanBag.ItemSandbox
             }
 
             return new ItemCoreAwakeningResolutionResult(results, errors);
+        }
+
+        private static bool TryResolveFormalNodeKind(
+            string baseItemId,
+            string candidateDefinitionId,
+            out ItemCoreAwakeningNodeKind nodeKind,
+            out int rank)
+        {
+            rank = FormalCandidateRank(
+                baseItemId, candidateDefinitionId);
+            nodeKind = rank switch
+            {
+                0 => ItemCoreAwakeningNodeKind.Core1,
+                1 => ItemCoreAwakeningNodeKind.Core2,
+                2 => ItemCoreAwakeningNodeKind.Core3,
+                3 => ItemCoreAwakeningNodeKind.Ultimate,
+                _ => default
+            };
+            return rank >= 0 && rank < FallbackNodeLevels.Length;
+        }
+
+        private static int FormalCandidateRank(
+            string baseItemId,
+            string candidateDefinitionId)
+        {
+            string prefix = "candidate_core_"
+                + (baseItemId ?? string.Empty).Trim()
+                    .ToLowerInvariant();
+            string[] identities =
+            {
+                prefix + "_01",
+                prefix + "_02",
+                prefix + "_03",
+                prefix + "_ultimate"
+            };
+            for (int index = 0;
+                 index < identities.Length;
+                 index++)
+            {
+                if (string.Equals(
+                        identities[index],
+                        candidateDefinitionId,
+                        StringComparison.Ordinal))
+                {
+                    return index;
+                }
+            }
+            return int.MaxValue;
         }
     }
 
@@ -982,7 +946,9 @@ namespace TalismanBag.ItemSandbox
                 string coreEffectId = displayLines[index].stateKey ?? string.Empty;
                 int unlockLevel = candidate.CoreUnlockLevels.TryGetValue(coreEffectId, out int configuredLevel)
                     ? Mathf.Clamp(configuredLevel, 1, 40)
-                    : Mathf.Min(40, (index + 1) * 10);
+                    : FormalCandidateUnlockLevel(
+                        projection.baseItemId,
+                        coreEffectId);
                 bool unlocked = visibleCoreIds.Contains(coreEffectId) && level >= unlockLevel;
                 rowStates.Add(unlocked
                     ? ItemDetailCoreEffectRowState.UnlockedInactive
@@ -1029,6 +995,46 @@ namespace TalismanBag.ItemSandbox
             model.awakeningPreview.unlockedCoreEffectIdsText = FormatIds(unlockedIds);
             model.awakeningPreview.activeCoreEffectIdsText = "None";
             model.awakeningPreview.lockedCoreEffectIdsText = FormatIds(lockedIds);
+        }
+
+        private static int FormalCandidateUnlockLevel(
+            string baseItemId,
+            string candidateDefinitionId)
+        {
+            string prefix = "candidate_core_"
+                + (baseItemId ?? string.Empty).Trim()
+                    .ToLowerInvariant();
+            if (string.Equals(
+                    candidateDefinitionId,
+                    prefix + "_01",
+                    StringComparison.Ordinal))
+            {
+                return 10;
+            }
+            if (string.Equals(
+                    candidateDefinitionId,
+                    prefix + "_02",
+                    StringComparison.Ordinal))
+            {
+                return 20;
+            }
+            if (string.Equals(
+                    candidateDefinitionId,
+                    prefix + "_03",
+                    StringComparison.Ordinal))
+            {
+                return 30;
+            }
+            if (string.Equals(
+                    candidateDefinitionId,
+                    prefix + "_ultimate",
+                    StringComparison.Ordinal))
+            {
+                return 40;
+            }
+            throw new InvalidOperationException(
+                "Unknown formal Candidate core identity: "
+                + candidateDefinitionId);
         }
 
         private static string FormatPreviewNodeText(string label, int level)
@@ -1500,8 +1506,8 @@ namespace TalismanBag.ItemSandbox
                 && string.Equals(value.stateKey, stateKey, StringComparison.Ordinal));
             if (section == null) return;
             section.title = string.Equals(stateKey, "famenBuild", StringComparison.Ordinal)
-                ? "法门构筑"
-                : "器类构筑";
+                ? ItemBuildPlayerPresentationFormatter.FaMenSectionTitle
+                : ItemBuildPlayerPresentationFormatter.QiLeiSectionTitle;
             int currentCount = track?.litItemCount ?? 0;
             int maxPieceCount = track?.maxPieceCount ?? ResolveBuildMaxPieceCount(candidates);
             bool faMen = string.Equals(stateKey, "famenBuild", StringComparison.Ordinal);
@@ -1599,37 +1605,39 @@ namespace TalismanBag.ItemSandbox
                 safeMax = ResolveBuildMaxPieceCount(candidates);
             }
 
-            string progress = FormatBuildProgress(Math.Max(0, currentCount), safeMax);
-            if (faMen)
-            {
-                string name = track != null
-                    ? ItemSandboxBuildPresentationNames.FaMenSetName(track.stableTag)
-                    : NonEmpty(candidates?.FirstOrDefault(value => value != null)?.buildName, "未命名法门典藏");
-                string[] faMenRows = (candidates ?? Array.Empty<ItemDetailBuildPreview>())
-                    .Where(value => value != null)
-                    .OrderBy(ResolveBuildStageThreshold)
-                    .Select(value => FormatBuildStageRow(value, true, currentCount, rarity, indent, arrayModifiers))
-                    .ToArray();
-                string memberRows = FormatFaMenBuildMemberRows(track, indent);
-                return indent + BuildColoredText(name, BuildTitleHex, true)
-                    + "\n" + indent + BuildColoredText(
-                        ItemSandboxBuildPresentationNames.ProgressLabel(true, track?.stableTag) + "：" + progress,
-                        BuildActiveHex,
-                        true)
-                    + (string.IsNullOrWhiteSpace(memberRows) ? string.Empty : "\n" + memberRows)
-                    + (faMenRows.Length == 0 ? string.Empty : "\n" + string.Join("\n", faMenRows));
-            }
-
-            string[] qiLeiRows = (candidates ?? Array.Empty<ItemDetailBuildPreview>())
+            ItemBuildPlayerPresentationStage[] stages =
+                (candidates ?? Array.Empty<ItemDetailBuildPreview>())
                 .Where(value => value != null)
                 .OrderBy(ResolveBuildStageThreshold)
-                .Select(value => FormatBuildStageRow(value, false, currentCount, rarity, indent, arrayModifiers))
+                .Select(value =>
+                {
+                    int threshold = ResolveBuildStageThreshold(value);
+                    bool isActive = currentCount >= threshold;
+                    string detail = ItemDetailArrayModifierResolver.AppendInlineModifier(
+                        NonEmpty(value.previewText, "未配置"),
+                        FindBuildStageArrayModifier(
+                            arrayModifiers,
+                            faMen,
+                            threshold),
+                        isActive);
+                    return new ItemBuildPlayerPresentationStage(
+                        threshold,
+                        detail,
+                        isActive);
+                })
                 .ToArray();
-            return indent + BuildColoredText(
-                    ItemSandboxBuildPresentationNames.ProgressLabel(false, track?.stableTag) + "：" + progress,
-                    BuildActiveHex,
-                    true)
-                + (qiLeiRows.Length == 0 ? string.Empty : "\n" + string.Join("\n", qiLeiRows));
+            return ItemBuildPlayerPresentationFormatter.FormatTrack(
+                faMen,
+                track?.stableTag,
+                Math.Max(0, currentCount),
+                safeMax,
+                stages,
+                track?.SourceItemIds,
+                indent,
+                RarityColorHex(rarity),
+                faMen && track == null
+                    ? candidates?.FirstOrDefault(value => value != null)?.buildName
+                    : null);
         }
 
         private static string FormatFaMenBuildMemberRows(ItemBuildTrackResult track, string indent)
@@ -1941,7 +1949,8 @@ namespace TalismanBag.ItemSandbox
                     value => value.placementId,
                     value => instances.First(instance => string.Equals(instance.itemInstanceId, value.itemInstanceId, StringComparison.Ordinal)).buildQualification,
                     StringComparer.Ordinal);
-            ItemBuildSynergyResolutionResult build = ItemFullDetailQualifiedBuildAdapter.Resolve(lighting, catalog, qualifications);
+            ItemBuildSynergyResolutionResult build =
+                ItemFullDetailQualifiedBuildAdapter.Resolve(system, qualifications);
             if (!string.IsNullOrWhiteSpace(selectedMainBuildId)
                 && build.FaMenBuilds.All(track => !string.Equals(track.buildId, selectedMainBuildId, StringComparison.Ordinal)
                     || track.litItemCount <= 0))

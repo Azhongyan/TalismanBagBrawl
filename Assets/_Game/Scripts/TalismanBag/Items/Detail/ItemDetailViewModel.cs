@@ -1,6 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using TalismanBag.Items.Build;
+using TalismanBag.Items.Build.Qualified;
+using TalismanBag.Items.Generation.Potential;
 
 namespace TalismanBag.Items.Detail
 {
@@ -42,6 +49,10 @@ namespace TalismanBag.Items.Detail
         public ItemUpgradePreview upgradePreview = new();
         public ItemBattleEffectPreview battleEffectPreview = new();
         public ItemSkillMonitorPreview skillMonitorPreview = new();
+        public ItemDetailQualifiedBuildTrackProjection qualifiedBuildTrack { get; internal set; } =
+            ItemDetailQualifiedBuildTrackProjection.NotApplicable();
+        public ItemDetailQualifiedCoreEffectProjection qualifiedCoreEffect { get; internal set; } =
+            ItemDetailQualifiedCoreEffectProjection.NotApplicable();
         public List<ItemDetailSectionViewModel> displayPlayerSections = new();
         public List<ItemDetailSectionViewModel> displayDebugSections = new();
 
@@ -85,6 +96,10 @@ namespace TalismanBag.Items.Detail
                 upgradePreview = CloneUpgradePreview(upgradePreview),
                 battleEffectPreview = CloneBattleEffectPreview(battleEffectPreview),
                 skillMonitorPreview = CloneSkillMonitorPreview(skillMonitorPreview),
+                qualifiedBuildTrack = qualifiedBuildTrack?.Clone()
+                    ?? ItemDetailQualifiedBuildTrackProjection.NotApplicable(),
+                qualifiedCoreEffect = qualifiedCoreEffect?.Clone()
+                    ?? ItemDetailQualifiedCoreEffectProjection.NotApplicable(),
                 displayPlayerSections = CloneSections(displayPlayerSections),
                 displayDebugSections = CloneSections(displayDebugSections)
             };
@@ -306,6 +321,345 @@ namespace TalismanBag.Items.Detail
                     previewText = source.previewText,
                     slotPreviewLines = CloneTextLines(source.slotPreviewLines)
                 };
+        }
+    }
+
+    public enum ItemDetailQualifiedBuildProjectionStatus
+    {
+        Complete = 0,
+        Unknown = 1,
+        NotApplicable = 2
+    }
+
+    public sealed class ItemDetailQualifiedBuildTrackProjection
+    {
+        private readonly ReadOnlyCollection<ItemDetailQualifiedBuildTrackRow> trackRows;
+
+        public ItemDetailQualifiedBuildTrackProjection(
+            ItemDetailQualifiedBuildProjectionStatus status,
+            ItemInstanceQualifiedBuildFactCompleteness completeness,
+            string itemInstanceId,
+            string baseItemId,
+            string placementId,
+            ItemInstanceQualifiedBuildLocation location,
+            ItemBuildQualification? buildQualification,
+            ItemInstanceQualifiedBuildBooleanFact isLitFact,
+            ItemInstanceQualifiedBuildBooleanFact sourceIsCountedFact,
+            ItemInstanceQualifiedBuildBooleanFact qualifiedIsCountedFact,
+            string eligibleFaMenBuildId,
+            string eligibleQiLeiBuildId,
+            int? faMenBuildCount,
+            int? qiLeiBuildCount,
+            int? faMenActiveStagePieceCount,
+            int? qiLeiActiveStagePieceCount,
+            IEnumerable<ItemDetailQualifiedBuildTrackRow> trackRows,
+            string diagnosticCode,
+            string safeUnavailableReason,
+            string sourceQualifiedBuildCanonicalSignature)
+        {
+            this.status = status;
+            this.completeness = completeness;
+            this.itemInstanceId = Normalize(itemInstanceId);
+            this.baseItemId = Normalize(baseItemId);
+            this.placementId = Normalize(placementId);
+            this.location = location;
+            this.buildQualification = buildQualification;
+            this.isLitFact = isLitFact;
+            this.sourceIsCountedFact = sourceIsCountedFact;
+            this.qualifiedIsCountedFact = qualifiedIsCountedFact;
+            this.eligibleFaMenBuildId = Normalize(eligibleFaMenBuildId);
+            this.eligibleQiLeiBuildId = Normalize(eligibleQiLeiBuildId);
+            this.faMenBuildCount = faMenBuildCount;
+            this.qiLeiBuildCount = qiLeiBuildCount;
+            this.faMenActiveStagePieceCount = faMenActiveStagePieceCount;
+            this.qiLeiActiveStagePieceCount = qiLeiActiveStagePieceCount;
+            this.trackRows = Array.AsReadOnly((trackRows ??
+                    Array.Empty<ItemDetailQualifiedBuildTrackRow>())
+                .Where(value => value != null)
+                .Select(value => value.Clone())
+                .OrderBy(value => value.trackKind)
+                .ThenBy(value => value.buildId, StringComparer.Ordinal)
+                .ToArray());
+            this.diagnosticCode = Normalize(diagnosticCode);
+            this.safeUnavailableReason = safeUnavailableReason ?? string.Empty;
+            this.sourceQualifiedBuildCanonicalSignature =
+                Normalize(sourceQualifiedBuildCanonicalSignature);
+            canonicalSignature = ItemDetailQualifiedBuildCanonical.Sha256(BuildCanonicalPayload());
+        }
+
+        public ItemDetailQualifiedBuildProjectionStatus status { get; }
+        public ItemInstanceQualifiedBuildFactCompleteness completeness { get; }
+        public string itemInstanceId { get; }
+        public string baseItemId { get; }
+        public string placementId { get; }
+        public ItemInstanceQualifiedBuildLocation location { get; }
+        public ItemBuildQualification? buildQualification { get; }
+        public ItemInstanceQualifiedBuildBooleanFact isLitFact { get; }
+        public ItemInstanceQualifiedBuildBooleanFact sourceIsCountedFact { get; }
+        public ItemInstanceQualifiedBuildBooleanFact qualifiedIsCountedFact { get; }
+        public string eligibleFaMenBuildId { get; }
+        public string eligibleQiLeiBuildId { get; }
+        public int? faMenBuildCount { get; }
+        public int? qiLeiBuildCount { get; }
+        public int? faMenActiveStagePieceCount { get; }
+        public int? qiLeiActiveStagePieceCount { get; }
+        public IReadOnlyList<ItemDetailQualifiedBuildTrackRow> TrackRows => trackRows;
+        public string diagnosticCode { get; }
+        public string safeUnavailableReason { get; }
+        public string sourceQualifiedBuildCanonicalSignature { get; }
+        public string canonicalSignature { get; }
+
+        public ItemDetailQualifiedBuildTrackProjection Clone() =>
+            new(
+                status,
+                completeness,
+                itemInstanceId,
+                baseItemId,
+                placementId,
+                location,
+                buildQualification,
+                isLitFact,
+                sourceIsCountedFact,
+                qualifiedIsCountedFact,
+                eligibleFaMenBuildId,
+                eligibleQiLeiBuildId,
+                faMenBuildCount,
+                qiLeiBuildCount,
+                faMenActiveStagePieceCount,
+                qiLeiActiveStagePieceCount,
+                trackRows,
+                diagnosticCode,
+                safeUnavailableReason,
+                sourceQualifiedBuildCanonicalSignature);
+
+        public static ItemDetailQualifiedBuildTrackProjection NotApplicable(
+            string baseItemId = null,
+            string diagnosticCode = "DETAIL_QUALIFIED_NOT_APPLICABLE") =>
+            new(
+                ItemDetailQualifiedBuildProjectionStatus.NotApplicable,
+                ItemInstanceQualifiedBuildFactCompleteness.NotApplicable,
+                null,
+                baseItemId,
+                null,
+                ItemInstanceQualifiedBuildLocation.Unknown,
+                null,
+                ItemInstanceQualifiedBuildBooleanFact.NotApplicable,
+                ItemInstanceQualifiedBuildBooleanFact.NotApplicable,
+                ItemInstanceQualifiedBuildBooleanFact.NotApplicable,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Array.Empty<ItemDetailQualifiedBuildTrackRow>(),
+                diagnosticCode,
+                string.Empty,
+                null);
+
+        private string BuildCanonicalPayload()
+        {
+            StringBuilder builder = new();
+            ItemDetailQualifiedBuildCanonical.Append(builder, "status", status.ToString());
+            ItemDetailQualifiedBuildCanonical.Append(builder, "completeness", completeness.ToString());
+            ItemDetailQualifiedBuildCanonical.AppendOptional(builder, "itemInstanceId", itemInstanceId);
+            ItemDetailQualifiedBuildCanonical.AppendOptional(builder, "baseItemId", baseItemId);
+            ItemDetailQualifiedBuildCanonical.AppendOptional(builder, "placementId", placementId);
+            ItemDetailQualifiedBuildCanonical.Append(builder, "location", location.ToString());
+            ItemDetailQualifiedBuildCanonical.AppendNullableEnum(
+                builder, "buildQualification", buildQualification);
+            ItemDetailQualifiedBuildCanonical.Append(builder, "isLitFact", isLitFact.ToString());
+            ItemDetailQualifiedBuildCanonical.Append(
+                builder, "sourceIsCountedFact", sourceIsCountedFact.ToString());
+            ItemDetailQualifiedBuildCanonical.Append(
+                builder, "qualifiedIsCountedFact", qualifiedIsCountedFact.ToString());
+            ItemDetailQualifiedBuildCanonical.AppendOptional(
+                builder, "eligibleFaMenBuildId", eligibleFaMenBuildId);
+            ItemDetailQualifiedBuildCanonical.AppendOptional(
+                builder, "eligibleQiLeiBuildId", eligibleQiLeiBuildId);
+            ItemDetailQualifiedBuildCanonical.AppendNullableInt(
+                builder, "faMenBuildCount", faMenBuildCount);
+            ItemDetailQualifiedBuildCanonical.AppendNullableInt(
+                builder, "qiLeiBuildCount", qiLeiBuildCount);
+            ItemDetailQualifiedBuildCanonical.AppendNullableInt(
+                builder, "faMenActiveStagePieceCount", faMenActiveStagePieceCount);
+            ItemDetailQualifiedBuildCanonical.AppendNullableInt(
+                builder, "qiLeiActiveStagePieceCount", qiLeiActiveStagePieceCount);
+            ItemDetailQualifiedBuildCanonical.Append(
+                builder, "trackRowCount", trackRows.Count.ToString(CultureInfo.InvariantCulture));
+            foreach (ItemDetailQualifiedBuildTrackRow row in trackRows)
+            {
+                ItemDetailQualifiedBuildCanonical.Append(builder, "track", row.BuildCanonicalPayload());
+            }
+            ItemDetailQualifiedBuildCanonical.AppendOptional(builder, "diagnosticCode", diagnosticCode);
+            ItemDetailQualifiedBuildCanonical.Append(
+                builder, "safeUnavailableReason", safeUnavailableReason);
+            ItemDetailQualifiedBuildCanonical.AppendOptional(
+                builder, "sourceQualifiedBuildCanonicalSignature",
+                sourceQualifiedBuildCanonicalSignature);
+            return builder.ToString();
+        }
+
+        private static string Normalize(string value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    public sealed class ItemDetailQualifiedBuildTrackRow
+    {
+        private readonly ReadOnlyCollection<ItemDetailQualifiedBuildStageRow> stageRows;
+
+        public ItemDetailQualifiedBuildTrackRow(
+            string buildId,
+            ItemBuildTrackKind trackKind,
+            string stableTag,
+            string displayName,
+            ItemInstanceQualifiedBuildFactCompleteness completeness,
+            int? qualifiedItemCount,
+            int? maxPieceCount,
+            int? activeStagePieceCount,
+            int? nextStagePieceCount,
+            IEnumerable<ItemDetailQualifiedBuildStageRow> stageRows)
+        {
+            this.buildId = buildId ?? string.Empty;
+            this.trackKind = trackKind;
+            this.stableTag = stableTag ?? string.Empty;
+            this.displayName = displayName ?? string.Empty;
+            this.completeness = completeness;
+            this.qualifiedItemCount = qualifiedItemCount;
+            this.maxPieceCount = maxPieceCount;
+            this.activeStagePieceCount = activeStagePieceCount;
+            this.nextStagePieceCount = nextStagePieceCount;
+            this.stageRows = Array.AsReadOnly((stageRows ??
+                    Array.Empty<ItemDetailQualifiedBuildStageRow>())
+                .Where(value => value != null)
+                .Select(value => value.Clone())
+                .OrderBy(value => value.stagePieceCount)
+                .ToArray());
+        }
+
+        public string buildId { get; }
+        public ItemBuildTrackKind trackKind { get; }
+        public string stableTag { get; }
+        public string displayName { get; }
+        public ItemInstanceQualifiedBuildFactCompleteness completeness { get; }
+        public int? qualifiedItemCount { get; }
+        public int? maxPieceCount { get; }
+        public int? activeStagePieceCount { get; }
+        public int? nextStagePieceCount { get; }
+        public IReadOnlyList<ItemDetailQualifiedBuildStageRow> StageRows => stageRows;
+
+        public ItemDetailQualifiedBuildTrackRow Clone() =>
+            new(
+                buildId,
+                trackKind,
+                stableTag,
+                displayName,
+                completeness,
+                qualifiedItemCount,
+                maxPieceCount,
+                activeStagePieceCount,
+                nextStagePieceCount,
+                stageRows);
+
+        internal string BuildCanonicalPayload()
+        {
+            StringBuilder builder = new();
+            ItemDetailQualifiedBuildCanonical.Append(builder, "buildId", buildId);
+            ItemDetailQualifiedBuildCanonical.Append(builder, "trackKind", trackKind.ToString());
+            ItemDetailQualifiedBuildCanonical.Append(builder, "stableTag", stableTag);
+            ItemDetailQualifiedBuildCanonical.Append(builder, "displayName", displayName);
+            ItemDetailQualifiedBuildCanonical.Append(builder, "completeness", completeness.ToString());
+            ItemDetailQualifiedBuildCanonical.AppendNullableInt(
+                builder, "qualifiedItemCount", qualifiedItemCount);
+            ItemDetailQualifiedBuildCanonical.AppendNullableInt(
+                builder, "maxPieceCount", maxPieceCount);
+            ItemDetailQualifiedBuildCanonical.AppendNullableInt(
+                builder, "activeStagePieceCount", activeStagePieceCount);
+            ItemDetailQualifiedBuildCanonical.AppendNullableInt(
+                builder, "nextStagePieceCount", nextStagePieceCount);
+            foreach (ItemDetailQualifiedBuildStageRow row in stageRows)
+            {
+                ItemDetailQualifiedBuildCanonical.Append(builder, "stage", row.BuildCanonicalPayload());
+            }
+            return builder.ToString();
+        }
+    }
+
+    public sealed class ItemDetailQualifiedBuildStageRow
+    {
+        public ItemDetailQualifiedBuildStageRow(
+            int stagePieceCount,
+            string effectDescription,
+            bool isActive)
+        {
+            this.stagePieceCount = stagePieceCount;
+            this.effectDescription = effectDescription ?? string.Empty;
+            this.isActive = isActive;
+        }
+
+        public int stagePieceCount { get; }
+        public string effectDescription { get; }
+        public bool isActive { get; }
+
+        public ItemDetailQualifiedBuildStageRow Clone() =>
+            new(stagePieceCount, effectDescription, isActive);
+
+        internal string BuildCanonicalPayload()
+        {
+            StringBuilder builder = new();
+            ItemDetailQualifiedBuildCanonical.Append(
+                builder, "stagePieceCount", stagePieceCount.ToString(CultureInfo.InvariantCulture));
+            ItemDetailQualifiedBuildCanonical.Append(builder, "effectDescription", effectDescription);
+            ItemDetailQualifiedBuildCanonical.Append(builder, "isActive", isActive ? "true" : "false");
+            return builder.ToString();
+        }
+    }
+
+    internal static class ItemDetailQualifiedBuildCanonical
+    {
+        public static void Append(StringBuilder builder, string key, string value)
+        {
+            string safeKey = key ?? string.Empty;
+            string safeValue = value ?? string.Empty;
+            builder.Append(safeKey.Length.ToString(CultureInfo.InvariantCulture))
+                .Append(':').Append(safeKey).Append('=')
+                .Append(safeValue.Length.ToString(CultureInfo.InvariantCulture))
+                .Append(':').Append(safeValue).Append('\n');
+        }
+
+        public static void AppendOptional(StringBuilder builder, string key, string value)
+        {
+            Append(builder, key + ".presence", value == null ? "Missing" : "Present");
+            if (value != null)
+            {
+                Append(builder, key, value);
+            }
+        }
+
+        public static void AppendNullableInt(StringBuilder builder, string key, int? value)
+        {
+            Append(builder, key + ".presence", value.HasValue ? "Present" : "Missing");
+            if (value.HasValue)
+            {
+                Append(builder, key, value.Value.ToString(CultureInfo.InvariantCulture));
+            }
+        }
+
+        public static void AppendNullableEnum<T>(StringBuilder builder, string key, T? value)
+            where T : struct
+        {
+            Append(builder, key + ".presence", value.HasValue ? "Present" : "Missing");
+            if (value.HasValue)
+            {
+                Append(builder, key, value.Value.ToString());
+            }
+        }
+
+        public static string Sha256(string payload)
+        {
+            using SHA256 sha = SHA256.Create();
+            byte[] digest = sha.ComputeHash(Encoding.UTF8.GetBytes(payload ?? string.Empty));
+            return "sha256:" + BitConverter.ToString(digest).Replace("-", string.Empty).ToLowerInvariant();
         }
     }
 

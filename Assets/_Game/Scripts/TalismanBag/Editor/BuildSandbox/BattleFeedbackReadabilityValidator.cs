@@ -13,8 +13,6 @@ namespace TalismanBag.EditorTools.BuildSandbox
         public const string PackageName = BattleFeedbackReadabilityPreview.PackageName;
         public const string QaMenuPath =
             "Tools/Talisman Bag/V0.4/BuildSandbox/BattleFeedbackReadability01/[QA Only] Run Battle Feedback Readability";
-
-        [MenuItem(QaMenuPath)]
         public static void RunFromMenu()
         {
             BattleFeedbackReadabilityPreview preview = BuildDefaultPreview();

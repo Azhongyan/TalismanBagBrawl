@@ -22,7 +22,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
         private static readonly Color TextColor = new(0.86f, 0.80f, 0.70f, 1f);
         private static readonly Color AccentColor = new(0.72f, 0.48f, 0.18f, 1f);
 
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/ItemFullDetailBuildSandboxWorkbench01/[Writes Scene][Manual Only] Apply Workbench")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4/ItemSandbox/ItemFullDetailBuildSandboxWorkbench01/[Writes Scene][Manual Only] Apply Workbench")]
         public static void ApplyMenu()
         {
             Apply();

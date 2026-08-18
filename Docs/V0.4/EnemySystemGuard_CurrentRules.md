@@ -851,3 +851,23 @@ Enemy 数据阶段 E01-E10 已收口完成。当前没有自动释放的下一�
 推进正式章节
 commit / tag / push
 ```
+
+## 十三、Shared Module Layering / Enemy Prefab Presentation
+
+Enemy Guard 后续必须同时读取并执行：
+
+```text
+Docs/V0.4/SHARED_MODULE_LAYERING_AND_PREFAB_PRESENTATION_GUARD.md
+```
+
+Enemy 数据、Enemy Runtime 状态、Enemy View 必须分层。Enemy Prefab 只读取
+Enemy/Combat ViewModel 并渲染动画、受伤、技能、状态和详情，不得挂载 Enemy 数据
+真源、当前 HP/Boss阶段或第二套 EnemyManager。Enemy 只能消费 Item Snapshot 的
+公开结果，不得建立 Item 形状、供能或 Build 的第二套真源。
+
+若任务要求在每个场景重画 Enemy UI、让 Enemy View 直接改 Item/Reward/Save/Chapter，
+或超过两个技术包仍没有可操作的敌人体验手测，Enemy Guard 必须暂停并向用户解释。
+
+Enemy状态、技能、伤害、施法条、Boss阶段和机制提示进入玩家UI时，必须逐字段提供真实
+Enemy Runtime端到端血缘。Enemy Fixture、Schema或离线Evaluator通过不能替代真实敌人
+在指定Scene产生对应Snapshot、ViewModel和可见反馈。

@@ -280,3 +280,16 @@ BuildTuningDataPanelExtension
 ```
 
 并通过 Adapter 接到已登记成熟组件上。
+
+## 11. Base Component 必须资产化为共享 Prefab
+
+本规则中的 Base Component 如果属于可见 UI，后续必须同时遵守：
+
+```text
+Docs/V0.4/SHARED_MODULE_LAYERING_AND_PREFAB_PRESENTATION_GUARD.md
+```
+
+Base Component 不是某个 Scene 中复制出来的一棵独立 hierarchy。用户验收后的可见组块
+必须以共享 Base Prefab 为内部视觉真源；不同页面只允许通过 Prefab Variant 与 Scene
+Slot表达必要差异。Adapter / Extension 只能把 ViewModel 和 Intent 接到共享 View，不得
+在 Prefab 内建立第二套数据或状态。

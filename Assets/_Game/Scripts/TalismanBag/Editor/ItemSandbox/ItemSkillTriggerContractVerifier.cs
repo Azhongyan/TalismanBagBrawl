@@ -67,8 +67,6 @@ namespace TalismanBag.EditorTools.ItemSandbox
             "UpgradeService",
             "EditorBuildSettings.scenes ="
         };
-
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/ItemSkillTriggerContract01/[Guard Only] Verify And Write Reports")]
         public static void VerifyMenu()
         {
             VerifyAndWriteReports(exitWhenBatchMode: false);

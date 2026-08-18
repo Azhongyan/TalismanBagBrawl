@@ -22,8 +22,6 @@ namespace TalismanBag.EditorTools.ItemSandbox
         private const string LeakCheckReportPath = "Docs/V0.4/Reports/ItemSystemValidatorAndSnapshotLeakCheckReport.md";
 
         private static readonly DefaultItemSystemSnapshotProvider Provider = DefaultItemSystemSnapshotProvider.Instance;
-
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/ItemSystemValidatorAndSnapshot01/[Guard Only] Verify And Write Reports")]
         public static void VerifyMenu()
         {
             VerifyAndWriteReports(exitWhenBatchMode: false);
@@ -94,29 +92,29 @@ namespace TalismanBag.EditorTools.ItemSandbox
 
             AddProviderCase(result, rows, "duplicate-placement-id", "Two items share P_DUP.", false, new[] { "PLACEMENT_ID_DUPLICATE" }, Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_DUP", "I001", 1, 1),
                 P("P_DUP", "I007", 2, 1)
             }));
             AddProviderCase(result, rows, "empty-placement-id", "One placed item has an empty placementId.", false, new[] { "PLACEMENT_ID_EMPTY" }, Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P(string.Empty, "I001", 1, 1)
             }));
             AddProviderCase(result, rows, "out-of-bounds", "I002 line2_h starts at x=4.", false, new[] { "ITEM_OUT_OF_BOUNDS" }, Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_I002", "I002", 4, 0)
             }));
             AddProviderCase(result, rows, "placement-overlap", "I001 and I007 both occupy (1,1).", false, new[] { "PLACEMENT_OVERLAP" }, Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_I001", "I001", 1, 1),
                 P("P_I007", "I007", 1, 1)
             }));
             AddProviderCase(result, rows, "eye-covered", "I001 is placed on fixed eyeCell (2,2).", false, new[] { "EYE_CELL_COVERED" }, Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_I001", "I001", 2, 2)
             }));
             AddProviderCase(result, rows, "array-bonus-coordinates-wrong", "AP04 is moved away from the fixed cross.", false, new[] { "ARRAY_BONUS_CELLS_INVALID" }, Input(
@@ -128,15 +126,15 @@ namespace TalismanBag.EditorTools.ItemSandbox
                     new Vector2Int(1, 2),
                     new Vector2Int(0, 4)
                 })));
-            AddProviderCase(result, rows, "missing-junian", "Complete ordinary layout without I031.", false, new[] { "JUNIAN_MISSING" }, Input(new[]
+            AddProviderCase(result, rows, "board-state-missing-i031", "Explicit Board state without its stable I031 placement.", false, new[] { "I031_BOARD_PLACEMENT_MISSING" }, Input(new[]
             {
                 P("P_I001", "I001", 1, 1),
                 P("P_I007", "I007", 2, 1),
                 P("P_I013", "I013", 3, 1)
-            }));
-            AddProviderCase(result, rows, "multiple-junian", "Two I031 source placements.", false, new[] { "JUNIAN_MULTIPLE" }, Input(new[]
+            }, i031State: I031InventoryPlacementContract.OwnedBoard()));
+            AddProviderCase(result, rows, "multiple-i031-placement", "Two I031 source placements.", false, new[] { "I031_PLACEMENT_MULTIPLE" }, Input(new[]
             {
-                P("P_SOURCE_A", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_SOURCE_B", "I031", 4, 1),
                 P("P_I001", "I001", 1, 1)
             }));
@@ -157,7 +155,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 "Four monitor slots are contract-only and carry no runtime trigger/cooldown/charge state.");
             AddProviderCase(result, rows, "duplicate-base-item-excluded-from-build", "Two unique placements use the same ordinary base item I001.", false, new[] { ItemSystemValidationCodes.DuplicateBaseItemPlaced }, Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_I001_A", "I001", 1, 1),
                 P("P_I001_B", "I001", 2, 1)
             }),
@@ -244,7 +242,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
 
             ItemSystemSnapshot invalidA = Provider.CreateSnapshot(Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_DUP", "I001", 1, 1),
                 P("P_DUP", "I007", 1, 1)
             }));
@@ -252,7 +250,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             {
                 P("P_DUP", "I007", 1, 1),
                 P("P_DUP", "I001", 1, 1),
-                P("P_SOURCE", "I031", 0, 1)
+                P("P_SYSTEM_I031", "I031", 0, 1)
             }));
             bool invalidSame = string.Equals(invalidA.BuildDebugSignature(), invalidB.BuildDebugSignature(), StringComparison.Ordinal);
             bool invalidImmutable = CheckSnapshotCollectionsImmutable(invalidA, out string invalidImmutableNote);
@@ -282,7 +280,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 mainBuildSelectionInput: new ItemMainBuildSelectionInput("famen:zhenlei", "ItemSystemValidatorAndSnapshotVerifier", 21)));
             ItemSystemSnapshot invalid = Provider.CreateSnapshot(Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_DUP", "I001", 1, 1),
                 P("P_DUP", "I007", 1, 1)
             }));
@@ -351,7 +349,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
         {
             ItemSystemSnapshot unlitBuild = Provider.CreateSnapshot(Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_I013_UNLIT", "I013", 4, 4)
             }));
             bool buildSafe = unlitBuild.FindPlacement("P_I013_UNLIT")?.isCountedInBuild == false;
@@ -360,7 +358,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
 
             ItemSystemSnapshot unlitArray = Provider.CreateSnapshot(Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 0),
+                P("P_SYSTEM_I031", "I031", 0, 0),
                 P("P_I007_AP_UNLIT", "I007", 2, 3)
             }));
             bool arraySafe = unlitArray.FindPlacement("P_I007_AP_UNLIT") is { isOnArrayBonusCell: true, isArrayBonusActive: false };
@@ -369,7 +367,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
 
             ItemSystemSnapshot lockedCore = Provider.CreateSnapshot(Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_I001_LV1", "I001", 1, 1)
             }));
             bool lockedSafe = lockedCore.FindPlacement("P_I001_LV1")?.ActiveCoreEffectIds.Count == 0;
@@ -378,7 +376,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
 
             ItemSystemSnapshot unlitAwakened = Provider.CreateSnapshot(Input(new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_I013_UNLIT_LV40", "I013", 4, 4)
             }, awakeningInputs: new[]
             {
@@ -400,12 +398,12 @@ namespace TalismanBag.EditorTools.ItemSandbox
             {
                 ItemSystemSnapshot snapshot = Provider.CreateSnapshot(Input(new[]
                 {
-                    P("P_SOURCE", "I031", 0, 1),
+                    P("P_SYSTEM_I031", "I031", 0, 1),
                     P("P_I001_LIT", "I001", 1, 1),
                     P("P_I007_UNLIT", "I007", 4, 4)
                 }, awakeningInputs: new[]
                 {
-                    A("I031", "P_SOURCE", 40),
+                    A("I031", "P_SYSTEM_I031", 40),
                     A("I001", "P_I001_LIT", 40),
                     A("I007", "P_I007_UNLIT", 40)
                 }));
@@ -439,14 +437,14 @@ namespace TalismanBag.EditorTools.ItemSandbox
                     && string.IsNullOrWhiteSpace(catalogPreviewI031.placementId)
                     && !catalogPreviewI031.statusFlags.isLit
                     && !catalogPreviewI031.statusFlags.countedInBuild;
-                AddManualRow(result, rows, "i031-catalog-preview-no-placement-state", "CatalogPreview for I031 while P_SOURCE exists.", true, catalogI031Ok, Array.Empty<string>(), Array.Empty<string>(), true, snapshotImmutable, catalogI031Ok && snapshotImmutable, "Catalog preview ignores placement state. " + snapshotImmutableNote);
+                AddManualRow(result, rows, "i031-catalog-preview-no-placement-state", "CatalogPreview for I031 while P_SYSTEM_I031 exists.", true, catalogI031Ok, Array.Empty<string>(), Array.Empty<string>(), true, snapshotImmutable, catalogI031Ok && snapshotImmutable, "Catalog preview ignores placement state. " + snapshotImmutableNote);
 
-                ItemDetailViewModel placedI031 = Compose(i031, ItemDetailProjectionContextKind.PlacedInstance, "P_SOURCE", lighting, arrayBonus, build, awakening, monitor);
+                ItemDetailViewModel placedI031 = Compose(i031, ItemDetailProjectionContextKind.PlacedInstance, "P_SYSTEM_I031", lighting, arrayBonus, build, awakening, monitor);
                 bool placedI031Ok = placedI031 != null
-                    && string.Equals(placedI031.placementId, "P_SOURCE", StringComparison.Ordinal)
+                    && string.Equals(placedI031.placementId, "P_SYSTEM_I031", StringComparison.Ordinal)
                     && placedI031.statusFlags.isLit
                     && !placedI031.statusFlags.countedInBuild;
-                AddManualRow(result, rows, "i031-placed-instance-source-boundary", "PlacedInstance for P_SOURCE/I031.", true, placedI031Ok, Array.Empty<string>(), Array.Empty<string>(), true, snapshotImmutable, placedI031Ok && snapshotImmutable, "I031 is lit source boundary and never counts in Build. " + snapshotImmutableNote);
+                AddManualRow(result, rows, "i031-placed-instance-source-boundary", "PlacedInstance for P_SYSTEM_I031/I031.", true, placedI031Ok, Array.Empty<string>(), Array.Empty<string>(), true, snapshotImmutable, placedI031Ok && snapshotImmutable, "I031 is lit source boundary and never counts in Build. " + snapshotImmutableNote);
 
                 bool all31Ok = snapshot.catalogItems.Count == 31
                     && snapshot.catalogItems.All(item =>
@@ -598,21 +596,31 @@ namespace TalismanBag.EditorTools.ItemSandbox
             ItemSystemBoardConfigInput boardConfig = null,
             IReadOnlyList<ItemCoreAwakeningInput> awakeningInputs = null,
             ItemMainBuildSelectionInput mainBuildSelectionInput = null,
-            IReadOnlyList<ItemInnerDataDefinition> catalogItems = null)
+            IReadOnlyList<ItemInnerDataDefinition> catalogItems = null,
+            I031InventoryPlacementStateInput i031State = null)
         {
+            I031InventoryPlacementStateInput resolvedState = i031State ??
+                ((placements ?? Array.Empty<ItemSystemPlacementInput>()).Any(
+                    value => value != null && string.Equals(
+                        value.itemId,
+                        I031InventoryPlacementContract.ItemId,
+                        StringComparison.Ordinal))
+                    ? I031InventoryPlacementContract.OwnedBoard()
+                    : I031InventoryPlacementContract.OwnedInventory());
             return new ItemSystemSnapshotInput(
                 placements,
                 boardConfig,
                 awakeningInputs,
                 mainBuildSelectionInput,
-                catalogItems);
+                catalogItems,
+                new[] { resolvedState });
         }
 
         private static ItemSystemPlacementInput[] ValidPlacements()
         {
             return new[]
             {
-                P("P_SOURCE", "I031", 0, 1),
+                P("P_SYSTEM_I031", "I031", 0, 1),
                 P("P_I001", "I001", 1, 1),
                 P("P_I007", "I007", 2, 1),
                 P("P_I013", "I013", 3, 1)
@@ -742,7 +750,8 @@ namespace TalismanBag.EditorTools.ItemSandbox
                 source.selectedMainBuildId,
                 source.selectedMainBuildIsExplicit,
                 source.selectedMainBuildSource,
-                validationErrors ?? Array.Empty<ItemSystemValidationError>());
+                validationErrors ?? Array.Empty<ItemSystemValidationError>(),
+                source.i031State);
         }
 
         private static ItemSystemPlacementSnapshot ForgePlacement(
@@ -1372,7 +1381,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
             builder.AppendLine($"Failed rows: {rows.Count(row => row.result != "PASS")}");
             builder.AppendLine();
             builder.AppendLine("## Snapshot v1 Contract");
-            builder.AppendLine("- schemaVersion is ItemSystemSnapshot.v1.");
+            builder.AppendLine("- schemaVersion is ItemSystemSnapshot.v2 with explicit I031 ownership/location state.");
             builder.AppendLine("- Provider input is cloned; generated snapshots expose read-only collections and deterministic ordering.");
             builder.AppendLine("- Snapshot covers board, eye cell, AP cells, catalog, placements, lighting, array bonus, Build, awakening, skill monitor, selected main Build, and validation errors.");
             builder.AppendLine("- Detail view models remain projections; they are not used as Item System fact sources.");

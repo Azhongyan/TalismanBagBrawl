@@ -20,9 +20,7 @@ namespace TalismanBag.EditorTools.UnifiedBattle
         public const string ManualTestPath = "Docs/V0.4/Reports/UnifiedBattlePageShellManualTest.md";
 
         private const string MenuRoot =
-            "Tools/Talisman Bag/V0.4/UnifiedBattle/UnifiedBattlePageShell01/[QA Only] Run Validation Reports";
-
-        [MenuItem(MenuRoot, priority = 2221)]
+            "Tools/Talisman Bag/QA/UnifiedBattle/Run Validation Reports";
         public static void RunFromMenu()
         {
             BuildSandboxValidationReport report = UnifiedBattlePageShellVerifier.Validate(out UnifiedBattlePageShellValidationSnapshot snapshot);
@@ -198,8 +196,8 @@ namespace TalismanBag.EditorTools.UnifiedBattle
             AppendHeader(builder, "UnifiedBattlePageShell01 Manual Test", validationSource);
             builder.AppendLine();
             builder.AppendLine("## Unity Editor QA Menus");
-            builder.AppendLine("- Build scene/prefab: `Tools/Talisman Bag/V0.4/UnifiedBattle/UnifiedBattlePageShell01/[Writes Scene][Manual Only] Build Shell Scene And Prefab`");
-            builder.AppendLine("- Run validation reports: `Tools/Talisman Bag/V0.4/UnifiedBattle/UnifiedBattlePageShell01/[QA Only] Run Validation Reports`");
+            builder.AppendLine("- Build scene/prefab: `Tools/Talisman Bag/Authoring/UnifiedBattle/Build Shell Scene And Prefab [Writes Scene]`");
+            builder.AppendLine($"- Run validation reports: `{MenuRoot}`");
             builder.AppendLine();
             builder.AppendLine("## Manual Checks");
             builder.AppendLine("1. Open the devOnly shell scene after running the build menu.");

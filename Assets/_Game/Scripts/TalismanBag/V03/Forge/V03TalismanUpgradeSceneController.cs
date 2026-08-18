@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using System.Text;
+using TalismanBag.Navigation;
 using TalismanBag.V02.CoreLoop.Inventory;
-using TalismanBag.V02.CoreLoop.MainTrial;
 using TalismanBag.V02.CoreLoop.Resources;
 using TalismanBag.V02.CoreLoop.Save;
 using TalismanBag.V02.CoreLoop.Upgrades;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace TalismanBag.V03.Forge
@@ -16,10 +15,6 @@ namespace TalismanBag.V03.Forge
     public sealed class V03TalismanUpgradeSceneController : MonoBehaviour
     {
         private const string DefaultFirstUpgradeItemId = "fire_talisman_basic";
-        private const string HomeSceneName = "Scene_TalismanBag_V03_MainHome";
-        private const string HomeScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V03_MainHome.unity";
-        private const string TrialSceneName = "Scene_TalismanBag_V02_FormationCounter";
-        private const string TrialScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity";
         private const string PageRootName = "V03TalismanUpgradePageRoot";
         private const string ItemTrayRootName = "V03Upgrade_TalismanListPanel";
         private const string LegacyItemTrayRootName = "V02BottomOperationArea";
@@ -51,7 +46,6 @@ namespace TalismanBag.V03.Forge
         private Transform itemTrayTemplateRoot;
         private SaveService saveService;
         private UpgradeService upgradeService;
-        private MainTrialFlowService mainTrialFlowService;
         private string selectedItemId;
         private Text resourceText;
         private Text itemNameText;
@@ -434,7 +428,6 @@ namespace TalismanBag.V03.Forge
                 return;
             }
 
-            FindButton(pageRoot, "V03Upgrade_BackHomeButton")?.onClick.AddListener(LoadHome);
             FindButton(pageRoot, "InfoButton")?.onClick.AddListener(ShowInfoPopup);
             FindButton(pageRoot, "PopupCloseButton")?.onClick.AddListener(() => infoPopupRoot.SetActive(false));
             upgradeButton?.onClick.AddListener(UpgradeSelected);
@@ -448,7 +441,7 @@ namespace TalismanBag.V03.Forge
             FindButton(pageRoot, "ItemTrayTab_Material")?.onClick.AddListener(() => SelectItemTrayCategory(ItemTrayCategory.Material));
             FindButton(pageRoot, "ItemTrayTab_Consumable")?.onClick.AddListener(() => SelectItemTrayCategory(ItemTrayCategory.Consumable));
             FindButton(pageRoot, "ItemTrayTab_Special")?.onClick.AddListener(() => SelectItemTrayCategory(ItemTrayCategory.Special));
-            FindButton(pageRoot, "BottomNav_Home")?.onClick.AddListener(LoadHome);
+            FindButton(pageRoot, "BottomNav_Home")?.onClick.AddListener(NavigateBack);
             FindButton(pageRoot, "BottomNav_Develop")?.onClick.AddListener(() => SetStatus("当前已在养成页。"));
             FindButton(pageRoot, "BottomNav_Trial")?.onClick.AddListener(EnterTrialFromBottomBar);
             FindButton(pageRoot, "BottomNav_Explore")?.onClick.AddListener(ShowLockedModuleHint);
@@ -512,7 +505,7 @@ namespace TalismanBag.V03.Forge
                 new Vector2(-430f, -86f),
                 new Vector2(220f, 76f),
                 new Color(0.17f, 0.21f, 0.2f, 0.98f),
-                LoadHome);
+                NavigateBack);
 
             CreateButton(
                 "V03Upgrade_SettingsButton",
@@ -1432,13 +1425,9 @@ namespace TalismanBag.V03.Forge
 
         private void RefreshGuide()
         {
-            MainTrialPhase phase = EnsureMainTrialFlowService().GetCurrentPhase();
-            bool shouldGuide = phase == MainTrialPhase.FirstUpgradeRequired ||
-                               phase == MainTrialPhase.Chapter1RewardClaimed;
-            guideRoot.SetActive(shouldGuide);
-            if (shouldGuide)
+            if (guideRoot != null)
             {
-                guideSlotText.text = "图片插槽占位";
+                guideRoot.SetActive(false);
             }
         }
 
@@ -1498,16 +1487,7 @@ namespace TalismanBag.V03.Forge
 
         private void EnterTrialFromBottomBar()
         {
-            MainTrialPhase phase = EnsureMainTrialFlowService().GetCurrentPhase();
-            if (phase == MainTrialPhase.FirstUpgradeRequired ||
-                phase == MainTrialPhase.Chapter1RewardClaimed)
-            {
-                SetStatus("先完成升级符箓，再从首页进入试炼。");
-                RefreshGuide();
-                return;
-            }
-
-            LoadTrial();
+            LoadWorldMap();
         }
 
         private void SetStatus(string message)
@@ -1517,30 +1497,24 @@ namespace TalismanBag.V03.Forge
 
         private void CompleteFirstUpgradeAndReturn(string itemId)
         {
-            EnsureMainTrialFlowService().OnFirstUpgradeCompleted(itemId);
             LoadHome();
         }
 
         private void LoadHome()
         {
-            if (UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath(HomeScenePath) < 0)
-            {
-                Debug.LogError($"[V0.3-TalismanUpgrade] Home scene is missing from Build Settings: {HomeScenePath}", this);
-                return;
-            }
-
-            SceneManager.LoadScene(HomeSceneName, LoadSceneMode.Single);
+            TalismanSceneNavigationOwner.TryNavigate(TalismanSceneRoute.MainHome, this);
         }
 
-        private void LoadTrial()
+        private void LoadWorldMap()
         {
-            if (UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath(TrialScenePath) < 0)
-            {
-                Debug.LogError($"[V0.3-TalismanUpgrade] Trial scene is missing from Build Settings: {TrialScenePath}", this);
-                return;
-            }
+            TalismanSceneNavigationOwner.TryNavigate(TalismanSceneRoute.WorldMap, this);
+        }
 
-            SceneManager.LoadScene(TrialSceneName, LoadSceneMode.Single);
+        private void NavigateBack()
+        {
+            TalismanSceneNavigationOwner.TryNavigateBackFromUpgrade(
+                TalismanSceneRoute.MainHome,
+                this);
         }
 
         private List<UpgradeItemRow> BuildUpgradeItemRows()
@@ -1928,7 +1902,6 @@ namespace TalismanBag.V03.Forge
         {
             saveService = SaveService.GetOrCreate();
             upgradeService = FindObjectOfType<UpgradeService>(true);
-            mainTrialFlowService = FindObjectOfType<MainTrialFlowService>(true);
 
             if (upgradeService == null)
             {
@@ -1938,21 +1911,12 @@ namespace TalismanBag.V03.Forge
                     this);
             }
 
-            if (mainTrialFlowService == null)
-            {
-                Debug.LogError(
-                    "[V0.3-BootGuideUpgradeRuntimeLock01] MainTrialFlowService is missing; " +
-                    "runtime service creation is disabled.",
-                    this);
-            }
-
-            if (upgradeService == null || mainTrialFlowService == null)
+            if (upgradeService == null)
             {
                 return false;
             }
 
             upgradeService.Bind(saveService, null);
-            mainTrialFlowService.Bind(saveService);
             return true;
         }
 
@@ -1975,27 +1939,6 @@ namespace TalismanBag.V03.Forge
 
             upgradeService.Bind(saveService ?? SaveService.GetOrCreate(), null);
             return upgradeService;
-        }
-
-        private MainTrialFlowService EnsureMainTrialFlowService()
-        {
-            if (mainTrialFlowService != null)
-            {
-                return mainTrialFlowService;
-            }
-
-            mainTrialFlowService = FindObjectOfType<MainTrialFlowService>(true);
-            if (mainTrialFlowService == null)
-            {
-                Debug.LogError(
-                    "[V0.3-BootGuideUpgradeRuntimeLock01] MainTrialFlowService is missing; " +
-                    "runtime service creation is disabled.",
-                    this);
-                return null;
-            }
-
-            mainTrialFlowService.Bind(saveService ?? SaveService.GetOrCreate());
-            return mainTrialFlowService;
         }
 
         private void EnsureCanvas()

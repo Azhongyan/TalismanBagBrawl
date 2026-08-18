@@ -35,8 +35,6 @@ namespace TalismanBag.EditorTools.ItemBalance
         private ItemBalancePreviewResult preview;
         private ItemBalanceValidationReport validation;
         private ItemBalanceCsvImportPreview importPreview;
-
-        [MenuItem("Tools/Talisman Bag/V0.4/Data/[Manual Only] Item Balance Workbench")]
         public static void Open()
         {
             ItemBalanceWorkbenchWindow window = GetWindow<ItemBalanceWorkbenchWindow>();
@@ -54,12 +52,11 @@ namespace TalismanBag.EditorTools.ItemBalance
         {
             if (catalog == null)
             {
-                EditorGUILayout.HelpBox("Candidate catalog is missing. Create the 30 seeded profiles first.", MessageType.Warning);
-                if (GUILayout.Button("Create Missing Candidate Assets", GUILayout.Height(34)))
-                {
-                    catalog = ItemBalanceCandidateSeedBuilder.BuildAssets(false);
-                    SelectFirst();
-                }
+                EditorGUILayout.HelpBox(
+                    "Authoritative Item catalog is missing at "
+                    + ItemBalanceWorkbenchCatalog.CatalogAssetPath
+                    + ". Restore the canonical asset; this window does not generate a second database.",
+                    MessageType.Error);
                 return;
             }
 
@@ -115,10 +112,6 @@ namespace TalismanBag.EditorTools.ItemBalance
                 if (GUILayout.Button("Copy Rarity Band", EditorStyles.toolbarButton)) CopyRarityBand();
                 if (GUILayout.Button("Copy Stat Range", EditorStyles.toolbarButton)) CopyStatRange();
                 GUILayout.Space(10);
-                if (GUILayout.Button("Generate Suggested Bands", EditorStyles.toolbarButton)) RegenerateSelected("Generate suggested bands for the selected item?");
-                if (GUILayout.Button("Reset Selected From Candidate Seed", EditorStyles.toolbarButton)) ResetSelected();
-                GUILayout.Space(10);
-                if (GUILayout.Button("CSV Export", EditorStyles.toolbarButton)) ExportCsv();
                 if (GUILayout.Button("CSV Import Preview", EditorStyles.toolbarButton)) PreviewCsvImport();
                 if (GUILayout.Button("Validation", EditorStyles.toolbarButton)) { validation = ItemBalanceWorkbenchValidation.Validate(catalog); tab = 13; }
             }
@@ -444,20 +437,6 @@ namespace TalismanBag.EditorTools.ItemBalance
             preview = ItemBalanceWorkbenchCompiler.Preview(catalog, compiled, selected.baseItemId, previewRarity, rootSeed);
         }
 
-        private void RegenerateSelected(string message)
-        {
-            if (selected == null || !EditorUtility.DisplayDialog("Confirm overwrite", message, "Overwrite Selected", "Cancel")) return;
-            ItemBalanceCandidateSeedBuilder.GenerateSuggestedBands(catalog, selected);
-            validation = null;
-        }
-
-        private void ResetSelected()
-        {
-            if (selected == null || !EditorUtility.DisplayDialog("Reset selected candidate seed?", "All hand-edited values in the selected profile will be overwritten.", "Reset Selected", "Cancel")) return;
-            ItemBalanceCandidateSeedBuilder.ResetSelectedProfile(catalog, selected);
-            validation = null;
-        }
-
         private void CopyItem() { if (selected != null) EditorGUIUtility.systemCopyBuffer = EditorJsonUtility.ToJson(selected, true); }
         private void CopyRarityBand()
         {
@@ -468,12 +447,6 @@ namespace TalismanBag.EditorTools.ItemBalance
         {
             ItemBalanceRange range = selected?.FindVersion(previewRarity)?.FindRange(selected.primaryStatId);
             if (range != null) EditorGUIUtility.systemCopyBuffer = selected.baseItemId + "," + previewRarity.ToStableKey() + "," + range.statId + "," + range.minUnits + "," + range.maxUnits;
-        }
-
-        private void ExportCsv()
-        {
-            ItemCompleteCandidateContentWorkbenchVerifier.VerifyAndWrite(out string summary);
-            ShowNotification(new GUIContent(summary.Split('\n')[0]));
         }
 
         private void PreviewCsvImport()
@@ -493,7 +466,8 @@ namespace TalismanBag.EditorTools.ItemBalance
         private void LoadCatalog()
         {
             AssetDatabase.Refresh();
-            catalog = AssetDatabase.LoadAssetAtPath<ItemBalanceWorkbenchCatalog>(ItemBalanceCandidateSeedBuilder.CatalogPath);
+            catalog = AssetDatabase.LoadAssetAtPath<ItemBalanceWorkbenchCatalog>(
+                ItemBalanceWorkbenchCatalog.CatalogAssetPath);
             SelectFirst();
             validation = null; preview = null; importPreview = null;
         }

@@ -11,7 +11,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
     public sealed class BuildTuningDataPanelPreviewWindow : EditorWindow
     {
         public const string MenuPath =
-            "Tools/Talisman Bag/V0.4/BuildSandbox/Data/[Manual Only] Build Tuning Data Panel Preview 01";
+            "Tools/Talisman Bag/Dev Only/V0.4/BuildSandbox/Data/[Manual Only] Build Tuning Data Panel Preview 01";
 
         public const string WindowTitle = "Build Tuning Data Panel Preview 01";
 

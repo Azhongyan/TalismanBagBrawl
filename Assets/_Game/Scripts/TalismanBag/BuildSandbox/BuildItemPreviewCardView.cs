@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -196,7 +197,11 @@ namespace TalismanBag.BuildSandbox
         private BuildGridInteractionPreviewController controller;
         private readonly List<Image> layoutCellImages = new();
         private readonly HashSet<Image> manualLayoutCellImageColors = new();
-        private readonly Dictionary<Image, float> originalArtworkImageRotationByImage = new();
+        private readonly Dictionary<Image, AuthoritativeArtworkImageState>
+            authoritativeArtworkStates = new();
+        private Image authoritativeArtworkImage;
+        private Sprite deferredArtworkSpriteAfterDisable;
+        private bool hasDeferredArtworkRestoreAfterDisable;
         private DragGestureMode dragGestureMode;
         private ScrollRect gestureScrollRect;
         private RectTransform gestureScrollViewport;
@@ -215,6 +220,71 @@ namespace TalismanBag.BuildSandbox
             Pending,
             Scrolling,
             ItemDragging
+        }
+
+        private sealed class AuthoritativeArtworkImageState
+        {
+            public AuthoritativeArtworkImageState(Image image)
+            {
+                Image = image;
+                ActiveSelf = image != null && image.gameObject.activeSelf;
+                Enabled = image != null && image.enabled;
+                Sprite = image?.sprite;
+                OverrideSprite = image?.overrideSprite;
+                Color = image == null ? Color.white : image.color;
+                Type = image == null ? Image.Type.Simple : image.type;
+                PreserveAspect = image != null && image.preserveAspect;
+                FillCenter = image == null || image.fillCenter;
+                Material = image == null ? null : image.material;
+                PixelsPerUnitMultiplier = image == null ? 1f : image.pixelsPerUnitMultiplier;
+                RaycastTarget = image != null && image.raycastTarget;
+                LocalEulerAngles = image != null && image.rectTransform != null
+                    ? image.rectTransform.localEulerAngles
+                    : Vector3.zero;
+            }
+
+            public Image Image { get; }
+            public bool ActiveSelf { get; }
+            public bool Enabled { get; }
+            public Sprite Sprite { get; }
+            public Sprite OverrideSprite { get; }
+            public Color Color { get; }
+            public Image.Type Type { get; }
+            public bool PreserveAspect { get; }
+            public bool FillCenter { get; }
+            public Material Material { get; }
+            public float PixelsPerUnitMultiplier { get; }
+            public bool RaycastTarget { get; }
+            public Vector3 LocalEulerAngles { get; }
+
+            public void Restore(GameObject cardVisibilityOwner)
+            {
+                if (Image == null)
+                {
+                    return;
+                }
+                Image.sprite = Sprite;
+                Image.overrideSprite = OverrideSprite;
+                Image.color = Color;
+                Image.type = Type;
+                Image.preserveAspect = PreserveAspect;
+                Image.fillCenter = FillCenter;
+                Image.material = Material;
+                Image.pixelsPerUnitMultiplier = PixelsPerUnitMultiplier;
+                Image.raycastTarget = RaycastTarget;
+                if (Image.rectTransform != null)
+                {
+                    Image.rectTransform.localEulerAngles = LocalEulerAngles;
+                }
+                Image.enabled = Enabled;
+                // Artwork state restoration must never own the card root's
+                // presentation visibility.  A child slot can restore its own
+                // authored activeSelf, but an inactive card remains inactive.
+                if (Image.gameObject != cardVisibilityOwner)
+                {
+                    Image.gameObject.SetActive(ActiveSelf);
+                }
+            }
         }
 
         public RectTransform RectTransform
@@ -237,6 +307,135 @@ namespace TalismanBag.BuildSandbox
             || (titleText != null && !string.IsNullOrWhiteSpace(titleText.text))
             || (categoryText != null && !string.IsNullOrWhiteSpace(categoryText.text))
             || (shapeText != null && !string.IsNullOrWhiteSpace(shapeText.text));
+        public Image AuthoritativeArtworkImage => authoritativeArtworkImage;
+        public bool HasAuthoritativeArtworkRenderLease => authoritativeArtworkImage != null;
+        public bool UsesFallbackArtworkRenderLease => authoritativeArtworkImage != null
+            && authoritativeArtworkImage == backgroundImage;
+        public bool IsPresentationDisplayed => gameObject.activeSelf;
+        public bool IsArtworkEffectivelyRendering => gameObject.activeInHierarchy
+            && authoritativeArtworkImage != null
+            && authoritativeArtworkImage.gameObject.activeInHierarchy
+            && authoritativeArtworkImage.enabled
+            && authoritativeArtworkImage.color.a > ColorTolerance;
+        public bool IsPresentationRaycastable => gameObject.activeInHierarchy
+            && (canvasGroup == null
+                || (canvasGroup.blocksRaycasts && canvasGroup.interactable));
+        public bool AreLayoutCellRenderersNonObscuring => layoutCellImages.All(image => image == null
+            || !image.gameObject.activeSelf
+            || image.color.a <= ColorTolerance);
+        public int SuppressedAuthoritativeArtworkRendererCount =>
+            authoritativeArtworkStates.Keys.Count(image => image != null
+                && image != authoritativeArtworkImage && !image.enabled);
+
+        public bool BindAuthoritativeArtwork(Sprite sprite)
+        {
+            bool cardActiveSelf = gameObject.activeSelf;
+            RestoreAuthoritativeArtwork();
+            if (sprite == null)
+            {
+                return false;
+            }
+
+            Image[] candidates = GetComponentsInChildren<Image>(true)
+                .Where(IsAuthoritativeArtworkSlotCandidate)
+                .ToArray();
+            Image selected = candidates
+                .OrderByDescending(ScoreArtworkImageCandidate)
+                .FirstOrDefault();
+            if (selected == null && backgroundImage != null)
+            {
+                selected = backgroundImage;
+                candidates = new[] { selected };
+            }
+            if (selected == null)
+            {
+                return false;
+            }
+
+            foreach (Image candidate in candidates)
+            {
+                CaptureAuthoritativeArtworkState(candidate);
+            }
+            authoritativeArtworkImage = selected;
+            selected.enabled = true;
+            selected.overrideSprite = null;
+            selected.sprite = sprite;
+            selected.type = Image.Type.Simple;
+            selected.preserveAspect = true;
+            selected.fillCenter = true;
+            selected.material = null;
+            selected.pixelsPerUnitMultiplier = 1f;
+            selected.color = selected == backgroundImage
+                ? Color.white
+                : WithRequiredOpacity(selected.color);
+            SetArtworkImageRotationDegrees(selected, 0f);
+
+            foreach (Image candidate in candidates)
+            {
+                if (candidate != null && candidate != selected
+                    && (candidate.sprite != null || candidate.overrideSprite != null))
+                {
+                    candidate.enabled = false;
+                }
+            }
+            SetLayoutCellRenderersNonObscuringForArtworkLease();
+            return ReferenceEquals(
+                selected.overrideSprite != null ? selected.overrideSprite : selected.sprite,
+                sprite)
+                && gameObject.activeSelf == cardActiveSelf;
+        }
+
+        public void RestoreAuthoritativeArtwork()
+        {
+            foreach (AuthoritativeArtworkImageState state in
+                     authoritativeArtworkStates.Values.Reverse())
+            {
+                state.Restore(gameObject);
+            }
+            authoritativeArtworkStates.Clear();
+            authoritativeArtworkImage = null;
+            deferredArtworkSpriteAfterDisable = null;
+            hasDeferredArtworkRestoreAfterDisable = false;
+        }
+
+        private void OnEnable()
+        {
+            if (!hasDeferredArtworkRestoreAfterDisable)
+            {
+                return;
+            }
+
+            Sprite sprite = deferredArtworkSpriteAfterDisable;
+            deferredArtworkSpriteAfterDisable = null;
+            hasDeferredArtworkRestoreAfterDisable = false;
+            RestoreAuthoritativeArtwork();
+            if (sprite != null)
+            {
+                BindAuthoritativeArtwork(sprite);
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (authoritativeArtworkImage == null)
+            {
+                return;
+            }
+
+            deferredArtworkSpriteAfterDisable = authoritativeArtworkImage.overrideSprite != null
+                ? authoritativeArtworkImage.overrideSprite
+                : authoritativeArtworkImage.sprite;
+            hasDeferredArtworkRestoreAfterDisable = true;
+            authoritativeArtworkImage = null;
+        }
+
+        private void OnDestroy()
+        {
+            authoritativeArtworkStates.Clear();
+            authoritativeArtworkImage = null;
+            deferredArtworkSpriteAfterDisable = null;
+            hasDeferredArtworkRestoreAfterDisable = false;
+        }
 
         public void Bind(
             RectTransform rect,
@@ -291,6 +490,7 @@ namespace TalismanBag.BuildSandbox
 
         public void Clear()
         {
+            RestoreAuthoritativeArtwork();
             controller = null;
             itemId = string.Empty;
             category = string.Empty;
@@ -318,6 +518,11 @@ namespace TalismanBag.BuildSandbox
 
         public void SetVisible(bool visible)
         {
+            if (canvasGroup != null)
+            {
+                canvasGroup.blocksRaycasts = visible;
+                canvasGroup.interactable = visible;
+            }
             gameObject.SetActive(visible);
         }
 
@@ -382,6 +587,7 @@ namespace TalismanBag.BuildSandbox
                 backgroundImage.raycastTarget = !usesLayoutCellVisuals;
             }
 
+            SetLayoutCellRenderersNonObscuringForArtworkLease();
             SetNormalVisual();
         }
 
@@ -393,15 +599,7 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
-            if (!originalArtworkImageRotationByImage.TryGetValue(image, out float originalRotationDegrees))
-            {
-                originalRotationDegrees = image.rectTransform.localEulerAngles.z;
-                originalArtworkImageRotationByImage[image] = originalRotationDegrees;
-            }
-
-            Vector3 eulerAngles = image.rectTransform.localEulerAngles;
-            eulerAngles.z = originalRotationDegrees + rotationOffsetDegrees;
-            image.rectTransform.localEulerAngles = eulerAngles;
+            SetArtworkImageRotationDegrees(image, rotationOffsetDegrees);
         }
 
         public bool TryCaptureCellVisualStyles(List<ShapeCellVisualStyle> styles)
@@ -478,6 +676,10 @@ namespace TalismanBag.BuildSandbox
 
         private Image FindBestArtworkImage()
         {
+            if (authoritativeArtworkImage != null)
+            {
+                return authoritativeArtworkImage;
+            }
             Image bestImage = null;
             float bestScore = float.NegativeInfinity;
             foreach (Image image in GetComponentsInChildren<Image>(true))
@@ -496,6 +698,27 @@ namespace TalismanBag.BuildSandbox
             }
 
             return bestImage;
+        }
+
+        private bool IsAuthoritativeArtworkSlotCandidate(Image image)
+        {
+            if (image == null
+                || layoutCellImages.Contains(image)
+                || IsGeneratedLayoutCellImage(image))
+            {
+                return false;
+            }
+            string name = image.name ?? string.Empty;
+            if (ContainsNameHint(name,
+                    "background", "bg", "frame", "mask", "outline", "border"))
+            {
+                return false;
+            }
+            return image != backgroundImage
+                && (IsArtworkImageCandidate(image)
+                    || ContainsNameHint(name,
+                        "art", "artwork", "icon", "image", "picture",
+                        "sprite", "visual"));
         }
 
         public void OnInitializePotentialDrag(PointerEventData eventData)
@@ -840,18 +1063,63 @@ namespace TalismanBag.BuildSandbox
 
         private void ApplyBodyColor(Color color)
         {
-            if (backgroundImage != null && !manualBackgroundImageColor)
+            if (backgroundImage != null
+                && backgroundImage != authoritativeArtworkImage
+                && !manualBackgroundImageColor)
             {
                 backgroundImage.color = usesLayoutCellVisuals ? Color.clear : color;
             }
 
             foreach (Image image in layoutCellImages)
             {
-                if (image != null && !manualLayoutCellImageColors.Contains(image))
+                if (image == null || image == authoritativeArtworkImage)
+                {
+                    continue;
+                }
+
+                if (authoritativeArtworkImage != null)
+                {
+                    CaptureAuthoritativeArtworkState(image);
+                    image.color = Color.clear;
+                }
+                else if (!manualLayoutCellImageColors.Contains(image))
                 {
                     image.color = color;
                 }
             }
+        }
+
+        private void SetLayoutCellRenderersNonObscuringForArtworkLease()
+        {
+            if (authoritativeArtworkImage == null)
+            {
+                return;
+            }
+
+            foreach (Image image in layoutCellImages)
+            {
+                if (image == null || image == authoritativeArtworkImage)
+                {
+                    continue;
+                }
+
+                CaptureAuthoritativeArtworkState(image);
+                image.color = Color.clear;
+            }
+        }
+
+        private void CaptureAuthoritativeArtworkState(Image image)
+        {
+            if (image != null && !authoritativeArtworkStates.ContainsKey(image))
+            {
+                authoritativeArtworkStates.Add(image, new AuthoritativeArtworkImageState(image));
+            }
+        }
+
+        private static Color WithRequiredOpacity(Color color)
+        {
+            color.a = 1f;
+            return color;
         }
 
         private void CacheManualLayoutCellColors()
@@ -942,6 +1210,35 @@ namespace TalismanBag.BuildSandbox
             }
 
             return score;
+        }
+
+        private static void SetArtworkImageRotationDegrees(
+            Image image,
+            float rotationDegrees)
+        {
+            if (image == null || image.rectTransform == null)
+            {
+                return;
+            }
+
+            Vector3 eulerAngles = image.rectTransform.localEulerAngles;
+            eulerAngles.z = NormalizeRotationDegrees(rotationDegrees);
+            image.rectTransform.localEulerAngles = eulerAngles;
+        }
+
+        private static float NormalizeRotationDegrees(float degrees)
+        {
+            while (degrees > 180f)
+            {
+                degrees -= 360f;
+            }
+
+            while (degrees <= -180f)
+            {
+                degrees += 360f;
+            }
+
+            return degrees;
         }
 
         private static bool ContainsNameHint(string name, params string[] hints)

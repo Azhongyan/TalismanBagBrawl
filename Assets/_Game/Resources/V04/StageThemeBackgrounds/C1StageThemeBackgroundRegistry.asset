@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cced08aafe2946dc9eafe541a54f8b1d, type: 3}
+  m_Name: C1StageThemeBackgroundRegistry
+  m_EditorClassIdentifier: 
+  interiorProfile: {fileID: 11400000, guid: 32bc58f80e4529543891c351e965b6f5, type: 2}
+  exteriorProfile: {fileID: 11400000, guid: 099e350e69d9a3c4f906e94b74227e4b, type: 2}
+  nightAnimatedProfile: {fileID: 11400000, guid: 4ae1d16d1d07778408747b96af0d9772, type: 2}

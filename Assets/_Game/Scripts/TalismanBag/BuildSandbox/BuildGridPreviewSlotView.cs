@@ -234,6 +234,11 @@ namespace TalismanBag.BuildSandbox
                 return;
             }
 
+            if (controller != null && controller.TryShowBoardItemDetailFromCell(Cell))
+            {
+                return;
+            }
+
             controller?.ConfirmLockedPreviewFromCell(Cell);
         }
 

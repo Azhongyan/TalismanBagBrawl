@@ -1,0 +1,5 @@
+case,status,request_count,telemetry_count,canonical_signature,zero_semantics
+"current_valid_not_executed","Valid",6,41,"sha256:e1483fb754e891636cbc192ef9703f36403d466128439f8debd3e2dc12d29b37","unsupported rows retain Missing/Conflicted"
+"known_zero","Valid",1,4,"sha256:34003ba730bd56866069064aaf0b2592d1d3e40a06636b625e74dd6c2c187108","adjacency present stack=0 applied=0"
+"unknown","Unknown",0,0,"sha256:814ae4dfee58c6963da3b9b97f627f760ab3ca94714412b774b9a960fdd83716","missing fact; zero request"
+"invalid","Invalid",0,0,"sha256:327e115b594bde6468d4bb2ee8822fe4ac69d3a57e7cec13bb3913d7024d27f4","identity/signature contradiction; zero request"

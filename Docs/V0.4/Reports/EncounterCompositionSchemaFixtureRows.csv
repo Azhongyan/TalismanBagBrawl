@@ -1,7 +1,0 @@
-encounterId,waveId,waveOrder,slotId,spawnOrder,slotKind,slotRole,carrierId,quantity,mechanicProfileIds,mapRuleIds,fixtureOnly
-"dev_encounter_fixture_alpha","wave_opening",0,"slot_poison",0,"Enemy","Normal","dev_enemy_poison_cultist",2,"dev_enemy_poison_burn_problem","dev_map_black_furnace_smoke;dev_map_bluestone_damp",true
-"dev_encounter_fixture_alpha","wave_opening",0,"slot_burning",1,"Enemy","Elite","dev_enemy_burning_wisp",1,"dev_enemy_poison_burn_problem","dev_map_black_furnace_smoke;dev_map_bluestone_damp",true
-"dev_encounter_fixture_alpha","wave_pressure",1,"slot_boss",0,"Boss","Boss","dev_boss_shield_jinglei",1,"dev_boss_black_furnace_shell","dev_map_black_furnace_smoke;dev_map_bluestone_damp",true
-"dev_encounter_fixture_alpha","wave_pressure",1,"slot_guard",1,"Enemy","Elite","dev_enemy_shield_guard",1,"dev_enemy_shield_problem","dev_map_black_furnace_smoke;dev_map_bluestone_damp",true
-"dev_encounter_fixture_beta","wave_reuse",0,"slot_reused_carrier",0,"Enemy","Normal","dev_enemy_poison_cultist",1,"dev_enemy_poison_burn_problem","dev_map_old_lane_echo",true
-"dev_encounter_fixture_beta","wave_baseline",1,"slot_baseline_exception",0,"Enemy","Normal","dev_enemy_basic",1,"","dev_map_old_lane_echo",true

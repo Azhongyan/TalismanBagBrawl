@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94ed01388841f6e42bf279e5a56d4498, type: 3}
   m_Name: ItemBalanceProfile_I024
   m_EditorClassIdentifier: 
-  balanceDataRevision: ITEM_COMPLETE_CANDIDATE_CONTENT_WORKBENCH01_R1
+  balanceDataRevision: ITEM_FOUR_CORE_CANDIDATE_DATA_CORRECTION01_R1
   baseItemId: I024
   displayName: "\u51C0\u6C34\u76C2"
   faMenTag: xuanshui
@@ -126,8 +126,12 @@ MonoBehaviour:
     flavorText: "\u65E7\u7269\u8BB0\uFF1A\u51C0\u6C34\u76C2\u539F\u662F\u9752\u77F3\u574A\u91CC\u5E38\u89C1\u7684\u6CD5\uFF0C\u7ECF\u7384\u6C34\u6CD5\u6CD5\u8109\u91CD\u9898\u7B26\u80C6\u540E\uFF0C\u7559\u4E0B\u4E86\u201C\u84C4\u6C34\u201D\u8FD9\u4E00\u624B\u72EC\u95E8\u7528\u6CD5\u3002"
     faMenDisplayName: "\u7384\u6C34\u6CD5"
     qiLeiDisplayName: "\u6CD5"
-    shapeDescription: "shape_corner3 \xB7 3\u683C \xB7 \u6838\u5FC3\u683C(0,0)"
+    shapeDescription: "shape_line2_h \xB7 2\u683C \xB7 \u6838\u5FC3\u683C(0,0)"
     iconKey: i024_placeholder
+    presentationState: 1
+    effectFamilyKey: GUARD_SUSTAIN
+    presentationStyleKey: presentation.c1.campaign.item.i024.white.v1
+    cueIdentity: cue.c1.campaign.guard_sustain.i024
     dataMaturity: BALANCE_CANDIDATE
   coreCandidates:
   - coreEffectId: candidate_core_i024_01
@@ -231,42 +235,6 @@ MonoBehaviour:
       effectTags:
       - CoreEffect
       - AddPercent
-      - DEV_ONLY
-      dataMaturity: BALANCE_CANDIDATE
-      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
-        executor.
-    stateDescription: "\u54C1\u9636\u6EE1\u8DB3\u540E\u53EF\u89C1\uFF1B\u517B\u6210\u89E3\u9501\u4E14\u5B9E\u4F8B\u70B9\u4EAE\u65F6\u624D\u53EF\u6FC0\u6D3B\u3002"
-    dataMaturity: BALANCE_CANDIDATE
-    designNote: "\u540C\u539F\u578B\u4E94\u5C42\u9012\u8FDB\u5019\u9009\u6838\u5FC3\u3002"
-  - coreEffectId: candidate_core_i024_04
-    displayName: "\u51C0\u6C34\u76C2\xB7\u8F6C\u673A"
-    description: "\u201C\u84C4\u6C34\u201D\u6EE1\u8DB3\u5173\u952E\u6761\u4EF6\u540E\u989D\u5916\u89E6\u53D1\u4E00\u6B21\uFF0C\u4F46\u53D7\u72EC\u7ACB\u51B7\u5374\u9650\u5236\u3002"
-    isUltimate: 0
-    nodeKind: Core4
-    unlockLevel: 40
-    requiredRarity: 3
-    effectType: CoreEffect
-    effectPayload:
-      effectId: candidate_core_i024_04
-      displayName: "\u51C0\u6C34\u76C2\xB7\u8F6C\u673A"
-      description: "\u201C\u84C4\u6C34\u201D\u6EE1\u8DB3\u5173\u952E\u6761\u4EF6\u540E\u989D\u5916\u89E6\u53D1\u4E00\u6B21\uFF0C\u4F46\u53D7\u72EC\u7ACB\u51B7\u5374\u9650\u5236\u3002"
-      effectCategory: 7
-      triggerEventId: on_cleanse
-      conditionId: water_charge_3
-      targetSelector: effect_primary_target
-      targetStatId: heal
-      operation: 7
-      valueUnitKey: flat
-      valueUnits: 24
-      secondaryValueUnits: 3
-      durationUnits: 1
-      stackLimit: 3
-      internalCooldownUnits: 1
-      parameterProfileId: i024_core_4
-      mutexGroupId: CORE_I024
-      effectTags:
-      - CoreEffect
-      - ExtraTrigger
       - DEV_ONLY
       dataMaturity: BALANCE_CANDIDATE
       designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
@@ -410,12 +378,10 @@ MonoBehaviour:
     - candidate_core_i024_01
     - candidate_core_i024_02
     - candidate_core_i024_03
-    - candidate_core_i024_04
     visibleCoreEffectIds:
     - candidate_core_i024_01
     - candidate_core_i024_02
     - candidate_core_i024_03
-    - candidate_core_i024_04
     candidateItemPower: 107
     candidateItemPowerOverridden: 0
     candidateDisplaySummary: "\u51C0\u6C34\u76C2 \xB7 \u7384\u54C1 \xB7 \u7269\u54C1\u5F3A\u5EA6\uFF08\u5019\u9009\uFF09107"
@@ -440,13 +406,11 @@ MonoBehaviour:
     - candidate_core_i024_01
     - candidate_core_i024_02
     - candidate_core_i024_03
-    - candidate_core_i024_04
     - candidate_core_i024_ultimate
     visibleCoreEffectIds:
     - candidate_core_i024_01
     - candidate_core_i024_02
     - candidate_core_i024_03
-    - candidate_core_i024_04
     - candidate_core_i024_ultimate
     candidateItemPower: 124
     candidateItemPowerOverridden: 0

@@ -1,16 +1,15 @@
 ﻿using System.Collections;
+using TalismanBag.Navigation;
 using TalismanBag.V02.CoreLoop.Save;
-using TalismanBag.V03.Navigation;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace TalismanBag.V03.BootEntry
 {
     public sealed class V03BootEntryFlowController : MonoBehaviour
     {
-        public const string HomeSceneName = "Scene_TalismanBag_V03_MainHome";
-        public const string HomeScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V03_MainHome.unity";
+        public const string HomeSceneName = TalismanSceneNavigationOwner.MainHomeSceneName;
+        public const string HomeScenePath = TalismanSceneNavigationOwner.MainHomeScenePath;
 
         [SerializeField] private float loadingSeconds = 0.75f;
         [SerializeField] private string serverLabel = "青石坡一区";
@@ -89,28 +88,17 @@ namespace TalismanBag.V03.BootEntry
 
         private void SkipOpeningStory()
         {
-            LoadTrial();
+            LoadWorldMap();
         }
 
-        private void LoadTrial()
+        private void LoadWorldMap()
         {
-            LoadScene(V03NavigationFlowController.TrialScenePath, V03NavigationFlowController.TrialSceneName);
+            TalismanSceneNavigationOwner.TryNavigate(TalismanSceneRoute.WorldMap, this);
         }
 
         private void LoadHome()
         {
-            LoadScene(HomeScenePath, HomeSceneName);
-        }
-
-        private void LoadScene(string scenePath, string sceneName)
-        {
-            if (SceneUtility.GetBuildIndexByScenePath(scenePath) < 0)
-            {
-                Debug.LogError($"[V0.3-BootEntryFlow01] Scene is missing from Build Settings: {scenePath}", this);
-                return;
-            }
-
-            SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
+            TalismanSceneNavigationOwner.TryNavigate(TalismanSceneRoute.MainHome, this);
         }
 
         private bool BindSceneObjects()

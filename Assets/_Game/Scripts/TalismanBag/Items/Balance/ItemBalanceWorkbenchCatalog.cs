@@ -88,12 +88,15 @@ namespace TalismanBag.Items.Balance
         fileName = "ItemBalanceWorkbenchCatalog")]
     public sealed class ItemBalanceWorkbenchCatalog : ScriptableObject
     {
+        public const string CatalogAssetPath =
+            "Assets/_Game/Configs/ItemBalanceWorkbench/ItemBalanceWorkbenchCatalog.asset";
         public const string BalanceCandidate = "BALANCE_CANDIDATE";
         public const string Editable = "EDITABLE";
         public const string NotLiveLocked = "NOT_LIVE_LOCKED";
         public const string NotBattleConnected = "NOT_BATTLE_CONNECTED";
         public const string DevPreviewOnly = "DEV_PREVIEW_ONLY";
-        public const string CompleteCandidateRevision = ItemCompleteCandidateContentSeed.Revision;
+        public const string CompleteCandidateRevision =
+            "ITEM_FOUR_CORE_CANDIDATE_DATA_CORRECTION01_R1";
 
         public string balanceDataRevision = string.Empty;
         public string dataMaturity = BalanceCandidate;

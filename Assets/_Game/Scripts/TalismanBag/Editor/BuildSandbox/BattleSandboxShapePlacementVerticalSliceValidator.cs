@@ -67,8 +67,6 @@ namespace TalismanBag.EditorTools.BuildSandbox
             "Scene_TalismanBag_V02",
             "Scene_TalismanBag_V03"
         };
-
-        [MenuItem(QaMenuPath)]
         public static void RunMenu()
         {
             Run(throwOnFailure: false);

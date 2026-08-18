@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TalismanBag.Contracts.Battle;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -66,6 +67,16 @@ namespace TalismanBag.BuildSandbox
         public int sourceItemStatProfileCount;
         public int sourceCombatKernelAdapterRowCount;
         public int sourceBuildCombatPreviewRowCount;
+        public bool usesExplicitDevEncounter;
+        public string explicitEncounterProfileId = string.Empty;
+        public string explicitProfileFingerprint = string.Empty;
+        public int explicitGeneration;
+        public string explicitStartToken = string.Empty;
+        public string explicitEnemyIdentity = string.Empty;
+        public string explicitEncounterKind = string.Empty;
+        public int acceptedEnemyBasicAttackCount;
+        public int acceptedEnemySkillCount;
+        public int targetDurationMilliseconds;
         public List<BattleSandboxRuntimeLoopRow> rows = new();
 
         public int ManaRowCount => CountRows("mana");
@@ -218,6 +229,10 @@ namespace TalismanBag.BuildSandbox
         public bool hasDefeatSettlement;
         public bool hasSandboxVictoryResult;
         public bool hasSandboxDefeatResult;
+        public bool hasAcceptedEnemyAction;
+        public string acceptedEnemyActionKind = string.Empty;
+        public int acceptedEnemyActionSequence;
+        public int acceptedEnemyActionAtMilliseconds;
         public bool locksRuntimeLoop;
         public string resultTitleChinese = string.Empty;
         public string resultBodyChinese = string.Empty;
@@ -386,6 +401,59 @@ namespace TalismanBag.BuildSandbox
             BattleSandboxRuntimeLoopScenario scenario,
             bool allowDefaultLayoutFallbackWhenBoardEmpty = false)
         {
+            return BuildInternal(
+                snapshot,
+                sourcePreviewBuildId,
+                scenario,
+                allowDefaultLayoutFallbackWhenBoardEmpty,
+                null);
+        }
+
+        internal static BattleSandboxRuntimeLoopPreview BuildExplicitDevEncounter(
+            BuildSandboxLayoutSnapshot snapshot,
+            string sourcePreviewBuildId,
+            BattleSandboxExplicitDevEncounterRequest request)
+        {
+            if (request == null)
+            {
+                return null;
+            }
+
+            BattleSandboxRuntimeLoopScenario scenario = new()
+            {
+                stageId = request.EncounterProfileId,
+                devChapterLabel = request.EncounterProfileId,
+                previewBuildId = sourcePreviewBuildId ?? string.Empty,
+                enemyDisplayNameChinese = request.EnemyIdentity,
+                simulatedWinRate = 1f,
+                expectsSandboxVictory = true,
+                devOnlyProfileId = request.EncounterProfileId,
+                attackSourcePath =
+                    "BattleSandboxExplicitDevEncounterRequest.acceptedEnemyActionCadence",
+                attackDamage = request.BasicAttackDamage,
+                attackIntervalSeconds =
+                    request.BasicAttackIntervalMilliseconds / 1000f,
+                attackFromDevOnlyProfile = true,
+                playerMechanicFeedbackChinese =
+                    "实验遭遇参数已由显式开发合同接受。",
+                playerBuildPressureChinese =
+                    "仅用于垂直切片手测，不代表正式关卡平衡。"
+            };
+            return BuildInternal(
+                snapshot,
+                sourcePreviewBuildId,
+                scenario,
+                false,
+                request);
+        }
+
+        private static BattleSandboxRuntimeLoopPreview BuildInternal(
+            BuildSandboxLayoutSnapshot snapshot,
+            string sourcePreviewBuildId,
+            BattleSandboxRuntimeLoopScenario scenario,
+            bool allowDefaultLayoutFallbackWhenBoardEmpty,
+            BattleSandboxExplicitDevEncounterRequest explicitRequest)
+        {
             BuildSandboxLayoutSnapshot safeSnapshot = NormalizeSnapshot(
                 snapshot,
                 allowDefaultLayoutFallbackWhenBoardEmpty,
@@ -419,16 +487,27 @@ namespace TalismanBag.BuildSandbox
                         : sourcePreviewBuildId,
                     usesCurrentBoardSnapshot: true);
 
-            int playerMaxHp = 100;
+            bool usesExplicitRequest = explicitRequest != null;
+            int playerMaxHp = usesExplicitRequest
+                ? explicitRequest.PlayerMaxHp
+                : 100;
             int playerHp = playerMaxHp;
-            int playerShield = Mathf.Clamp(placedItems.Sum(item => ResolveStat(item).guard), 0, BattleSandboxCombatKernelAdapterBuilder.PlayerShieldCap);
-            int enemyMaxHp = ResolveEnemyMaxHp(adapter, placedItems.Count, safeScenario);
+            int playerShield = usesExplicitRequest
+                ? explicitRequest.PlayerInitialShield
+                : Mathf.Clamp(placedItems.Sum(item => ResolveStat(item).guard), 0, BattleSandboxCombatKernelAdapterBuilder.PlayerShieldCap);
+            int enemyMaxHp = usesExplicitRequest
+                ? explicitRequest.EnemyMaxHp
+                : ResolveEnemyMaxHp(adapter, placedItems.Count, safeScenario);
             int enemyHp = enemyMaxHp;
             int enemyShield = ResolveEnemyShield(placedItems, safeScenario);
             int currentMana = BattleSandboxManaLoopPreviewBuilder.CalculateInitialMana(placedItems);
             int maxMana = BattleSandboxManaLoopPreviewBuilder.CalculateMaxMana(placedItems);
-            int enemyAttackDamage = ResolveEnemyAttackDamage(safeScenario);
-            float bossCastDuration = ResolveEnemyAttackIntervalSeconds(safeScenario);
+            int enemyAttackDamage = usesExplicitRequest
+                ? explicitRequest.BasicAttackDamage
+                : ResolveEnemyAttackDamage(safeScenario);
+            float bossCastDuration = usesExplicitRequest
+                ? explicitRequest.BasicAttackIntervalMilliseconds / 1000f
+                : ResolveEnemyAttackIntervalSeconds(safeScenario);
             float bossCastRemaining = bossCastDuration;
 
             BattleSandboxRuntimeLoopPreview preview = new()
@@ -469,7 +548,19 @@ namespace TalismanBag.BuildSandbox
                     : safeScenario.attackSourcePath,
                 sourceItemStatProfileCount = placedItems.Count(item => !string.IsNullOrWhiteSpace(ResolveStat(item).statProfileId)),
                 sourceCombatKernelAdapterRowCount = adapter.RuleRowCount,
-                sourceBuildCombatPreviewRowCount = buildCombatPreview?.rows?.Count ?? 0
+                sourceBuildCombatPreviewRowCount = buildCombatPreview?.rows?.Count ?? 0,
+                usesExplicitDevEncounter = usesExplicitRequest,
+                explicitEncounterProfileId = explicitRequest?.EncounterProfileId ?? string.Empty,
+                explicitProfileFingerprint = explicitRequest?.ProfileFingerprint ?? string.Empty,
+                explicitGeneration = explicitRequest?.Generation ?? 0,
+                explicitStartToken = explicitRequest?.StartToken ?? string.Empty,
+                explicitEnemyIdentity = explicitRequest?.EnemyIdentity ?? string.Empty,
+                explicitEncounterKind = explicitRequest?.EncounterKind.ToString() ?? string.Empty,
+                acceptedEnemyBasicAttackCount = explicitRequest?.AcceptedEnemyActionCadence.Count(cue =>
+                    cue.ActionKind == BattleSandboxExplicitDevEnemyActionKind.BasicAttack) ?? 0,
+                acceptedEnemySkillCount = explicitRequest?.AcceptedEnemyActionCadence.Count(cue =>
+                    cue.ActionKind == BattleSandboxExplicitDevEnemyActionKind.Skill) ?? 0,
+                targetDurationMilliseconds = explicitRequest?.TargetDurationMilliseconds ?? 0
             };
 
             AddOpeningRow(preview, safeScenario, currentMana, playerHp, playerShield, enemyHp, enemyShield, bossCastRemaining, bossCastDuration);
@@ -478,7 +569,15 @@ namespace TalismanBag.BuildSandbox
             int passiveEffectIndex = 0;
             int manaProviderEffectIndex = 0;
             int buildPassiveEffectIndex = 0;
-            for (int step = 0; step < PreviewStepCount; step++)
+            int simulationStepCount = usesExplicitRequest
+                ? Mathf.Max(
+                    PreviewStepCount,
+                    Mathf.CeilToInt(
+                        explicitRequest.TargetDurationMilliseconds
+                        / (StepSeconds * 1000f)))
+                : PreviewStepCount;
+            int explicitCadenceIndex = 0;
+            for (int step = 0; step < simulationStepCount; step++)
             {
                 float elapsed = (step + 1) * StepSeconds;
                 int manaBefore = currentMana;
@@ -606,37 +705,110 @@ namespace TalismanBag.BuildSandbox
                     }
                 }
 
-                if (enemyHp <= 0)
+                if (enemyHp <= 0 && !usesExplicitRequest)
                 {
                     break;
                 }
 
-                float attackTimerBefore = bossCastRemaining;
-                bossCastRemaining = Mathf.Max(0f, bossCastRemaining - StepSeconds);
-                preview.rows.Add(CreateBossCastRow(step, elapsed, currentMana, playerHp, playerShield, enemyHp, enemyShield, attackTimerBefore, bossCastRemaining, bossCastDuration));
-                if (bossCastRemaining <= 0f)
+                if (usesExplicitRequest)
                 {
-                    int playerHpBefore = playerHp;
-                    int playerShieldBefore = playerShield;
-                    int bossDamage = enemyAttackDamage;
-                    int blocked = Mathf.Min(playerShield, bossDamage);
-                    playerShield = Mathf.Max(0, playerShield - blocked);
-                    int hpDamage = Mathf.Max(0, bossDamage - blocked);
-                    playerHp = Mathf.Max(0, playerHp - hpDamage);
-                    preview.rows.Add(CreatePlayerDamageRow(step, elapsed, safeScenario, bossDamage, blocked, hpDamage, currentMana, playerHpBefore, playerHp, playerShieldBefore, playerShield, enemyHp, enemyShield, bossCastDuration));
-                    bossCastRemaining = bossCastDuration;
-                    if (playerHp <= 0)
+                    int elapsedMilliseconds = Mathf.RoundToInt(elapsed * 1000f);
+                    BattleSandboxExplicitDevEnemyActionCue nextCue =
+                        explicitCadenceIndex < explicitRequest.AcceptedEnemyActionCadence.Count
+                            ? explicitRequest.AcceptedEnemyActionCadence[explicitCadenceIndex]
+                            : null;
+                    float timerBefore = bossCastRemaining;
+                    bossCastRemaining = nextCue == null
+                        ? 0f
+                        : Mathf.Max(0f, (nextCue.AtMilliseconds - elapsedMilliseconds) / 1000f);
+                    preview.rows.Add(CreateBossCastRow(
+                        step,
+                        elapsed,
+                        currentMana,
+                        playerHp,
+                        playerShield,
+                        enemyHp,
+                        enemyShield,
+                        timerBefore,
+                        bossCastRemaining,
+                        bossCastDuration));
+                    while (nextCue != null && nextCue.AtMilliseconds <= elapsedMilliseconds)
                     {
-                        break;
+                        int playerHpBefore = playerHp;
+                        int playerShieldBefore = playerShield;
+                        int acceptedDamage = nextCue.ActionKind ==
+                            BattleSandboxExplicitDevEnemyActionKind.Skill
+                                ? explicitRequest.SkillDamage
+                                : explicitRequest.BasicAttackDamage;
+                        int blocked = Mathf.Min(playerShield, acceptedDamage);
+                        playerShield = Mathf.Max(0, playerShield - blocked);
+                        int hpDamage = Mathf.Max(0, acceptedDamage - blocked);
+                        playerHp = Mathf.Max(0, playerHp - hpDamage);
+                        BattleSandboxRuntimeLoopRow acceptedActionRow = CreatePlayerDamageRow(
+                            step,
+                            nextCue.AtMilliseconds / 1000f,
+                            safeScenario,
+                            acceptedDamage,
+                            blocked,
+                            hpDamage,
+                            currentMana,
+                            playerHpBefore,
+                            playerHp,
+                            playerShieldBefore,
+                            playerShield,
+                            enemyHp,
+                            enemyShield,
+                            bossCastDuration,
+                            playerMaxHp);
+                        acceptedActionRow.hasAcceptedEnemyAction = true;
+                        acceptedActionRow.acceptedEnemyActionKind =
+                            nextCue.ActionKind.ToString();
+                        acceptedActionRow.acceptedEnemyActionSequence = nextCue.Sequence;
+                        acceptedActionRow.acceptedEnemyActionAtMilliseconds =
+                            nextCue.AtMilliseconds;
+                        preview.rows.Add(acceptedActionRow);
+                        explicitCadenceIndex++;
+                        nextCue = explicitCadenceIndex
+                                  < explicitRequest.AcceptedEnemyActionCadence.Count
+                            ? explicitRequest.AcceptedEnemyActionCadence[explicitCadenceIndex]
+                            : null;
+                        bossCastRemaining = nextCue == null
+                            ? 0f
+                            : Mathf.Max(
+                                0f,
+                                (nextCue.AtMilliseconds - elapsedMilliseconds) / 1000f);
+                    }
+                }
+                else
+                {
+                    float attackTimerBefore = bossCastRemaining;
+                    bossCastRemaining = Mathf.Max(0f, bossCastRemaining - StepSeconds);
+                    preview.rows.Add(CreateBossCastRow(step, elapsed, currentMana, playerHp, playerShield, enemyHp, enemyShield, attackTimerBefore, bossCastRemaining, bossCastDuration));
+                    if (bossCastRemaining <= 0f)
+                    {
+                        int playerHpBefore = playerHp;
+                        int playerShieldBefore = playerShield;
+                        int bossDamage = enemyAttackDamage;
+                        int blocked = Mathf.Min(playerShield, bossDamage);
+                        playerShield = Mathf.Max(0, playerShield - blocked);
+                        int hpDamage = Mathf.Max(0, bossDamage - blocked);
+                        playerHp = Mathf.Max(0, playerHp - hpDamage);
+                        preview.rows.Add(CreatePlayerDamageRow(step, elapsed, safeScenario, bossDamage, blocked, hpDamage, currentMana, playerHpBefore, playerHp, playerShieldBefore, playerShield, enemyHp, enemyShield, bossCastDuration, playerMaxHp));
+                        bossCastRemaining = bossCastDuration;
+                        if (playerHp <= 0)
+                        {
+                            break;
+                        }
                     }
                 }
             }
 
-            int pressureStep = PreviewStepCount;
+            int pressureStep = simulationStepCount;
             bool hasPlacedRuntimeItems = placedItems.Count > 0;
-            while ((!safeScenario.expectsSandboxVictory || !hasPlacedRuntimeItems)
+            while (!usesExplicitRequest
+                   && (!safeScenario.expectsSandboxVictory || !hasPlacedRuntimeItems)
                    && playerHp > 0
-                   && pressureStep < PreviewStepCount + 8)
+                   && pressureStep < simulationStepCount + 8)
             {
                 float elapsed = (pressureStep + 1) * StepSeconds;
                 int playerHpBefore = playerHp;
@@ -646,7 +818,7 @@ namespace TalismanBag.BuildSandbox
                 playerShield = Mathf.Max(0, playerShield - blocked);
                 int hpDamage = Mathf.Max(0, bossDamage - blocked);
                 playerHp = Mathf.Max(0, playerHp - hpDamage);
-                preview.rows.Add(CreatePlayerDamageRow(pressureStep, elapsed, safeScenario, bossDamage, blocked, hpDamage, currentMana, playerHpBefore, playerHp, playerShieldBefore, playerShield, enemyHp, enemyShield, bossCastDuration));
+                preview.rows.Add(CreatePlayerDamageRow(pressureStep, elapsed, safeScenario, bossDamage, blocked, hpDamage, currentMana, playerHpBefore, playerHp, playerShieldBefore, playerShield, enemyHp, enemyShield, bossCastDuration, playerMaxHp));
                 pressureStep++;
             }
 
@@ -661,7 +833,11 @@ namespace TalismanBag.BuildSandbox
                 enemyShield,
                 bossCastRemaining,
                 bossCastDuration,
-                allowScenarioVictory: hasPlacedRuntimeItems);
+                allowScenarioVictory: usesExplicitRequest || hasPlacedRuntimeItems,
+                resultStep: simulationStepCount,
+                resultElapsedSeconds: usesExplicitRequest
+                    ? explicitRequest.TargetDurationMilliseconds / 1000f
+                    : (simulationStepCount + 1) * StepSeconds);
 
             preview.finalMana = currentMana;
             BattleSandboxRuntimeLoopRow resultRow = preview.rows
@@ -1850,7 +2026,8 @@ namespace TalismanBag.BuildSandbox
             int playerShieldAfter,
             int enemyHp,
             int enemyShield,
-            float bossCastDuration)
+            float bossCastDuration,
+            int playerMaxHp)
         {
             BattleSandboxRuntimeLoopScenario safeScenario = scenario ?? new BattleSandboxRuntimeLoopScenario();
             BattleSandboxRuntimeLoopRow row = BaseRow(
@@ -1872,7 +2049,7 @@ namespace TalismanBag.BuildSandbox
                 bossCastDuration,
                 "\u73a9\u5bb6\uff1a\u627f\u53d7\u538b\u529b",
                 "\u65bd\u6cd5\u5df2\u91ca\u653e\uff0c\u91cd\u65b0\u84c4\u529b",
-                $"\u3010\u538b\u529b\u3011\u9996\u9886\u9020\u6210 {bossDamage}\uff0c\u62a4\u76fe\u5438\u6536 {blockedByShield}\uff0c\u6c14\u8840\u635f\u5931 {hpDamage}\uff0c\u73a9\u5bb6 {playerHpAfter}/100",
+                $"\u3010\u538b\u529b\u3011\u9996\u9886\u9020\u6210 {bossDamage}\uff0c\u62a4\u76fe\u5438\u6536 {blockedByShield}\uff0c\u6c14\u8840\u635f\u5931 {hpDamage}\uff0c\u73a9\u5bb6 {playerHpAfter}/{Mathf.Max(1, playerMaxHp)}",
                 $"-{Mathf.Max(0, playerHpBefore - playerHpAfter)}",
                 string.IsNullOrWhiteSpace(safeScenario.attackSourcePath)
                     ? SourceDevEnemyProfileAttack
@@ -1900,7 +2077,9 @@ namespace TalismanBag.BuildSandbox
             int enemyShield,
             float bossCastRemaining,
             float bossCastDuration,
-            bool allowScenarioVictory)
+            bool allowScenarioVictory,
+            int resultStep,
+            float resultElapsedSeconds)
         {
             bool defeat = playerHp <= 0;
             bool victory = !defeat && (enemyHp <= 0 || (allowScenarioVictory && scenario?.expectsSandboxVictory == true));
@@ -1918,8 +2097,8 @@ namespace TalismanBag.BuildSandbox
             BattleSandboxRuntimeLoopRow row = BaseRow(
                 victory ? "sandboxVictory" : "sandboxDefeat",
                 victory ? "sandboxVictory" : "sandboxDefeat",
-                PreviewStepCount,
-                (PreviewStepCount + 1) * StepSeconds,
+                resultStep,
+                resultElapsedSeconds,
                 mana,
                 mana,
                 playerHp,
@@ -2223,6 +2402,16 @@ namespace TalismanBag.BuildSandbox
         private bool manaLoopRuntimeWasEnabled;
         private bool manaLoopRuntimeSuspended;
         private bool resultLocked;
+        private float activeRowTickSeconds = RowTickSeconds;
+        private long runtimeGeneration;
+        private long runtimeRevision;
+        private long currentRowRevision;
+        private int lastAcceptedExplicitGeneration;
+        private string lastAcceptedExplicitStartToken = string.Empty;
+        private BattleSandboxExplicitDevEncounterRequest currentExplicitRequest;
+        private BattleSandboxExplicitDevEncounterAcceptedStart currentExplicitAcceptedStart;
+        private BattleSandboxExplicitDevEncounterRejectReason lastExplicitRejectReason;
+        private string lastExplicitDiagnosticCode = "NONE";
 
         public bool DevOnly => devOnly;
         public bool IsEnabled => isEnabled;
@@ -2238,6 +2427,13 @@ namespace TalismanBag.BuildSandbox
         public string CurrentDevEnemyLabel => ResolveCurrentDevEnemyLabel();
         public string CurrentDevChapterLabel => ResolveCurrentDevChapterLabel();
         public string CurrentSandboxResultTitle => CurrentRow()?.resultTitleChinese ?? string.Empty;
+        public long CurrentRowRevision => currentRowRevision;
+        public BattleSandboxRuntimeLoopRow CurrentAcceptedRow => CurrentRow();
+        public BattleSandboxExplicitDevEncounterAcceptedStart CurrentExplicitAcceptedStart =>
+            currentExplicitAcceptedStart;
+        public BattleSandboxExplicitDevEncounterRejectReason LastExplicitRejectReason =>
+            lastExplicitRejectReason;
+        public string LastExplicitDiagnosticCode => lastExplicitDiagnosticCode;
 
         public void Bind(
             BuildGridInteractionPreviewController controller,
@@ -2273,6 +2469,11 @@ namespace TalismanBag.BuildSandbox
             rowIndex = 0;
             wasBattleActive = false;
             resultLocked = false;
+            activeRowTickSeconds = RowTickSeconds;
+            runtimeRevision++;
+            currentRowRevision++;
+            currentExplicitRequest = null;
+            currentExplicitAcceptedStart = null;
             itemTriggerFeedbackController?.ClearAll();
             RestoreManaLoopRuntime();
             feedbackController?.SetRuntimeLoopMode(false);
@@ -2280,6 +2481,9 @@ namespace TalismanBag.BuildSandbox
 
         public void RestartLoop()
         {
+            currentExplicitRequest = null;
+            currentExplicitAcceptedStart = null;
+            activeRowTickSeconds = RowTickSeconds;
             resultLocked = false;
             activePreview = null;
             rowTimer = 0f;
@@ -2289,6 +2493,134 @@ namespace TalismanBag.BuildSandbox
                 StartLoop();
                 wasBattleActive = true;
             }
+        }
+
+        public bool TryStartExplicitDevEncounter(
+            BattleSandboxExplicitDevEncounterRequest request,
+            out BattleSandboxExplicitDevEncounterAcceptedStart acceptedStart)
+        {
+            acceptedStart = null;
+            if (!BattleSandboxExplicitDevEncounterContract.Validate(
+                    request,
+                    Application.isEditor,
+                    out BattleSandboxExplicitDevEncounterRejectReason rejectReason,
+                    out string diagnosticCode))
+            {
+                SetExplicitRejection(rejectReason, diagnosticCode);
+                return false;
+            }
+
+            if (currentExplicitRequest != null)
+            {
+                if (BattleSandboxExplicitDevEncounterContract.IsIdempotentlyEquivalent(
+                        currentExplicitRequest,
+                        request))
+                {
+                    acceptedStart = currentExplicitAcceptedStart;
+                    SetExplicitRejection(
+                        BattleSandboxExplicitDevEncounterRejectReason.None,
+                        "NONE");
+                    return acceptedStart != null;
+                }
+
+                SetExplicitRejection(
+                    BattleSandboxExplicitDevEncounterRejectReason.DuplicateMismatch,
+                    "EXPLICIT_DEV_ENCOUNTER_DUPLICATE_MISMATCH");
+                return false;
+            }
+
+            if (request.Generation <= lastAcceptedExplicitGeneration)
+            {
+                SetExplicitRejection(
+                    BattleSandboxExplicitDevEncounterRejectReason.StaleGenerationOrToken,
+                    "EXPLICIT_DEV_ENCOUNTER_STALE_GENERATION_OR_TOKEN");
+                return false;
+            }
+
+            if (gridController == null)
+            {
+                SetExplicitRejection(
+                    BattleSandboxExplicitDevEncounterRejectReason.RuntimeDependencyMissing,
+                    "EXPLICIT_DEV_ENCOUNTER_RUNTIME_DEPENDENCY_MISSING");
+                return false;
+            }
+
+            if (!gridController.IsSandboxBattleModeActive)
+            {
+                SetExplicitRejection(
+                    BattleSandboxExplicitDevEncounterRejectReason.BattleModeInactive,
+                    "EXPLICIT_DEV_ENCOUNTER_BATTLE_MODE_INACTIVE");
+                return false;
+            }
+
+            BuildSandboxLayoutSnapshot snapshot =
+                gridController.BuildCurrentLayoutSnapshot();
+            BattleSandboxRuntimeLoopPreview candidate =
+                BattleSandboxRuntimeLoopPreviewBuilder.BuildExplicitDevEncounter(
+                    snapshot,
+                    "core_loop_lab_explicit_" + request.EncounterProfileId,
+                    request);
+            if (candidate?.rows == null
+                || candidate.rows.Count == 0
+                || candidate.SandboxResultRowCount != 1)
+            {
+                SetExplicitRejection(
+                    BattleSandboxExplicitDevEncounterRejectReason.RuntimeStartRejected,
+                    "EXPLICIT_DEV_ENCOUNTER_RUNTIME_START_REJECTED");
+                return false;
+            }
+
+            long acceptedRuntimeGeneration = runtimeGeneration + 1;
+            long acceptedRuntimeRevision = runtimeRevision + 1;
+            string initialLedgerFingerprint =
+                BattleSandboxExplicitDevEncounterContract
+                    .ComputeInitialLedgerFingerprint(
+                        request,
+                        acceptedRuntimeGeneration,
+                        acceptedRuntimeRevision);
+            BattleSandboxExplicitDevEncounterStartSnapshot startSnapshot = new(
+                request.EnemyIdentity,
+                request.EncounterKind,
+                request.PlayerMaxHp,
+                request.PlayerInitialShield,
+                request.EnemyMaxHp,
+                request.EnemyMaxHp,
+                request.BasicAttackDamage,
+                request.SkillDamage,
+                request.TargetDurationMilliseconds,
+                request.BasicAttackIntervalMilliseconds,
+                request.SkillCastDurationMilliseconds,
+                request.AcceptedEnemyActionCadence,
+                acceptedRuntimeGeneration,
+                acceptedRuntimeRevision,
+                initialLedgerFingerprint);
+            BattleSandboxExplicitDevEncounterAcceptedStart candidateAccepted = new(
+                request.Generation,
+                request.StartToken,
+                request.EncounterProfileId,
+                request.ProfileFingerprint,
+                startSnapshot);
+
+            currentExplicitRequest = request;
+            currentExplicitAcceptedStart = candidateAccepted;
+            lastAcceptedExplicitGeneration = request.Generation;
+            lastAcceptedExplicitStartToken = request.StartToken;
+            runtimeGeneration = acceptedRuntimeGeneration;
+            runtimeRevision = acceptedRuntimeRevision;
+            activeRowTickSeconds = candidate.rows.Count <= 1
+                ? RowTickSeconds
+                : Mathf.Max(
+                    0.01f,
+                    request.TargetDurationMilliseconds
+                    / 1000f
+                    / (candidate.rows.Count - 1));
+            ActivatePreview(candidate);
+            wasBattleActive = true;
+            acceptedStart = candidateAccepted;
+            SetExplicitRejection(
+                BattleSandboxExplicitDevEncounterRejectReason.None,
+                "NONE");
+            return true;
         }
 
         public string SelectNextDevEnemy()
@@ -2393,19 +2725,26 @@ namespace TalismanBag.BuildSandbox
 
         private void StartLoop()
         {
-            ResolveUiReferences();
-            SuspendManaLoopRuntime();
             BuildSandboxLayoutSnapshot snapshot = gridController == null
                 ? null
                 : gridController.BuildCurrentLayoutSnapshot();
             BattleSandboxRuntimeLoopScenario scenario =
                 BattleSandboxRuntimeLoopPreviewBuilder.ResolveDevEnemyScenario(selectedDevEnemyIndex);
-            activePreview = BattleSandboxRuntimeLoopPreviewBuilder.Build(
+            BattleSandboxRuntimeLoopPreview preview = BattleSandboxRuntimeLoopPreviewBuilder.Build(
                 snapshot,
                 string.IsNullOrWhiteSpace(scenario?.previewBuildId)
                     ? "current_v04_runtime_loop_board"
                     : scenario.previewBuildId,
                 scenario);
+            activeRowTickSeconds = RowTickSeconds;
+            ActivatePreview(preview);
+        }
+
+        private void ActivatePreview(BattleSandboxRuntimeLoopPreview preview)
+        {
+            ResolveUiReferences();
+            SuspendManaLoopRuntime();
+            activePreview = preview;
             rowIndex = 0;
             rowTimer = 0f;
             resultLocked = false;
@@ -2426,12 +2765,12 @@ namespace TalismanBag.BuildSandbox
             }
 
             rowTimer += deltaTime;
-            if (rowTimer < RowTickSeconds)
+            if (rowTimer < activeRowTickSeconds)
             {
                 return;
             }
 
-            rowTimer -= RowTickSeconds;
+            rowTimer -= activeRowTickSeconds;
             rowIndex++;
             if (rowIndex >= activePreview.rows.Count)
             {
@@ -2444,6 +2783,7 @@ namespace TalismanBag.BuildSandbox
 
         private void ApplyCurrentRow()
         {
+            currentRowRevision++;
             BattleSandboxRuntimeLoopRow row = CurrentRow();
             BattleSandboxRuntimeLoopFrame frame =
                 BattleSandboxRuntimeLoopFrame.FromRow(row, activePreview);
@@ -2465,6 +2805,20 @@ namespace TalismanBag.BuildSandbox
             }
 
             return activePreview.rows[Mathf.Clamp(rowIndex, 0, activePreview.rows.Count - 1)];
+        }
+
+        private void SetExplicitRejection(
+            BattleSandboxExplicitDevEncounterRejectReason rejectReason,
+            string diagnosticCode)
+        {
+            lastExplicitRejectReason = rejectReason;
+            lastExplicitDiagnosticCode = string.IsNullOrWhiteSpace(diagnosticCode)
+                ? "EXPLICIT_DEV_ENCOUNTER_UNKNOWN_REJECTION"
+                : diagnosticCode;
+            if (rejectReason != BattleSandboxExplicitDevEncounterRejectReason.None)
+            {
+                Debug.LogWarning(lastExplicitDiagnosticCode, this);
+            }
         }
 
         private string ResolveCurrentDevEnemyLabel()

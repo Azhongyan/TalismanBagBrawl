@@ -1,0 +1,9 @@
+capability,owner,carrier,packageStatus,evidenceClass,milestoneStatus
+"live clock/lifecycle","Battle/Bridge","C1FormalRealtimeBattleSession","CREATE_COMPLETE","runtime integration + deterministic verifier","PARTIAL"
+"live player/enemy HP","Battle/Bridge consumes Enemy","session snapshots","CREATE_COMPLETE","runtime integration + deterministic verifier","PARTIAL"
+"item/enemy action timeline","Battle/Bridge","scheduled action ledger","CREATE_COMPLETE","runtime integration + deterministic verifier","PARTIAL"
+"ordered cue contract","Battle/Bridge","C1FormalRealtimeBattleCue","CREATE_COMPLETE","contract/data + runtime integration","PARTIAL"
+"stage 1-2 0/1/2 active Item admission","Battle/Bridge","C1FormalRealtimeBattleSessionAdapter + Session","TECHNICAL_PREREQUISITE_COMPLETE","runtime integration + deterministic verifier","NO_MILESTONE_EVIDENCE"
+"accepted realtime defeat with no persistence","Battle/Bridge","live HP/actions/event ledger terminal","TECHNICAL_PREREQUISITE_COMPLETE","runtime integration + deterministic verifier","NO_MILESTONE_EVIDENCE"
+"enemy/player visual presentation","Animation/VFX + Mainline","downstream prefabs/components","STILL_MISSING","none","NOT_HANDTEST_READY"
+"guaranteed I002/rebuild/return WorldMap","Reward+Item+Mainline","downstream integration","STILL_MISSING_OR_NOT_INTEGRATED","none","NOT_HANDTEST_READY"

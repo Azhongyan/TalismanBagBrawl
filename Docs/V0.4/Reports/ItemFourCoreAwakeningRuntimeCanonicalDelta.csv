@@ -1,0 +1,7 @@
+authority,taskStart,current,classification,evidence
+"AwakeningDefinitionSet","five nodes / 150","four nodes / 120","PERMITTED_V1_TO_V2_DELTA","SUPERSEDED_BY_ITEM_FOUR_CORE_AUTHORITY_OPTION_C"
+"ItemCoreEffectIdentityCatalogSnapshot","ItemCoreEffectIdentityCatalogSnapshot.v1 / 150","ItemCoreEffectIdentityCatalogSnapshot.v2 / 120","PERMITTED_V1_TO_V2_DELTA","ITEM_FOUR_CORE_AWAKENING_RUNTIME_CONTRACT_CORRECTION01_R1"
+"ItemInstanceCoreEffectRuntimeStateSnapshot","ItemInstanceCoreEffectRuntimeStateSnapshot.v1 / five rows","ItemInstanceCoreEffectRuntimeStateSnapshot.v2 / four rows","PERMITTED_V1_TO_V2_DELTA","ITEM_FOUR_CORE_AWAKENING_RUNTIME_CONTRACT_CORRECTION01_R1"
+"CandidateAuthority","P1 120","P1 120","PROTECTED_UNCHANGED","71fc7080eceaf9adf2aa47508e4900d00fae91d8f8158fb1a2618b69241a8143"
+"ItemSystemSnapshot","ItemSystemSnapshot.v2","ItemSystemSnapshot.v2","SCHEMA_UNCHANGED","794c3a6d9dbe9fb1ff96275c247bcef4d9d248edc1df3eaee6d396dd87969827"
+"HistoricalEvidence","v1 accepted artifacts","byte-identical","HISTORICAL_EVIDENCE_RETAINED","SUPERSEDED_BY_ITEM_FOUR_CORE_AUTHORITY_OPTION_C"

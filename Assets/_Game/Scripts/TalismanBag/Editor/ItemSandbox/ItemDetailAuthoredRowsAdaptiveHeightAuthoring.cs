@@ -16,9 +16,9 @@ namespace TalismanBag.EditorTools.ItemSandbox
     internal static class ItemDetailAuthoredRowsAdaptiveHeightAuthoring
     {
         private const string MenuPath =
-            "TalismanBag/Item Sandbox/Enable Authored Row Adaptive Heights (Once)";
+            "Tools/Talisman Bag/Dev Only/Item Sandbox/Enable Authored Row Adaptive Heights (Once)";
         private const string DynamicAffixRowsMenuPath =
-            "TalismanBag/Item Sandbox/Enable Dynamic Affix Row Heights (Once)";
+            "Tools/Talisman Bag/Dev Only/Item Sandbox/Enable Dynamic Affix Row Heights (Once)";
         private const string ScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V04_ItemSandbox.unity";
         private const string PanelPath =
             "ItemSandboxCanvas/MobileSafeAreaRoot/ItemSandboxRoot/ItemDetailPanel";

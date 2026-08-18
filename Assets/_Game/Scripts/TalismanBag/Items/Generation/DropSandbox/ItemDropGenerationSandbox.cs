@@ -1,455 +1,383 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using TalismanBag.Items.Generation.Potential;
+using TalismanBag.Items.Generation.DropCore;
 using TalismanBag.Items.Generation.Rolling;
 
 namespace TalismanBag.Items.Generation.DropSandbox
 {
     public static class ItemDropGenerationSandbox
     {
+        private const string QaAttributeRollBandProfileId =
+            "QA_DROP_ATTRIBUTE_ROLL_BAND_V1";
+
         public static ItemDropGenerationResult Generate(ItemDropGenerationRequest request)
         {
             try
             {
-                return GenerateCore(request);
+                return GenerateAdapter(request);
             }
             catch (Exception)
             {
-                return Failure(ItemDropGenerationValidationCodes.InstanceRollFailed,
+                return Failure(
+                    ItemDropGenerationValidationCodes.InstanceRollFailed,
                     "Drop generation stopped after an internal validation failure; no partial snapshot was returned.");
             }
         }
 
-        private static ItemDropGenerationResult GenerateCore(ItemDropGenerationRequest request)
+        private static ItemDropGenerationResult GenerateAdapter(
+            ItemDropGenerationRequest request)
         {
-            if (request == null)
+            ItemDropGenerationResult legacyValidation = ValidateLegacyRequest(request);
+            if (legacyValidation != null)
             {
-                return Failure(ItemDropGenerationValidationCodes.RequestNull,
-                    "Item drop generation request is null.");
+                return legacyValidation;
             }
 
-            if (string.IsNullOrWhiteSpace(request.dropRequestId))
+            ItemDropCoreCandidatePool corePool = request.candidatePool == null
+                ? null
+                : new ItemDropCoreCandidatePool(
+                    request.candidatePool.poolId,
+                    request.candidatePool.Candidates.Select(candidate =>
+                        candidate == null
+                            ? null
+                            : new ItemDropCoreCandidateEntry(
+                                candidate.baseItemId,
+                                ItemDropCoreCandidateKind.OrdinaryGeneratedItem,
+                                candidate.weightUnits)));
+
+            ItemDropRarityTierProfile coreRarity;
+            string rarityPolicySource;
+            string projectedRarityProfileId;
+            if (request.sourceContext.stageNumber <= 10)
             {
-                return Failure(ItemDropGenerationValidationCodes.DropRequestIdEmpty,
-                    "dropRequestId is required.");
+                coreRarity = new ItemDropRarityTierProfile(
+                    ItemDropRarityPolicySources.LockedStage1To10White,
+                    ItemDropRarityTierMode.Fixed,
+                    new[] { new ItemDropRarityTierEntry(ItemInstanceRarity.White, 1) });
+                rarityPolicySource = ItemDropRarityPolicySources.LockedStage1To10White;
+                projectedRarityProfileId = string.Empty;
+            }
+            else
+            {
+                coreRarity = request.rarityWeightProfile == null
+                    ? null
+                    : new ItemDropRarityTierProfile(
+                        request.rarityWeightProfile.profileId,
+                        ItemDropRarityTierMode.Weighted,
+                        request.rarityWeightProfile.Entries.Select(entry =>
+                            entry == null
+                                ? null
+                                : new ItemDropRarityTierEntry(
+                                    entry.rarity,
+                                    entry.weightUnits)));
+                rarityPolicySource = ItemDropRarityPolicySources.QaWeightProfile;
+                projectedRarityProfileId =
+                    request.rarityWeightProfile?.profileId ?? string.Empty;
             }
 
-            if (string.IsNullOrWhiteSpace(request.itemInstanceId))
-            {
-                return Failure(ItemDropGenerationValidationCodes.ItemInstanceIdEmpty,
-                    "itemInstanceId is required.");
-            }
-
-            if (request.generationVersion != DeterministicItemDropRandom.SupportedGenerationVersion)
-            {
-                return Failure(ItemDropGenerationValidationCodes.GenerationVersionUnsupported,
-                    "Only generationVersion 1 is supported by this drop algorithm.");
-            }
-
-            if (!string.Equals(request.generationDataStatus,
-                ItemGenerationDataStatus.QaFixtureCanonical, StringComparison.Ordinal))
-            {
-                return Failure(ItemDropGenerationValidationCodes.GenerationDataStatusInvalid,
-                    "Drop generation accepts only QA fixture data with all three isolation markers.");
-            }
-
-            if (request.foundation == null)
-            {
-                return Failure(ItemDropGenerationValidationCodes.FoundationNull,
-                    "Item generation foundation is null.");
-            }
-
-            if (!request.foundation.isValid)
-            {
-                return Failure(ItemDropGenerationValidationCodes.FoundationInvalid,
-                    "Item generation foundation contains validation errors.");
-            }
-
-            ItemDropGenerationResult sourceValidation = ValidateSource(request.sourceContext);
-            if (sourceValidation != null)
-            {
-                return sourceValidation;
-            }
-
-            ItemDropGenerationResult candidateValidation = ValidateCandidates(
-                request.sourceContext, request.candidatePool, out ItemDropCandidateEntrySnapshot[] candidates,
-                out ulong candidateWeightTotal);
-            if (candidateValidation != null)
-            {
-                return candidateValidation;
-            }
-
-            if (!DeterministicItemDropRandom.TryCreateStream(request.rootSeed, request.generationVersion,
-                request.dropRequestId, request.sourceContext.sourceContextId, request.sourceContext.sourceKey,
-                request.sourceContext.stageNumber,
-                new[] { "drop", "candidate", request.candidatePool.poolId },
-                out DeterministicItemRandom.Stream candidateStream)
-                || !candidateStream.TryNextBounded(candidateWeightTotal, out ulong candidateTarget))
-            {
-                return Failure(ItemDropGenerationValidationCodes.DropDomainInvalid,
-                    "Candidate selection domain is invalid.");
-            }
-
-            string selectedBaseItemId = SelectCandidate(candidates, candidateTarget).baseItemId;
-            ItemDropGenerationResult rarityValidation = SelectRarity(request,
-                out ItemInstanceRarity selectedRarity, out string rarityPolicySource,
-                out string rarityWeightProfileId);
-            if (rarityValidation != null)
-            {
-                return rarityValidation;
-            }
-
-            if (request.coreBuildSchema == null)
-            {
-                return Failure(ItemDropGenerationValidationCodes.CoreProfileMissing,
-                    "Core/Build schema is null.");
-            }
-
-            ItemCorePotentialQueryResult<ItemCorePotentialProfileSnapshot> coreResult =
-                request.coreBuildSchema.QueryCorePotentialProfile(selectedBaseItemId, selectedRarity);
-            if (!coreResult.isSuccess
-                || coreResult.value.resolutionStatus != ItemCorePotentialResolutionStatus.Defined)
-            {
-                return Failure(ItemDropGenerationValidationCodes.CoreProfileMissing,
-                    $"A Defined core potential profile is required for '{selectedBaseItemId}@{selectedRarity.ToStableKey()}'.");
-            }
-
-            ItemBuildQualificationRollProfile buildProfile = null;
-            if (selectedRarity != ItemInstanceRarity.White)
-            {
-                ItemBuildQualificationRollProfile[] matches = request.BuildQualificationRollProfiles
-                    .Where(profile => profile != null && profile.rarity == selectedRarity)
-                    .ToArray();
-                if (matches.Length == 0)
-                {
-                    return Failure(ItemDropGenerationValidationCodes.BuildRollProfileMissing,
-                        $"A QA Build roll profile is required for '{selectedRarity.ToStableKey()}'.");
-                }
-
-                if (matches.Length > 1)
-                {
-                    return Failure(ItemDropGenerationValidationCodes.BuildRollProfileDuplicate,
-                        $"More than one QA Build roll profile matches '{selectedRarity.ToStableKey()}'.");
-                }
-
-                buildProfile = matches[0];
-            }
-
-            ItemInstanceIdentityCreationResult identityResult =
-                ItemRarityInstanceFoundation.TryCreateOrdinaryInstance(
-                    request.foundation,
-                    request.itemInstanceId,
-                    selectedBaseItemId,
-                    selectedRarity,
-                    request.generationVersion,
-                    request.rootSeed,
-                    coreResult.value.cultivationPotentialProfileId);
-            if (!identityResult.isValid)
-            {
-                return Failure(ItemDropGenerationValidationCodes.IdentityCreationFailed,
-                    "Item instance identity creation failed: " + identityResult.primaryValidationCode + ".");
-            }
-
-            ItemInstanceRollResult rollResult = ItemInstanceRollEngine.Generate(new ItemInstanceRollRequest(
-                identityResult.snapshot,
+            ItemDropDeterministicCoreRequest coreRequest = new(
+                request.dropRequestId,
+                request.itemInstanceId,
+                request.rootSeed,
+                request.generationVersion,
+                ItemDropCoreDataStatus.DevOnlyCandidate,
+                new ItemDropCoreSourceIdentity(
+                    request.sourceContext.sourceContextId,
+                    request.sourceContext.sourceKey,
+                    request.sourceContext.stageNumber),
+                request.sourceContext.candidatePoolId,
+                coreRarity?.rarityTierProfileId ?? string.Empty,
+                QaAttributeRollBandProfileId,
+                DeterministicItemRandom.AlgorithmId,
+                request.foundation,
+                corePool,
+                coreRarity,
                 request.statSchema,
                 request.affixSchema,
                 request.coreBuildSchema,
-                buildProfile,
-                request.generationDataStatus));
-            if (!rollResult.isSuccess)
+                request.BuildQualificationRollProfiles);
+
+            ItemDropDeterministicCoreResult coreResult =
+                ItemDropDeterministicCore.Generate(coreRequest);
+            if (!coreResult.isSuccess)
             {
-                return Failure(ItemDropGenerationValidationCodes.InstanceRollFailed,
-                    "Item instance roll failed: " + rollResult.primaryValidationCode + ".");
+                return Failure(
+                    MapValidationCode(coreResult.primaryValidationCode),
+                    coreResult.ValidationErrors.Count == 0
+                        ? "Core generation failed."
+                        : coreResult.ValidationErrors[0].message);
             }
 
+            ItemDropDeterministicCoreSnapshot coreSnapshot = coreResult.snapshot;
             ItemDropGenerationSnapshot snapshot = new(
                 request.generationDataStatus,
                 request.dropRequestId,
                 request.sourceContext,
                 rarityPolicySource,
-                rarityWeightProfileId,
+                projectedRarityProfileId,
                 request.rootSeed,
                 request.generationVersion,
-                selectedBaseItemId,
-                selectedRarity,
-                rollResult.snapshot);
-            return new ItemDropGenerationResult(snapshot,
+                coreSnapshot.selectedBaseItemId,
+                coreSnapshot.selectedRarity,
+                coreSnapshot.generatedInstance);
+            return new ItemDropGenerationResult(
+                snapshot,
                 Array.Empty<ItemDropGenerationValidationError>());
         }
 
-        private static ItemDropGenerationResult ValidateSource(ItemDropSourceContextSnapshot source)
+        private static ItemDropGenerationResult ValidateLegacyRequest(
+            ItemDropGenerationRequest request)
         {
-            if (source == null)
+            if (request == null)
             {
-                return Failure(ItemDropGenerationValidationCodes.SourceContextNull,
+                return Failure(
+                    ItemDropGenerationValidationCodes.RequestNull,
+                    "Item drop generation request is null.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.dropRequestId))
+            {
+                return Failure(
+                    ItemDropGenerationValidationCodes.DropRequestIdEmpty,
+                    "dropRequestId is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.itemInstanceId))
+            {
+                return Failure(
+                    ItemDropGenerationValidationCodes.ItemInstanceIdEmpty,
+                    "itemInstanceId is required.");
+            }
+
+            if (request.generationVersion
+                != DeterministicItemDropRandom.SupportedGenerationVersion)
+            {
+                return Failure(
+                    ItemDropGenerationValidationCodes.GenerationVersionUnsupported,
+                    "Only generationVersion 1 is supported by this drop algorithm.");
+            }
+
+            if (!string.Equals(
+                    request.generationDataStatus,
+                    ItemGenerationDataStatus.QaFixtureCanonical,
+                    StringComparison.Ordinal))
+            {
+                return Failure(
+                    ItemDropGenerationValidationCodes.GenerationDataStatusInvalid,
+                    "Drop generation accepts only QA fixture data with all three isolation markers.");
+            }
+
+            if (request.foundation == null)
+            {
+                return Failure(
+                    ItemDropGenerationValidationCodes.FoundationNull,
+                    "Item generation foundation is null.");
+            }
+
+            if (!request.foundation.isValid)
+            {
+                return Failure(
+                    ItemDropGenerationValidationCodes.FoundationInvalid,
+                    "Item generation foundation contains validation errors.");
+            }
+
+            if (request.sourceContext == null)
+            {
+                return Failure(
+                    ItemDropGenerationValidationCodes.SourceContextNull,
                     "Drop source context is null.");
             }
 
-            if (string.IsNullOrWhiteSpace(source.sourceContextId))
+            if (string.IsNullOrWhiteSpace(request.sourceContext.sourceContextId))
             {
-                return Failure(ItemDropGenerationValidationCodes.SourceContextIdEmpty,
+                return Failure(
+                    ItemDropGenerationValidationCodes.SourceContextIdEmpty,
                     "sourceContextId is required.");
             }
 
-            if (string.IsNullOrWhiteSpace(source.sourceKey))
+            if (string.IsNullOrWhiteSpace(request.sourceContext.sourceKey))
             {
-                return Failure(ItemDropGenerationValidationCodes.SourceKeyEmpty,
+                return Failure(
+                    ItemDropGenerationValidationCodes.SourceKeyEmpty,
                     "sourceKey is required.");
             }
 
-            if (source.stageNumber <= 0)
+            if (request.sourceContext.stageNumber <= 0)
             {
-                return Failure(ItemDropGenerationValidationCodes.StageNumberInvalid,
+                return Failure(
+                    ItemDropGenerationValidationCodes.StageNumberInvalid,
                     "stageNumber must be greater than zero.");
             }
 
-            if (!string.Equals(source.dataMaturityKey,
-                ItemGenerationDataStatus.QaFixtureOnly, StringComparison.Ordinal))
+            if (!string.Equals(
+                    request.sourceContext.dataMaturityKey,
+                    ItemGenerationDataStatus.QaFixtureOnly,
+                    StringComparison.Ordinal))
             {
-                return Failure(ItemDropGenerationValidationCodes.SourceContextDataStatusInvalid,
+                return Failure(
+                    ItemDropGenerationValidationCodes.SourceContextDataStatusInvalid,
                     "Drop source context must be marked QA_FIXTURE_ONLY.");
             }
 
-            return null;
-        }
-
-        private static ItemDropGenerationResult ValidateCandidates(
-            ItemDropSourceContextSnapshot source,
-            ItemDropCandidatePoolSnapshot pool,
-            out ItemDropCandidateEntrySnapshot[] candidates,
-            out ulong totalWeight)
-        {
-            candidates = Array.Empty<ItemDropCandidateEntrySnapshot>();
-            totalWeight = 0UL;
-            if (pool == null)
+            if (request.candidatePool == null)
             {
-                return Failure(ItemDropGenerationValidationCodes.CandidatePoolNull,
+                return Failure(
+                    ItemDropGenerationValidationCodes.CandidatePoolNull,
                     "Candidate pool is null.");
             }
 
-            if (string.IsNullOrWhiteSpace(pool.poolId)
-                || !string.Equals(pool.poolId, source.candidatePoolId, StringComparison.Ordinal))
+            if (string.IsNullOrWhiteSpace(request.candidatePool.poolId)
+                || !string.Equals(
+                    request.candidatePool.poolId,
+                    request.sourceContext.candidatePoolId,
+                    StringComparison.Ordinal))
             {
-                return Failure(ItemDropGenerationValidationCodes.CandidatePoolIdMismatch,
+                return Failure(
+                    ItemDropGenerationValidationCodes.CandidatePoolIdMismatch,
                     "Candidate pool ID must exactly match the source context.");
             }
 
-            if (!string.Equals(pool.dataMaturityKey,
-                ItemGenerationDataStatus.QaFixtureOnly, StringComparison.Ordinal))
+            if (!string.Equals(
+                    request.candidatePool.dataMaturityKey,
+                    ItemGenerationDataStatus.QaFixtureOnly,
+                    StringComparison.Ordinal))
             {
-                return Failure(ItemDropGenerationValidationCodes.CandidatePoolDataStatusInvalid,
+                return Failure(
+                    ItemDropGenerationValidationCodes.CandidatePoolDataStatusInvalid,
                     "Candidate pool must be marked QA_FIXTURE_ONLY.");
             }
 
-            if (pool.Candidates.Count == 0)
-            {
-                return Failure(ItemDropGenerationValidationCodes.CandidatePoolEmpty,
-                    "Candidate pool must not be empty.");
-            }
-
-            foreach (ItemDropCandidateEntrySnapshot candidate in pool.Candidates)
-            {
-                if (candidate == null || string.IsNullOrWhiteSpace(candidate.baseItemId))
-                {
-                    return Failure(ItemDropGenerationValidationCodes.CandidateBaseItemEmpty,
-                        "Every candidate requires a baseItemId.");
-                }
-
-                if (string.Equals(candidate.baseItemId,
-                    ItemRarityInstanceFoundation.CoreProgressionBaseItemId, StringComparison.Ordinal))
-                {
-                    return Failure(ItemDropGenerationValidationCodes.I031Forbidden,
-                        "I031 is excluded from ordinary drop candidates.");
-                }
-
-                if (!ItemRarityInstanceFoundation.IsOrdinaryBaseItemId(candidate.baseItemId))
-                {
-                    return Failure(ItemDropGenerationValidationCodes.CandidateBaseItemUnknown,
-                        $"Unknown ordinary candidate '{candidate.baseItemId}'.");
-                }
-
-                if (candidate.weightUnits <= 0)
-                {
-                    return Failure(ItemDropGenerationValidationCodes.CandidateWeightInvalid,
-                        $"Candidate '{candidate.baseItemId}' weightUnits must be positive.");
-                }
-            }
-
-            if (pool.Candidates.Where(candidate => candidate != null)
-                .GroupBy(candidate => candidate.baseItemId, StringComparer.Ordinal)
-                .Any(group => group.Count() > 1))
-            {
-                return Failure(ItemDropGenerationValidationCodes.CandidateDuplicate,
-                    "Candidate baseItemId values must be unique.");
-            }
-
-            candidates = pool.Candidates.OrderBy(candidate => candidate.baseItemId, StringComparer.Ordinal).ToArray();
-            foreach (ItemDropCandidateEntrySnapshot candidate in candidates)
-            {
-                if (!TryAddWeight(ref totalWeight, candidate.weightUnits))
-                {
-                    return Failure(ItemDropGenerationValidationCodes.CandidateWeightSumOverflow,
-                        "Candidate weight sum exceeds ulong capacity.");
-                }
-            }
-
-            return null;
-        }
-
-        private static ItemDropGenerationResult SelectRarity(
-            ItemDropGenerationRequest request,
-            out ItemInstanceRarity selectedRarity,
-            out string rarityPolicySource,
-            out string rarityWeightProfileId)
-        {
-            selectedRarity = ItemInstanceRarity.White;
-            rarityPolicySource = string.Empty;
-            rarityWeightProfileId = string.Empty;
             if (request.sourceContext.stageNumber <= 10)
             {
                 if (request.rarityWeightProfile != null)
                 {
-                    return Failure(ItemDropGenerationValidationCodes.EarlyStageRarityProfileForbidden,
+                    return Failure(
+                        ItemDropGenerationValidationCodes.EarlyStageRarityProfileForbidden,
                         "Stages 1-10 reject rarity profiles and do not create a rarity stream.");
                 }
-
-                rarityPolicySource = ItemDropRarityPolicySources.LockedStage1To10White;
-                return null;
             }
-
-            ItemDropRarityWeightProfileSnapshot profile = request.rarityWeightProfile;
-            if (profile == null)
+            else
             {
-                return Failure(ItemDropGenerationValidationCodes.RarityPolicyUnresolved,
-                    "Stages 11+ require an explicit QA rarity weight profile.");
-            }
-
-            if (string.IsNullOrWhiteSpace(profile.profileId)
-                || !string.Equals(profile.profileId,
-                    request.sourceContext.rarityWeightProfileId, StringComparison.Ordinal))
-            {
-                return Failure(ItemDropGenerationValidationCodes.RarityProfileIdMismatch,
-                    "Rarity profile ID must exactly match the source context.");
-            }
-
-            if (!string.Equals(profile.dataMaturityKey,
-                ItemGenerationDataStatus.QaFixtureOnly, StringComparison.Ordinal))
-            {
-                return Failure(ItemDropGenerationValidationCodes.RarityProfileDataStatusInvalid,
-                    "Rarity profile must be marked QA_FIXTURE_ONLY.");
-            }
-
-            if (profile.Entries.Count == 0 || profile.Entries.Any(entry => entry == null))
-            {
-                return Failure(ItemDropGenerationValidationCodes.RarityEntryInvalid,
-                    "Rarity profile must contain non-null entries.");
-            }
-
-            if (profile.Entries.Any(entry => !ItemInstanceRarityCatalog.TryGetDefinition(entry.rarity, out _)))
-            {
-                return Failure(ItemDropGenerationValidationCodes.RarityEntryInvalid,
-                    "Rarity profile contains an unsupported rarity.");
-            }
-
-            if (profile.Entries.GroupBy(entry => entry.rarity).Any(group => group.Count() > 1))
-            {
-                return Failure(ItemDropGenerationValidationCodes.RarityEntryDuplicate,
-                    "Rarity entries must be unique.");
-            }
-
-            if (profile.Entries.Any(entry => entry.weightUnits <= 0))
-            {
-                return Failure(ItemDropGenerationValidationCodes.RarityWeightInvalid,
-                    "Rarity weightUnits must be positive.");
-            }
-
-            ulong totalWeight = 0UL;
-            ItemDropRarityWeightEntrySnapshot[] entries = profile.Entries
-                .OrderBy(entry => entry.rarity.ToTierIndex())
-                .ThenBy(entry => (int)entry.rarity)
-                .ToArray();
-            foreach (ItemDropRarityWeightEntrySnapshot entry in entries)
-            {
-                if (!TryAddWeight(ref totalWeight, entry.weightUnits))
+                if (request.rarityWeightProfile == null)
                 {
-                    return Failure(ItemDropGenerationValidationCodes.RarityWeightSumOverflow,
-                        "Rarity weight sum exceeds ulong capacity.");
+                    return Failure(
+                        ItemDropGenerationValidationCodes.RarityPolicyUnresolved,
+                        "Stages 11+ require an explicit QA rarity weight profile.");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.rarityWeightProfile.profileId)
+                    || !string.Equals(
+                        request.rarityWeightProfile.profileId,
+                        request.sourceContext.rarityWeightProfileId,
+                        StringComparison.Ordinal))
+                {
+                    return Failure(
+                        ItemDropGenerationValidationCodes.RarityProfileIdMismatch,
+                        "Rarity profile ID must exactly match the source context.");
+                }
+
+                if (!string.Equals(
+                        request.rarityWeightProfile.dataMaturityKey,
+                        ItemGenerationDataStatus.QaFixtureOnly,
+                        StringComparison.Ordinal))
+                {
+                    return Failure(
+                        ItemDropGenerationValidationCodes.RarityProfileDataStatusInvalid,
+                        "Rarity profile must be marked QA_FIXTURE_ONLY.");
                 }
             }
 
-            if (!DeterministicItemDropRandom.TryCreateStream(request.rootSeed, request.generationVersion,
-                request.dropRequestId, request.sourceContext.sourceContextId, request.sourceContext.sourceKey,
-                request.sourceContext.stageNumber,
-                new[] { "drop", "rarity", profile.profileId },
-                out DeterministicItemRandom.Stream rarityStream)
-                || !rarityStream.TryNextBounded(totalWeight, out ulong target))
-            {
-                return Failure(ItemDropGenerationValidationCodes.DropDomainInvalid,
-                    "Rarity selection domain is invalid.");
-            }
-
-            selectedRarity = SelectRarity(entries, target).rarity;
-            rarityPolicySource = ItemDropRarityPolicySources.QaWeightProfile;
-            rarityWeightProfileId = profile.profileId;
             return null;
         }
 
-        private static ItemDropCandidateEntrySnapshot SelectCandidate(
-            IReadOnlyList<ItemDropCandidateEntrySnapshot> entries,
-            ulong target)
+        private static string MapValidationCode(string code)
         {
-            ulong cursor = 0UL;
-            foreach (ItemDropCandidateEntrySnapshot entry in entries)
+            switch (code)
             {
-                cursor += unchecked((ulong)entry.weightUnits);
-                if (target < cursor)
-                {
-                    return entry;
-                }
+                case ItemDropCoreValidationCodes.RequestNull:
+                    return ItemDropGenerationValidationCodes.RequestNull;
+                case ItemDropCoreValidationCodes.RequestIdEmpty:
+                    return ItemDropGenerationValidationCodes.DropRequestIdEmpty;
+                case ItemDropCoreValidationCodes.ItemInstanceIdEmpty:
+                    return ItemDropGenerationValidationCodes.ItemInstanceIdEmpty;
+                case ItemDropCoreValidationCodes.GenerationVersionUnsupported:
+                    return ItemDropGenerationValidationCodes.GenerationVersionUnsupported;
+                case ItemDropCoreValidationCodes.DataStatusInvalid:
+                    return ItemDropGenerationValidationCodes.GenerationDataStatusInvalid;
+                case ItemDropCoreValidationCodes.FoundationNull:
+                    return ItemDropGenerationValidationCodes.FoundationNull;
+                case ItemDropCoreValidationCodes.FoundationInvalid:
+                    return ItemDropGenerationValidationCodes.FoundationInvalid;
+                case ItemDropCoreValidationCodes.SourceIdentityNull:
+                    return ItemDropGenerationValidationCodes.SourceContextNull;
+                case ItemDropCoreValidationCodes.SourceContextIdEmpty:
+                    return ItemDropGenerationValidationCodes.SourceContextIdEmpty;
+                case ItemDropCoreValidationCodes.SourceKeyEmpty:
+                    return ItemDropGenerationValidationCodes.SourceKeyEmpty;
+                case ItemDropCoreValidationCodes.SourceOrdinalInvalid:
+                    return ItemDropGenerationValidationCodes.StageNumberInvalid;
+                case ItemDropCoreValidationCodes.CandidatePoolNull:
+                    return ItemDropGenerationValidationCodes.CandidatePoolNull;
+                case ItemDropCoreValidationCodes.CandidatePoolIdentityEmpty:
+                case ItemDropCoreValidationCodes.CandidatePoolIdMismatch:
+                    return ItemDropGenerationValidationCodes.CandidatePoolIdMismatch;
+                case ItemDropCoreValidationCodes.CandidatePoolEmpty:
+                    return ItemDropGenerationValidationCodes.CandidatePoolEmpty;
+                case ItemDropCoreValidationCodes.CandidateEntryInvalid:
+                    return ItemDropGenerationValidationCodes.CandidateBaseItemEmpty;
+                case ItemDropCoreValidationCodes.CandidateDuplicate:
+                    return ItemDropGenerationValidationCodes.CandidateDuplicate;
+                case ItemDropCoreValidationCodes.CandidateBaseItemUnknown:
+                case ItemDropCoreValidationCodes.CandidateKindInvalid:
+                    return ItemDropGenerationValidationCodes.CandidateBaseItemUnknown;
+                case ItemDropCoreValidationCodes.I031Forbidden:
+                    return ItemDropGenerationValidationCodes.I031Forbidden;
+                case ItemDropCoreValidationCodes.CandidateWeightInvalid:
+                    return ItemDropGenerationValidationCodes.CandidateWeightInvalid;
+                case ItemDropCoreValidationCodes.CandidateWeightSumOverflow:
+                    return ItemDropGenerationValidationCodes.CandidateWeightSumOverflow;
+                case ItemDropCoreValidationCodes.RarityTierProfileNull:
+                    return ItemDropGenerationValidationCodes.RarityPolicyUnresolved;
+                case ItemDropCoreValidationCodes.RarityTierProfileIdentityEmpty:
+                case ItemDropCoreValidationCodes.RarityTierProfileIdMismatch:
+                    return ItemDropGenerationValidationCodes.RarityProfileIdMismatch;
+                case ItemDropCoreValidationCodes.RarityTierProfileEmpty:
+                case ItemDropCoreValidationCodes.RarityTierEntryInvalid:
+                case ItemDropCoreValidationCodes.FixedRarityTierEntryCountInvalid:
+                case ItemDropCoreValidationCodes.RarityTierModeInvalid:
+                    return ItemDropGenerationValidationCodes.RarityEntryInvalid;
+                case ItemDropCoreValidationCodes.RarityTierDuplicate:
+                    return ItemDropGenerationValidationCodes.RarityEntryDuplicate;
+                case ItemDropCoreValidationCodes.RarityTierWeightInvalid:
+                    return ItemDropGenerationValidationCodes.RarityWeightInvalid;
+                case ItemDropCoreValidationCodes.RarityTierWeightSumOverflow:
+                    return ItemDropGenerationValidationCodes.RarityWeightSumOverflow;
+                case ItemDropCoreValidationCodes.DropDomainInvalid:
+                    return ItemDropGenerationValidationCodes.DropDomainInvalid;
+                case ItemDropCoreValidationCodes.CoreSchemaMissing:
+                case ItemDropCoreValidationCodes.CoreProfileMissing:
+                    return ItemDropGenerationValidationCodes.CoreProfileMissing;
+                case ItemDropCoreValidationCodes.BuildRollProfileMissing:
+                    return ItemDropGenerationValidationCodes.BuildRollProfileMissing;
+                case ItemDropCoreValidationCodes.BuildRollProfileDuplicate:
+                    return ItemDropGenerationValidationCodes.BuildRollProfileDuplicate;
+                case ItemDropCoreValidationCodes.IdentityCreationFailed:
+                    return ItemDropGenerationValidationCodes.IdentityCreationFailed;
+                case ItemDropCoreValidationCodes.AttributeRollBandProfileIdentityEmpty:
+                case ItemDropCoreValidationCodes.RollPolicyVersionEmpty:
+                case ItemDropCoreValidationCodes.RollPolicyVersionUnsupported:
+                case ItemDropCoreValidationCodes.StatSchemaMissing:
+                case ItemDropCoreValidationCodes.AffixSchemaMissing:
+                case ItemDropCoreValidationCodes.InstanceRollFailed:
+                default:
+                    return ItemDropGenerationValidationCodes.InstanceRollFailed;
             }
-
-            return entries[entries.Count - 1];
-        }
-
-        private static ItemDropRarityWeightEntrySnapshot SelectRarity(
-            IReadOnlyList<ItemDropRarityWeightEntrySnapshot> entries,
-            ulong target)
-        {
-            ulong cursor = 0UL;
-            foreach (ItemDropRarityWeightEntrySnapshot entry in entries)
-            {
-                cursor += unchecked((ulong)entry.weightUnits);
-                if (target < cursor)
-                {
-                    return entry;
-                }
-            }
-
-            return entries[entries.Count - 1];
-        }
-
-        private static bool TryAddWeight(ref ulong sum, long weightUnits)
-        {
-            if (weightUnits <= 0)
-            {
-                return false;
-            }
-
-            ulong weight = unchecked((ulong)weightUnits);
-            if (ulong.MaxValue - sum < weight)
-            {
-                return false;
-            }
-
-            sum += weight;
-            return true;
         }
 
         private static ItemDropGenerationResult Failure(string code, string message)
         {
-            return new ItemDropGenerationResult(null,
+            return new ItemDropGenerationResult(
+                null,
                 new[] { new ItemDropGenerationValidationError(code, message) });
         }
     }

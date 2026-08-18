@@ -1,0 +1,6 @@
+case_id,repeat_count,baseline_signature,observed,result
+"repeat-100","100","d797c28ae65153e38d487bf29e7becf99f6afab8c828a3ce6f79d48764be56e0","d797c28ae65153e38d487bf29e7becf99f6afab8c828a3ce6f79d48764be56e0","PASS"
+"reversed-fixture","1","d797c28ae65153e38d487bf29e7becf99f6afab8c828a3ce6f79d48764be56e0","d797c28ae65153e38d487bf29e7becf99f6afab8c828a3ce6f79d48764be56e0","PASS"
+"projection-canonical-mismatch","1","9830747edfb3de3318910795820588b2114d28bf108e79fb5b76ef9f6cf664d3","PROJECTION_CANONICAL_MISMATCH","PASS"
+"item-catalog-canonical-mismatch","1","d0dd84f6e2f59344d3a49416d883eb5f4f84b408ab85a96a8dcf6751de97e357","ITEM_CATALOG_CANONICAL_MISMATCH","PASS"
+"terminal-marker","1","C1_STAGE1_FIRST_CLEAR_GUARANTEED_REWARD_DATA01_PASS","C1_STAGE1_FIRST_CLEAR_GUARANTEED_REWARD_DATA01_PASS","PASS"

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47136b3196c67e34db5d7d567b8194dc, type: 3}
   m_Name: ItemBalanceWorkbenchCatalog
   m_EditorClassIdentifier: 
-  balanceDataRevision: ITEM_COMPLETE_CANDIDATE_CONTENT_WORKBENCH01_R1
+  balanceDataRevision: ITEM_FOUR_CORE_CANDIDATE_DATA_CORRECTION01_R1
   dataMaturity: BALANCE_CANDIDATE
   editState: EDITABLE
   liveState: NOT_LIVE_LOCKED
@@ -1395,19 +1395,19 @@ MonoBehaviour:
     designNote: "\u5171\u4EAB\u968F\u673A\u8BCD\u6761\u5019\u9009\uFF1B\u4E94\u54C1\u9636\u8303\u56F4\u53EF\u7F16\u8F91\u3002"
   - affixId: affix_nian_efficiency
     displayName: "\u7701\u5FF5"
-    description: "\u8017\u5FF5\u964D\u4F4EX\u70B9\u3002"
+    description: "\u8017\u5FF5\u964D\u4F4EX%\u3002"
     effectPayload:
       effectId: affix_nian_efficiency:effect
       displayName: "\u7701\u5FF5"
-      description: "\u8017\u5FF5\u964D\u4F4EX\u70B9\u3002"
+      description: "\u8017\u5FF5\u964D\u4F4EX%\u3002"
       effectCategory: 3
       triggerEventId: before_trigger
       conditionId: nian_cost_gt_0
       targetSelector: effect_primary_target
       targetStatId: nianCost
-      operation: 3
-      valueUnitKey: point
-      valueUnits: 1
+      operation: 4
+      valueUnitKey: basisPoint
+      valueUnits: 200
       secondaryValueUnits: 0
       durationUnits: 1
       stackLimit: 1
@@ -1416,27 +1416,27 @@ MonoBehaviour:
       mutexGroupId: NONE
       effectTags:
       - ResourceEffect
-      - ReduceFlat
+      - ReducePercent
       - DEV_ONLY
       dataMaturity: BALANCE_CANDIDATE
       designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
         executor.
     rarityRanges:
     - rarity: 0
-      minUnits: 1
-      maxUnits: 2
+      minUnits: 200
+      maxUnits: 400
     - rarity: 1
-      minUnits: 2
-      maxUnits: 3
+      minUnits: 350
+      maxUnits: 650
     - rarity: 2
-      minUnits: 3
-      maxUnits: 4
+      minUnits: 550
+      maxUnits: 900
     - rarity: 3
-      minUnits: 4
-      maxUnits: 5
+      minUnits: 800
+      maxUnits: 1300
     - rarity: 4
-      minUnits: 5
-      maxUnits: 6
+      minUnits: 1200
+      maxUnits: 1800
     mutexGroupId: NONE
     repeatPolicy: NO_DUPLICATE
     dataMaturity: BALANCE_CANDIDATE

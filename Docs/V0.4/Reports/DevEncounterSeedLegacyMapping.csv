@@ -1,5 +1,0 @@
-legacyStageId,seedId,mapRuleId,primaryEnemyProblemId,bossProblemId,bossCarrierId,mappingStatus,runtimeConsumesLegacy
-"dev_balance_3_10_cleanse_corner","dev_seed_3_10_cleanse_corner","dev_map_bluestone_damp","dev_enemy_polluted_tile_problem","dev_boss_dirty_dream_mother","dev_boss_debuff_jinge","MAPPED","false"
-"dev_balance_3_10_guard_wall","dev_seed_3_10_guard_wall","dev_map_copper_bell_night","dev_enemy_caster_problem","dev_boss_bronze_formation_general","dev_boss_burst_huzhen","MAPPED","false"
-"dev_balance_4_10_furnace_core","dev_seed_4_10_furnace_core","dev_map_furnace_ash_fall","dev_enemy_spirit_thief_problem","dev_boss_spirit_thief_core","dev_boss_energy_juneng","MAPPED","false"
-"dev_balance_4_10_thunder_fire_cross","dev_seed_4_10_thunder_fire_cross","dev_map_bluestone_crack","dev_enemy_formation_eye_problem","dev_boss_black_furnace_complex_eye","dev_boss_hybrid_combo","MAPPED","false"

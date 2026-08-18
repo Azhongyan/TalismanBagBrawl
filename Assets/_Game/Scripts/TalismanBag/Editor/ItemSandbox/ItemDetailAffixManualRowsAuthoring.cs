@@ -16,15 +16,15 @@ namespace TalismanBag.EditorTools.ItemSandbox
     internal static class ItemDetailAffixManualRowsAuthoring
     {
         private const string MenuPath =
-            "TalismanBag/Item Sandbox/Migrate Fixed And Random Affixes To BaseStats Rows (Once)";
+            "Tools/Talisman Bag/Dev Only/Item Sandbox/Migrate Fixed And Random Affixes To BaseStats Rows (Once)";
         private const string CleanFieldPrefixesMenuPath =
-            "TalismanBag/Item Sandbox/Clean Generic Affix Field Prefixes (Manual Only)";
+            "Tools/Talisman Bag/Dev Only/Item Sandbox/Clean Generic Affix Field Prefixes (Manual Only)";
         private const string DaoTraceMenuPath =
-            "TalismanBag/Item Sandbox/Migrate Dao Trace To Fixed Affix Row (Once)";
+            "Tools/Talisman Bag/Dev Only/Item Sandbox/Migrate Dao Trace To Fixed Affix Row (Once)";
         private const string CoreEffectMenuPath =
-            "TalismanBag/Item Sandbox/Migrate Core Effects To Authored Rows (Once)";
+            "Tools/Talisman Bag/Dev Only/Item Sandbox/Migrate Core Effects To Authored Rows (Once)";
         private const string AffixLineSpacingMenuPath =
-            "TalismanBag/Item Sandbox/Set Affix And Dao Trace Line Spacing To 1.2 (Once)";
+            "Tools/Talisman Bag/Dev Only/Item Sandbox/Set Affix And Dao Trace Line Spacing To 1.2 (Once)";
         private const string ScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V04_ItemSandbox.unity";
         private const string PanelPath =
             "ItemSandboxCanvas/MobileSafeAreaRoot/ItemSandboxRoot/ItemDetailPanel";

@@ -103,7 +103,7 @@ namespace TalismanBag.Items.Balance
                     errors.Add("RANDOM_POOL_INVALID: " + profile.baseItemId + " must have at least six positive entries.");
                 if (profile.randomAffixes.Any(value => value != null && value.affixId == profile.fixedAffixId))
                     errors.Add("AFFIX_REPEAT_INVALID: " + profile.baseItemId + " fixed affix appears in random pool.");
-                if (profile.coreCandidates.Count != 5)
+                if (profile.coreCandidates.Count != 4)
                     errors.Add("CORE_CANDIDATE_COUNT_INVALID: " + profile.baseItemId);
                 if (profile.signatureAffix == null || !ValidAffix(profile.signatureAffix))
                     errors.Add("SIGNATURE_AFFIX_INVALID: " + profile.baseItemId);
@@ -112,6 +112,7 @@ namespace TalismanBag.Items.Balance
                     || Empty(profile.candidateDisplay.placementRecommendation)
                     || Empty(profile.candidateDisplay.flavorText))
                     errors.Add("DISPLAY_PROFILE_INVALID: " + profile.baseItemId);
+                ValidatePresentationIdentity(profile, errors);
                 foreach (ItemBalanceCoreCandidate core in profile.coreCandidates.Where(value => value != null))
                     if (Empty(core.displayName) || Empty(core.description) || !ValidPayload(core.effectPayload))
                         errors.Add("CORE_CONTENT_INVALID: " + profile.baseItemId + "@" + core.coreEffectId);
@@ -143,7 +144,15 @@ namespace TalismanBag.Items.Balance
                             errors.Add("STAT_RANGE_INVALID: " + version.versionKey + "@" + range.statId);
                     }
 
-                    int expectedCoreCount = rarity.tierIndex + 1;
+                    int expectedCoreCount = rarity.rarity switch
+                    {
+                        ItemInstanceRarity.White => 1,
+                        ItemInstanceRarity.Green => 2,
+                        ItemInstanceRarity.Blue => 3,
+                        ItemInstanceRarity.Purple => 3,
+                        ItemInstanceRarity.Orange => 4,
+                        _ => 0
+                    };
                     if (version.eligibleCoreEffectIds.Count != expectedCoreCount
                         || version.visibleCoreEffectIds.Count != expectedCoreCount)
                         errors.Add("CORE_PROFILE_INVALID: " + version.versionKey);
@@ -158,6 +167,28 @@ namespace TalismanBag.Items.Balance
             if (versionCount != 150) errors.Add("VERSION_COUNT_INVALID: Expected 150, got " + versionCount);
             if (catalog.affixDefinitions.Any(value => value != null && value.affixId == "affix_duration_up"))
                 warnings.Add("AFFIX_DURATION_BRIDGE: affix_duration_up is a candidate-only definition required by duration secondary-stat pools.");
+        }
+
+        private static void ValidatePresentationIdentity(ItemBalanceProfile profile, List<string> errors)
+        {
+            ItemCandidateDisplayProfile presentation = profile.candidateDisplay;
+            if (presentation == null) return;
+
+            bool hasAnyIdentity = !Empty(presentation.effectFamilyKey)
+                                  || !Empty(presentation.presentationStyleKey)
+                                  || !Empty(presentation.cueIdentity);
+            bool hasCompleteIdentity = !Empty(presentation.effectFamilyKey)
+                                       && !Empty(presentation.presentationStyleKey)
+                                       && !Empty(presentation.cueIdentity);
+            if (presentation.presentationState == ItemPresentationConfirmationState.Unconfirmed)
+            {
+                if (hasAnyIdentity)
+                    errors.Add("PRESENTATION_UNCONFIRMED_HAS_IDENTITY: " + profile.baseItemId);
+                return;
+            }
+
+            if (!hasCompleteIdentity)
+                errors.Add("PRESENTATION_IDENTITY_INCOMPLETE: " + profile.baseItemId);
         }
 
         private static void ValidateMonotonic(
@@ -202,7 +233,7 @@ namespace TalismanBag.Items.Balance
         private static void ValidateCompleteCandidateCatalog(ItemBalanceWorkbenchCatalog catalog,
             List<string> errors)
         {
-            if (!string.Equals(catalog.balanceDataRevision, ItemCompleteCandidateContentSeed.Revision,
+            if (!string.Equals(catalog.balanceDataRevision, ItemBalanceWorkbenchCatalog.CompleteCandidateRevision,
                 StringComparison.Ordinal))
                 errors.Add("BALANCE_DATA_REVISION_INVALID");
             if (catalog.candidateRandomAffixes.Count(value => value != null) < 36)

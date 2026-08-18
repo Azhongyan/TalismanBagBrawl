@@ -1,6 +1,6 @@
 # Item 算法 Package Queue
 
-更新时间：2026-07-11  
+更新时间：2026-07-21
 所属：总体 Item System 下属 Item 算法线
 
 ## 总体状态
@@ -206,3 +206,115 @@ Expected marker: ITEM_DETAIL_TWO_STATE_INLINE_ARRAY_MODIFIER_GUARDFIX01_PASS
 ```
 
 因当前阵脉 Runtime 只有状态布尔量，本包允许增加独立的可编辑 `BALANCE_CANDIDATE` 阵脉修正载荷与只读解析结果；不得接正式 Battle、Reward/RunFlow、Inventory/Save，不得修改 `ItemSystemSnapshot.v1` 或算法基础八包契约。
+
+### V0.4-I009AndI029ItemShapeFix01
+
+```text
+Status: PACKAGE_SCOPE_SELFTEST_PASS / EXTERNAL_REGRESSION_BLOCKERS_RECORDED / AWAITING_USER_HANDTEST
+Guard rule: RULE_CONFIRMED
+Assignment: Docs/V0.4/I009AndI029ItemShapeFix01_Assignment.md
+Expected marker: I009_I029_ITEM_SHAPE_FIX01_PASS
+```
+
+本包锁定并校验：
+
+```text
+I009 离火焚邪印 = shape_single_1 / (0,0) / core(0,0)
+I029 照煞镜 = shape_single_1 / (0,0) / core(0,0)
+五品阶与所有实例继承原型形状
+四个旋转方向均保持单格
+详情页走 DaojuSingleCellImage
+```
+
+当前工作树中 I009 已存在未提交单格修正，本任务窗口必须保留并验证；I029 仍是 `shape_line2_v`，需要从真源修正并同步派生出口。不得修改其他道具形状，不得改用户手调详情布局，不得接 Battle、Reward/RunFlow、Inventory/Save 或 BuildSettings。
+
+Guard 实施复核：专项 marker、Unity 编译、I009/I029 真源、四方向旋转、五品阶、双 seed Roll / Projection、Candidate 与详情共享单格图片槽均已通过。当前不发送最终同步，只等待用户手测。
+
+全量历史套件的非绿项已隔离记录：详情手调布局 `12/14 active`、全体候选既有 `player-skill-monitor` 文本检查、Projection 下游 marker `155/156`、Workbench 的 BuildSettings 扫描器自身文字误命中、旧 BattleSandbox Vertical2/场景假设及入场前场景尾随空格。它们不构成本包形状回退，也不得在本包扩修；用户手测通过后的同步必须标注 `PACKAGE_SCOPE_PASS / GLOBAL_REGRESSION_BLOCKERS_RECORDED`。
+
+### V0.4-ItemShapeCatalogBatchCorrection01
+
+```text
+Status: COMPLETE / USER_HANDTEST_PASS
+Guard status: MULTI_GUARD_CONVERGED
+Primary Guard: ITEM_GUARD
+Joint Guard: ENEMY_GUARD
+Capability review: PASS_WITH_EXPECTED_DERIVED_DELTAS
+System ownership: ITEM_OWNED / CROSS_SYSTEM_CONSUMED
+Assignment: Docs/V0.4/ItemShapeCatalogBatchCorrection01_Assignment.md
+GuardFix assignment: Docs/V0.4/ItemShapeCatalogBatchCorrection01_GuardFix01_Assignment.md
+Approved matrix: Docs/V0.4/ItemShapeCatalogApprovedMatrix01.csv
+```
+
+统一结论：Item 系统唯一持有 I001-I030 的 `shapeId / ordered cells / coreCellLocal / 默认朝向`；Enemy、Layout Resilience 与 Capability Survey 只消费 Item Snapshot / Item Fact Projection，不得建立第二套形状真源。Capability 连续 BP 不因格数变化而调整；结构通道按修正后的事实重新投影。
+
+单包条件：用户批准完整30件矩阵；Item Runtime 真源一次修改；Candidate 与当前派生出口统一生成；通用形状测试改用 Editor-only QA Fixture；Enemy/CrossSystem Runtime 修改数必须为0。允许按精确白名单迁移由 Item105 或真实修正布局引起的 Editor QA baseline，并必须保留旧值、新值与 superseded 记录；禁止自动刷新全局 Protected Hash。
+
+当前已确认：I009、I029 均为 `shape_single_1 / (0,0) / core(0,0)`。其余道具在用户矩阵批准前不得修改。I031 不属于本批次。
+
+正式 Assignment 只在30件矩阵批准、Item Guard 主批准与 Enemy Guard 联合确认后生成。
+
+用户已批准 `30/30` 矩阵：`14 KEEP / 16 CHANGE / 0 UNRESOLVED`。I024 以已制作五品阶美术主图为准，锁定为 `shape_line2_h / (0,0);(1,0)`。空间核心格保留为 `TECHNICAL_RESERVED` 合同字段，当前版本不作为玩家机制、UI、教学或平衡输入；正式核心格设计延期至独立后续版本。
+
+矩阵批准文件：`Docs/V0.4/ItemShapeCatalogApprovedMatrix01.csv`。当前允许 Guard 生成唯一 Assignment，但在 Assignment 下发前不得修改 Runtime。
+
+正式 Assignment 已于 2026-07-21 下发：`Docs/V0.4/ItemShapeCatalogBatchCorrection01_Assignment.md`。任务窗口只允许执行该任务书；完成后按 `TASK_STATUS_SYNC_TO_GUARD_REPOOPS` 回传 Guard + RepoOps。
+
+2026-07-21 实现回执：30件矩阵、16项纠错、I024、120次旋转、150品阶/300双seed继承、Roll/Projection Canonical、Capability BP、Item105 11处 Ledger 和 C02 均提供通过证据；Unity 源码编译通过。最终自动验收未通过，唯一专项失败为 `protected.scenes`。
+
+Guard 复核确认 PID 10076 为人工控制的 Unity Editor（`BatchMode=0 / IsHumanControllingUs=1`），持有工程 `UnityLockfile`，且 ItemSandbox Scene 在任务期间偏离任务起始保护哈希。包状态更新为：
+
+```text
+Status: IMPLEMENTED / AWAITING_EXCLUSIVE_REVALIDATION
+Blocker: EXTERNAL_INTERACTIVE_UNITY_LOCK_AND_PROTECTED_SCENE_DRIFT
+Final PASS: NO
+GuardFix: NOT_ISSUED
+RepoOps completion sync: HOLD
+```
+
+用户必须先决定 Scene 改动保留或放弃，并正常关闭 Unity；Guard 随后才可批准稳定基线处理与独占复验。不得由任务窗口杀进程、回滚 Scene、吸收新哈希或削弱保护断言。
+
+用户关闭 Unity 后，Guard 已执行真实独占 batch。工程锁已解除，Unity 编译与全部 Item 形状核心断言通过；最终 marker 仍为 `ITEM_SHAPE_CATALOG_BATCH_CORRECTION01_FAIL errors=2`。失败已精确定位为：
+
+```text
+protected.scenes: E8E0ABC4...693C -> F44C2A85...746B
+  Scene_TalismanBag_V04_ItemSandbox.unity
+  Scene_TalismanBag_V04_UnifiedBattlePageShell.unity
+
+protected.prefabs: DC689B67...187D -> 3D3807A7...FBA6
+  BattleLikePreviewAreaBridge.prefab
+```
+
+当前状态更新为 `IMPLEMENTED / AWAITING_USER_PROTECTED_ASSET_DECISION`。这三个资产不属于形状包白名单；用户确认保留或不接受前，不下发基线迁移 GuardFix，不回滚，也不标 PASS。
+
+用户已明确批准 `KEEP_CURRENT_UI_SCENE_PREFAB`。Guard 在 Unity 关闭、无工程锁时锁定新保护基线：Scenes 7=`F44C2A85...746B`，Prefabs 5=`3D3807A7...FBA6`。这些资产仍归属用户外部工作，不归入形状包修改。
+
+已下发唯一最小复验任务：`Docs/V0.4/ItemShapeCatalogBatchCorrection01_GuardFix01_Assignment.md`。只允许更新专项 verifier 的两个 expected aggregate、刷新专项报告并独占重跑；不得修改 Scene/Prefab 或其他 Runtime。
+
+GuardFix01 已通过自动验收：最终 marker 为 `ITEM_SHAPE_CATALOG_BATCH_CORRECTION01_PASS items=30 keep=14 change=16 unresolved=0`；Scene/Prefab 批准聚合前后稳定，全部保护域、核心形状断言、Roll/Projection、Capability BP、Item105 11处与 C02 均通过，Runtime 修改为0。
+
+当前状态：`AUTO_ACCEPTANCE_PASS / AWAITING_USER_HANDTEST`。Guard 已修正 GuardFix Assignment 中 Roll SHA 少一个字符的纯文档笔误；实际验证基线始终正确。用户手测前 RepoOps completion 保持 HOLD。
+
+用户已回执 `USER_HANDTEST: PASS`。本包及 GuardFix01 正式关闭：
+
+```text
+Status: COMPLETE / USER_HANDTEST_PASS
+Auto acceptance: PASS
+Final marker: ITEM_SHAPE_CATALOG_BATCH_CORRECTION01_PASS items=30 keep=14 change=16 unresolved=0
+RepoOps record: READY
+Commit / tag / push: NO
+```
+
+批准矩阵、Change Ledger、Canonical Delta、GuardFix 迁移记录和当前报告作为后续消费基线。后续包不得恢复旧形状或旧 Scene/Prefab 保护聚合；核心格仍为 `TECHNICAL_RESERVED`，未获正式玩法授权。
+
+## Shared Module Layering Queue Gate
+
+所有后续 Item、Item UI、Item→Battle 与 Item→Enemy 包必须读取：
+
+```text
+Docs/V0.4/SHARED_MODULE_LAYERING_AND_PREFAB_PRESENTATION_GUARD.md
+```
+
+Queue Gate：Prefab 只读 ViewModel，不挂载权威 Item 数据或状态；成熟 Item UI 必须转为
+Base Prefab并跨场景复用；任何第二套 ItemData、InventoryManager、Scene Copy 长期维护
+或无设计师手测节点的路线均不得入队，必须先向用户发出 `GUARD_LAYERING_WARNING`。

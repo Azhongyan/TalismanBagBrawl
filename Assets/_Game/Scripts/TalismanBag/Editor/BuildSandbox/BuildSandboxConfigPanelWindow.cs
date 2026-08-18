@@ -25,7 +25,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
     public sealed class BuildSandboxConfigPanelWindow : EditorWindow
     {
         public const string MenuPath =
-            "Tools/Talisman Bag/V0.4/BuildSandbox/Data/[Manual Only] BuildSandbox Config Panel 01";
+            "Tools/Talisman Bag/Dev Only/V0.4/BuildSandbox/Data/[Manual Only] BuildSandbox Config Panel 01";
 
         public const string WindowTitle = "BuildSandbox Config Panel 01";
 

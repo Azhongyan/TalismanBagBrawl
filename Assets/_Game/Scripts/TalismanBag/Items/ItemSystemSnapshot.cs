@@ -139,13 +139,16 @@ namespace TalismanBag.Items
         private readonly ReadOnlyCollection<ItemSystemPlacementInput> placements;
         private readonly ReadOnlyCollection<ItemCoreAwakeningInput> awakeningInputs;
         private readonly ReadOnlyCollection<ItemInnerDataDefinition> catalogItems;
+        private readonly ReadOnlyCollection<I031InventoryPlacementStateInput>
+            i031StateInputs;
 
         public ItemSystemSnapshotInput(
             IReadOnlyList<ItemSystemPlacementInput> placements,
             ItemSystemBoardConfigInput boardConfig = null,
             IReadOnlyList<ItemCoreAwakeningInput> awakeningInputs = null,
             ItemMainBuildSelectionInput mainBuildSelectionInput = null,
-            IReadOnlyList<ItemInnerDataDefinition> catalogItems = null)
+            IReadOnlyList<ItemInnerDataDefinition> catalogItems = null,
+            IReadOnlyList<I031InventoryPlacementStateInput> i031StateInputs = null)
         {
             this.placements = ItemSystemSnapshotReadOnly.Freeze((placements ?? Array.Empty<ItemSystemPlacementInput>())
                 .Where(placement => placement != null)
@@ -167,6 +170,17 @@ namespace TalismanBag.Items
             this.catalogItems = ItemSystemSnapshotReadOnly.Freeze((catalogItems ?? ItemInnerDataCatalog.AllItems)
                 .Where(item => item != null)
                 .Select(CloneCatalogItem));
+            this.i031StateInputs = ItemSystemSnapshotReadOnly.Freeze(
+                (i031StateInputs ??
+                        Array.Empty<I031InventoryPlacementStateInput>())
+                    .Where(value => value != null)
+                    .Select(value => value.Clone())
+                    .OrderBy(value => value.itemId, StringComparer.Ordinal)
+                    .ThenBy(value => value.specialIdentityId, StringComparer.Ordinal)
+                    .ThenBy(value => value.stablePlacementId, StringComparer.Ordinal)
+                    .ThenBy(value => (int)value.ownershipCompleteness)
+                    .ThenBy(value => (int)value.location)
+                    .ThenBy(value => value.isOwned ? 1 : 0));
         }
 
         public IReadOnlyList<ItemSystemPlacementInput> Placements => placements;
@@ -174,6 +188,10 @@ namespace TalismanBag.Items
         public IReadOnlyList<ItemCoreAwakeningInput> AwakeningInputs => awakeningInputs;
         public ItemMainBuildSelectionInput mainBuildSelectionInput { get; }
         public IReadOnlyList<ItemInnerDataDefinition> CatalogItems => catalogItems;
+        public IReadOnlyList<I031InventoryPlacementStateInput> I031StateInputs =>
+            i031StateInputs;
+        public I031InventoryPlacementStateInput i031StateInput =>
+            i031StateInputs.Count == 1 ? i031StateInputs[0] : null;
 
         private static ItemCoreAwakeningInput CloneAwakeningInput(ItemCoreAwakeningInput input)
         {
@@ -645,7 +663,7 @@ namespace TalismanBag.Items
 
     public sealed class ItemSystemSnapshot
     {
-        public const string CurrentSchemaVersion = "ItemSystemSnapshot.v1";
+        public const string CurrentSchemaVersion = "ItemSystemSnapshot.v2";
 
         private readonly ReadOnlyCollection<Vector2Int> arrayBonusCells;
         private readonly ReadOnlyCollection<ItemSystemCatalogItemSnapshot> catalogItemSnapshots;
@@ -671,7 +689,8 @@ namespace TalismanBag.Items
             string selectedMainBuildId,
             bool selectedMainBuildIsExplicit,
             string selectedMainBuildSource,
-            IReadOnlyList<ItemSystemValidationError> validationErrors)
+            IReadOnlyList<ItemSystemValidationError> validationErrors,
+            I031InventoryPlacementStateSnapshot i031State = null)
         {
             schemaVersion = CurrentSchemaVersion;
             this.boardSize = boardSize;
@@ -701,6 +720,13 @@ namespace TalismanBag.Items
             this.selectedMainBuildIsExplicit = selectedMainBuildIsExplicit;
             this.selectedMainBuildSource = selectedMainBuildSource ?? string.Empty;
             validationErrorSnapshots = ItemSystemSnapshotReadOnly.Freeze(NormalizeErrors(validationErrors));
+            this.i031State = (i031State ?? new I031InventoryPlacementStateSnapshot(
+                I031InventoryPlacementContract.ItemId,
+                I031InventoryPlacementContract.SpecialIdentityId,
+                I031InventoryPlacementContract.StablePlacementId,
+                I031OwnershipCompleteness.Unknown,
+                I031Location.Unknown,
+                false)).Clone();
         }
 
         public string schemaVersion { get; }
@@ -720,6 +746,7 @@ namespace TalismanBag.Items
         public bool selectedMainBuildIsExplicit { get; }
         public string selectedMainBuildSource { get; }
         public IReadOnlyList<ItemSystemValidationError> validationErrors => validationErrorSnapshots;
+        public I031InventoryPlacementStateSnapshot i031State { get; }
 
         public ItemSystemPlacementSnapshot FindPlacement(string placementId)
         {
@@ -739,6 +766,17 @@ namespace TalismanBag.Items
                 .Append(selectedMainBuildId).Append('|')
                 .Append(FormatBool(selectedMainBuildIsExplicit)).Append('|')
                 .Append(selectedMainBuildSource);
+
+            builder.Append("\nI031:")
+                .Append(i031State.itemId).Append('|')
+                .Append(i031State.specialIdentityId).Append('|')
+                .Append(i031State.stablePlacementId).Append('|')
+                .Append(((int)i031State.ownershipCompleteness).ToString(
+                    CultureInfo.InvariantCulture)).Append('|')
+                .Append(((int)i031State.location).ToString(
+                    CultureInfo.InvariantCulture)).Append('|')
+                .Append(FormatBool(i031State.isOwned)).Append('|')
+                .Append(FormatBool(i031State.isPlaced));
 
             foreach (ItemSystemCatalogItemSnapshot item in catalogItems)
             {
@@ -1195,7 +1233,14 @@ namespace TalismanBag.Items
                 errors.AddRange(ValidateBoard(board));
 
                 List<PlacementBuildData> placementData = BuildPlacementData(safeInput.Placements, board, catalogById, errors);
-                ValidateJuNianCount(placementData, errors);
+                I031InventoryPlacementStateSnapshot i031State = ResolveI031State(
+                    safeInput.I031StateInputs);
+                ValidateI031State(
+                    safeInput.I031StateInputs,
+                    i031State,
+                    placementData,
+                    catalogById,
+                    errors);
 
                 List<ItemLightingPlacedItem> lightingInputs = placementData
                     .Where(data => data.eligibleForResolvers)
@@ -1241,7 +1286,8 @@ namespace TalismanBag.Items
                     mainBuildInput.selectedMainBuildId,
                     selectedExplicit,
                     mainBuildInput.selectionSource,
-                    errors);
+                    errors,
+                    i031State);
 
                 List<ItemSystemValidationError> combined = new(snapshot.validationErrors);
                 combined.AddRange(validator.ValidateSnapshot(snapshot));
@@ -1257,7 +1303,8 @@ namespace TalismanBag.Items
                     mainBuildInput.selectedMainBuildId,
                     selectedExplicit,
                     mainBuildInput.selectionSource,
-                    combined);
+                    combined,
+                    i031State);
             }
             catch (Exception exception)
             {
@@ -1281,7 +1328,8 @@ namespace TalismanBag.Items
             string selectedMainBuildId,
             bool selectedExplicit,
             string selectedSource,
-            IReadOnlyList<ItemSystemValidationError> errors)
+            IReadOnlyList<ItemSystemValidationError> errors,
+            I031InventoryPlacementStateSnapshot i031State)
         {
             List<ItemSystemPlacementSnapshot> placements = new();
             foreach (PlacementBuildData data in placementData)
@@ -1329,7 +1377,8 @@ namespace TalismanBag.Items
                 selectedMainBuildId,
                 selectedExplicit,
                 selectedSource,
-                errors);
+                errors,
+                i031State);
         }
 
         private static List<PlacementBuildData> BuildPlacementData(
@@ -1548,16 +1597,218 @@ namespace TalismanBag.Items
             return errors;
         }
 
-        private static void ValidateJuNianCount(IReadOnlyList<PlacementBuildData> placements, List<ItemSystemValidationError> errors)
+        private static I031InventoryPlacementStateSnapshot ResolveI031State(
+            IReadOnlyList<I031InventoryPlacementStateInput> sourceRows)
         {
-            int count = (placements ?? Array.Empty<PlacementBuildData>()).Count(placement => string.Equals(placement.itemId, "I031", StringComparison.Ordinal));
-            if (count == 0)
+            I031InventoryPlacementStateInput row = (sourceRows ??
+                    Array.Empty<I031InventoryPlacementStateInput>())
+                .Where(value => value != null)
+                .OrderBy(value => value.itemId, StringComparer.Ordinal)
+                .ThenBy(value => value.specialIdentityId, StringComparer.Ordinal)
+                .ThenBy(value => value.stablePlacementId, StringComparer.Ordinal)
+                .ThenBy(value => (int)value.ownershipCompleteness)
+                .ThenBy(value => (int)value.location)
+                .ThenBy(value => value.isOwned ? 1 : 0)
+                .FirstOrDefault();
+            if (row == null)
             {
-                errors.Add(ItemSystemValidationError.Error("JUNIAN_MISSING", string.Empty, "I031", "valid complete layout requires exactly one I031 JuNian stone."));
+                return new I031InventoryPlacementStateSnapshot(
+                    I031InventoryPlacementContract.ItemId,
+                    I031InventoryPlacementContract.SpecialIdentityId,
+                    I031InventoryPlacementContract.StablePlacementId,
+                    I031OwnershipCompleteness.Unknown,
+                    I031Location.Unknown,
+                    false);
             }
-            else if (count > 1)
+
+            return new I031InventoryPlacementStateSnapshot(
+                row.itemId,
+                row.specialIdentityId,
+                row.stablePlacementId,
+                row.ownershipCompleteness,
+                row.location,
+                row.isOwned);
+        }
+
+        private static void ValidateI031State(
+            IReadOnlyList<I031InventoryPlacementStateInput> sourceRows,
+            I031InventoryPlacementStateSnapshot state,
+            IReadOnlyList<PlacementBuildData> placements,
+            IReadOnlyDictionary<string, ItemInnerDataDefinition> catalogById,
+            List<ItemSystemValidationError> errors)
+        {
+            I031InventoryPlacementStateInput[] rows = (sourceRows ??
+                    Array.Empty<I031InventoryPlacementStateInput>())
+                .Where(value => value != null)
+                .ToArray();
+            if (rows.Length == 0)
             {
-                errors.Add(ItemSystemValidationError.Error("JUNIAN_MULTIPLE", string.Empty, "I031", $"valid complete layout requires exactly one I031 JuNian stone; actual {count}."));
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_OWNERSHIP_UNKNOWN",
+                    string.Empty,
+                    I031InventoryPlacementContract.ItemId,
+                    "explicit I031 ownership state is required; missing state is Unknown, not known zero."));
+            }
+            else if (rows.Length > 1)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_OWNERSHIP_DUPLICATE",
+                    I031InventoryPlacementContract.StablePlacementId,
+                    I031InventoryPlacementContract.ItemId,
+                    $"exactly one explicit I031 ownership row is required; actual {rows.Length}."));
+            }
+
+            ValidateI031StateFields(state, errors);
+
+            PlacementBuildData[] i031Placements = (placements ??
+                    Array.Empty<PlacementBuildData>())
+                .Where(value => value != null && string.Equals(
+                    value.itemId,
+                    I031InventoryPlacementContract.ItemId,
+                    StringComparison.Ordinal))
+                .ToArray();
+            if (i031Placements.Length > 1)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_PLACEMENT_MULTIPLE",
+                    I031InventoryPlacementContract.StablePlacementId,
+                    I031InventoryPlacementContract.ItemId,
+                    $"I031 may have at most one board placement; actual {i031Placements.Length}."));
+            }
+
+            foreach (PlacementBuildData placement in i031Placements.Where(value =>
+                         !string.Equals(
+                             value.placementId,
+                             I031InventoryPlacementContract.StablePlacementId,
+                             StringComparison.Ordinal)))
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_PLACEMENT_ID_INVALID",
+                    placement.placementId,
+                    placement.itemId,
+                    $"I031 placementId must be {I031InventoryPlacementContract.StablePlacementId}."));
+            }
+
+            foreach (PlacementBuildData placement in (placements ??
+                         Array.Empty<PlacementBuildData>()).Where(value =>
+                         value != null && !string.Equals(
+                             value.itemId,
+                             I031InventoryPlacementContract.ItemId,
+                             StringComparison.Ordinal) && string.Equals(
+                             value.placementId,
+                             I031InventoryPlacementContract.StablePlacementId,
+                             StringComparison.Ordinal)))
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_STABLE_PLACEMENT_ID_REUSED",
+                    placement.placementId,
+                    placement.itemId,
+                    "ordinary items must not reuse the reserved I031 stable placement identity."));
+            }
+
+            if (state.location == I031Location.Inventory &&
+                i031Placements.Length != 0)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_INVENTORY_PLACEMENT_CONFLICT",
+                    i031Placements[0].placementId,
+                    I031InventoryPlacementContract.ItemId,
+                    "Inventory I031 state requires zero I031 board placements."));
+            }
+            else if (state.location == I031Location.Board &&
+                i031Placements.Length == 0)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_BOARD_PLACEMENT_MISSING",
+                    I031InventoryPlacementContract.StablePlacementId,
+                    I031InventoryPlacementContract.ItemId,
+                    "Board I031 state requires the stable I031 board placement."));
+            }
+
+            if (catalogById != null && catalogById.TryGetValue(
+                    I031InventoryPlacementContract.ItemId,
+                    out ItemInnerDataDefinition i031Catalog) &&
+                (!string.Equals(
+                        i031Catalog.shapeId,
+                        I031InventoryPlacementContract.CatalogShapeId,
+                        StringComparison.Ordinal) ||
+                    !i031Catalog.ShapeCells.SequenceEqual(new[] { Vector2Int.zero }) ||
+                    i031Catalog.coreCellLocal != Vector2Int.zero))
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "CATALOG_I031_SHAPE_INVALID",
+                    string.Empty,
+                    I031InventoryPlacementContract.ItemId,
+                    "I031 catalog truth must be shape_single_1 with cell/core (0,0)."));
+            }
+        }
+
+        private static void ValidateI031StateFields(
+            I031InventoryPlacementStateSnapshot state,
+            List<ItemSystemValidationError> errors)
+        {
+            if (state == null)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_STATE_NULL",
+                    string.Empty,
+                    I031InventoryPlacementContract.ItemId,
+                    "I031 state branch must be present."));
+                return;
+            }
+            if (!string.Equals(state.itemId, I031InventoryPlacementContract.ItemId,
+                    StringComparison.Ordinal))
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_ITEM_ID_INVALID", state.stablePlacementId, state.itemId,
+                    $"I031 state itemId must be {I031InventoryPlacementContract.ItemId}."));
+            }
+            if (!string.Equals(
+                    state.specialIdentityId,
+                    I031InventoryPlacementContract.SpecialIdentityId,
+                    StringComparison.Ordinal))
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_SPECIAL_IDENTITY_INVALID",
+                    state.stablePlacementId,
+                    state.itemId,
+                    $"specialIdentityId must be {I031InventoryPlacementContract.SpecialIdentityId}."));
+            }
+            if (!string.Equals(
+                    state.stablePlacementId,
+                    I031InventoryPlacementContract.StablePlacementId,
+                    StringComparison.Ordinal))
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_STABLE_PLACEMENT_ID_INVALID",
+                    state.stablePlacementId,
+                    state.itemId,
+                    $"stablePlacementId must be {I031InventoryPlacementContract.StablePlacementId}."));
+            }
+            if (state.ownershipCompleteness != I031OwnershipCompleteness.Complete)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_OWNERSHIP_UNKNOWN",
+                    state.stablePlacementId,
+                    state.itemId,
+                    "I031 ownership completeness must be Complete; Unknown is not known zero."));
+            }
+            if (!state.isOwned)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_OWNERSHIP_REQUIRED",
+                    state.stablePlacementId,
+                    state.itemId,
+                    "the locked V0.4 roster requires owned=true for I031."));
+            }
+            if (state.location != I031Location.Inventory &&
+                state.location != I031Location.Board)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_LOCATION_UNKNOWN",
+                    state.stablePlacementId,
+                    state.itemId,
+                    "I031 location must be explicit Inventory or Board."));
             }
         }
 
@@ -1697,6 +1948,7 @@ namespace TalismanBag.Items
 
             ValidateCatalog(snapshot, errors);
             ValidateBoard(snapshot, errors);
+            ValidateI031State(snapshot, errors);
             ValidatePlacements(snapshot, errors);
             ValidateChildSnapshotIdentity(snapshot, errors);
             ValidateChildSnapshotState(snapshot, errors);
@@ -1745,6 +1997,19 @@ namespace TalismanBag.Items
             {
                 errors.Add(ItemSystemValidationError.Error("CATALOG_I031_SOURCE_INVALID", string.Empty, "I031", "I031 must be the JuNian source boundary item."));
             }
+            else if (!string.Equals(
+                    i031.shapeId,
+                    I031InventoryPlacementContract.CatalogShapeId,
+                    StringComparison.Ordinal) ||
+                !i031.ShapeCells.SequenceEqual(new[] { Vector2Int.zero }) ||
+                i031.coreCellLocal != Vector2Int.zero)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "CATALOG_I031_SHAPE_INVALID",
+                    string.Empty,
+                    I031InventoryPlacementContract.ItemId,
+                    "I031 catalog truth must be shape_single_1 with cell/core (0,0)."));
+            }
 
             foreach (ItemSystemCatalogItemSnapshot item in snapshot.catalogItems
                 .Where(item => !string.Equals(item.itemId, "I031", StringComparison.Ordinal) && item.isLightingSource))
@@ -1778,6 +2043,122 @@ namespace TalismanBag.Items
             }
         }
 
+        private static void ValidateI031State(
+            ItemSystemSnapshot snapshot,
+            List<ItemSystemValidationError> errors)
+        {
+            I031InventoryPlacementStateSnapshot state = snapshot.i031State;
+            if (state == null)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_STATE_NULL",
+                    string.Empty,
+                    I031InventoryPlacementContract.ItemId,
+                    "I031 state branch must be present."));
+                return;
+            }
+
+            if (!string.Equals(state.itemId, I031InventoryPlacementContract.ItemId,
+                    StringComparison.Ordinal))
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_ITEM_ID_INVALID", state.stablePlacementId, state.itemId,
+                    $"I031 state itemId must be {I031InventoryPlacementContract.ItemId}."));
+            }
+            if (!string.Equals(
+                    state.specialIdentityId,
+                    I031InventoryPlacementContract.SpecialIdentityId,
+                    StringComparison.Ordinal))
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_SPECIAL_IDENTITY_INVALID",
+                    state.stablePlacementId,
+                    state.itemId,
+                    $"specialIdentityId must be {I031InventoryPlacementContract.SpecialIdentityId}."));
+            }
+            if (!string.Equals(
+                    state.stablePlacementId,
+                    I031InventoryPlacementContract.StablePlacementId,
+                    StringComparison.Ordinal))
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_STABLE_PLACEMENT_ID_INVALID",
+                    state.stablePlacementId,
+                    state.itemId,
+                    $"stablePlacementId must be {I031InventoryPlacementContract.StablePlacementId}."));
+            }
+            if (state.ownershipCompleteness != I031OwnershipCompleteness.Complete)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_OWNERSHIP_UNKNOWN",
+                    state.stablePlacementId,
+                    state.itemId,
+                    "I031 ownership completeness must be Complete; Unknown is not known zero."));
+            }
+            if (!state.isOwned)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_OWNERSHIP_REQUIRED",
+                    state.stablePlacementId,
+                    state.itemId,
+                    "the locked V0.4 roster requires owned=true for I031."));
+            }
+            if (state.location != I031Location.Inventory &&
+                state.location != I031Location.Board)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_LOCATION_UNKNOWN",
+                    state.stablePlacementId,
+                    state.itemId,
+                    "I031 location must be explicit Inventory or Board."));
+            }
+
+            ItemSystemPlacementSnapshot[] i031Placements = snapshot.placements
+                .Where(value => string.Equals(
+                    value.itemId,
+                    I031InventoryPlacementContract.ItemId,
+                    StringComparison.Ordinal))
+                .ToArray();
+            if (i031Placements.Length > 1)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_PLACEMENT_MULTIPLE",
+                    I031InventoryPlacementContract.StablePlacementId,
+                    I031InventoryPlacementContract.ItemId,
+                    $"I031 may have at most one board placement; actual {i031Placements.Length}."));
+            }
+            foreach (ItemSystemPlacementSnapshot placement in i031Placements.Where(
+                         value => !string.Equals(
+                             value.placementId,
+                             I031InventoryPlacementContract.StablePlacementId,
+                             StringComparison.Ordinal)))
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_PLACEMENT_ID_INVALID",
+                    placement.placementId,
+                    placement.itemId,
+                    $"I031 placementId must be {I031InventoryPlacementContract.StablePlacementId}."));
+            }
+            if (state.location == I031Location.Inventory &&
+                i031Placements.Length != 0)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_INVENTORY_PLACEMENT_CONFLICT",
+                    i031Placements[0].placementId,
+                    I031InventoryPlacementContract.ItemId,
+                    "Inventory I031 state requires zero I031 board placements."));
+            }
+            else if (state.location == I031Location.Board &&
+                i031Placements.Length == 0)
+            {
+                errors.Add(ItemSystemValidationError.Error(
+                    "I031_BOARD_PLACEMENT_MISSING",
+                    I031InventoryPlacementContract.StablePlacementId,
+                    I031InventoryPlacementContract.ItemId,
+                    "Board I031 state requires the stable I031 board placement."));
+            }
+        }
+
         private static void ValidatePlacements(ItemSystemSnapshot snapshot, List<ItemSystemValidationError> errors)
         {
             Dictionary<string, ItemSystemCatalogItemSnapshot> catalog = snapshot.catalogItems
@@ -1798,16 +2179,6 @@ namespace TalismanBag.Items
                 {
                     errors.Add(ItemSystemValidationError.Error("PLACEMENT_ID_DUPLICATE", group.Key, group.First().itemId, "placementId must be unique."));
                 }
-            }
-
-            int juNianCount = snapshot.placements.Count(placement => placement.itemId == "I031");
-            if (juNianCount == 0)
-            {
-                errors.Add(ItemSystemValidationError.Error("JUNIAN_MISSING", string.Empty, "I031", "valid complete layout requires exactly one I031."));
-            }
-            else if (juNianCount > 1)
-            {
-                errors.Add(ItemSystemValidationError.Error("JUNIAN_MULTIPLE", string.Empty, "I031", "valid complete layout requires exactly one I031."));
             }
 
             foreach (IGrouping<string, ItemSystemPlacementSnapshot> group in snapshot.placements
@@ -1835,6 +2206,20 @@ namespace TalismanBag.Items
 
             foreach (ItemSystemPlacementSnapshot placement in snapshot.placements)
             {
+                if (!string.Equals(
+                        placement.itemId,
+                        I031InventoryPlacementContract.ItemId,
+                        StringComparison.Ordinal) && string.Equals(
+                        placement.placementId,
+                        I031InventoryPlacementContract.StablePlacementId,
+                        StringComparison.Ordinal))
+                {
+                    errors.Add(ItemSystemValidationError.Error(
+                        "I031_STABLE_PLACEMENT_ID_REUSED",
+                        placement.placementId,
+                        placement.itemId,
+                        "ordinary items must not reuse the reserved I031 stable placement identity."));
+                }
                 foreach (Vector2Int occupiedCell in placement.OccupiedCells.Distinct().OrderByCell())
                 {
                     if (occupiedByCell.TryGetValue(occupiedCell, out string existingPlacementId)
@@ -2074,9 +2459,17 @@ namespace TalismanBag.Items
                 }
             }
 
-            if (sourceCount != 1 && snapshot.lightingResults.Count > 0)
+            int expectedSourceCount = snapshot.i031State != null &&
+                snapshot.i031State.location == I031Location.Board
+                ? 1
+                : 0;
+            if (sourceCount != expectedSourceCount)
             {
-                errors.Add(ItemSystemValidationError.Error("LIGHTING_SNAPSHOT_MISMATCH", string.Empty, "I031", $"lightingResults must contain exactly one source; actual {sourceCount}."));
+                errors.Add(ItemSystemValidationError.Error(
+                    "LIGHTING_SNAPSHOT_MISMATCH",
+                    string.Empty,
+                    "I031",
+                    $"lightingResults source count must match I031 location; expected {expectedSourceCount}, actual {sourceCount}."));
             }
         }
 

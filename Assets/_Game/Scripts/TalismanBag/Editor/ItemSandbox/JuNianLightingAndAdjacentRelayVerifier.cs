@@ -71,8 +71,6 @@ namespace TalismanBag.EditorTools.ItemSandbox
             "BossInfo",
             "EditorBuildSettings.scenes ="
         };
-
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/JuNianLightingAndAdjacentRelay01/[Guard Only] Verify And Write Reports")]
         public static void VerifyMenu()
         {
             VerifyAndWriteReports(exitWhenBatchMode: false);

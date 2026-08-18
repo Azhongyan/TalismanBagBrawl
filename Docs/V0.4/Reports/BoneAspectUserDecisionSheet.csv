@@ -1,0 +1,5 @@
+"decisionId","title","lockedNow","userDecisionRequired","forbiddenUntilDecision","blockedDownstream","decisionOwner","decisionStatus","selectedOption"
+"BA-D1","守骨奴的“替盲眼女人承担伤害”是否存在真实可受击保护目标","守护姿态、盲眼女人叙事关系、“忠”字核心","true","保护目标 HP、目标选择、承伤比例、连线与执行规则","对应 Runtime、VFX 状态机、最终机制 UI 和正式 Boss 阶段演出","USER","USER_DECISION_REQUIRED","NOT_SELECTED"
+"BA-D2","竞骨人辅助机制选择“虚假分身”或“竞价护盾”","老人本体、三身份、骨契册、身份切换与打断窗口","true","同时使用两个辅助机制或由开发窗口代选","对应 Runtime、VFX 状态机、最终机制 UI 和正式 Boss 阶段演出","USER","USER_DECISION_REQUIRED","NOT_SELECTED"
+"BA-D3","换骨残相与骨尘小像的 Copy 范围","“复制/模仿”作为策划承诺和视觉母题","true","复制视觉、数值、触发行为或 Item 内部实现的具体边界","对应 Runtime、VFX 状态机、最终机制 UI 和正式 Boss 阶段演出","USER","USER_DECISION_REQUIRED","NOT_SELECTED"
+"BA-D4","万相骨兽封存对象与两种正式形态","巨兽主轮廓、交易口、骨商核心、封存/解封母题","true","锁器类还是单项效果、具体两形态、颜色、弱点与执行规则","对应 Runtime、VFX 状态机、最终机制 UI 和正式 Boss 阶段演出","USER","USER_DECISION_REQUIRED","NOT_SELECTED"

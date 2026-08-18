@@ -1,0 +1,4 @@
+scenario,accepted,outcome,durationSeconds,enemyApplications,playerMaxHp,playerCurrentHp,acceptedItemApplications,actorCount,totalEnemyHp,saveWrites,rewardGrants,canonicalSignature,status
+"1-1 / I001 lit","true","VICTORY","16","3","100","76","8","2","0","0","0","d7b9e309753cf61c80969ebc5b292d13f52f839e8392ac559c7781da5b60e951","PASS"
+"1-2 / I001 lit + I002 unlit","true","VICTORY","48","10","100","20","24","3","0","0","0","8657c6529d45ffbba7c9afad2109802e65d82fd5f3b1b887a3ee0651c7e4df40","PASS"
+"1-2 / I001 lit + I002 lit","true","VICTORY","36","7","100","44","35","3","0","0","0","4f244b94ae0a0a6d559368417d939bc7d0bf49763ee3313c3e73104da680e91b","PASS"

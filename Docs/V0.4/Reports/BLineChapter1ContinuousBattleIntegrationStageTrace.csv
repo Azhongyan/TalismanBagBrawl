@@ -1,0 +1,12 @@
+sequence,stageId,flowPhase,contentId,runtimeProfileId,battleRequestId,resultId,outcome,bossDefeated,completedStageCount,unlockedChapterCount,labels
+1,1-1,Settlement,bone_aspect_enemy_c1_01_shattered_host,bone_aspect.runtime.c1.shattered_host.v1,bline.c1.battle_request.0001,bline.c1.normal_result.0001,Win,false,0,1,DEV_ONLY_CADENCE / NOT_BALANCE_FINAL
+2,1-2,Settlement,bone_aspect_enemy_c1_01_shattered_host,bone_aspect.runtime.c1.shattered_host.v1,bline.c1.battle_request.0002,bline.c1.normal_result.0002,Win,false,1,1,DEV_ONLY_CADENCE / NOT_BALANCE_FINAL
+3,1-3,Settlement,bone_aspect_enemy_c1_01_shattered_host,bone_aspect.runtime.c1.shattered_host.v1,bline.c1.battle_request.0003,bline.c1.normal_result.0003,Win,false,2,1,DEV_ONLY_CADENCE / NOT_BALANCE_FINAL
+4,1-4,Settlement,bone_aspect_enemy_c1_02_porcelain_hound,bone_aspect.runtime.c1.porcelain_hound.v1,bline.c1.battle_request.0004,bline.c1.normal_result.0004,Win,false,3,1,DEV_ONLY_CADENCE / NOT_BALANCE_FINAL
+5,1-5,Settlement,bone_aspect_enemy_c1_02_porcelain_hound,bone_aspect.runtime.c1.porcelain_hound.v1,bline.c1.battle_request.0005,bline.c1.normal_result.0005,Win,false,4,1,DEV_ONLY_CADENCE / NOT_BALANCE_FINAL
+6,1-6,Settlement,bone_aspect_enemy_c1_02_porcelain_hound,bone_aspect.runtime.c1.porcelain_hound.v1,bline.c1.battle_request.0006,bline.c1.normal_result.0006,Win,false,5,1,DEV_ONLY_CADENCE / NOT_BALANCE_FINAL
+7,1-7,Settlement,bone_aspect_enemy_c1_02_porcelain_hound,bone_aspect.runtime.c1.porcelain_hound.v1,bline.c1.battle_request.0007,bline.c1.normal_result.0007,Win,false,6,1,DEV_ONLY_CADENCE / NOT_BALANCE_FINAL
+8,1-8,Settlement,bone_aspect_enemy_c1_01_shattered_host,bone_aspect.runtime.c1.shattered_host.v1,bline.c1.battle_request.0008,bline.c1.normal_result.0008,Win,false,7,1,HELD_BY_BA-D3 temporary substitute / NOT_CONTENT_FINAL
+9,1-9,Settlement,bone_aspect_enemy_c1_02_porcelain_hound,bone_aspect.runtime.c1.porcelain_hound.v1,bline.c1.battle_request.0009,bline.c1.normal_result.0009,Win,false,8,1,1-9 STOP / NO AUTOMATIC BOSS
+10,1-10,ChapterComplete,shougunu.phase1,bone_aspect_boss_c1_bone_guard,bline.c1.battle_request.0010,bline.c1.phase1_temporary_result.0010,Win,true,10,2,PHASE1_DEV_VERTICAL_SLICE;NOT_CONTENT_FINAL;NOT_FORMAL_BOSS_COMPLETION
+

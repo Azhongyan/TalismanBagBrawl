@@ -12,7 +12,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
     public static class BattleSandboxEnemyEncounterPreviewSceneBinder
     {
         public const string ManualMenuPath =
-            "Tools/Talisman Bag/V0.4/BuildSandbox/BattleSandboxEnemyEncounterPreview01/[Writes Scene][Manual Only] Bind Enemy Encounter Preview";
+            "Tools/Talisman Bag/Dev Only/V0.4/BuildSandbox/BattleSandboxEnemyEncounterPreview01/[Writes Scene][Manual Only] Bind Enemy Encounter Preview";
 
         private static readonly Color PanelColor = new(0.11f, 0.125f, 0.12f, 0.96f);
         private static readonly Color SlotColor = new(0.18f, 0.19f, 0.16f, 0.96f);

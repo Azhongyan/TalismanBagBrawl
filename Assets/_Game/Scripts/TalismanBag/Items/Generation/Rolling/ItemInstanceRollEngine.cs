@@ -38,10 +38,12 @@ namespace TalismanBag.Items.Generation.Rolling
             }
 
             if (!string.Equals(request.generationDataStatus,
-                ItemGenerationDataStatus.QaFixtureCanonical, StringComparison.Ordinal))
+                    ItemGenerationDataStatus.QaFixtureCanonical, StringComparison.Ordinal)
+                && !string.Equals(request.generationDataStatus,
+                    ItemGenerationDataStatus.PlaytestV1Canonical, StringComparison.Ordinal))
             {
                 return Failure(ItemInstanceRollValidationCodes.GenerationDataStatusInvalid,
-                    "This engine package accepts only QA_FIXTURE_ONLY / NOT_BALANCE_APPROVED / NOT_FORMAL_GENERATION_DATA input.");
+                    "Generation data status must be QA fixture data or the canonical PLAYTEST_V1 catalog.");
             }
 
             if (!IsIdentityValid(identity))
@@ -421,7 +423,7 @@ namespace TalismanBag.Items.Generation.Rolling
             if (rollProfile == null)
             {
                 Add(errors, ItemInstanceRollValidationCodes.BuildRollProfileMissing,
-                    "Higher rarity generation requires an explicit QA Build qualification roll profile.");
+                    "Higher rarity generation requires an explicit Build qualification roll profile.");
                 return ItemBuildQualification.Unresolved;
             }
 
@@ -437,8 +439,10 @@ namespace TalismanBag.Items.Generation.Rolling
                 .Where(entry => entry != null)
                 .ToArray();
             if (string.IsNullOrWhiteSpace(rollProfile.profileId)
-                || !string.Equals(rollProfile.dataMaturityKey,
-                    ItemGenerationDataStatus.QaFixtureOnly, StringComparison.Ordinal)
+                || (!string.Equals(rollProfile.dataMaturityKey,
+                        ItemGenerationDataStatus.QaFixtureOnly, StringComparison.Ordinal)
+                    && !string.Equals(rollProfile.dataMaturityKey,
+                        ItemGenerationDataStatus.PlaytestV1Canonical, StringComparison.Ordinal))
                 || rollProfile.Entries.Count == 0
                 || hasNullEntry
                 || nonNullEntries.GroupBy(entry => entry.qualification).Any(group => group.Count() > 1)

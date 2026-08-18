@@ -20,8 +20,6 @@ namespace TalismanBag.EditorTools.BuildSandbox
             "furnace_core_array",
             "thunder_fire_cross_array"
         };
-
-        [MenuItem(QaMenuPath)]
         public static void RunMenu()
         {
             Run(throwOnFailure: false);

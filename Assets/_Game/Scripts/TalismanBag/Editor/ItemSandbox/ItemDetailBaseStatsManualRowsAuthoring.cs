@@ -15,9 +15,9 @@ namespace TalismanBag.EditorTools.ItemSandbox
     internal static class ItemDetailBaseStatsManualRowsAuthoring
     {
         private const string MenuPath =
-            "TalismanBag/Item Sandbox/Migrate BaseStats To Manual Rows From Current Non-Play Layout (Once)";
+            "Tools/Talisman Bag/Dev Only/Item Sandbox/Migrate BaseStats To Manual Rows From Current Non-Play Layout (Once)";
         private const string ApplyGapMenuPath =
-            "TalismanBag/Item Sandbox/Set BaseStats Icon-To-Text Gap To 10 (Manual Only)";
+            "Tools/Talisman Bag/Dev Only/Item Sandbox/Set BaseStats Icon-To-Text Gap To 10 (Manual Only)";
         private const string ScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V04_ItemSandbox.unity";
         private const string PanelPath =
             "ItemSandboxCanvas/MobileSafeAreaRoot/ItemSandboxRoot/ItemDetailPanel";

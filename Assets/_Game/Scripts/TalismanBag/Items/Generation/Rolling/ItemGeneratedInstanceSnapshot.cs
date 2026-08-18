@@ -17,6 +17,7 @@ namespace TalismanBag.Items.Generation.Rolling
         public const string NotFormalGenerationData = "NOT_FORMAL_GENERATION_DATA";
         public const string QaFixtureCanonical =
             QaFixtureOnly + "|" + NotBalanceApproved + "|" + NotFormalGenerationData;
+        public const string PlaytestV1Canonical = "PLAYTEST_V1_CANONICAL";
     }
 
     public static class ItemInstanceRollValidationCodes
@@ -227,6 +228,7 @@ namespace TalismanBag.Items.Generation.Rolling
             ItemGeneratedCorePotentialSnapshot generatedCorePotential,
             ItemBuildQualification buildQualification)
         {
+            this.identity = identity ?? throw new ArgumentNullException(nameof(identity));
             schemaId = CurrentSchemaId;
             generationAlgorithmId = DeterministicItemRandom.AlgorithmId;
             this.generationDataStatus = generationDataStatus ?? string.Empty;
@@ -256,6 +258,7 @@ namespace TalismanBag.Items.Generation.Rolling
         }
 
         public string schemaId { get; }
+        public ItemInstanceIdentitySnapshot identity { get; }
         public string generationAlgorithmId { get; }
         public string generationDataStatus { get; }
         public string itemInstanceId { get; }

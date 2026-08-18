@@ -38,8 +38,6 @@ namespace TalismanBag.EditorTools.BuildSandbox
             "Reward",
             "Chapter"
         };
-
-        [MenuItem(QaMenuPath)]
         public static void RunMenu()
         {
             Run(throwOnFailure: false);

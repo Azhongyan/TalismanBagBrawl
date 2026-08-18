@@ -934,3 +934,16 @@ V0.4-DevEncounterSeedData01 已在 GuardFix01 后由 Guard 接受；离线与 Un
 E01-E10 数据、Contract、Schema、离线 Evaluator 与验证种子阶段已经收口完成；当前没有已释放的下一包。
 所有后置 Runtime、Battle、Item Adapter 与正式流程包继续冻结，未释放。
 ```
+
+## 十六、Shared Module Layering Queue Gate
+
+所有后续 Enemy Runtime、Enemy UI、BattleSandbox 与 Unified 接线包必须读取：
+
+```text
+Docs/V0.4/SHARED_MODULE_LAYERING_AND_PREFAB_PRESENTATION_GUARD.md
+```
+
+Enemy Prefab 只读 Enemy/Combat ViewModel；Enemy 状态只有一个 Runtime Owner；Enemy
+不得复制 Item/Build/供能真源。成熟 Enemy 视觉必须以 Base Prefab / Variant / Scene
+Slot复用，不得每个场景重画。任务若越层或缺少可见手测节点，Enemy Guard 必须暂停并
+向用户解释，不得仅返回技术枚举或哈希。

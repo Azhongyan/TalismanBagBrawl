@@ -19,8 +19,6 @@ namespace TalismanBag.V03.EditorTools
         public const string ScenePath =
             "Assets/_Game/Scenes/Scene_TalismanBag_V03_MainHome.unity";
 
-        private const string LegacyScenePath =
-            "Assets/_Game/Scenes/Scene_TalismanBag_V02_FormationCounter.unity";
         private const string PlayModeSessionKey =
             "TalismanBag.V03.MainHome.Fix02.PlayModeVerification";
         private const string PlayModeExitKey =
@@ -49,16 +47,12 @@ namespace TalismanBag.V03.EditorTools
             EditorApplication.update -= OnEditorUpdate;
             EditorApplication.update += OnEditorUpdate;
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/Fix02/[Writes Scene][Deprecated][Guard Only] Build Independent Main Home Scene")]
         public static void BuildSceneBatch()
         {
             if (!EditorUtility.DisplayDialog(
                     "[Writes Scene][Deprecated][Guard Only] Build Independent Main Home Scene",
                     "This deprecated Guard Only tool rebuilds and saves:\n" +
                     ScenePath + "\n\n" +
-                    "It can also open and modify legacy scene cleanup targets:\n" +
-                    LegacyScenePath + "\n\n" +
                     "Use in Edit Mode only after saving or backing up open work, with Guard or user confirmation.",
                     "Proceed",
                     "Cancel"))
@@ -122,7 +116,6 @@ namespace TalismanBag.V03.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            CleanupFix01LegacyScene();
             EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             VerifyStaticScene();
 
@@ -131,15 +124,11 @@ namespace TalismanBag.V03.EditorTools
                 "scene=Scene_TalismanBag_V03_MainHome, defaultActive=true, " +
                 "legacySceneDelivery=false");
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/Fix02/[QA Only] Verify Static Scene")]
         public static void VerifyStaticBatch()
         {
             EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             VerifyStaticScene();
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/Fix02/[Writes Scene][Manual Only] Repair Full Background Underlay")]
         public static void RepairFullBackgroundUnderlayBatch()
         {
             Require(!EditorApplication.isPlaying,
@@ -375,8 +364,6 @@ namespace TalismanBag.V03.EditorTools
                 "scene=Scene_TalismanBag_V03_MainHome, hierarchy=unique, " +
                 "defaultActive=true, missingScripts=0");
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/Fix02/[QA Only] Verify PlayMode First Frame")]
         public static void VerifyPlayModeBatch()
         {
             SessionState.SetBool(ForceEditorExitKey, false);
@@ -625,59 +612,6 @@ namespace TalismanBag.V03.EditorTools
             ScreenCapture.CaptureScreenshot(absolutePath);
             Debug.Log(
                 $"[V0.3-MainHomeScene01-Retry-Fix02] GAME_VIEW_CAPTURE_REQUESTED path={absolutePath}");
-        }
-
-        private static void CleanupFix01LegacyScene()
-        {
-            if (!File.Exists(LegacyScenePath))
-            {
-                return;
-            }
-
-            Scene legacyScene =
-                EditorSceneManager.OpenScene(LegacyScenePath, OpenSceneMode.Single);
-            MainHomeGreyboxPanel legacyPanel = Resources
-                .FindObjectsOfTypeAll<MainHomeGreyboxPanel>()
-                .FirstOrDefault(candidate =>
-                    candidate != null &&
-                    candidate.gameObject.scene == legacyScene &&
-                    candidate.gameObject.name == "MainHomeGreyboxPanel_Scene");
-
-            if (legacyPanel == null)
-            {
-                return;
-            }
-
-            foreach (MonoBehaviour behaviour in legacyScene
-                         .GetRootGameObjects()
-                         .SelectMany(root => root.GetComponentsInChildren<MonoBehaviour>(true)))
-            {
-                if (behaviour == null)
-                {
-                    continue;
-                }
-
-                SerializedObject serializedBehaviour = new(behaviour);
-                SerializedProperty homePanelProperty =
-                    serializedBehaviour.FindProperty("homeGreyboxPanel");
-                if (homePanelProperty?.objectReferenceValue != legacyPanel)
-                {
-                    continue;
-                }
-
-                homePanelProperty.objectReferenceValue = null;
-                serializedBehaviour.ApplyModifiedPropertiesWithoutUndo();
-                EditorUtility.SetDirty(behaviour);
-            }
-
-            UnityEngine.Object.DestroyImmediate(legacyPanel.gameObject);
-            EditorSceneManager.MarkSceneDirty(legacyScene);
-            Require(
-                EditorSceneManager.SaveScene(legacyScene),
-                "Could not save precise Fix01 cleanup in legacy scene.");
-            Debug.Log(
-                "[V0.3-MainHomeScene01-Retry-Fix02] FIX01_LEGACY_SCENE_CLEANED " +
-                "removed=MainHomeGreyboxPanel_Scene");
         }
 
         private static void EnsureProjectDirectories()

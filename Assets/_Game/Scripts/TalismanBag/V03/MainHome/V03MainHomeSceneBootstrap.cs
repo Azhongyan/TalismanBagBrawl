@@ -1,9 +1,8 @@
 using System.Collections.Generic;
+using TalismanBag.Navigation;
 using TalismanBag.V02.UI;
-using TalismanBag.V03.Forge;
 using TalismanBag.V03.Navigation;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace TalismanBag.V03.MainHome
@@ -33,7 +32,6 @@ namespace TalismanBag.V03.MainHome
             "灵石 0　符纸 0\n朱砂 0　初阶符胚 0\n修为 0";
         [SerializeField] private string status = "小店已开门，选择店内区域查看。";
 
-        private V03ForgeFirstUpgradeGuideController fallbackForgeGuide;
         private GameObject fallbackBottomNavRoot;
         private static Sprite homeFullBackgroundSprite;
 #if UNITY_EDITOR
@@ -126,53 +124,23 @@ namespace TalismanBag.V03.MainHome
                 OnTrialRequested,
                 null);
             EnsureFallbackBottomNav(true);
-            ResolveExistingForgeGuide()?.OnHomeShown();
         }
 
         private void OnRefineRequested()
         {
-            ResolveExistingForgeGuide()?.HideGuideSlot();
-            LoadScene(
-                V03NavigationFlowController.UpgradeScenePath,
-                V03NavigationFlowController.UpgradeSceneName,
-                $"[V0.3-MainHome] Upgrade scene is missing from Build Settings: {V03NavigationFlowController.UpgradeScenePath}");
+            TalismanSceneNavigationOwner.TryNavigateToUpgrade(
+                TalismanSceneRoute.MainHome,
+                this);
         }
 
         private void OnTrialRequested()
         {
-            V03ForgeFirstUpgradeGuideController guide = ResolveExistingForgeGuide();
-            if (guide != null && guide.ShouldBlockTrialUntilFirstUpgrade())
-            {
-                guide.ShowFirstUpgradeHomeGuide();
-                return;
-            }
-
-            guide?.HideGuideSlot();
-            LoadScene(
-                V03NavigationFlowController.TrialScenePath,
-                V03NavigationFlowController.TrialSceneName,
-                $"[V0.3-MainHome] Trial scene is missing from Build Settings: {V03NavigationFlowController.TrialScenePath}");
+            TalismanSceneNavigationOwner.TryNavigate(TalismanSceneRoute.WorldMap, this);
         }
 
-        private V03ForgeFirstUpgradeGuideController ResolveExistingForgeGuide()
+        private void OnExploreRequested()
         {
-            if (fallbackForgeGuide != null)
-            {
-                return fallbackForgeGuide;
-            }
-
-            fallbackForgeGuide = GetComponent<V03ForgeFirstUpgradeGuideController>();
-            if (fallbackForgeGuide == null)
-            {
-                Debug.LogWarning(
-                    "[V0.3-MainHomeRuntimeLock] Forge guide component is missing; " +
-                    "runtime component creation is disabled.",
-                    this);
-                return null;
-            }
-
-            fallbackForgeGuide.Initialize(null, homePanel, null);
-            return fallbackForgeGuide;
+            TalismanSceneNavigationOwner.TryNavigate(TalismanSceneRoute.WorldMap, this);
         }
 
         private void EnsureFallbackBottomNav(bool bindButtons)
@@ -269,12 +237,15 @@ namespace TalismanBag.V03.MainHome
                     OnRefineRequested,
                     OnTrialRequested,
                     null);
-                ResolveExistingForgeGuide()?.OnHomeShown();
             });
             CreateFallbackNavButton(rect, "BottomNavRefineButton", "养成", -BottomNavButtonStep, OnRefineRequested);
             CreateFallbackNavButton(rect, "BottomNavTrialButton", "试炼", 0f, OnTrialRequested);
-            CreateFallbackNavButton(rect, "BottomNavExploreButton", "探索", BottomNavButtonStep, () =>
-                Debug.Log("[V0.3-MainHome] Explore entry is reserved for a later package.", this));
+            CreateFallbackNavButton(
+                rect,
+                "BottomNavExploreButton",
+                "探索",
+                BottomNavButtonStep,
+                OnExploreRequested);
             CreateFallbackNavButton(rect, "BottomNavMoreButton", "更多", BottomNavButtonStep * 2f, () =>
                 Debug.Log("[V0.3-MainHome] More entry is reserved for a later package.", this));
 
@@ -333,12 +304,13 @@ namespace TalismanBag.V03.MainHome
                     OnRefineRequested,
                     OnTrialRequested,
                     null);
-                ResolveExistingForgeGuide()?.OnHomeShown();
             });
             BindFallbackNavButton(parent, "BottomNavRefineButton", OnRefineRequested);
             BindFallbackNavButton(parent, "BottomNavTrialButton", OnTrialRequested);
-            BindFallbackNavButton(parent, "BottomNavExploreButton", () =>
-                Debug.Log("[V0.3-MainHome] Explore entry is reserved for a later package.", this));
+            BindFallbackNavButton(
+                parent,
+                "BottomNavExploreButton",
+                OnExploreRequested);
             BindFallbackNavButton(parent, "BottomNavMoreButton", () =>
                 Debug.Log("[V0.3-MainHome] More entry is reserved for a later package.", this));
         }
@@ -730,15 +702,5 @@ namespace TalismanBag.V03.MainHome
             return homeFullBackgroundSprite;
         }
 
-        private void LoadScene(string scenePath, string sceneName, string missingSceneMessage)
-        {
-            if (SceneUtility.GetBuildIndexByScenePath(scenePath) < 0)
-            {
-                Debug.LogError(missingSceneMessage, this);
-                return;
-            }
-
-            SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
-        }
     }
 }

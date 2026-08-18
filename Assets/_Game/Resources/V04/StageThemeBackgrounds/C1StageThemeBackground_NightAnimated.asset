@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17fe7a8d68453e54c8142c57a1e623e3, type: 3}
+  m_Name: C1StageThemeBackground_NightAnimated
+  m_EditorClassIdentifier: 
+  profileId: campaign.normal.lv1.theme.bone_aspect.c1.night_animated
+  mode: 1
+  staticSprite: {fileID: 0}
+  sequenceFrames:
+  - {fileID: 21300000, guid: b382c817e9195e34b92e4429cbdabe55, type: 3}
+  - {fileID: 21300000, guid: 63b206e604011ca4f91fe5b79c654851, type: 3}
+  - {fileID: 21300000, guid: 2e695b29119c1c143b7e33765bdbdb7b, type: 3}
+  - {fileID: 21300000, guid: fdc653e7e4a8bd94b99a243ff16f8fd5, type: 3}
+  - {fileID: 21300000, guid: 000255c3260ff2c4986786db7af2aa49, type: 3}
+  - {fileID: 21300000, guid: 473a63c3efcc6e542868b84a3f833e70, type: 3}
+  - {fileID: 21300000, guid: 7af6ab771eba53a498ff28b7cac178f7, type: 3}
+  - {fileID: 21300000, guid: aaa1dacbef32ca64381f2451eb218e61, type: 3}
+  - {fileID: 21300000, guid: bff9c507bc6dc454da2e1ca7382cc19e, type: 3}
+  - {fileID: 21300000, guid: 732202a1a0bf3c94a87c58003ce1225a, type: 3}
+  - {fileID: 21300000, guid: 6d8d2eb50f699864180d38e262dd8953, type: 3}
+  framesPerSecond: 10
+  loopFrameOneHoldSeconds: 5

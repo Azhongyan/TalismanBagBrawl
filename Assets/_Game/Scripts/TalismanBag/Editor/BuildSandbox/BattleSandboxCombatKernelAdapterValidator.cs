@@ -26,8 +26,6 @@ namespace TalismanBag.EditorTools.BuildSandbox
             "statusTick",
             "adapterIsolation"
         };
-
-        [MenuItem(QaMenuPath)]
         public static void RunMenu()
         {
             BattleSandboxCombatKernelAdapterPreview preview = BuildDefaultPreview();

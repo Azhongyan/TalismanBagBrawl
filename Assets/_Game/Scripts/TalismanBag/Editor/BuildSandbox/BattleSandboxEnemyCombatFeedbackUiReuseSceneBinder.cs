@@ -12,7 +12,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
     public static class BattleSandboxEnemyCombatFeedbackUiReuseSceneBinder
     {
         public const string ManualMenuPath =
-            "Tools/Talisman Bag/V0.4/BuildSandbox/BattleSandboxEnemyCombatFeedbackUiReuse01/[Writes Scene][Manual Only] Bind Combat Feedback UI";
+            "Tools/Talisman Bag/Dev Only/V0.4/BuildSandbox/BattleSandboxEnemyCombatFeedbackUiReuse01/[Writes Scene][Manual Only] Bind Combat Feedback UI";
 
         private static readonly Color PanelColor = new(0.09f, 0.105f, 0.105f, 0.95f);
         private static readonly Color SlotColor = new(0.14f, 0.155f, 0.15f, 0.96f);

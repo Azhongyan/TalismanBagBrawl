@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TalismanBag.V02.CoreLoop.MainTrial;
 using TalismanBag.V02.CoreLoop.Resources;
 using TalismanBag.V02.CoreLoop.Upgrades;
 using TalismanBag.V03.Forge;
@@ -43,8 +42,6 @@ namespace TalismanBag.V03.EditorTools
             "BottomNav_Explore",
             "BottomNav_More"
         };
-
-        [MenuItem("Tools/Talisman Bag/V0.3/ForgeFirstUpgradeGuide01/[Writes Scene][Guard Only] Build Upgrade Scene")]
         public static void BuildSceneBatch()
         {
             if (!ConfirmSceneWrite(
@@ -73,23 +70,17 @@ namespace TalismanBag.V03.EditorTools
 
             Debug.Log("[V0.3-ForgeFirstUpgradeGuide01] UPGRADE_SCENE_BUILD_SUCCESS");
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/ForgeFirstUpgradeGuide01/[QA Only] Verify Upgrade Scene")]
         public static void VerifyStaticBatch()
         {
             EditorSceneManager.OpenScene(V03NavigationFlowController.UpgradeScenePath, OpenSceneMode.Single);
             VerifyStaticScene();
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/DevelopUpgradePage01-SlotAuthoring01/[QA Only] Verify Upgrade Slot Contract")]
         public static void VerifyUpgradeSlotContractBatch()
         {
             EditorSceneManager.OpenScene(V03NavigationFlowController.UpgradeScenePath, OpenSceneMode.Single);
             VerifyStaticScene();
             Debug.Log("[V0.3-DevelopUpgradePage01-SlotAuthoring01] UPGRADE_SLOT_CONTRACT_VERIFY_SUCCESS");
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/ForgeFirstUpgradeGuide01/[Writes Scene][Guard Only] Rebuild Editable Upgrade Preview")]
         public static void RebuildEditablePreviewInOpenScene()
         {
             if (!ConfirmSceneWrite(
@@ -113,8 +104,6 @@ namespace TalismanBag.V03.EditorTools
             Require(EditorSceneManager.SaveScene(scene), "Could not save editable upgrade scene preview.");
             Debug.Log("[V0.3-ForgeFirstUpgradeGuide01] UPGRADE_EDITABLE_PREVIEW_REBUILD_SUCCESS");
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/ForgeFirstUpgradeGuide01/[Writes Scene][Guard Only] Bind Upgrade Runtime Lock Services")]
         public static void BindRuntimeLockServicesBatch()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
@@ -131,7 +120,6 @@ namespace TalismanBag.V03.EditorTools
                     "This writes scene nodes if missing:\n" +
                     "- V03Upgrade_ResourceService\n" +
                     "- V03Upgrade_UpgradeService\n" +
-                    "- V03Upgrade_MainTrialFlowService\n" +
                     "- EventSystem\n\n" +
                     "Target scene:\n" + V03NavigationFlowController.UpgradeScenePath + "\n\n" +
                     "Run only with Guard or user confirmation, after saving or backing up open work.\n" +
@@ -151,7 +139,6 @@ namespace TalismanBag.V03.EditorTools
 
             _ = EnsureSceneService<ResourceService>(root.transform, "V03Upgrade_ResourceService");
             _ = EnsureSceneService<UpgradeService>(root.transform, "V03Upgrade_UpgradeService");
-            _ = EnsureSceneService<MainTrialFlowService>(root.transform, "V03Upgrade_MainTrialFlowService");
             _ = EnsureEventSystem(root.transform);
 
             EditorSceneManager.MarkSceneDirty(scene);
@@ -159,8 +146,6 @@ namespace TalismanBag.V03.EditorTools
             AssetDatabase.SaveAssets();
             Debug.Log("[V0.3-BootGuideUpgradeRuntimeLock01] UPGRADE_RUNTIME_LOCK_SCENE_NODES_BOUND");
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/ForgeFirstUpgradeGuide01/[Writes Scene][Guard Only] Bind Upgrade Runtime Lock Services", true)]
         private static bool CanBindRuntimeLockServicesBatch()
         {
             return !EditorApplication.isPlayingOrWillChangePlaymode;
@@ -190,9 +175,6 @@ namespace TalismanBag.V03.EditorTools
             Require(
                 UnityEngine.Object.FindObjectOfType<UpgradeService>(true) != null,
                 "Upgrade scene must contain a scene-authored UpgradeService.");
-            Require(
-                UnityEngine.Object.FindObjectOfType<MainTrialFlowService>(true) != null,
-                "Upgrade scene must contain a scene-authored MainTrialFlowService.");
             Require(
                 UnityEngine.Object.FindObjectOfType<EventSystem>(true) != null,
                 "Upgrade scene must contain a scene-authored EventSystem.");
@@ -495,54 +477,43 @@ namespace TalismanBag.V03.EditorTools
 
         private static void AppendBuildSettingsScenes()
         {
-            EditorBuildSettingsScene[] current = EditorBuildSettings.scenes;
-            string[] paths = current.Select(scene => scene.path).ToArray();
-            string[] expected =
+            List<EditorBuildSettingsScene> scenes = EditorBuildSettings.scenes.ToList();
+            foreach (string path in GetRequiredBuildScenePaths())
             {
-                V03NavigationFlow01SceneBuilder.BootEntryScenePath,
-                V03NavigationFlow01SceneBuilder.MainHomeScenePath,
-                V03NavigationFlowController.UpgradeScenePath,
-                V03NavigationFlowController.TrialScenePath
-            };
-            if (paths.SequenceEqual(expected))
-            {
-                return;
+                int index = scenes.FindIndex(scene => scene.path == path);
+                if (index < 0)
+                {
+                    scenes.Add(new EditorBuildSettingsScene(path, true));
+                    continue;
+                }
+
+                scenes[index] = new EditorBuildSettingsScene(path, true);
             }
 
-            string[] missingUpgradeOnly =
-            {
-                V03NavigationFlow01SceneBuilder.BootEntryScenePath,
-                V03NavigationFlow01SceneBuilder.MainHomeScenePath,
-                V03NavigationFlowController.TrialScenePath
-            };
-            Require(
-                paths.SequenceEqual(missingUpgradeOnly),
-                "Build Settings contains an unexpected scene list; refusing to reorder or overwrite it.");
-
-            EditorBuildSettings.scenes = new[]
-            {
-                current[0],
-                current[1],
-                new EditorBuildSettingsScene(V03NavigationFlowController.UpgradeScenePath, true),
-                current[2]
-            };
+            EditorBuildSettings.scenes = scenes.ToArray();
         }
 
         private static void VerifyBuildSettings()
         {
-            string[] expected =
+            string[] required = GetRequiredBuildScenePaths();
+            EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
+            Require(required.All(path =>
+                    scenes.Any(scene => scene.path == path && scene.enabled)),
+                "A required player-route scene is missing or disabled in Build Settings.");
+            Require(required.All(path => scenes.Count(scene => scene.path == path) == 1),
+                "Required player-route scenes must not be duplicated.");
+        }
+
+        private static string[] GetRequiredBuildScenePaths()
+        {
+            return new[]
             {
                 V03NavigationFlow01SceneBuilder.BootEntryScenePath,
                 V03NavigationFlow01SceneBuilder.MainHomeScenePath,
+                TalismanBag.Navigation.TalismanSceneNavigationOwner.WorldMapScenePath,
                 V03NavigationFlowController.UpgradeScenePath,
-                V03NavigationFlowController.TrialScenePath
+                TalismanBag.Navigation.TalismanSceneNavigationOwner.UnifiedBattleScenePath
             };
-            Require(
-                EditorBuildSettings.scenes.Select(scene => scene.path).SequenceEqual(expected),
-                "Build Settings order does not match the ForgeFirstUpgradeGuide01 contract.");
-            Require(
-                EditorBuildSettings.scenes.All(scene => scene.enabled),
-                "All ForgeFirstUpgradeGuide01 Build Settings scenes must remain enabled.");
         }
 
         private static void Require(bool condition, string message)

@@ -346,7 +346,6 @@ namespace TalismanBag.BuildSandbox
                 AllowEditModeLayoutObjectPersistence(layer.gameObject);
             }
 
-            layer.SetAsFirstSibling();
             layer.anchorMin = new Vector2(0f, 1f);
             layer.anchorMax = new Vector2(0f, 1f);
             layer.pivot = new Vector2(0f, 1f);

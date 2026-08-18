@@ -1,2 +1,0 @@
-statId,displayName,unitKey,direction,decimalPlaces,stepUnits,roundingMode,dataMaturity,usageStatus,notes
-qa_damage_example,QA Damage Example,flat,HigherIsBetter,0,1,Nearest,SEED_DATA,QA_SEED_ONLY,NOT_BALANCE_APPROVED; NOT_FORMAL_GENERATION_DATA

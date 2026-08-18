@@ -15,8 +15,6 @@ namespace TalismanBag.EditorTools.BuildSandbox
         public const string PackageName = FormationEnergyContractPreview.PackageName;
         public const string QaMenuPath =
             "Tools/Talisman Bag/V0.4/BuildSandbox/FormationEnergyContract01/[QA Only] Run Formation Energy Contract";
-
-        [MenuItem(QaMenuPath)]
         public static void RunMenu()
         {
             Run(throwOnFailure: false);

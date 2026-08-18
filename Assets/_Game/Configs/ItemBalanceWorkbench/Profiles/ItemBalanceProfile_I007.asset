@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94ed01388841f6e42bf279e5a56d4498, type: 3}
   m_Name: ItemBalanceProfile_I007
   m_EditorClassIdentifier: 
-  balanceDataRevision: ITEM_COMPLETE_CANDIDATE_CONTENT_WORKBENCH01_R1
+  balanceDataRevision: ITEM_FOUR_CORE_CANDIDATE_DATA_CORRECTION01_R1
   baseItemId: I007
   displayName: "\u79BB\u706B\u7B26"
   faMenTag: lihuo
@@ -77,26 +77,46 @@ MonoBehaviour:
       displayName: "\u71C3\u7B26"
       description: "\u70B9\u4EAE\u540E\u9996\u6B21\u547D\u4E2D\u9644\u52A0\u4E00\u5C42\u4F59\u7130\uFF0C\u4F59\u7130\u5728\u4E0B\u56DE\u5408\u7ED3\u7B97\u3002"
       effectCategory: 2
-      triggerEventId: on_first_hit
+      triggerEventId: on_action_commit
       conditionId: is_lit
       targetSelector: effect_primary_target
       targetStatId: burn
       operation: 0
       valueUnitKey: stack
       valueUnits: 1
-      secondaryValueUnits: 1
-      durationUnits: 1
-      stackLimit: 1
+      secondaryValueUnits: 0
+      durationUnits: 5000
+      stackLimit: 3
       internalCooldownUnits: 1
-      parameterProfileId: i007_signature
+      statusKey: afterglow
+      statusFamilyKey: PERIODIC_DAMAGE
+      lifetimePolicy: TIMED
+      reapplyPolicy: ADD_STACK_AND_REFRESH
+      timeUnitKey: MILLISECOND
+      firstTickDelayUnits: 1000
+      tickIntervalUnits: 1000
+      tickSchedulePolicy: PRESERVE_ON_REFRESH
+      tickDamageFormulaId: SOURCE_RESOLVED_DAMAGE_RATIO_BASIS_POINTS
+      tickDamageValueUnits: 0
+      tickDamageRatioBasisPoints: 1000
+      canCrit: 0
+      countsAsHit: 0
+      autoConsumeAtMaxStack: 0
+      consumeRule: NO_AUTO_CONSUME
+      expireRule: REMOVE_ENTIRE_STATUS
+      cleanseRule: REMOVE_ENTIRE_STATUS
+      parameterProfileId: I007_STATUS_PLAYTEST_V1
       mutexGroupId: SIGNATURE_I007
       effectTags:
       - TriggeredEffect
       - AddFlat
-      - DEV_ONLY
-      dataMaturity: BALANCE_CANDIDATE
-      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
-        executor.
+      - Debuff
+      - Fire
+      - Cleanseable
+      - PLAYTEST_V1
+      dataMaturity: PLAYTEST_V1
+      designNote: I007_STATUS_PLAYTEST_V1 / Canonical status data; Battle uses the generic
+        Status operation path.
     rarityRanges:
     - rarity: 0
       minUnits: 1
@@ -128,6 +148,10 @@ MonoBehaviour:
     qiLeiDisplayName: "\u7B26"
     shapeDescription: "shape_single_1 \xB7 1\u683C \xB7 \u6838\u5FC3\u683C(0,0)"
     iconKey: i007_placeholder
+    presentationState: 1
+    effectFamilyKey: DIRECT_TEMPO
+    presentationStyleKey: presentation.c1.campaign.item.i007.white.v1
+    cueIdentity: cue.c1.campaign.direct_tempo.i007
     dataMaturity: BALANCE_CANDIDATE
   coreCandidates:
   - coreEffectId: candidate_core_i007_01
@@ -231,42 +255,6 @@ MonoBehaviour:
       effectTags:
       - CoreEffect
       - AddPercent
-      - DEV_ONLY
-      dataMaturity: BALANCE_CANDIDATE
-      designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
-        executor.
-    stateDescription: "\u54C1\u9636\u6EE1\u8DB3\u540E\u53EF\u89C1\uFF1B\u517B\u6210\u89E3\u9501\u4E14\u5B9E\u4F8B\u70B9\u4EAE\u65F6\u624D\u53EF\u6FC0\u6D3B\u3002"
-    dataMaturity: BALANCE_CANDIDATE
-    designNote: "\u540C\u539F\u578B\u4E94\u5C42\u9012\u8FDB\u5019\u9009\u6838\u5FC3\u3002"
-  - coreEffectId: candidate_core_i007_04
-    displayName: "\u79BB\u706B\u7B26\xB7\u8F6C\u673A"
-    description: "\u201C\u71C3\u7B26\u201D\u6EE1\u8DB3\u5173\u952E\u6761\u4EF6\u540E\u989D\u5916\u89E6\u53D1\u4E00\u6B21\uFF0C\u4F46\u53D7\u72EC\u7ACB\u51B7\u5374\u9650\u5236\u3002"
-    isUltimate: 0
-    nodeKind: Core4
-    unlockLevel: 40
-    requiredRarity: 3
-    effectType: CoreEffect
-    effectPayload:
-      effectId: candidate_core_i007_04
-      displayName: "\u79BB\u706B\u7B26\xB7\u8F6C\u673A"
-      description: "\u201C\u71C3\u7B26\u201D\u6EE1\u8DB3\u5173\u952E\u6761\u4EF6\u540E\u989D\u5916\u89E6\u53D1\u4E00\u6B21\uFF0C\u4F46\u53D7\u72EC\u7ACB\u51B7\u5374\u9650\u5236\u3002"
-      effectCategory: 7
-      triggerEventId: on_first_hit
-      conditionId: is_lit
-      targetSelector: effect_primary_target
-      targetStatId: burn
-      operation: 7
-      valueUnitKey: stack
-      valueUnits: 4
-      secondaryValueUnits: 1
-      durationUnits: 1
-      stackLimit: 1
-      internalCooldownUnits: 1
-      parameterProfileId: i007_core_4
-      mutexGroupId: CORE_I007
-      effectTags:
-      - CoreEffect
-      - ExtraTrigger
       - DEV_ONLY
       dataMaturity: BALANCE_CANDIDATE
       designNote: BALANCE_CANDIDATE / sandbox formatter payload; no formal battle
@@ -410,12 +398,10 @@ MonoBehaviour:
     - candidate_core_i007_01
     - candidate_core_i007_02
     - candidate_core_i007_03
-    - candidate_core_i007_04
     visibleCoreEffectIds:
     - candidate_core_i007_01
     - candidate_core_i007_02
     - candidate_core_i007_03
-    - candidate_core_i007_04
     candidateItemPower: 93
     candidateItemPowerOverridden: 0
     candidateDisplaySummary: "\u79BB\u706B\u7B26 \xB7 \u7384\u54C1 \xB7 \u7269\u54C1\u5F3A\u5EA6\uFF08\u5019\u9009\uFF0993"
@@ -440,13 +426,11 @@ MonoBehaviour:
     - candidate_core_i007_01
     - candidate_core_i007_02
     - candidate_core_i007_03
-    - candidate_core_i007_04
     - candidate_core_i007_ultimate
     visibleCoreEffectIds:
     - candidate_core_i007_01
     - candidate_core_i007_02
     - candidate_core_i007_03
-    - candidate_core_i007_04
     - candidate_core_i007_ultimate
     candidateItemPower: 111
     candidateItemPowerOverridden: 0

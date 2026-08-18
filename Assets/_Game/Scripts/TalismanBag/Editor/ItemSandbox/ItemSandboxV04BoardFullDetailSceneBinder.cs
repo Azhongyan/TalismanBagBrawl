@@ -16,7 +16,7 @@ namespace TalismanBag.ItemSandbox.Editor
     {
         public const string ScenePath = "Assets/_Game/Scenes/Scene_TalismanBag_V04_ItemSandbox.unity";
 
-        [MenuItem("Tools/TalismanBag/V0.4 ItemSandbox/[Writes Scene][Manual Only] Bind Board Full Detail Adapter")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4 ItemSandbox/[Writes Scene][Manual Only] Bind Board Full Detail Adapter")]
         public static void BindMenu()
         {
             BindBatch();

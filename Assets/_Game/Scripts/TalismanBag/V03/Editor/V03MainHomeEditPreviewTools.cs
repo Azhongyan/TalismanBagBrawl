@@ -11,7 +11,6 @@ namespace TalismanBag.V03.EditorTools
 {
     public static class V03MainHomeEditPreviewTools
     {
-        [MenuItem("Tools/Talisman Bag/V0.3/MainHome/[Writes Scene][Manual Only] Refresh Edit Preview (No Play)")]
         public static void RefreshEditPreview()
         {
             if (!EditorUtility.DisplayDialog(

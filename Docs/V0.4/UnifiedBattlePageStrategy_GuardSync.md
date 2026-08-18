@@ -857,3 +857,30 @@ V0.4 提供新战斗体验和 Build 数据。
 BattleContract 定义两者怎么说话。
 Unified BattlePage 承接最终正式战斗页。
 ```
+
+## 12. Shared Prefab Composition 与四层架构
+
+Unified BattlePage 后续必须同时遵守：
+
+```text
+Docs/V0.4/SHARED_MODULE_LAYERING_AND_PREFAB_PRESENTATION_GUARD.md
+```
+
+Unified BattlePage 是 Composition Root，不是第三套 Item、Enemy、Board 或 Combat
+实现。它只负责 Scene Slot、Provider、Coordinator 与共享 Prefab 的组合：
+
+```text
+Item/Enemy/Stage静态事实 → Data
+当前棋盘/HP/Boss/流程 → 唯一 State Owner
+Shared Base Prefab / Variant → 只读 Presentation
+Coordinator / Presenter / Adapter → Communication
+```
+
+ItemSandbox、BattleSandbox、EnemySandbox 与 Unified 必须复用同一批共享视觉 Prefab，
+只允许使用不同 Provider 和 Scene Slot。桥接页应尽早建立可玩的 Composition Shell，
+每接入一个真实纵向切片就交给用户手测，不得等待所有后台系统完成后才第一次组装。
+
+Unified 接入验收不得只证明各模块独立 PASS。每个玩家可见字段必须提供从真实 Data、
+State Owner、Snapshot、Projection、ViewModel到共享Prefab节点的 Field Lineage，并分别
+声明 `COMPONENT_FIXTURE_PASS / REAL_RUNTIME_PATH_PASS / USER_HANDTEST_PASS`。任何一项
+未通过，该字段不得计入 Unified Ready。

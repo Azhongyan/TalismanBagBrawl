@@ -226,3 +226,27 @@ V0.4-BuildGridInteractionPreview01-UIReuseCorrection01
 ```
 
 该纠偏包完成前，不得把 V0.4 沙盒 UI 推进为正式 UI 真源。
+
+## 9. Shared Prefab 规则对“复制皮”的修订
+
+本节依据：
+
+```text
+Docs/V0.4/SHARED_MODULE_LAYERING_AND_PREFAB_PRESENTATION_GUARD.md
+```
+
+第 3.1 节“复制皮，换内核”只允许作为短期、可删除、不得继续投入正式美术的逻辑验证
+手段，不再允许作为长期复用策略。一个视觉组块一旦经过用户手调并验收，应立即转为
+Base Prefab；其他 Sandbox 与 Unified 页面必须引用该 Prefab 或薄 Variant。
+
+禁止：
+
+```text
+复制成熟 hierarchy 后在多个 Scene 分别精修
+把 Scene Copy 继续当成共享视觉模块
+依靠 Runtime 补字体、图标和字段来维持多个独立副本
+没有 Prefab 退场计划的临时视觉复制
+```
+
+Item Detail 当前确认：ItemSandbox 已验收视觉作为 Prefab 化来源；Revision09-Rev03
+完成共享 View 兼容修复后，不得继续在 ItemSandbox 与 BattleSandbox 分别修同一组表现。

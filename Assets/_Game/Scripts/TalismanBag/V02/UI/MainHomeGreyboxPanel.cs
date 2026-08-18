@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using TalismanBag.V02.CoreLoop.Save;
+using TalismanBag.V04.WorldMap;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -778,70 +778,24 @@ namespace TalismanBag.V02.UI
 
         private static string BuildCurrentObjective()
         {
-            MainTrialProgressData progress = GetProgress();
-            return progress.mainTrialPhase switch
-            {
-                MainTrialPhase.NotStarted =>
-                    "师父留下的委托还没处理完，先去试炼看看。",
-                MainTrialPhase.Chapter1InProgress =>
-                    "青石坡今晚不太太平，继续处理试炼异象。",
-                MainTrialPhase.Chapter1BossCleared or
-                MainTrialPhase.Chapter1RewardClaimed or
-                MainTrialPhase.FirstUpgradeRequired =>
-                    "符箓已可培养，去底栏【养成】打开符桌。",
-                MainTrialPhase.FirstUpgradeDone =>
-                    "阵势稳了些，可以继续前往下一段试炼。",
-                MainTrialPhase.Chapter2InProgress =>
-                    "继续巡行，清理青石坡周边异象。",
-                MainTrialPhase.Chapter2BossReady =>
-                    "前方煞气聚阵，整备后再攻打。",
-                MainTrialPhase.Chapter2BossInProgress =>
-                    "煞气尚未平息，继续处理当前试炼。",
-                MainTrialPhase.Chapter2Cleared or
-                MainTrialPhase.CoreLoopComplete =>
-                    "今日试炼暂告一段落，回小店整理收获。",
-                _ =>
-                    "先在小店看看，再决定下一步。"
-            };
+            int completedCount = LoadCompletion().completedStageIds.Count;
+            return completedCount >= 5
+                ? "第一章路线已完成，可以前往世界地图重玩已通关关卡。"
+                : "前往世界地图，继续挑战第一章正式关卡。";
         }
 
         private static string BuildProgressSummary()
         {
-            MainTrialProgressData progress = GetProgress();
-            string roundId = !string.IsNullOrWhiteSpace(progress.currentRoundId)
-                ? progress.currentRoundId.Trim()
-                : progress.currentMainTrialLevelId?.Trim();
-            if (string.IsNullOrWhiteSpace(roundId))
-            {
-                roundId = progress.mainTrialPhase == MainTrialPhase.NotStarted ? "尚未开始" : "待确认";
-            }
-
-            return $"当前：{roundId}\n阶段：{GetPhaseLabel(progress.mainTrialPhase)}";
+            int completedCount = LoadCompletion().completedStageIds.Count;
+            string nextStage = completedCount >= 5
+                ? "第一章已完成"
+                : $"下一关：1-{completedCount + 1}";
+            return $"已通关：{completedCount}/5\n{nextStage}";
         }
 
-        private static MainTrialProgressData GetProgress()
+        private static V04CampaignStageCompletionSnapshot LoadCompletion()
         {
-            SaveData saveData = SaveService.GetOrCreate().EnsureLoaded();
-            return saveData.mainTrialProgressData ?? new MainTrialProgressData();
-        }
-
-        private static string GetPhaseLabel(MainTrialPhase phase)
-        {
-            return phase switch
-            {
-                MainTrialPhase.NotStarted => "委托待处理",
-                MainTrialPhase.Chapter1InProgress => "第一段试炼",
-                MainTrialPhase.Chapter1BossCleared => "首领结算",
-                MainTrialPhase.Chapter1RewardClaimed => "等待培养",
-                MainTrialPhase.FirstUpgradeRequired => "需要养成",
-                MainTrialPhase.FirstUpgradeDone => "准备继续",
-                MainTrialPhase.Chapter2InProgress => "青石坡巡行",
-                MainTrialPhase.Chapter2BossReady => "首领前整备",
-                MainTrialPhase.Chapter2BossInProgress => "首领战",
-                MainTrialPhase.Chapter2Cleared => "首领结算",
-                MainTrialPhase.CoreLoopComplete => "今日收束",
-                _ => "状态待确认"
-            };
+            return new V04CampaignStageCompletionRepository().Load();
         }
 
         private static string FormatResourceSummary(string resources)

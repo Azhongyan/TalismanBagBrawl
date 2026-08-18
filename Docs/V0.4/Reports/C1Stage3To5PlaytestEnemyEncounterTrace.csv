@@ -1,0 +1,7 @@
+stageId,encounterVariantId,itemPercentile,directPulse,everyMilliseconds,encounterHp,timeToKillMilliseconds,enemyBasicHits,boneSwapReturns,finalPlayerHp,sameTickOrder,animationCompletionControlsGameplay,simulationCanonicalSignature
+1-3,campaign.normal.lv1.encounter.c1.1-3.playtest.v1,P50,82,2000,1700,42000,9,0,37,PLAYER_THEN_ENEMY,false,15c217bbdcf76b5481c8a20ff25a282f7999fcd2e69570c16fcd9a2787cdd44b
+1-3,campaign.normal.lv1.encounter.c1.1-3.playtest.v1,P90,110,2000,1700,32000,7,0,51,PLAYER_THEN_ENEMY,false,250ac20b3351b547ea9f66f26785b9486360847f12a5923f9f2f843376c227e7
+1-4,campaign.normal.lv1.encounter.c1.1-4.playtest.v1,P50,82,2000,1650,42000,9,2,23,PLAYER_THEN_ENEMY,false,69e6ada9b52052a2e1a5365f8acfec25f1089d1c7afebab586ab98275ec3286d
+1-4,campaign.normal.lv1.encounter.c1.1-4.playtest.v1,P90,110,2000,1650,30000,6,2,44,PLAYER_THEN_ENEMY,false,30f9e8204cad78aac349dc1a1a9cc03679d3d10405fa5c977a64cc21a332a1d1
+1-5,campaign.normal.lv1.encounter.c1.1-5.playtest.v1,P50,82,2000,1800,44000,9,3,16,PLAYER_THEN_ENEMY,false,65f5ea2393d9b702af9ff77e03381abf44c58346af110463d54d24f338e4d6cf
+1-5,campaign.normal.lv1.encounter.c1.1-5.playtest.v1,P90,110,2000,1800,34000,7,2,37,PLAYER_THEN_ENEMY,false,dbd91019311dfe520566e7cb1cfad133dbe2f1e4a9029b49ff191d519b5d5f7e

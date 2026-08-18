@@ -2,6 +2,26 @@
 
 本文件是本仓库所有 Codex 会话的强制入口。适用于从仓库根目录及其任意子目录启动的新窗口、新线程、分叉线程和后续版本开发窗口。
 
+## 0. Engineering Process V2 已生效
+
+`Docs/LOCKED/ENGINEERING_PROCESS_V2_LOCK.md` 自 `2026-07-30` 起覆盖本文件中与它冲突的旧流程机械规则，尤其包括：
+
+- 全量读取所有 LOCKED、旧 V0.3 CURRENT 与旧 Package Queue 的统一前置要求；
+- 多 Guard 往返确认、旧角色链路和开发中的普通状态打断；
+- 对所有任务统一要求 Unity batch、大量自制报告或多窗口重复验收；
+- 把历史记录误当成当前包、当前版本或当前工程事实。
+
+V2 不解除产品边界、系统 Owner、场景真源、存档、奖励、正式流程、用户手调 UI、Git 和受保护文件规则。遇到产品规则冲突时，仍按更具体的任务相关锁执行。
+
+每个新任务的最小入口只有：
+
+1. 本文件；
+2. `Docs/LOCKED/ENGINEERING_PROCESS_V2_LOCK.md`；
+3. `Docs/CURRENT/PROJECT_ENGINEERING_STATE_V2.md`；
+4. 当前任务的 Task Contract / Assignment（若存在）。
+
+之后只读取 Task Contract 列出的任务相关锁、代码和数据。没有 Task Contract 的任务先做最小只读定位，再按 `Docs/TEMPLATES/TASK_CONTRACT_V2.md` 冻结边界。
+
 ## 1. 工程身份与路径
 
 - 游戏：《符箓背包》
@@ -14,63 +34,42 @@
   - `Packages`
 - 找不到上述真实根目录或三个 Unity 标识时，立即停止，不得猜测路径，不得在 C 盘或其他目录新建工程文件。
 
-## 2. 每个新窗口的强制学习流程
+## 2. 每个新窗口的 V2 学习流程
 
-Codex 接到任务后的第一件事是任务入场审查，不是写代码。
+Codex 接到任务后先确认真实工程与任务边界，但不再把全部历史文档塞入每个窗口。
 
-每个会话在分析、规划、编辑或运行工程命令前，必须完整读取以下文件：
+固定读取：
 
-1. `Docs/LOCKED/PROJECT_DIRECTION_LOCK.md`
-2. `Docs/LOCKED/STABLE_BASELINE_LOCK.md`
-3. `Docs/LOCKED/CURRENT_VERSION_SCOPE_LOCK.md`
-4. `Docs/LOCKED/CORE_INVARIANTS.md`
-5. `Docs/LOCKED/DO_NOT_TOUCH.md`
-6. `Docs/LOCKED/PAGE_FLOW_LOCK.md`
-7. `Docs/LOCKED/RISK_LEVEL_RULE.md`
-8. `Docs/LOCKED/GOLDEN_PATH_QA.md`
-9. `Docs/LOCKED/CODEX_PREFLIGHT_CHECK.md`
-10. `Docs/LOCKED/MEMORY_FILE_APPROVAL_RULE.md`
-11. `Docs/LOCKED/CODEX_VERSION_PIPELINE_LOCK.md`
-12. `Docs/LOCKED/CODEX_ROLE_WINDOW_REGISTRY.md`
-13. `Docs/LOCKED/DELIVERY_ACCEPTANCE_GATE.md`
-14. `Docs/LOCKED/CROSS_SYSTEM_EXECUTOR_PROTOCOL.md`
-15. `Docs/LOCKED/BUILD_SANDBOX_BOUNDARY_LOCK.md`
+1. `AGENTS.md`
+2. `Docs/LOCKED/ENGINEERING_PROCESS_V2_LOCK.md`
+3. `Docs/CURRENT/PROJECT_ENGINEERING_STATE_V2.md`
+4. 当前 Task Contract / Assignment
 
-若当前版本存在 ROADMAP / CURRENT / Package Queue，还必须读取：
+按需读取：
 
-```text
-Docs/ROADMAP/VERSION_ROADMAP.md
-Docs/CURRENT/V0.3_PRODUCT_FLOW01.md
-Docs/V0.3/V0.3_PACKAGE_QUEUE.md
-```
+- Task Contract 的 `Required Locks / Sources`；
+- 目标文件及直接依赖；
+- 与写入白名单真实重叠的历史锁或报告；
+- 当前用户明确引用的需求和素材。
 
-若任务属于 Build / 词条 / 羁绊 / 多格占位 / 验证池后台沙盒线，还必须读取：
-
-```text
-Docs/ROADMAP/V0.4_BUILD_SYNERGY_ROADMAP.md
-Docs/V0.4/BUILD_PACKAGE_QUEUE.md
-```
-
-ROADMAP / CURRENT 定义当前版本总蓝图；Package Queue 用于判断当前包、上一包验收状态和下一包。默认采用 Light Guard + RepoOps 模式：用户在 GPT / 外部策划流程拆包，Guard 收口边界和队列，任务窗口开发并自测，用户手测后只同步 Guard + RepoOps。producer tech pm、tech architect、codex task writer、QA reviewer 旧线程均停用自动流转。
-
-不得只读取本文件的摘要后直接开发。任一锁定文档缺失、不可读、相互冲突或超过可用上下文时，必须停止并回报。
+历史 ROADMAP、旧 CURRENT、旧 Package Queue 与其他 LOCKED 文档不再默认全文读取，也不得仅凭它们判断当前包状态。缺少 Task Contract 时，先完成最小只读定位；简单任务可在一句话边界确认后直接执行，复杂任务再建立合同。
 
 ## 3. 入场审查
 
-开发前必须先判断：
+开发前只需冻结这些可执行字段：
 
-- 当前任务属于哪个版本。
-- 是否符合长期项目方向。
-- 是否破坏 V0.2 稳定基线。
-- 是否超出当前 V0.3 版本范围。
-- 风险等级是绿灯、黄灯还是红灯。
-- 是否触碰当前任务的禁止修改边界。
-- 允许修改和禁止修改的文件分别是什么。
-- 需要执行哪些黄金路径 QA，失败时如何回滚。
+- 目标结果与产品上下文；
+- `SIMPLE_DIRECT_CLOSE`、`CONTAINED_ONE_GUARD` 或 `COMPLEX_GUARDED_ONCE`；
+- Primary Guard、开发 Owner 与用户判断点；
+- 允许 / 禁止写入范围和补丁预算；
+- 最小验收方式；
+- Unity 或外部工具进程的 Owner、超时和清理责任。
 
-黄灯任务必须先完成最小 Code Survey。红灯任务未获用户针对具体范围的明确授权时，必须停止并提交冲突报告。
+只有边界不清、红线、跨 Owner 状态、存档 / 奖励 / 正式流程迁移或不可逆数据变更才需要更深审查。一般代码、表现和同包修复不得因为“可能有风险”自动升级成重流程。
 
 ## 4. 稳定基线与当前收口
+
+> 本节保留历史决策与来源记录，不再代表当前包、当前版本或当前磁盘事实。当前工程事实以 `Docs/CURRENT/PROJECT_ENGINEERING_STATE_V2.md` 为准；任务状态以当前 Task Contract / Assignment 和用户最新决定为准。
 
 - 当前安全基线：`V0.2 稳定版本`
 - 当前版本方向：`V0.3-ProductFlow01`
@@ -117,6 +116,7 @@ ROADMAP / CURRENT 定义当前版本总蓝图；Package Queue 用于判断当前
 
 - 本长期置顶常驻窗口认领 `guard-agents` 职责。
 - `guard-agents` 只守边界、红线、Package Queue 和记忆收口，不直接开发。
+- 主调度窗口不持续轮询等待开发任务；对应 Primary Guard / 类别任务窗口负责终态、阻断和用户决定点回传。用户查询时只取一次即时快照，等待期间继续处理可并行工作。
 - 新开发窗口只能执行 Package Queue 指向的当前包、用户指定的小版本 / 包体编号，或经 Guard 收口后的用户明确 assignment。
 - 新任务开始必须先读取当前版本 Package Queue，例如 `Docs/V0.3/V0.3_PACKAGE_QUEUE.md`。普通已排队包走 Light Path：Package Queue → Guard 收口 assignment → 开发窗口开发 / 自测 / 用户手测清单 → 用户手测 → 同步 Guard + RepoOps。不得自动发送 producer tech pm、tech architect、codex task writer、QA reviewer 旧线程。
 - `Cross-System Executor / 跨系统执行体` 当前为 `DISABLED`；ZCode 未重新获得用户审批启用前不得正式承接开发、外部 QA 或修复执行，只能作为外部参考 / 临时草案来源。即使未来启用，也不得获得治理权，不得承接 producer tech pm / tech architect / codex task writer / guard-agents / RepoOps 主责。

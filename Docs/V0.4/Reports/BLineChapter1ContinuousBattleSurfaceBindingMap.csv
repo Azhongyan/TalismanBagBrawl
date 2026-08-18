@@ -1,0 +1,13 @@
+surfaceOrAction,source,access,scenePersisted,formalAuthority,notes
+Enable And Open Continuous Handtest,Editor menu,manual,false,false,Default false; exact target scene only
+Injected runtime root,Editor play-mode callback,automatic after manual enable,false,false,DontSaveInEditor|DontSaveInBuild|HideInHierarchy
+Start Chapter 1 Session,integration overlay,player click,false,false,Accepted ChapterFlow reducer with explicit dev handtest enable fact
+Start Current Normal Stage,integration overlay,player click,false,false,Exactly one real Item authority; fresh ItemCombatEffectRequestSnapshot.v1
+Continue From Settlement / Drop Candidate,integration overlay,player click,false,false,Zero reward/drop/inventory/Save authority
+Boss readiness gate,real Item authority,read-only validation,false,false,Before reducer mutation: valid contracts + one positive request each for I007-I012 + I031 owned/placed; missing facts remain at BossGate
+Manual Challenge Shougunu Phase1,integration overlay,player click,false,false,Only at 1-10 after readiness; invokes SceneBinder.AuthoredResetButton.onClick exactly once and visibly switches into authored Boss surface
+Boss handoff timeout,integration controller,automatic diagnostic,false,false,Three-second bounded diagnostic; no direct Runtime-only fallback or silent pending
+Reset Dev Session,integration overlay,player click,false,false,Clears session-only unlock
+Existing Item board/tray,BuildSandbox authority,read-only consumption,true,false,Not redrawn/reparented/reformatted
+Phase1 temporary-clear labels,completion resolver,player visible,false,false,PHASE1_DEV_VERTICAL_SLICE;NOT_CONTENT_FINAL;NOT_FORMAL_BOSS_COMPLETION
+Chapter 2 session unlock,ChapterFlow snapshot,read-only display,false,false,No Chapter 2 Battle and no persistence

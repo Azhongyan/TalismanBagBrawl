@@ -1,0 +1,10 @@
+layout,sourceStaggerMs,outcome,durationSeconds,playerHp,enemyHp,analysisOnly,status
+"0 active","96","defeat","58.5","0","","true","PASS"
+"I001+I002","96","victory","36","44","0","true","PASS"
+"I002-only","96","defeat","58.5","0","1108","true","PASS"
+"0 active","120","defeat","58.5","0","","true","PASS"
+"I001+I002","120","victory","36","44","0","true","PASS"
+"I002-only","120","defeat","58.5","0","1108","true","PASS"
+"0 active","144","defeat","58.5","0","","true","PASS"
+"I001+I002","144","victory","36","44","0","true","PASS"
+"I002-only","144","defeat","58.5","0","1108","true","PASS"

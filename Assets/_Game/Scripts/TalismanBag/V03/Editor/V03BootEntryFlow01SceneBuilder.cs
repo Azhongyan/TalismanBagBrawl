@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using TalismanBag.V03.BootEntry;
 using TalismanBag.V03.Navigation;
@@ -19,8 +19,6 @@ namespace TalismanBag.V03.Editor
         private static readonly Color PanelColor = new(0.11f, 0.14f, 0.12f, 0.96f);
         private static readonly Color ButtonColor = new(0.38f, 0.29f, 0.12f, 1f);
         private static readonly Color TextColor = new(0.92f, 0.88f, 0.74f, 1f);
-
-        [MenuItem("Tools/Talisman Bag/V0.3/BootEntryFlow01/[Writes Scene][Guard Only] Build Boot Entry Flow 01 Scene")]
         public static void BuildScene()
         {
             if (!ConfirmSceneWrite(
@@ -53,8 +51,6 @@ namespace TalismanBag.V03.Editor
             AssetDatabase.SaveAssets();
             Debug.Log("[V0.3-BootEntryFlow01] BOOT_ENTRY_SCENE_BUILT path=" + BootScenePath);
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/BootEntryFlow01/[Writes Scene][Guard Only] Bind Boot Entry Runtime Lock Scene Nodes")]
         public static void BindRuntimeLockSceneNodes()
         {
             if (!ConfirmSceneWrite(
@@ -334,7 +330,7 @@ namespace TalismanBag.V03.Editor
             {
                 BootScenePath,
                 V03BootEntryFlowController.HomeScenePath,
-                V03NavigationFlowController.TrialScenePath
+                TalismanBag.Navigation.TalismanSceneNavigationOwner.WorldMapScenePath
             };
 
             List<EditorBuildSettingsScene> scenes = EditorBuildSettings.scenes

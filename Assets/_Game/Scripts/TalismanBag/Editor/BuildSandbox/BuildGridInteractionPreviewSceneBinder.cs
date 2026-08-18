@@ -20,7 +20,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
         private const float TrayScrollSensitivity = 18f;
         private const float TrayScrollDecelerationRate = 0.16f;
 
-        [MenuItem("Tools/Talisman Bag/V0.4/BuildSandbox/BuildGridInteractionPreview01/[Writes Scene][Manual Only] Bind Grid Interaction Preview")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4/BuildSandbox/BuildGridInteractionPreview01/[Writes Scene][Manual Only] Bind Grid Interaction Preview")]
         public static void BindGridInteractionPreviewMenu()
         {
             if (!EditorUtility.DisplayDialog(

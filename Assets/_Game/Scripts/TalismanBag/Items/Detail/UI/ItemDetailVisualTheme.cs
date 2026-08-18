@@ -18,6 +18,7 @@ namespace TalismanBag.Items.Detail.UI
         public Color secondaryText = new Color32(0x99, 0x8f, 0x7c, 0xff);
         public Color weakText = new Color32(0x81, 0x79, 0x6d, 0xff);
         public Color restrictionText = new Color32(0xc9, 0x4e, 0x3b, 0xff);
+        public Color narrativeText = new Color32(0x7e, 0x68, 0x45, 0xff);
 
         [Header("Build states")]
         public Color buildActive = new Color32(0x82, 0xae, 0x4f, 0xff);
@@ -28,12 +29,22 @@ namespace TalismanBag.Items.Detail.UI
         public Color arrayModifierColor = new Color32(0x55, 0xc6, 0xb3, 0xff);
         public Sprite arrayModifierIcon;
 
+        [Header("Image tint")]
+        public Color artworkTint = new Color32(0xff, 0xff, 0xff, 0xff);
+        public Color iconTint = new Color32(0xff, 0xff, 0xff, 0xff);
+        public Color clearedStatusBadgeTint = new Color32(0x00, 0x00, 0x00, 0x00);
+
         [Header("Rarity")]
         public Color rarityWhite = new Color32(0xe3, 0xd8, 0xc3, 0xff);
         public Color rarityGreen = new Color32(0x87, 0xb6, 0x6a, 0xff);
         public Color rarityBlue = new Color32(0x68, 0xa9, 0xe6, 0xff);
         public Color rarityPurple = new Color32(0xb2, 0x7d, 0xdf, 0xff);
         public Color rarityOrange = new Color32(0xe4, 0xa1, 0x4b, 0xff);
+
+        [Header("Rarity surfaces")]
+        [Range(0f, 1f)] public float rarityArtworkFrameAlpha = 0.28f;
+        [Range(0f, 1f)] public float rarityBadgeAlpha = 0.30f;
+        [Range(0f, 1f)] public float rarityAccentAlpha = 0.75f;
     }
 
     public static class ItemDetailVisualThemeDefaults
@@ -46,14 +57,21 @@ namespace TalismanBag.Items.Detail.UI
         public static readonly Color SecondaryText = new Color32(0x99, 0x8f, 0x7c, 0xff);
         public static readonly Color WeakText = new Color32(0x81, 0x79, 0x6d, 0xff);
         public static readonly Color RestrictionText = new Color32(0xc9, 0x4e, 0x3b, 0xff);
+        public static readonly Color NarrativeText = new Color32(0x7e, 0x68, 0x45, 0xff);
         public static readonly Color BuildActive = new Color32(0x82, 0xae, 0x4f, 0xff);
         public static readonly Color BuildNearActive = new Color32(0xc0, 0xa4, 0x5e, 0xff);
         public static readonly Color BuildInactive = new Color32(0x71, 0x6f, 0x69, 0xff);
         public static readonly Color ArrayModifierColor = new Color32(0x55, 0xc6, 0xb3, 0xff);
+        public static readonly Color ArtworkTint = new Color32(0xff, 0xff, 0xff, 0xff);
+        public static readonly Color IconTint = new Color32(0xff, 0xff, 0xff, 0xff);
+        public static readonly Color ClearedStatusBadgeTint = new Color32(0x00, 0x00, 0x00, 0x00);
         public static readonly Color RarityWhite = new Color32(0xe3, 0xd8, 0xc3, 0xff);
         public static readonly Color RarityGreen = new Color32(0x87, 0xb6, 0x6a, 0xff);
         public static readonly Color RarityBlue = new Color32(0x68, 0xa9, 0xe6, 0xff);
         public static readonly Color RarityPurple = new Color32(0xb2, 0x7d, 0xdf, 0xff);
         public static readonly Color RarityOrange = new Color32(0xe4, 0xa1, 0x4b, 0xff);
+        public const float RarityArtworkFrameAlpha = 0.28f;
+        public const float RarityBadgeAlpha = 0.30f;
+        public const float RarityAccentAlpha = 0.75f;
     }
 }

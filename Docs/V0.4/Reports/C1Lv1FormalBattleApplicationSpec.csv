@@ -1,0 +1,9 @@
+requirement,expected,actual,status
+"ProductContext","CAMPAIGN_NORMAL_LV1","CAMPAIGN_NORMAL_LV1","PASS"
+"ValidStages","1-1|1-2","1-1|1-2","PASS"
+"SameTickOrder","player_then_enemy","player_then_enemy","PASS"
+"EnemyWaveScope","one application per encounter wave","one application per encounter wave","PASS"
+"OverkillCarry","stable actor order","stable actor order","PASS"
+"PlayerStart","100/100","100/100","PASS"
+"MiddleTier","NOT_AUTHORED / NOT_DISTINCT","NOT_AUTHORED / NOT_DISTINCT","PASS"
+"TerminalMarker","C1_LV1_FORMAL_BATTLE_APPLICATION01_PASS","C1_LV1_FORMAL_BATTLE_APPLICATION01_PASS","PASS"

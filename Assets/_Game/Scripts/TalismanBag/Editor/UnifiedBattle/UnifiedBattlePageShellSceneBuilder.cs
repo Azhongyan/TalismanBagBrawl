@@ -18,8 +18,6 @@ namespace TalismanBag.EditorTools.UnifiedBattle
         private static readonly Color AdapterPanelColor = new(0.12f, 0.14f, 0.16f, 0.96f);
         private static readonly Color DevPanelColor = new(0.16f, 0.11f, 0.08f, 0.96f);
         private static readonly Color TextColor = new(0.88f, 0.86f, 0.76f, 1f);
-
-        [MenuItem("Tools/Talisman Bag/V0.4/UnifiedBattle/UnifiedBattlePageShell01/[Writes Scene][Manual Only] Build Shell Scene And Prefab")]
         public static void BuildShellSceneAndPrefabMenu()
         {
             if (!EditorUtility.DisplayDialog(

@@ -13,6 +13,59 @@ namespace TalismanBag.Items.Detail
     {
         public const string ItemPowerUnavailable = "尚未建立正式评分";
         public const string EffectPayloadUnavailable = "效果数据尚未配置";
+        public const string InactiveStyleStartToken = "[ItemDetailStyle:Inactive]";
+        public const string ArrayModifierActiveStyleStartToken = "[ItemDetailStyle:ArrayModifierActive]";
+        public const string ArrayModifierInactiveStyleStartToken = "[ItemDetailStyle:ArrayModifierInactive]";
+        public const string StyleEndToken = "[/ItemDetailStyle]";
+
+        private static readonly string[] SemanticStyleStartTokens =
+        {
+            InactiveStyleStartToken,
+            ArrayModifierActiveStyleStartToken,
+            ArrayModifierInactiveStyleStartToken
+        };
+
+        public static string MarkInactive(string value)
+        {
+            return InactiveStyleStartToken + (value ?? string.Empty) + StyleEndToken;
+        }
+
+        public static string MarkArrayModifier(string value, bool active)
+        {
+            return (active ? ArrayModifierActiveStyleStartToken : ArrayModifierInactiveStyleStartToken)
+                + (value ?? string.Empty)
+                + StyleEndToken;
+        }
+
+        public static bool ContainsInactiveStyle(string value)
+        {
+            return !string.IsNullOrEmpty(value)
+                && (value.Contains(InactiveStyleStartToken, StringComparison.Ordinal)
+                    || value.Contains(ArrayModifierInactiveStyleStartToken, StringComparison.Ordinal));
+        }
+
+        public static bool IsWholeLineInactiveStyle(string value)
+        {
+            string content = (value ?? string.Empty).Trim();
+            return content.StartsWith(InactiveStyleStartToken, StringComparison.Ordinal)
+                && content.EndsWith(StyleEndToken, StringComparison.Ordinal);
+        }
+
+        public static string StripSemanticStyleTokens(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return value ?? string.Empty;
+            }
+
+            string result = value;
+            foreach (string token in SemanticStyleStartTokens)
+            {
+                result = result.Replace(token, string.Empty);
+            }
+
+            return result.Replace(StyleEndToken, string.Empty);
+        }
 
         public static string FormatStat(long rawUnits, ItemStatDefinitionSnapshot definition)
         {

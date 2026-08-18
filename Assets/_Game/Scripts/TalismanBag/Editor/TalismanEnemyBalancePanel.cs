@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using TalismanBag.Enemies;
 using TalismanBag.V02.Config;
-using TalismanBag.V02.Config.EditorTools;
 using TalismanBag.V02.EnemySkills;
 using UnityEditor;
 using UnityEngine;
@@ -24,11 +23,9 @@ namespace TalismanBag.EditorTools
         private bool showDebugEnemies;
         private bool showDeprecatedEnemies;
         private bool showLegacyEnemies;
-
-        [MenuItem("Tools/Talisman Bag/V0.2/Data/[Manual Only] Enemy Identity Panel")]
         public static void Open()
         {
-            DataCatalogEditorWindow.OpenTab(StageConfigPanelTab.Enemy);
+            GetWindow<TalismanEnemyBalancePanel>("Enemy Balance").Show();
         }
 
         private void OnEnable()
@@ -330,7 +327,7 @@ namespace TalismanBag.EditorTools
 
         private static void DrawAvatarGlyphPreview(EnemyDefinition definition)
         {
-            StageConfigPanelEditorUi.ReadOnlyTextField(
+            EditorGUILayout.TextField(
                 "Avatar Glyph / 头像字",
                 definition != null ? definition.GetAvatarGlyph() : "?");
         }
@@ -446,7 +443,7 @@ namespace TalismanBag.EditorTools
                 return;
             }
 
-            StageConfigPanelEditorUi.PropertyField(property, label);
+            EditorGUILayout.PropertyField(property, new GUIContent(label), true);
         }
 
         private sealed class EnemyRow

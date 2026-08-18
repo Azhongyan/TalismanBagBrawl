@@ -1,0 +1,9 @@
+output_field,authoritative_source,transformation
+"sourceItemInstanceId","ProjectionSet.v1.itemInstanceId","exact identity join"
+"sourcePlacementId","ItemSystemSnapshot.v2.placementId","exact IF01 placement join"
+"sourceBaseItemId","Projection/base + placement/item","exact equality"
+"baseDamageRawUnits","Projection stat damage/rawUnits","exact one non-negative row"
+"additiveBasisPoints","approved affix/build contributions","checked integer sum"
+"resolvedPreMitigationDamageUnits","baseDamage + additiveBasisPoints","floor(base*(10000+bp)/10000)"
+"activeCoreEffectIds","CoreRuntime.v2 active rows","identity preservation only"
+"UnsupportedTelemetry","unapproved machine facts","Missing/Conflicted + NotExecuted/Unknown"

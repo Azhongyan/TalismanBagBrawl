@@ -7,6 +7,7 @@ namespace TalismanBag.BuildSandbox
     public sealed class TrayPlacementViewModel
     {
         public string itemId;
+        public string shapeId;
         public int anchorSlotIndex;
         public IReadOnlyList<int> occupiedSlotIndexes;
         public int rotation;
@@ -15,6 +16,7 @@ namespace TalismanBag.BuildSandbox
         public TrayPlacementViewModel()
         {
             itemId = string.Empty;
+            shapeId = string.Empty;
             occupiedSlotIndexes = Array.Empty<int>();
         }
 
@@ -27,14 +29,18 @@ namespace TalismanBag.BuildSandbox
             {
                 return new TrayPlacementViewModel
                 {
+                    shapeId = string.Empty,
+                    occupiedSlotIndexes = Array.Empty<int>(),
                     isValid = false
                 };
             }
 
+            int safeColumnCount = Math.Max(1, columnCount);
             return new TrayPlacementViewModel
             {
                 itemId = placement.ItemId ?? string.Empty,
-                anchorSlotIndex = placement.AnchorCell.y * Math.Max(1, columnCount) + placement.AnchorCell.x,
+                shapeId = placement.ShapeId ?? string.Empty,
+                anchorSlotIndex = placement.AnchorCell.y * safeColumnCount + placement.AnchorCell.x,
                 occupiedSlotIndexes = placement.OccupiedSlotIndexes
                     .OrderBy(slotIndex => slotIndex)
                     .ToArray(),

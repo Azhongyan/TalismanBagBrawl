@@ -16,7 +16,7 @@ namespace TalismanBag.EditorTools.BuildSandbox
         private static readonly Color AccentColor = new(0.46f, 0.36f, 0.18f, 1f);
         private static readonly Color TextColor = new(0.88f, 0.86f, 0.76f, 1f);
 
-        [MenuItem("Tools/Talisman Bag/V0.4/BuildSandbox/BattleSandboxPreviewScene01/[Writes Scene][Manual Only] Build Preview Scene")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4/BuildSandbox/BattleSandboxPreviewScene01/[Writes Scene][Manual Only] Build Preview Scene")]
         public static void BuildPreviewSceneMenu()
         {
             if (!EditorUtility.DisplayDialog(

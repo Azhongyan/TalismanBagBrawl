@@ -50,8 +50,6 @@ namespace TalismanBag.EditorTools.ItemSandbox
             "Scene_TalismanBag_V02",
             "EditorBuildSettings.scenes ="
         };
-
-        [MenuItem("Tools/Talisman Bag/V0.4/ItemSandbox/ItemSandboxDetailUi01/[Guard Only] Verify And Write Reports")]
         public static void VerifyMenu()
         {
             VerifyAndWriteReports(exitWhenBatchMode: false);

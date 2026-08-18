@@ -16,23 +16,6 @@ namespace TalismanBag.UI
         private Rect lastRootRect;
         private Vector2Int lastScreenSize;
 
-#if UNITY_EDITOR
-        [UnityEditor.InitializeOnLoadMethod]
-        private static void ApplyInEditorAfterScriptsReload()
-        {
-            UnityEditor.EditorApplication.delayCall += () =>
-            {
-                if (Application.isPlaying)
-                {
-                    return;
-                }
-
-                Apply(false);
-                UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
-            };
-        }
-#endif
-
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void ApplyAfterSceneLoad()
         {

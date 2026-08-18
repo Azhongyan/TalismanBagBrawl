@@ -1,3 +1,0 @@
-exceptionKind,sourceId,status,reason,developerOnly
-Carrier,"dev_enemy_basic","BASELINE_ONLY","Baseline comparison carrier intentionally has no MechanicValidationProfile binding.",true
-MechanicProfile,"dev_enemy_polluted_tile_problem","MAP_RULE_ONLY","Polluted-tile pressure is intentionally carried by MapRule data and has no dedicated carrier.",true

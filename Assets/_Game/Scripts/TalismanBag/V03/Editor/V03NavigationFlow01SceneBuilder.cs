@@ -40,8 +40,6 @@ namespace TalismanBag.V03.EditorTools
         {
             "SecondaryBottomNavRoot"
         };
-
-        [MenuItem("Tools/Talisman Bag/V0.3/NavigationFlow01/[Writes Scene][Deprecated][Guard Only] Build Scene")]
         public static void BuildSceneBatch()
         {
             if (!EditorUtility.DisplayDialog(
@@ -161,8 +159,6 @@ namespace TalismanBag.V03.EditorTools
                 "roots=RefinePageRoot,ExplorePageRoot,MorePageRoot,BottomNavBar_Root " +
                 "trialMode=LoadSceneMode.Single");
         }
-
-        [MenuItem("Tools/Talisman Bag/V0.3/NavigationFlow01/[QA Only] Verify Static")]
         public static void VerifyStaticBatch()
         {
             EditorSceneManager.OpenScene(MainHomeScenePath, OpenSceneMode.Single);
@@ -416,54 +412,45 @@ namespace TalismanBag.V03.EditorTools
 
         private static void AppendBuildSettingsScenes()
         {
-            List<EditorBuildSettingsScene> scenes =
-                EditorBuildSettings.scenes.ToList();
-            string[] currentPaths = scenes.Select(scene => scene.path).ToArray();
-            string[] expected =
+            List<EditorBuildSettingsScene> scenes = EditorBuildSettings.scenes.ToList();
+            string[] required = GetRequiredBuildScenePaths();
+            foreach (string path in required)
             {
-                BootEntryScenePath,
-                MainHomeScenePath,
-                V03NavigationFlowController.UpgradeScenePath,
-                V03NavigationFlowController.TrialScenePath
-            };
-            bool hasUpgradeScene = currentPaths.SequenceEqual(expected);
-            bool needsUpgradeScene =
-                currentPaths.SequenceEqual(new[]
+                int index = scenes.FindIndex(scene => scene.path == path);
+                if (index < 0)
                 {
-                    BootEntryScenePath,
-                    MainHomeScenePath,
-                    V03NavigationFlowController.TrialScenePath
-                });
-            Require(hasUpgradeScene || needsUpgradeScene,
-                "Build Settings contains an unexpected scene list; refusing to reorder or overwrite it.");
+                    scenes.Add(new EditorBuildSettingsScene(path, true));
+                    continue;
+                }
 
-            if (hasUpgradeScene)
-            {
-                return;
+                scenes[index] = new EditorBuildSettingsScene(path, true);
             }
 
-            int trialIndex = scenes.FindIndex(scene => scene.path == V03NavigationFlowController.TrialScenePath);
-            Require(trialIndex >= 0, "Trial scene is missing from Build Settings.");
-            scenes.Insert(
-                trialIndex,
-                new EditorBuildSettingsScene(V03NavigationFlowController.UpgradeScenePath, true));
             EditorBuildSettings.scenes = scenes.ToArray();
         }
 
         private static void VerifyBuildSettings()
         {
-            string[] expected =
+            string[] required = GetRequiredBuildScenePaths();
+            EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
+            Require(required.All(path =>
+                    scenes.Any(scene => scene.path == path && scene.enabled)),
+                "A contracted main-navigation scene is missing or disabled in Build Settings.");
+            Require(required.All(path =>
+                    scenes.Count(scene => scene.path == path) == 1),
+                "Contracted main-navigation scenes must not be duplicated.");
+        }
+
+        private static string[] GetRequiredBuildScenePaths()
+        {
+            return new[]
             {
                 BootEntryScenePath,
                 MainHomeScenePath,
+                TalismanBag.Navigation.TalismanSceneNavigationOwner.WorldMapScenePath,
                 V03NavigationFlowController.UpgradeScenePath,
-                V03NavigationFlowController.TrialScenePath
+                TalismanBag.Navigation.TalismanSceneNavigationOwner.UnifiedBattleScenePath
             };
-            EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
-            Require(scenes.Select(scene => scene.path).SequenceEqual(expected),
-                "Build Settings order does not match the NavigationFlow01 contract.");
-            Require(scenes.All(scene => scene.enabled),
-                "All four contracted Build Settings scenes must remain enabled.");
         }
 
         private static void SetReference(

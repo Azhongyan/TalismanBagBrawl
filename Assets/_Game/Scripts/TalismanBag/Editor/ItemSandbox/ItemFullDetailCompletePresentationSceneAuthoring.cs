@@ -19,7 +19,7 @@ namespace TalismanBag.EditorTools.ItemSandbox
         public const string ThemeAssetPath = "Assets/_Game/Configs/ItemDetail/ItemDetailVisualTheme.asset";
         public const string StructureReportPath = "Docs/V0.4/Reports/ItemFullDetailCompletePresentationSceneStructureReport.md";
 
-        [MenuItem("TalismanBag/V0.4/Item Sandbox/Manual Only/Bind Complete Presentation Theme")]
+        [MenuItem("Tools/Talisman Bag/Dev Only/V0.4/Item Sandbox/Manual Only/Bind Complete Presentation Theme")]
         public static void ApplyManualOnly()
         {
             ApplyForBatch();

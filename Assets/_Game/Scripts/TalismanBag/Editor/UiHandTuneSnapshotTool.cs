@@ -30,8 +30,6 @@ namespace TalismanBag.EditorTools
                 EditorApplication.delayCall += ApplyPendingSnapshotIfNeeded;
             }
         }
-
-        [MenuItem(MenuRoot + "[Writes Scene][Manual Only] Save Selected Play UI To Scene", false, 100)]
         public static void SaveSelectedPlayUiToScene()
         {
             if (!EditorApplication.isPlaying)
@@ -100,8 +98,6 @@ namespace TalismanBag.EditorTools
 
             EditorApplication.ExitPlaymode();
         }
-
-        [MenuItem(MenuRoot + "[Manual Only] Clear Pending Play UI Snapshot", false, 101)]
         public static void ClearPendingSnapshot()
         {
             ClearPendingSession();
